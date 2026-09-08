@@ -1,3 +1,5 @@
+import Foundation
+
 /// HDF5 C ABI scalar aliases shared by the dynamic reader and writer.
 package typealias hid_t = Int64
 package typealias herr_t = Int32
@@ -24,6 +26,19 @@ package nonisolated enum SessionSidecarFormat {
     /// stem is the source name with *any* extension stripped — the source is
     /// not necessarily an `.h5` file.
     package static let nameSuffix = ".mac4dstem.h5"
+
+    /// The name to seed an `NSSavePanel` with when proposing `url`.
+    ///
+    /// The panel appends the extension its `allowedContentTypes` requires, so
+    /// the seed must NOT already carry it. Seeding the full
+    /// `<stem>.mac4dstem.h5` is what produced `<stem>.mac4dstem.h5.h5` on
+    /// every first save — reported 2026-09-07 on the COPL cube and seen again
+    /// 2026-09-09 on `downsample_Si_SiGe_exp` (`docs/open-items.md`). Only the
+    /// LAST extension comes off, so a sidecar already carrying the doubled
+    /// name keeps it rather than being silently renamed under the owner.
+    package static func savePanelSeedName(for url: URL) -> String {
+        url.deletingPathExtension().lastPathComponent
+    }
 
     // MARK: - Schema versioning (v2 S5)
 
