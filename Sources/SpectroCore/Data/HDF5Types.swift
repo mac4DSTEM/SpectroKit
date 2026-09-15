@@ -67,3 +67,31 @@ package nonisolated enum SessionSidecarFormat {
     //  `BraggVectorEMDWriter.minimumReaderSchema(for:)` — this file stays
     //  constants-only so harnesses can compile it without `LoadSpecification`.)
 }
+
+/// EVERY HDF5 CALL IN THE PROCESS RUNS UNDER THIS LOCK (2026-09-15 night).
+///
+/// The bundled libhdf5 is built `Threadsafety: OFF`, and it was entered from
+/// two unserialised paths — `H5Reader`, an actor per instance, and
+/// `BraggVectorEMDWriter`, a nonisolated enum with its own `dlopen`.
+/// `tools/hdf5-race-probe` reproduces the crash: serial completes, concurrent
+/// dies with SIGBUS inside the first twenty iterations. This is HDF5's own
+/// thread-safe build done from outside — its `H5_API_LOCK` is a global mutex
+/// around every API call; this one is around every logical operation (an
+/// open, a tile read, a sidecar write), recursive so nested entries (write →
+/// publish → …) do not deadlock, and NEVER held across an `await`: the
+/// tile-streaming export releases it before it reads the next tile from the
+/// source actor, and re-takes it to write. A caller that blocks on it blocks
+/// its thread for the length of one operation, which is the cost of a
+/// library that cannot be entered twice.
+package enum HDF5Serial {
+    private static let lock = NSRecursiveLock()
+    package static func run<T>(_ body: () throws -> T) rethrows -> T {
+        lock.lock(); defer { lock.unlock() }
+        return try body()
+    }
+    /// For the one synchronous stretch that must outlive a closure's scope
+    /// (the export's dataset setup, whose handles the loop below it uses).
+    /// Pair on the same thread, and never span an `await`.
+    package static func acquire() { lock.lock() }
+    package static func release() { lock.unlock() }
+}
