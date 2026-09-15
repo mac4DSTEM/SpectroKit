@@ -82,8 +82,13 @@ package nonisolated enum SessionSidecarFormat {
 /// tile-streaming export releases it before it reads the next tile from the
 /// source actor, and re-takes it to write. A caller that blocks on it blocks
 /// its thread for the length of one operation, which is the cost of a
-/// library that cannot be entered twice.
-package enum HDF5Serial {
+/// library that cannot be entered twice. Gate B (2026-09-15 late night)
+/// found two entry points that opened the file themselves and took nothing
+/// — `loadResultMap(id:)` and `loadRGBAResultMap(id:)`, reached by clicking
+/// a saved result — and crashed the probe's variant on the first attempt;
+/// the audit is by grep for `HDF5WriteLibrary.load()` and `HDF5Library.load()`:
+/// every one must sit under this lock, because `H5open` is an API call too.
+package nonisolated enum HDF5Serial {
     private static let lock = NSRecursiveLock()
     package static func run<T>(_ body: () throws -> T) rethrows -> T {
         lock.lock(); defer { lock.unlock() }
