@@ -47,8 +47,11 @@ package nonisolated enum SessionSidecarFormat {
     /// across the 2026-08-18 load-specification addition, which is exactly
     /// the defect that made this constant necessary (a stamp that never moves
     /// identifies nothing). "6" is v2's: load specification honoured on
-    /// restore, plus the replay record.
-    package static let currentSchema = 6
+    /// restore, plus the replay record. "7" adds the lineage graph
+    /// (`lineageAttribute`, ADR 047): additive and safe to ignore, so the
+    /// minimum-reader marker did NOT move with it — v4.0.0 (schema 6) opens a
+    /// v7 file and restores everything it did before.
+    package static let currentSchema = 7
 
     /// Root attribute naming the OLDEST schema a reader may implement and
     /// still interpret this file **without misreading it** — not the newest
@@ -63,6 +66,10 @@ package nonisolated enum SessionSidecarFormat {
 
     /// Root attribute carrying the serialized `SessionReplayRecord` (JSON).
     package static let replayRecordAttribute = "mac4dstem_replay_record"
+
+    /// Root attribute carrying the serialized `SessionLineage` (JSON), schema 7.
+    /// The linear record above is its projection and is still written with it.
+    package static let lineageAttribute = "mac4dstem_lineage"
     // (The min-reader VALUE for a given specification is computed by
     //  `BraggVectorEMDWriter.minimumReaderSchema(for:)` — this file stays
     //  constants-only so harnesses can compile it without `LoadSpecification`.)
