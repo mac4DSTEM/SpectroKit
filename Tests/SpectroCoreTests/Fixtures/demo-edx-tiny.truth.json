@@ -1,0 +1,1514 @@
+{
+ "generator": {
+  "name": "tools/demo-edx/sim_edx.py",
+  "version": "1.0",
+  "seed": 42,
+  "poisson_streams": "4D seed, EDS seed+1, HAADF seed+2, survey seed+3 (numpy default_rng)"
+ },
+ "files": {
+  "dm4": "demo-edx-tiny.dm4",
+  "sizes_bytes": {
+   "demo-edx-tiny.dm4": 115275
+  }
+ },
+ "scan": {
+  "nx": 6,
+  "ny": 4,
+  "pitch_nm": 5.0,
+  "dwell_s": 0.001,
+  "dead_time_fraction": 0.05,
+  "note": "NOT square: nx != ny so an axis swap shows"
+ },
+ "detector_4d": {
+  "pixels": 16,
+  "q_nm_inv_per_pixel": 0.96,
+  "make_demo_dose": {
+   "unit_bragg_amplitude": 8200.0,
+   "direct_beam_peak": 49200.0
+  }
+ },
+ "edx": {
+  "channels": 512,
+  "dispersion_eV": 20.0,
+  "origin_channel": 23.9,
+  "energy_offset_keV": -0.478,
+  "energy_of_channel": "(i - origin) * dispersion  (centre of channel i)",
+  "beam_keV": 200.0,
+  "FWHM_MnKa_eV": 130.0,
+  "dtype": "uint32",
+  "fwhm_law": "eXSpy utils/eds/_xray_lines.py:138-175 sqrt(2.5*(E-5.8987 keV)*1000 + FWHM_MnKa^2) eV",
+  "line_table": "eXSpy exspy/material/xray_lines.json (7185a4d): Al :119, Cu :716, Mg :1725, O :1968, Si :2953",
+  "dose_note": "mean total counts per pixel ~35-60 (the owner's 4D regime 25-85); Poisson per pixel",
+  "rect_survey_pixels_top_left_bottom_right": [
+   24.0,
+   14.0,
+   44.0,
+   44.0
+  ]
+ },
+ "model_parameters": {
+  "sensitivity_counts_per_atom_unit_per_family": {
+   "Al_K": 1.0,
+   "Mg_K": 0.55,
+   "Si_K": 1.2,
+   "Cu_K": 0.18,
+   "Cu_L": 0.8,
+   "O_K": 0.3
+  },
+  "true_cliff_lorimer_k_for_ratio_A_over_B": "C_A/C_B = k_AB * I_A/I_B with k_AB = s_B/s_A (family sensitivities above)",
+  "G_counts": 32.4,
+  "continuum_total_counts_per_pixel_for_sum_nZ_13": 8.0,
+  "al_k_edge_step_fraction": 0.15,
+  "al_k_edge_keV": 1.5596,
+  "al_ka_tail": {
+   "fraction": 0.015,
+   "lambda_keV": 0.12
+  },
+  "si_internal_fluorescence_fraction_of_counts_above_SiK_edge": 0.004,
+  "stray_Cu_Ka_per_pixel": 0.05,
+  "vacuum_continuum_per_pixel": 0.4,
+  "thickness_map": "0.85 + 0.30*(x+0.5)/nx for non-vacuum pixels, 1 for vacuum; precipitates carry thickness_factor 1.3",
+  "precipitate_volume_fraction": 0.5,
+  "model_features_flagged": [
+   "al_ka_tail",
+   "si_internal_fluorescence",
+   "al_k_edge_step",
+   "stray_Cu_K",
+   "oxide_O_0.02_per_metal_atom"
+  ]
+ },
+ "phases_at_pct": {
+  "Al": {
+   "Al": 98.8,
+   "Mg": 0.6,
+   "Si": 0.6
+  },
+  "beta_double_prime_Mg5Si6": {
+   "Mg": 45.45454545454545,
+   "Si": 54.54545454545454
+  },
+  "Q_Al3Cu2Mg9Si7": {
+   "Al": 14.285714285714285,
+   "Cu": 9.523809523809524,
+   "Mg": 42.857142857142854,
+   "Si": 33.33333333333333
+  }
+ },
+ "recipes": {
+  "A": {
+   "phase": "Al",
+   "composition_at_pct_metals": {
+    "Al": 98.8,
+    "Mg": 0.6,
+    "Si": 0.6
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.988,
+    "Mg": 0.006,
+    "Si": 0.006,
+    "O": 0.02
+   },
+   "thickness_factor": 1.0,
+   "n_pixels": 4,
+   "sum_of_pixel_thickness_map": 3.55,
+   "mean_total_counts_per_pixel_at_map_thickness": 35.909083682662164,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 32.011199999999995,
+     "gaussian_counts": 31.531031999999996,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 111.93516359999998,
+     "expected_total_counts_incl_tail": 113.63975999999998
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.42254783999999995,
+     "gaussian_counts": 0.42254783999999995,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 1.5000448319999997,
+     "expected_total_counts_incl_tail": 1.5000448319999997
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 0.10692,
+     "gaussian_counts": 0.10692,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 0.37956599999999996,
+     "expected_total_counts_incl_tail": 0.37956599999999996
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.0010692,
+     "gaussian_counts": 0.0010692,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.0037956599999999997,
+     "expected_total_counts_incl_tail": 0.0037956599999999997
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 0.23328,
+     "gaussian_counts": 0.23328,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 0.8281439999999999,
+     "expected_total_counts_incl_tail": 0.8281439999999999
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.0064828512,
+     "gaussian_counts": 0.0064828512,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.02301412176,
+     "expected_total_counts_incl_tail": 0.02301412176
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.1944,
+     "gaussian_counts": 0.1944,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.69012,
+     "expected_total_counts_incl_tail": 0.69012
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 7.406405142281454,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.014883904729403414,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.2,
+    "Cu_Kb": 0.026314
+   },
+   "realised_total_eds_counts": 152,
+   "realised_total_4d_counts": 36447257.0
+  },
+  "A_strain": {
+   "phase": "Al",
+   "composition_at_pct_metals": {
+    "Al": 98.8,
+    "Mg": 0.6,
+    "Si": 0.6
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.988,
+    "Mg": 0.006,
+    "Si": 0.006,
+    "O": 0.02
+   },
+   "thickness_factor": 1.0,
+   "n_pixels": 1,
+   "sum_of_pixel_thickness_map": 0.975,
+   "mean_total_counts_per_pixel_at_map_thickness": 39.44383771475562,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 32.011199999999995,
+     "gaussian_counts": 31.531031999999996,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 30.742756199999995,
+     "expected_total_counts_incl_tail": 31.210919999999994
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.42254783999999995,
+     "gaussian_counts": 0.42254783999999995,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.41198414399999994,
+     "expected_total_counts_incl_tail": 0.41198414399999994
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 0.10692,
+     "gaussian_counts": 0.10692,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 0.10424699999999999,
+     "expected_total_counts_incl_tail": 0.10424699999999999
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.0010692,
+     "gaussian_counts": 0.0010692,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.00104247,
+     "expected_total_counts_incl_tail": 0.00104247
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 0.23328,
+     "gaussian_counts": 0.23328,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 0.22744799999999998,
+     "expected_total_counts_incl_tail": 0.22744799999999998
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.0064828512,
+     "gaussian_counts": 0.0064828512,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.006320779919999999,
+     "expected_total_counts_incl_tail": 0.006320779919999999
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.1944,
+     "gaussian_counts": 0.1944,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.18954,
+     "expected_total_counts_incl_tail": 0.18954
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 7.406405142281454,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.014883904729403414,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.05,
+    "Cu_Kb": 0.0065785
+   },
+   "realised_total_eds_counts": 39,
+   "realised_total_4d_counts": 9114289.0
+  },
+  "B": {
+   "phase": "Al",
+   "composition_at_pct_metals": {
+    "Al": 98.8,
+    "Mg": 0.6,
+    "Si": 0.6
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.988,
+    "Mg": 0.006,
+    "Si": 0.006,
+    "O": 0.02
+   },
+   "thickness_factor": 1.0,
+   "n_pixels": 3,
+   "sum_of_pixel_thickness_map": 3.2750000000000004,
+   "mean_total_counts_per_pixel_at_map_thickness": 44.156843090880216,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 32.011199999999995,
+     "gaussian_counts": 31.531031999999996,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 103.26412979999999,
+     "expected_total_counts_incl_tail": 104.83668
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.42254783999999995,
+     "gaussian_counts": 0.42254783999999995,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 1.383844176,
+     "expected_total_counts_incl_tail": 1.383844176
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 0.10692,
+     "gaussian_counts": 0.10692,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 0.35016300000000006,
+     "expected_total_counts_incl_tail": 0.35016300000000006
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.0010692,
+     "gaussian_counts": 0.0010692,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.0035016300000000004,
+     "expected_total_counts_incl_tail": 0.0035016300000000004
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 0.23328,
+     "gaussian_counts": 0.23328,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 0.763992,
+     "expected_total_counts_incl_tail": 0.763992
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.0064828512,
+     "gaussian_counts": 0.0064828512,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.02123133768,
+     "expected_total_counts_incl_tail": 0.02123133768
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.1944,
+     "gaussian_counts": 0.1944,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.63666,
+     "expected_total_counts_incl_tail": 0.63666
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 7.406405142281454,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.014883904729403414,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.15000000000000002,
+    "Cu_Kb": 0.0197355
+   },
+   "realised_total_eds_counts": 135,
+   "realised_total_4d_counts": 26169190.0
+  },
+  "C": {
+   "phase": "Al",
+   "composition_at_pct_metals": {
+    "Al": 98.8,
+    "Mg": 0.6,
+    "Si": 0.6
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.988,
+    "Mg": 0.006,
+    "Si": 0.006,
+    "O": 0.02
+   },
+   "thickness_factor": 1.0,
+   "n_pixels": 4,
+   "sum_of_pixel_thickness_map": 4.4,
+   "mean_total_counts_per_pixel_at_map_thickness": 44.49348633203198,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 32.011199999999995,
+     "gaussian_counts": 31.531031999999996,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 138.7365408,
+     "expected_total_counts_incl_tail": 140.84928
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.42254783999999995,
+     "gaussian_counts": 0.42254783999999995,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 1.859210496,
+     "expected_total_counts_incl_tail": 1.859210496
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 0.10692,
+     "gaussian_counts": 0.10692,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 0.47044800000000003,
+     "expected_total_counts_incl_tail": 0.47044800000000003
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.0010692,
+     "gaussian_counts": 0.0010692,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.0047044800000000005,
+     "expected_total_counts_incl_tail": 0.0047044800000000005
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 0.23328,
+     "gaussian_counts": 0.23328,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 1.026432,
+     "expected_total_counts_incl_tail": 1.026432
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.0064828512,
+     "gaussian_counts": 0.0064828512,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.02852454528,
+     "expected_total_counts_incl_tail": 0.02852454528
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.1944,
+     "gaussian_counts": 0.1944,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.85536,
+     "expected_total_counts_incl_tail": 0.85536
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 7.406405142281454,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.014883904729403414,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.2,
+    "Cu_Kb": 0.026314
+   },
+   "realised_total_eds_counts": 200,
+   "realised_total_4d_counts": 34387984.0
+  },
+  "mixAB": {
+   "phase": "Al",
+   "composition_at_pct_metals": {
+    "Al": 98.8,
+    "Mg": 0.6,
+    "Si": 0.6
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.988,
+    "Mg": 0.006,
+    "Si": 0.006,
+    "O": 0.02
+   },
+   "thickness_factor": 1.0,
+   "n_pixels": 2,
+   "sum_of_pixel_thickness_map": 2.05,
+   "mean_total_counts_per_pixel_at_map_thickness": 41.463697161666154,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 32.011199999999995,
+     "gaussian_counts": 31.531031999999996,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 64.63861559999998,
+     "expected_total_counts_incl_tail": 65.62295999999998
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.42254783999999995,
+     "gaussian_counts": 0.42254783999999995,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.8662230719999998,
+     "expected_total_counts_incl_tail": 0.8662230719999998
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 0.10692,
+     "gaussian_counts": 0.10692,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 0.219186,
+     "expected_total_counts_incl_tail": 0.219186
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.0010692,
+     "gaussian_counts": 0.0010692,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.00219186,
+     "expected_total_counts_incl_tail": 0.00219186
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 0.23328,
+     "gaussian_counts": 0.23328,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 0.4782239999999999,
+     "expected_total_counts_incl_tail": 0.4782239999999999
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.0064828512,
+     "gaussian_counts": 0.0064828512,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.013289844959999998,
+     "expected_total_counts_incl_tail": 0.013289844959999998
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.1944,
+     "gaussian_counts": 0.1944,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.39851999999999993,
+     "expected_total_counts_incl_tail": 0.39851999999999993
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 7.406405142281454,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.014883904729403414,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.1,
+    "Cu_Kb": 0.013157
+   },
+   "realised_total_eds_counts": 111,
+   "realised_total_4d_counts": 18493570.0
+  },
+  "mixAC": {
+   "phase": "Al",
+   "composition_at_pct_metals": {
+    "Al": 98.8,
+    "Mg": 0.6,
+    "Si": 0.6
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.988,
+    "Mg": 0.006,
+    "Si": 0.006,
+    "O": 0.02
+   },
+   "thickness_factor": 1.0,
+   "n_pixels": 2,
+   "sum_of_pixel_thickness_map": 2.05,
+   "mean_total_counts_per_pixel_at_map_thickness": 41.463697161666154,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 32.011199999999995,
+     "gaussian_counts": 31.531031999999996,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 64.63861559999998,
+     "expected_total_counts_incl_tail": 65.62295999999998
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.42254783999999995,
+     "gaussian_counts": 0.42254783999999995,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.8662230719999998,
+     "expected_total_counts_incl_tail": 0.8662230719999998
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 0.10692,
+     "gaussian_counts": 0.10692,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 0.219186,
+     "expected_total_counts_incl_tail": 0.219186
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.0010692,
+     "gaussian_counts": 0.0010692,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.00219186,
+     "expected_total_counts_incl_tail": 0.00219186
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 0.23328,
+     "gaussian_counts": 0.23328,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 0.4782239999999999,
+     "expected_total_counts_incl_tail": 0.4782239999999999
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.0064828512,
+     "gaussian_counts": 0.0064828512,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.013289844959999998,
+     "expected_total_counts_incl_tail": 0.013289844959999998
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.1944,
+     "gaussian_counts": 0.1944,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.39851999999999993,
+     "expected_total_counts_incl_tail": 0.39851999999999993
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 7.406405142281454,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.014883904729403414,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.1,
+    "Cu_Kb": 0.013157
+   },
+   "realised_total_eds_counts": 84,
+   "realised_total_4d_counts": 18333787.0
+  },
+  "mixBC": {
+   "phase": "Al",
+   "composition_at_pct_metals": {
+    "Al": 98.8,
+    "Mg": 0.6,
+    "Si": 0.6
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.988,
+    "Mg": 0.006,
+    "Si": 0.006,
+    "O": 0.02
+   },
+   "thickness_factor": 1.0,
+   "n_pixels": 1,
+   "sum_of_pixel_thickness_map": 1.125,
+   "mean_total_counts_per_pixel_at_map_thickness": 45.50341605548725,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 32.011199999999995,
+     "gaussian_counts": 31.531031999999996,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 35.472410999999994,
+     "expected_total_counts_incl_tail": 36.01259999999999
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.42254783999999995,
+     "gaussian_counts": 0.42254783999999995,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.47536631999999995,
+     "expected_total_counts_incl_tail": 0.47536631999999995
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 0.10692,
+     "gaussian_counts": 0.10692,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 0.120285,
+     "expected_total_counts_incl_tail": 0.120285
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.0010692,
+     "gaussian_counts": 0.0010692,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.0012028499999999999,
+     "expected_total_counts_incl_tail": 0.0012028499999999999
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 0.23328,
+     "gaussian_counts": 0.23328,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 0.26244,
+     "expected_total_counts_incl_tail": 0.26244
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.0064828512,
+     "gaussian_counts": 0.0064828512,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.0072932076,
+     "expected_total_counts_incl_tail": 0.0072932076
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.1944,
+     "gaussian_counts": 0.1944,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.21869999999999998,
+     "expected_total_counts_incl_tail": 0.21869999999999998
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 7.406405142281454,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.014883904729403414,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.05,
+    "Cu_Kb": 0.0065785
+   },
+   "realised_total_eds_counts": 43,
+   "realised_total_4d_counts": 8997130.0
+  },
+  "precip_Q": {
+   "phase": "Q",
+   "composition_at_pct_metals": {
+    "Al": 56.54285714285714,
+    "Si": 16.966666666666665,
+    "Cu": 4.761904761904762,
+    "Mg": 21.728571428571428
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.5654285714285714,
+    "Si": 0.16966666666666666,
+    "Cu": 0.047619047619047616,
+    "Mg": 0.21728571428571428,
+    "O": 0.02
+   },
+   "thickness_factor": 1.3,
+   "n_pixels": 1,
+   "sum_of_pixel_thickness_map": 0.975,
+   "mean_total_counts_per_pixel_at_map_thickness": 49.87371005579532,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 23.815851428571424,
+     "gaussian_counts": 23.458613657142852,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 22.87214831571428,
+     "expected_total_counts_incl_tail": 23.220455142857137
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.3143692388571428,
+     "gaussian_counts": 0.3143692388571428,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.3065100078857142,
+     "expected_total_counts_incl_tail": 0.3065100078857142
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 5.033640857142857,
+     "gaussian_counts": 5.033640857142857,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 4.907799835714286,
+     "expected_total_counts_incl_tail": 4.907799835714286
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.05033640857142857,
+     "gaussian_counts": 0.05033640857142857,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.049077998357142855,
+     "expected_total_counts_incl_tail": 0.049077998357142855
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 8.575631999999999,
+     "gaussian_counts": 8.575631999999999,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 8.361241199999998,
+     "expected_total_counts_incl_tail": 8.361241199999998
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.23831681327999996,
+     "gaussian_counts": 0.23831681327999996,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.23235889294799994,
+     "expected_total_counts_incl_tail": 0.23235889294799994
+    },
+    "Cu_Ka": {
+     "energy_keV": 8.0478,
+     "weight": 1.0,
+     "mean_counts": 0.36102857142857137,
+     "gaussian_counts": 0.36102857142857137,
+     "fwhm_eV": 149.24057759202086,
+     "expected_total_counts": 0.35200285714285706,
+     "expected_total_counts_incl_tail": 0.35200285714285706
+    },
+    "Cu_Kb": {
+     "energy_keV": 8.9053,
+     "weight": 0.13157,
+     "mean_counts": 0.04750052914285713,
+     "gaussian_counts": 0.04750052914285713,
+     "fwhm_eV": 156.25779980532172,
+     "expected_total_counts": 0.0463130159142857,
+     "expected_total_counts_incl_tail": 0.0463130159142857
+    },
+    "Cu_La": {
+     "energy_keV": 0.9295,
+     "weight": 1.0,
+     "mean_counts": 1.6045714285714283,
+     "gaussian_counts": 1.6045714285714283,
+     "fwhm_eV": 66.91038783328041,
+     "expected_total_counts": 1.5644571428571425,
+     "expected_total_counts_incl_tail": 1.5644571428571425
+    },
+    "Cu_Lb1": {
+     "energy_keV": 0.9494,
+     "weight": 0.03197,
+     "mean_counts": 0.05129814857142856,
+     "gaussian_counts": 0.05129814857142856,
+     "fwhm_eV": 67.28112662552553,
+     "expected_total_counts": 0.05001569485714284,
+     "expected_total_counts_incl_tail": 0.05001569485714284
+    },
+    "Cu_Lb3": {
+     "energy_keV": 1.0225,
+     "weight": 0.00114,
+     "mean_counts": 0.0018292114285714282,
+     "gaussian_counts": 0.0018292114285714282,
+     "fwhm_eV": 68.6257968988339,
+     "expected_total_counts": 0.0017834811428571425,
+     "expected_total_counts_incl_tail": 0.0017834811428571425
+    },
+    "Cu_Ll": {
+     "energy_keV": 0.8113,
+     "weight": 0.08401,
+     "mean_counts": 0.1348000457142857,
+     "gaussian_counts": 0.1348000457142857,
+     "fwhm_eV": 64.66451886467571,
+     "expected_total_counts": 0.13143004457142854,
+     "expected_total_counts_incl_tail": 0.13143004457142854
+    },
+    "Cu_Ln": {
+     "energy_keV": 0.8312,
+     "weight": 0.01984,
+     "mean_counts": 0.03183469714285714,
+     "gaussian_counts": 0.03183469714285714,
+     "fwhm_eV": 65.04805915628843,
+     "expected_total_counts": 0.031038829714285707,
+     "expected_total_counts_incl_tail": 0.031038829714285707
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.25271999999999994,
+     "gaussian_counts": 0.25271999999999994,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.24640199999999993,
+     "expected_total_counts_incl_tail": 0.24640199999999993
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 10.556602886669223,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.024161638287708637,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.05,
+    "Cu_Kb": 0.0065785
+   },
+   "realised_total_eds_counts": 55,
+   "realised_total_4d_counts": 11543490.0
+  },
+  "precip_endon_0": {
+   "phase": "beta''",
+   "composition_at_pct_metals": {
+    "Al": 49.4,
+    "Si": 27.57272727272727,
+    "Mg": 23.027272727272727
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.494,
+    "Si": 0.2757272727272727,
+    "Mg": 0.23027272727272727,
+    "O": 0.02
+   },
+   "thickness_factor": 1.3,
+   "n_pixels": 1,
+   "sum_of_pixel_thickness_map": 0.9249999999999999,
+   "mean_total_counts_per_pixel_at_map_thickness": 47.39923967536261,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 20.80728,
+     "gaussian_counts": 20.495170799999997,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 18.958032989999996,
+     "expected_total_counts_incl_tail": 19.246733999999996
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.27465609599999996,
+     "gaussian_counts": 0.27465609599999996,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.25405688879999994,
+     "expected_total_counts_incl_tail": 0.25405688879999994
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 5.334498,
+     "gaussian_counts": 5.334498,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 4.934410649999999,
+     "expected_total_counts_incl_tail": 4.934410649999999
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.05334498,
+     "gaussian_counts": 0.05334498,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.0493441065,
+     "expected_total_counts_incl_tail": 0.0493441065
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 13.936359272727271,
+     "gaussian_counts": 13.936359272727271,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 12.891132327272725,
+     "expected_total_counts_incl_tail": 12.891132327272725
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.38729142418909085,
+     "gaussian_counts": 0.38729142418909085,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.358244567374909,
+     "expected_total_counts_incl_tail": 0.358244567374909
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.25271999999999994,
+     "gaussian_counts": 0.25271999999999994,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.23376599999999992,
+     "expected_total_counts_incl_tail": 0.23376599999999992
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 10.11297324626328,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.02213230553665113,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.05,
+    "Cu_Kb": 0.0065785
+   },
+   "realised_total_eds_counts": 58,
+   "realised_total_4d_counts": 12264218.0
+  },
+  "precip_endon_90": {
+   "phase": "beta''",
+   "composition_at_pct_metals": {
+    "Al": 49.4,
+    "Si": 27.57272727272727,
+    "Mg": 23.027272727272727
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.494,
+    "Si": 0.2757272727272727,
+    "Mg": 0.23027272727272727,
+    "O": 0.02
+   },
+   "thickness_factor": 1.3,
+   "n_pixels": 1,
+   "sum_of_pixel_thickness_map": 0.975,
+   "mean_total_counts_per_pixel_at_map_thickness": 49.95830244159843,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 20.80728,
+     "gaussian_counts": 20.495170799999997,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 19.982791529999997,
+     "expected_total_counts_incl_tail": 20.287097999999997
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.27465609599999996,
+     "gaussian_counts": 0.27465609599999996,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.26778969359999993,
+     "expected_total_counts_incl_tail": 0.26778969359999993
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 5.334498,
+     "gaussian_counts": 5.334498,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 5.20113555,
+     "expected_total_counts_incl_tail": 5.20113555
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.05334498,
+     "gaussian_counts": 0.05334498,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.0520113555,
+     "expected_total_counts_incl_tail": 0.0520113555
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 13.936359272727271,
+     "gaussian_counts": 13.936359272727271,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 13.58795029090909,
+     "expected_total_counts_incl_tail": 13.58795029090909
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.38729142418909085,
+     "gaussian_counts": 0.38729142418909085,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.37760913858436357,
+     "expected_total_counts_incl_tail": 0.37760913858436357
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.25271999999999994,
+     "gaussian_counts": 0.25271999999999994,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.24640199999999993,
+     "expected_total_counts_incl_tail": 0.24640199999999993
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 10.11297324626328,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.02213230553665113,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.05,
+    "Cu_Kb": 0.0065785
+   },
+   "realised_total_eds_counts": 49,
+   "realised_total_4d_counts": 12260506.0
+  },
+  "precip_needle_0": {
+   "phase": "beta''",
+   "composition_at_pct_metals": {
+    "Al": 49.4,
+    "Si": 27.57272727272727,
+    "Mg": 23.027272727272727
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.494,
+    "Si": 0.2757272727272727,
+    "Mg": 0.23027272727272727,
+    "O": 0.02
+   },
+   "thickness_factor": 1.3,
+   "n_pixels": 1,
+   "sum_of_pixel_thickness_map": 0.9249999999999999,
+   "mean_total_counts_per_pixel_at_map_thickness": 47.39923967536261,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 20.80728,
+     "gaussian_counts": 20.495170799999997,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 18.958032989999996,
+     "expected_total_counts_incl_tail": 19.246733999999996
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.27465609599999996,
+     "gaussian_counts": 0.27465609599999996,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.25405688879999994,
+     "expected_total_counts_incl_tail": 0.25405688879999994
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 5.334498,
+     "gaussian_counts": 5.334498,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 4.934410649999999,
+     "expected_total_counts_incl_tail": 4.934410649999999
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.05334498,
+     "gaussian_counts": 0.05334498,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.0493441065,
+     "expected_total_counts_incl_tail": 0.0493441065
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 13.936359272727271,
+     "gaussian_counts": 13.936359272727271,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 12.891132327272725,
+     "expected_total_counts_incl_tail": 12.891132327272725
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.38729142418909085,
+     "gaussian_counts": 0.38729142418909085,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.358244567374909,
+     "expected_total_counts_incl_tail": 0.358244567374909
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.25271999999999994,
+     "gaussian_counts": 0.25271999999999994,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.23376599999999992,
+     "expected_total_counts_incl_tail": 0.23376599999999992
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 10.11297324626328,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.02213230553665113,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.05,
+    "Cu_Kb": 0.0065785
+   },
+   "realised_total_eds_counts": 56,
+   "realised_total_4d_counts": 11491746.0
+  },
+  "precip_needle_90": {
+   "phase": "beta''",
+   "composition_at_pct_metals": {
+    "Al": 49.4,
+    "Si": 27.57272727272727,
+    "Mg": 23.027272727272727
+   },
+   "oxide_O_per_metal_atom": 0.02,
+   "n_atoms_per_unit_thickness": {
+    "Al": 0.494,
+    "Si": 0.2757272727272727,
+    "Mg": 0.23027272727272727,
+    "O": 0.02
+   },
+   "thickness_factor": 1.3,
+   "n_pixels": 1,
+   "sum_of_pixel_thickness_map": 0.975,
+   "mean_total_counts_per_pixel_at_map_thickness": 49.95830244159843,
+   "lines": {
+    "Al_Ka": {
+     "energy_keV": 1.4865,
+     "weight": 1.0,
+     "mean_counts": 20.80728,
+     "gaussian_counts": 20.495170799999997,
+     "fwhm_eV": 76.61266213883968,
+     "expected_total_counts": 19.982791529999997,
+     "expected_total_counts_incl_tail": 20.287097999999997
+    },
+    "Al_Kb": {
+     "energy_keV": 1.5596,
+     "weight": 0.0132,
+     "mean_counts": 0.27465609599999996,
+     "gaussian_counts": 0.27465609599999996,
+     "fwhm_eV": 77.79620813381587,
+     "expected_total_counts": 0.26778969359999993,
+     "expected_total_counts_incl_tail": 0.26778969359999993
+    },
+    "Mg_Ka": {
+     "energy_keV": 1.2536,
+     "weight": 1.0,
+     "mean_counts": 5.334498,
+     "gaussian_counts": 5.334498,
+     "fwhm_eV": 72.71347880551447,
+     "expected_total_counts": 5.20113555,
+     "expected_total_counts_incl_tail": 5.20113555
+    },
+    "Mg_Kb": {
+     "energy_keV": 1.305,
+     "weight": 0.01,
+     "mean_counts": 0.05334498,
+     "gaussian_counts": 0.05334498,
+     "fwhm_eV": 73.59177943221647,
+     "expected_total_counts": 0.0520113555,
+     "expected_total_counts_incl_tail": 0.0520113555
+    },
+    "Si_Ka": {
+     "energy_keV": 1.7397,
+     "weight": 1.0,
+     "mean_counts": 13.936359272727271,
+     "gaussian_counts": 13.936359272727271,
+     "fwhm_eV": 80.63808033429369,
+     "expected_total_counts": 13.58795029090909,
+     "expected_total_counts_incl_tail": 13.58795029090909
+    },
+    "Si_Kb": {
+     "energy_keV": 1.8389,
+     "weight": 0.02779,
+     "mean_counts": 0.38729142418909085,
+     "gaussian_counts": 0.38729142418909085,
+     "fwhm_eV": 82.1614264725242,
+     "expected_total_counts": 0.37760913858436357,
+     "expected_total_counts_incl_tail": 0.37760913858436357
+    },
+    "O_Ka": {
+     "energy_keV": 0.5249,
+     "weight": 1.0,
+     "mean_counts": 0.25271999999999994,
+     "gaussian_counts": 0.25271999999999994,
+     "fwhm_eV": 58.86849751777261,
+     "expected_total_counts": 0.24640199999999993,
+     "expected_total_counts_incl_tail": 0.24640199999999993
+    }
+   },
+   "continuum_counts_per_pixel_at_t1": 10.11297324626328,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.02213230553665113,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.05,
+    "Cu_Kb": 0.0065785
+   },
+   "realised_total_eds_counts": 50,
+   "realised_total_4d_counts": 11497273.0
+  },
+  "vacuum": {
+   "phase": "vacuum",
+   "composition_at_pct_metals": {},
+   "oxide_O_per_metal_atom": 0.0,
+   "n_atoms_per_unit_thickness": {},
+   "thickness_factor": 1.0,
+   "n_pixels": 2,
+   "sum_of_pixel_thickness_map": 2.0,
+   "mean_total_counts_per_pixel_at_map_thickness": 0.45743756095196614,
+   "lines": {},
+   "continuum_counts_per_pixel_at_t1": 0.0,
+   "si_internal_Ka_counts_per_pixel_at_t1": 0.0008590609519672957,
+   "stray_expected_total_counts": {
+    "Cu_Ka": 0.1,
+    "Cu_Kb": 0.013157
+   },
+   "realised_total_eds_counts": 1,
+   "realised_total_4d_counts": 524280.0
+  }
+ },
+ "recipe_names_in_map_order": [
+  "A",
+  "A_strain",
+  "B",
+  "C",
+  "mixAB",
+  "mixAC",
+  "mixBC",
+  "precip_Q",
+  "precip_endon_0",
+  "precip_endon_90",
+  "precip_needle_0",
+  "precip_needle_90",
+  "vacuum"
+ ],
+ "recipe_map": [
+  [
+   0,
+   0,
+   1,
+   4,
+   2,
+   2
+  ],
+  [
+   0,
+   8,
+   9,
+   4,
+   2,
+   6
+  ],
+  [
+   0,
+   10,
+   11,
+   5,
+   3,
+   3
+  ],
+  [
+   12,
+   12,
+   7,
+   5,
+   3,
+   3
+  ]
+ ],
+ "grain_label_map": [
+  [
+   0,
+   0,
+   0,
+   0,
+   1,
+   1
+  ],
+  [
+   0,
+   0,
+   0,
+   0,
+   1,
+   0
+  ],
+  [
+   0,
+   0,
+   0,
+   0,
+   2,
+   2
+  ],
+  [
+   3,
+   3,
+   0,
+   0,
+   2,
+   2
+  ]
+ ],
+ "grain_label_codes": {
+  "0": "A",
+  "1": "B",
+  "2": "C",
+  "3": "vacuum"
+ },
+ "precipitate_map": [
+  [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  [
+   0,
+   1,
+   1,
+   0,
+   0,
+   0
+  ],
+  [
+   0,
+   2,
+   2,
+   0,
+   0,
+   0
+  ],
+  [
+   0,
+   0,
+   3,
+   0,
+   0,
+   0
+  ]
+ ],
+ "precipitate_codes": {
+  "0": "none",
+  "1": "beta'' end-on [010]",
+  "2": "beta'' needle [001]",
+  "3": "Q (stand-in pattern)"
+ },
+ "precipitates": [],
+ "stripe_mask": [
+  [
+   false,
+   false,
+   true,
+   false,
+   false,
+   false
+  ],
+  [
+   false,
+   false,
+   false,
+   false,
+   false,
+   false
+  ],
+  [
+   false,
+   false,
+   false,
+   false,
+   false,
+   false
+  ],
+  [
+   false,
+   false,
+   false,
+   false,
+   false,
+   false
+  ]
+ ],
+ "thickness_map": [
+  [
+   0.875,
+   0.925,
+   0.975,
+   1.025,
+   1.075,
+   1.125
+  ],
+  [
+   0.875,
+   0.925,
+   0.975,
+   1.025,
+   1.075,
+   1.125
+  ],
+  [
+   0.875,
+   0.925,
+   0.975,
+   1.025,
+   1.075,
+   1.125
+  ],
+  [
+   1.0,
+   1.0,
+   0.975,
+   1.025,
+   1.075,
+   1.125
+  ]
+ ],
+ "array_sha256_of_written_arrays_C_order": {
+  "eds_ny_nx_nch_uint32": "9d64ffc87b1619d06b47b129e59b5f49c3611d5fb3d33a95c24b6d415ba1516e",
+  "diffraction_ny_nx_qy_qx_float32": "37e735fbfb103660d4efca146974b04445dfa4fde64fd604eba30a39187223dd",
+  "haadf_ny_nx_float32": "3d6e7e800c426ba2668e655df23cec5b53866895d83998a7ca7db8d2f76302cf",
+  "survey_uint16": "000ee5a780bb0c86b1845542ec4d85230808f99e156189e67e5ca6788ba19c56"
+ },
+ "totals_written": {
+  "eds_counts": 1033,
+  "diffraction_counts": 211524720.0
+ },
+ "guesses": [
+  "G1 EDS object name 'EDS SI' and Experiment label 'EDS' (4d-edx-file-structure 1b/4a: GUESS)",
+  "G2 EDS SI data type uint32 (DM code 11), memory order energy slowest: dims [nx,ny,nch], C array (nch,ny,nx)",
+  "G3 channel count 4096 at 5 eV, energy axis origin 95.6 (E = (i-95.6)*0.005 keV, the 1D GMS Super-X file's pattern); the tiny fixture uses 512 ch at 20 eV, origin 23.9",
+  "G4 EDS.Live time and EDS.Real time are per-SI scalars (real = dwell*nx*ny, live = real*(1-0.05)); no per-pixel live-time array",
+  "G5 the EDS SI sits in the SAME .dm4 as the Diffraction SI under the SAME Experiment ID, as the LAST object",
+  "G6 a scan-grid 'HAADF Image' (float32 [nx,ny]) is written in a 4D+EDS run; its pixel values are a model (thickness x Z^1.7 contrast), not derived from the 4D data",
+  "G7 SI.Acquisition.Survey Image.{Spectrum Image Rect, Unique Image ID} appear on the EDS SI as on the other SI objects; rect stored as a float32 array (top,left,bottom,right), IDs as a uint32 array of 4",
+  "G8 detector tags EDS.Detector Info.{Azimuthal angle 45, Elevation angle 18, Solid angle 0.7, Detector type SuperX} are copied from the Titan 1D file, not Talos Super-X values; the solid angle is written both at EDS.Solid angle and EDS.Detector Info.Solid angle",
+  "G9 'Data Order Swapped' = 1 on the Diffraction SI (as in the owner files, meaning unknown) and ABSENT on the EDS SI",
+  "G10 counts are binned SUMS per pixel (not averages)",
+  "G11 Experiment keywords: group 1 holds 'Experiment ID', group 2 holds 'Label' (positions as seen in the owner files; the reader must not rely on them)",
+  "G12 calibration Origin/Scale are float32 (as in the real 1D file); strings are ushort arrays",
+  "G13 precip_Q has no reflection list in the app's crystal geometry: its 4D pattern reuses beta'' [001] rotated +45 deg on the Al [001] matrix; it is a labelled stand-in, not Q crystallography",
+  "G14 EDX continuum, efficiency, Al K-edge step (15 %), Al Ka tail (1.5 %), Si internal fluorescence (0.4 % of counts above 1.839 keV), stray Cu K (0.05/px) and the per-element sensitivities are model choices (truth lists them)",
+  "G15 hspy 4D file carries axis calibrations (real figshare data carries none); y axis scale is POSITIVE (real figshare EDS files have a negative y scale)",
+  "G16 the single-HDF5 variant /eds /diffraction /survey /scan/rect is for tests only",
+  "G17 thumbnail pixels are the HAADF image as grey BGRA; survey is a model ADF field around the scan rectangle"
+ ]
+}
