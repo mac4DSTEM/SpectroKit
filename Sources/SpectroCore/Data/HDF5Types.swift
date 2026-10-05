@@ -113,7 +113,7 @@ package nonisolated enum HDF5Serial {
     /// the process crashed at quit (`tools/hdf5-exit-race-test`). This handler
     /// takes the lock and never gives it back. HDF5 registers its handler once
     /// per process, inside the first `H5open`, and atexit runs last-registered
-    /// first — so both loaders call this right after a successful `H5open`:
+    /// first — so all three loaders (H5Reader, the sidecar writer, VeloxEMDReader) call this right after a successful `H5open`:
     /// exit waits for the one call in flight, then HDF5 tears down with no
     /// other thread able to enter. The lock is recursive, so an exit on a
     /// thread that holds it goes straight through; nothing that holds it waits
