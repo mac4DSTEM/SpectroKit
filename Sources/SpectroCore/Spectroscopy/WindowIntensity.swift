@@ -201,7 +201,7 @@ package nonisolated struct WindowConflict: Equatable, Sendable {
     package let reachesIntegrationWindow: Bool
 }
 
-extension WindowIntensity {
+nonisolated extension WindowIntensity {
     /// The candidates for `conflicts`: every table line of `elements` inside the axis, with weight >= `minWeight`.
     package static func candidateLines(
         elements: [String], resolutionMnKaEV: Double, axis: EnergyAxis, minWeight: Double = 0.01

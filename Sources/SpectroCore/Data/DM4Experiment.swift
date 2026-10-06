@@ -14,9 +14,11 @@
 //  requested 2D image reads its own bytes.
 //
 //  Tag paths: docs/archive/v5/edx-research-2026-10-05/reports/gms.md §2.
-//  Decoding an EDS spectrum image is NOT here: no 4D+EDS file existed when
-//  this was written, so the EDS object is listed (role, shape, detector tags)
-//  and its blob is left alone.
+//  An EDS spectrum image is decoded by `readEDSSpectrumImage` (v5.0 WP2 R2): the
+//  only object it reads whole, in channel blocks, never the 4D blob. No real GMS
+//  4D+EDS file existed when this was written; the layout is the simulator's guess
+//  (`docs/archive/v5/4d-edx-file-structure-2026-10-05.md` §4a) and the first real
+//  file corrects it.
 //
 
 import Foundation
@@ -111,6 +113,8 @@ package nonisolated struct DM4ImageObject: Sendable, Equatable {
     /// (falls back to the survey's `ImageTags.Survey Image.Unique Image ID`).
     package let uniqueID: [UInt32]?
     package let eds: DM4EDSDetectorTags?
+    /// `ImageTags.Meta Data.Data Order Swapped` (1 on the owner's 4D cubes, meaning unknown for an SI), nil when absent.
+    package let dataOrderSwapped: Bool?
     /// Where the pixel blob starts in the file and how many bytes the tag declares.
     package let dataOffset: Int
     package let dataByteCount: Int
@@ -134,6 +138,17 @@ package nonisolated struct DM4Image: Sendable, Equatable {
     package let pixels: [Float]
     package let xAxis: DM4Axis?
     package let yAxis: DM4Axis?
+}
+
+/// A decoded EDS spectrum image: counts in `(ny, nx, channels)` row-major (the layout `DenseSpectrumImage` takes),
+/// and the energy axis exactly as the file states it (units NOT converted: the caller reads `units`).
+package nonisolated struct DM4EDSSpectrumImage: Sendable, Equatable {
+    package let object: DM4ImageObject
+    package let nx: Int
+    package let ny: Int
+    package let channels: Int
+    package let counts: [UInt32]
+    package let energyAxis: DM4Axis
 }
 
 package nonisolated enum DM4Experiment {
@@ -172,6 +187,23 @@ package nonisolated enum DM4Experiment {
             throw DM4Error.cannotOpen("This DM file has no image object \(index).")
         }
         return try decode2D(object, source: source)
+    }
+
+    /// Decodes the EDS spectrum image `index` (one-based) of the file at `path`. Throws `DM4Error.cannotOpen` with the
+    /// reason for everything it refuses: see `decodeEDS`.
+    package static func readEDSSpectrumImage(path: String, index: Int) throws -> DM4EDSSpectrumImage {
+        try readEDSSpectrumImage(source: try Source.file(path), index: index)
+    }
+
+    package static func readEDSSpectrumImage(data: Data, index: Int) throws -> DM4EDSSpectrumImage {
+        try readEDSSpectrumImage(source: Source.data(data), index: index)
+    }
+
+    private static func readEDSSpectrumImage(source: Source, index: Int) throws -> DM4EDSSpectrumImage {
+        guard let object = try Walk(source: source).objects.first(where: { $0.index == index }) else {
+            throw DM4Error.cannotOpen("This DM file has no image object \(index).")
+        }
+        return try decodeEDS(object, source: source)
     }
 
     /// The distinct Experiment IDs, in first-seen order.
@@ -302,6 +334,90 @@ package nonisolated enum DM4Experiment {
         let yAxis = axisIndices.count > 1 ? object.axes[axisIndices[1]] : nil
         return DM4Image(object: object, width: width, height: height, pixels: out,
                         xAxis: xAxis, yAxis: yAxis)
+    }
+
+    /// Most values one EDS spectrum image may hold: a quarter of physical memory as UInt32 (this Mac panicked once reading a
+    /// file bigger than RAM), so a larger cube is refused, not attempted, and the refusal names the limit.
+    private static var maxEDSElements: Int { Int(ProcessInfo.processInfo.physicalMemory / 16) }
+
+    /// The EDS SI blob, memory order `[nx, ny, channels]` with x fastest and ENERGY SLOWEST (what the simulator writes,
+    /// what RosettaSciIO's GMS reader gives for an EDS SI, and what `Dimensions` lists fastest first), transposed into
+    /// `(ny, nx, channels)` so one pixel's spectrum is contiguous. Read in blocks of 32 channels: the file is never held
+    /// whole. Counts must be non-negative integers (an integer type, or a float type whose values all are): an averaged
+    /// or scaled SI is refused rather than rounded, because every sum downstream is an exact integer sum.
+    /// DEVIATION from the reference reader (rosettasciio keeps the file's dtype and never refuses): refusing keeps
+    /// the exactness the net-count maths relies on.
+    /// `Data Order Swapped` = 1 on an SI is REFUSED: the tag is present on the owner's 4D cubes and its meaning for a
+    /// spectrum image is unmeasured (`docs/archive/v5/edx-research-2026-10-05/reports/formats.md` §3); guessing the
+    /// layout would scramble every map without a sign.
+    private static func decodeEDS(_ object: DM4ImageObject, source: Source) throws -> DM4EDSSpectrumImage {
+        let name = "\(object.name) (object \(object.index))"
+        guard object.role == .eds else {
+            throw DM4Error.cannotOpen("\(name) is not an EDS spectrum image.")
+        }
+        guard object.dimensions.count == 3, object.dimensions.allSatisfy({ $0 > 0 }) else {
+            throw DM4Error.cannotOpen("\(name) has dimensions \(object.dimensions); an EDS spectrum image is [x, y, energy].")
+        }
+        if object.dataOrderSwapped == true {
+            throw DM4Error.cannotOpen("\(name) sets 'Data Order Swapped', whose meaning for a spectrum image is not known here; its layout is not guessed.")
+        }
+        guard let axis = object.axes[2] else {
+            throw DM4Error.cannotOpen("\(name) carries no energy calibration.")
+        }
+        guard let size = pixelSize(object.dataType) else { throw DM4Error.unsupportedDataType(object.dataType) }
+        let nx = object.dimensions[0], ny = object.dimensions[1], nch = object.dimensions[2]
+        let (np, o1) = nx.multipliedReportingOverflow(by: ny)
+        let (total, o2) = np.multipliedReportingOverflow(by: nch)
+        let (planeBytes, o3) = np.multipliedReportingOverflow(by: size)
+        let (bytes, o4) = total.multipliedReportingOverflow(by: size)
+        let (end, o5) = object.dataOffset.addingReportingOverflow(bytes)
+        guard !(o1 || o2 || o3 || o4 || o5), object.dataOffset >= 0, end <= source.size,
+              object.dataByteCount == bytes || object.dataByteCount == 0 else { throw DM4Error.truncated }
+        guard total <= maxEDSElements else {
+            throw DM4Error.cannotOpen("\(name) has \(total) values; refusing to read more than \(maxEDSElements) (a quarter of this Mac's memory, as 32-bit counts).")
+        }
+        var out = [UInt32](repeating: 0, count: total)
+        var bad = false
+        let block = 32
+        var c0 = 0
+        while c0 < nch {
+            let b = min(block, nch - c0)
+            let raw = try source.fetch(object.dataOffset + c0 * planeBytes, b * planeBytes)
+            raw.withUnsafeBytes { p in
+                switch object.dataType {
+                case 11: bad = scatterEDS(p, UInt32.self, b, np, nch, c0, &out) { UInt32(exactly: $0) } || bad
+                case 10: bad = scatterEDS(p, UInt16.self, b, np, nch, c0, &out) { UInt32(exactly: $0) } || bad
+                case 6:  bad = scatterEDS(p, UInt8.self, b, np, nch, c0, &out) { UInt32(exactly: $0) } || bad
+                case 7:  bad = scatterEDS(p, Int32.self, b, np, nch, c0, &out) { UInt32(exactly: $0) } || bad
+                case 1:  bad = scatterEDS(p, Int16.self, b, np, nch, c0, &out) { UInt32(exactly: $0) } || bad
+                case 9:  bad = scatterEDS(p, Int8.self, b, np, nch, c0, &out) { UInt32(exactly: $0) } || bad
+                case 2:  bad = scatterEDS(p, Float.self, b, np, nch, c0, &out) { UInt32(exactly: $0) } || bad
+                default: bad = scatterEDS(p, Double.self, b, np, nch, c0, &out) { UInt32(exactly: $0) } || bad
+                }
+            }
+            if bad {
+                throw DM4Error.cannotOpen("\(name) holds values that are not non-negative whole counts; only a counts spectrum image is read.")
+            }
+            c0 += b
+        }
+        return DM4EDSSpectrumImage(object: object, nx: nx, ny: ny, channels: nch, counts: out, energyAxis: axis)
+    }
+
+    /// One block of `b` channel planes (`np` values each) into the pixel-major cube. True when a value does not convert.
+    private static func scatterEDS<T>(
+        _ p: UnsafeRawBufferPointer, _ type: T.Type, _ b: Int, _ np: Int, _ nch: Int, _ c0: Int,
+        _ out: inout [UInt32], _ convert: (T) -> UInt32?
+    ) -> Bool {
+        var bad = false
+        let stride = MemoryLayout<T>.stride
+        for pixel in 0..<np {
+            let base = pixel * nch + c0
+            for j in 0..<b {
+                let v = p.loadUnaligned(fromByteOffset: (j * np + pixel) * stride, as: T.self)
+                if let u = convert(v) { out[base + j] = u } else { bad = true }
+            }
+        }
+        return bad
     }
 
     /// Pixel types `DM4Reader` decodes; nil for anything else (notably 23, RGBA).
@@ -537,6 +653,7 @@ package nonisolated enum DM4Experiment {
                     surveyImageID: id(tags + "SI.Acquisition.Survey Image.Unique Image ID"),
                     uniqueID: ownID(root + "UniqueID.") ?? id(tags + "Survey Image.Unique Image ID"),
                     eds: eds.isEmpty ? nil : eds,
+                    dataOrderSwapped: numbers[tags + "Meta Data.Data Order Swapped"].map { $0 != 0 },
                     dataOffset: blob.offset, dataByteCount: blob.bytes))
             }
             return out
