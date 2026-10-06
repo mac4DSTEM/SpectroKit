@@ -41,6 +41,7 @@ package nonisolated enum SpectroscopyExport {
         for r in q.rows {
             var flags: [String] = []
             if let f = r.failure { flags.append(f) }
+            if let n = r.lineNote, r.failure == nil { flags.append(n) }
             if r.atBound && r.failure == nil { flags.append("held at 0 by the non-negativity bound: not detected, sigma is an upper-limit scale") }
             if !r.supported && r.failure == nil { flags.append("not supported by the data") }
             if r.isReference { flags.append("reference element") }

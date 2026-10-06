@@ -114,7 +114,7 @@ package nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     package var absorptionCorrection = true
     /// Unset until the user types one: no thickness is assumed.
     package var thickness: Thickness?
-    /// v5.0 R3. The three fields below are Optional ON PURPOSE: a nil is omitted from the canonical JSON, so every
+    /// v5.0 R3 (and WP3c for `fitToKeV`). The four fields below are Optional ON PURPOSE: a nil is omitted from the canonical JSON, so every
     /// method recorded before they existed keeps its bytes and its hash.
     /// Beam energy typed by the user, keV, for a file that does not state it (GMS EDS objects); nil takes the file's.
     package var beamEnergyKeV: Double?
@@ -123,6 +123,9 @@ package nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     /// Expert: keep the file's energy axis instead of refining offset, gain and width on the pooled spectrum (ADR 054
     /// item 4); nil is "refine".
     package var lockEnergyAxis: Bool?
+    /// Expert (WP3c): the upper end of the fitted range, keV; nil is the default, min(axis end, beam energy, 20 keV)
+    /// (`FitSettings.defaultFitTo`). A typed value past the axis end or the beam energy is clamped to them, and the footer says so.
+    package var fitToKeV: Double?
 
     package nonisolated init() {}
 

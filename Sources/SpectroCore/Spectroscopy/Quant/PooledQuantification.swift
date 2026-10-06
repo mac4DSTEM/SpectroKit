@@ -125,6 +125,9 @@ package nonisolated struct PooledQuantification: Sendable {
         package var atomicTermsText: String
         package var weightTermsText: String
         package var failure: String?
+        /// WP3c: set when the row is NOT on the element's K-alpha group because K-alpha lies outside the fitted range (its
+        /// column has no support there): names the group the row is on and why. nil on a K-alpha row.
+        package var lineNote: String? = nil
     }
 
     package var method: QuantificationMethod
@@ -150,6 +153,11 @@ package nonisolated struct PooledQuantification: Sendable {
     package var footerLines: [String]
     /// The settings the reported fit ran with (axis, width, range, continuum, estimator): the unlisted-line check proposes on them.
     package var fitSettings: FitSettings
+    /// The fitted range as run and where its upper end came from (WP3c; the footer's "fit range" line).
+    package var fitRange: FitRangeChoice
+    /// WP3c: what one extra fit to the axis end does to each quantified net, when the axis runs past the default range;
+    /// filled with the unlisted-line check (`FitRangeSensitivityCheck.attaching`), nil until then or when it does not apply.
+    package var rangeSensitivity: FitRangeSensitivity? = nil
     /// The unlisted-line check (WP3b F1), filled by `UnlistedLineChecker.withholding` once it has run; nil until then.
     package var unlistedCheck: UnlistedLineCheck? = nil
     /// The check is running and at%, wt% and the k-free ratios are held (`UnlistedLineChecker.holding`).
@@ -175,6 +183,12 @@ package nonisolated enum PooledQuantifier {
         guard counts.count == input.axis.size else { throw QuantificationRefusal("The spectrum and the energy axis differ in length.") }
         guard counts.contains(where: { $0 > 0 }) else { throw QuantificationRefusal("This region holds no counts.") }
 
+        // WP3c: the fitted range's upper end, typed (Expert) or the default, on the axis the fit runs on.
+        if let t = method.fitToKeV, !(t.isFinite && t > 0.2) {
+            throw QuantificationRefusal("The typed fit range end (\(t) keV) must be above the 0.2 keV start.")
+        }
+        func range(_ axis: EnergyAxis) -> FitRangeChoice { FitRangeChoice(method: method, fileAxis: input.axis, usedAxis: axis, beamEnergy: beam) }
+
         func settings(axis: EnergyAxis) -> FitSettings {
             var s: FitSettings
             switch method.background {
@@ -186,6 +200,7 @@ package nonisolated enum PooledQuantifier {
                                 fitFrom: 0.2, fitTo: min(axis.highValue, beam), background: .polynomial(order: order))
             }
             s.method = method.estimator == .leastSquares ? .leastSquares : .poissonML(IRLSSettings())
+            s.fitTo = range(axis).toKeV
             return s
         }
 
@@ -209,7 +224,7 @@ package nonisolated enum PooledQuantifier {
         }
         var fitSettings = settings(axis: axis)
         fitSettings.resolutionMnKaEV = resolution
-        fitSettings.fitTo = min(axis.highValue, beam)
+        let fitRange = range(axis)
         let fit: EDSFitResult
         do { fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings) }
         catch { throw QuantificationRefusal("The fit could not run: \(error).") }
@@ -234,20 +249,30 @@ package nonisolated enum PooledQuantifier {
             plotBackground[c] = b
         }
 
-        // Rows: one per quantified element, on its K alpha group when it has one.
+        // Rows: one per quantified element, on its K alpha group when the fitted range supports it (WP3c), else on its
+        // highest-energy supported group, named in the row; with no supported group, on K alpha (or the first) to say so.
         let quantified = method.elements.filter { $0.role == .quantify }.map(\.symbol)
         var rows: [PooledQuantification.Row] = []
         var groupIndex: [Int?] = []
         for el in quantified {
             let ids = fit.groupIDs.indices.filter { fit.groupIDs[$0].hasPrefix(el + "_") }
-            let gi = ids.first { fit.groupIDs[$0] == el + "_Ka" } ?? ids.first
+            let ka = ids.first { fit.groupIDs[$0] == el + "_Ka" }
+            let energy = { (i: Int) in XRayLines.line(fit.groupIDs[i])?.energy ?? 0 }
+            let gi: Int?
+            if let k = ka, fit.supported[k] { gi = k }
+            else if let best = ids.filter({ fit.supported[$0] }).max(by: { energy($0) < energy($1) }) { gi = best }
+            else { gi = ka ?? ids.first }
             groupIndex.append(gi)
             guard let g = gi else {
-                rows.append(emptyRow(el, "no line of \(el) lies in the fitted range (0.2 keV to the beam energy)"))
+                rows.append(emptyRow(el, "no line of \(el) lies in the fitted range (\(fitRange.rangeText))"))
                 continue
             }
             var row = emptyRow(el, nil)
             row.groupID = fit.groupIDs[g]
+            if let k = ka, k != g {
+                row.lineNote = String(format: "fitted on %@: %@ (%.2f keV) lies outside the fit range %@", fit.groupIDs[g], fit.groupIDs[k],
+                                      energy(k), fitRange.rangeText)
+            }
             row.supported = fit.supported[g]; row.atBound = fit.atBound[g]
             row.net = fit.values[g]; row.sigma = fit.sigma(at: g)
             if !fit.supported[g] { row.failure = "\(fit.groupIDs[g]) has no support in the fitted range" }
@@ -304,7 +329,7 @@ package nonisolated enum PooledQuantifier {
                                  axis == r.refinedAxis ? "" : "; NOT used (residual not lower)"))
         }
         if let b = BeamEnergy.provenance(typedKeV: input.method.beamEnergyKeV, metadata: input.metadata) { footer.append(b) }
-        footer.append("fit range 0.2 keV to \(String(format: "%g", min(axis.highValue, beam))) keV \u{00B7} \(input.pixelCount) px pooled (\(input.regionName))")
+        footer.append("\(fitRange.footerText) \u{00B7} \(input.pixelCount) px pooled (\(input.regionName))")
         // WP3b F3's wording item (D5: list x range x estimator moved Ti by ~ +-20 % against a counting sigma of ~4 %).
         footer.append(sigmaScopeLine)
         if let k = kSet {
@@ -324,7 +349,7 @@ package nonisolated enum PooledQuantifier {
             fileAxis: input.axis, usedAxis: axis, axisLocked: locked, refinement: refinement,
             plotModel: plotModel, plotBackground: plotBackground, kSet: kSet, abundanceRefusal: abundanceRefusal,
             absorption: absorption, warnings: warnings, qualityLabel: qualityLabel, quality: quality, footerLines: footer,
-            fitSettings: fitSettings)
+            fitSettings: fitSettings, fitRange: fitRange)
     }
 
     /// What every shown sigma covers (WP3b F3 wording): the fit's counting statistics, not the choice of model.
@@ -350,7 +375,8 @@ package nonisolated enum PooledQuantifier {
     private static func emptyRow(_ el: String, _ failure: String?) -> PooledQuantification.Row {
         .init(element: el, groupID: "", net: 0, sigma: 0, supported: failure == nil, atBound: false, isReference: false,
               kFreeRatio: nil, kFreeSigma: nil, atomicPercent: nil, atomicSigma: nil, weightPercent: nil, weightSigma: nil,
-              atomicTerms: nil, weightTerms: nil, absorptionSpreadAtomic: nil, absorptionSpreadWeight: nil, atomicTermsText: "", weightTermsText: "", failure: failure)
+              atomicTerms: nil, weightTerms: nil, absorptionSpreadAtomic: nil, absorptionSpreadWeight: nil, atomicTermsText: "", weightTermsText: "", failure: failure,
+              lineNote: nil)
     }
 
     // MARK: Absorption preconditions
