@@ -162,6 +162,9 @@ package nonisolated struct PooledQuantification: Sendable {
     package var unlistedCheck: UnlistedLineCheck? = nil
     /// The check is running and at%, wt% and the k-free ratios are held (`UnlistedLineChecker.holding`).
     package var unlistedCheckPending = false
+    /// A2: a caveat on the at% rows ("assumes the listed elements only; unlisted: Cu (net 139 411) ..."), set by the unlisted-line
+    /// check; "unlisted-line check running" while it runs; nil when the check found nothing. Never blanks a number.
+    package var abundanceCaveat: String? = nil
 
     package var hasAbundance: Bool { abundanceRefusal == nil }
     /// "unvalidated" whenever an at% was produced (ADR 054 item 3): the cross-section source is validation "none".

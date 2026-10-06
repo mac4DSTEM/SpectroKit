@@ -22,14 +22,11 @@ package nonisolated enum SpectroscopyExport {
         out.append("# mac4DSTEM Spectroscopy quantification, region: \(regionName)")
         out.append("# validation: " + (q.hasAbundance
             ? "UNVALIDATED (at% rests on a computed or typed k with validation \"none\"; net counts and k-free ratios are fit areas)"
-            : q.unlistedCheck?.withholds == true
-                ? "net counts only; at% and k-free ratios withheld by the unlisted-line check"
-                : q.unlistedCheckPending
-                    ? "net counts only; at% and k-free ratios held until the unlisted-line check finishes"
-                    : "net counts and k-free ratios only; no at% was computed"))
+            : "net counts and k-free ratios only; no at% was computed"))
+        if let c = q.abundanceCaveat { out.append("# at% caveat: " + c) }
         // WP3b F1: the unlisted-line check travels with the numbers, finished or not.
         out.append("# unlisted-line check: " + (q.unlistedCheck?.summary
-            ?? (q.unlistedCheckPending ? "check not finished when this was exported; at% omitted" : "not run")))
+            ?? (q.unlistedCheckPending ? "check not finished when this was exported" : "not run")))
         out.append("# method hash (sha256 of the method JSON): \(q.method.hash)")
         for line in q.footerLines { out.append("# " + line.replacingOccurrences(of: "\n", with: " ")) }
         if let r = q.refinement {
