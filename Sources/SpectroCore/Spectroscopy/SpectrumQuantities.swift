@@ -29,13 +29,30 @@ package nonisolated struct PixelRect: Equatable, Sendable {
     }
 }
 
+/// A vertex in continuous pixel-grid coordinates: x in [0, nx], y in [0, ny], pixel (i, j) covering [i, i+1) x [j, j+1).
+package nonisolated struct PixelPoint: Equatable, Sendable {
+    package var x: Double, y: Double
+    package init(x: Double, y: Double) { self.x = x; self.y = y }
+}
+
 package nonisolated enum SpectrumRegionShape: Equatable, Sendable {
     case rectangle(PixelRect)
     /// The ellipse inscribed in the rectangle: a pixel is in when its centre is.
     case ellipse(PixelRect)
+    /// A closed polygon (the last vertex joins the first): a pixel is in when its centre is inside by the even-odd rule.
+    /// Fewer than three vertices hold no pixel.
+    case polygon([PixelPoint])
 
+    /// The smallest pixel rectangle that holds the shape (the whole outline for a polygon).
     package var bounds: PixelRect {
-        switch self { case .rectangle(let r), .ellipse(let r): return r }
+        switch self {
+        case .rectangle(let r), .ellipse(let r): return r
+        case .polygon(let v):
+            guard let first = v.first else { return PixelRect(x0: 0, y0: 0, x1: 0, y1: 0) }
+            var lx = first.x, hx = first.x, ly = first.y, hy = first.y
+            for p in v { lx = min(lx, p.x); hx = max(hx, p.x); ly = min(ly, p.y); hy = max(hy, p.y) }
+            return PixelRect(x0: Int(lx.rounded(.down)), y0: Int(ly.rounded(.down)), x1: Int(hx.rounded(.up)), y1: Int(hy.rounded(.up)))
+        }
     }
 
     /// Row-major `y * nx + x`, true = in. Pixels outside the grid are ignored.
@@ -54,6 +71,25 @@ package nonisolated enum SpectrumRegionShape: Equatable, Sendable {
                 let dx = (Double(x) + 0.5 - cx) / ax, dy = (Double(y) + 0.5 - cy) / ay
                 if dx * dx + dy * dy <= 1 { m[y * nx + x] = true }
             } }
+        case .polygon(let v):
+            guard v.count >= 3 else { return m }
+            for y in ys {
+                let py = Double(y) + 0.5
+                // The crossings of the scanline with the edges, sorted: pixel centres between the 1st and 2nd, 3rd and 4th... are in.
+                var xsCross: [Double] = []
+                var j = v.count - 1
+                for i in 0..<v.count {
+                    let a = v[j], b = v[i]
+                    if (a.y > py) != (b.y > py) { xsCross.append(a.x + (py - a.y) / (b.y - a.y) * (b.x - a.x)) }
+                    j = i
+                }
+                xsCross.sort()
+                var k = 0
+                while k + 1 < xsCross.count {
+                    for x in xs where Double(x) + 0.5 >= xsCross[k] && Double(x) + 0.5 < xsCross[k + 1] { m[y * nx + x] = true }
+                    k += 2
+                }
+            }
         }
         return m
     }
@@ -186,6 +222,18 @@ package nonisolated enum ElementWindows {
             guard lw.window != nil else { return nil }
             defer { next += 1 }
             return m[next]
+        }
+    }
+
+    /// The integrated-intensity map of every window that has one (the room's "int" mode): the exact signal-window sum per
+    /// pixel, no background taken off, so it is the net map plus the background term the net map subtracts.
+    package static func integratedMaps(image: some SpectrumImage, windows: [LineWindow]) -> [[Double]?] {
+        let sums = image.windowSums(windows.compactMap { $0.window?.signal })
+        var next = 0
+        return windows.map { lw in
+            guard lw.window != nil else { return nil }
+            defer { next += 1 }
+            return sums[next].map { Double($0) }
         }
     }
 
