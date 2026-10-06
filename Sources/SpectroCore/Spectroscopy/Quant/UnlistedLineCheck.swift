@@ -191,8 +191,12 @@ package nonisolated enum UnlistedLineChecker {
     /// What a candidate at `energyKeV` sits beside: the alpha line of a listed group within +-2 FWHM(E) (FWHM at the
     /// candidate's energy), else a continuum split edge within +-1 FWHM, else nil. `nets` maps a group id to its fitted net
     /// (the listed lines' areas; absent = 0). For an edge the net is 0. Geometry convention, not a measured bar (file header).
+    ///
+    /// R8: a split edge is the K edge of an element (Al 1.5596 keV, Si 1.839): the candidate of the element that OWNS the edge is
+    /// that element's own line group sitting on its own edge, never an "excess beside the split". `element` is the candidate's
+    /// symbol; nil (or an edge with no known owner) exempts nothing.
     package static func neighbour(energyKeV e: Double, listedGroups: [FitLineGroup], resolutionMnKaEV: Double,
-                                  edges: [Double], nets: [String: Double] = [:]) -> (line: String, net: Double)? {
+                                  edges: [Double], nets: [String: Double] = [:], element: String? = nil) -> (line: String, net: Double)? {
         guard let fwhm = XRayLines.fwhm(resolutionMnKaEV: resolutionMnKaEV, atEnergy: e) else { return nil }
         // The STRONGEST (alpha, the group's first) line of each listed group is the reference, the nearest in FWHM units wins; the
         // net it carries (and the fraction against it) is that group's alpha area. Never a beta line: the shape misfit the label
@@ -204,10 +208,16 @@ package nonisolated enum UnlistedLineChecker {
             if d <= 2 * fwhm, d < (best?.d ?? .infinity) { best = (g.id, d) }
         }
         if let b = best { return (displayName(b.group), nets[b.group] ?? 0) }
-        if let edge = edges.filter({ abs($0 - e) <= fwhm }).min(by: { abs($0 - e) < abs($1 - e) }) {
+        if let edge = edges.filter({ abs($0 - e) <= fwhm && !(element != nil && edgeOwner($0) == element) })
+            .min(by: { abs($0 - e) < abs($1 - e) }) {
             return (String(format: "the continuum split at %.3f keV", edge), 0)
         }
         return nil
+    }
+
+    /// The element whose K edge sits at `edge` keV (within 1 eV), for the edges a continuum is split at; nil for any other energy.
+    package static func edgeOwner(_ edge: Double) -> String? {
+        [(ContinuumForm.alKEdge, "Al"), (EDSLineModel.siKEdge, "Si")].first { abs($0.0 - edge) < 0.001 }?.1
     }
 
     /// The decision for one proposal. `input` is the reported fit's input (counts, axis, method); `q` its result.
@@ -228,7 +238,7 @@ package nonisolated enum UnlistedLineChecker {
         let candidates = found.map { c -> UnlistedLineCheck.Candidate in
             var cand = UnlistedLineCheck.Candidate(element: c.element, group: c.group, net: c.net, detectionLimit: c.detectionLimit,
                                                    sumPeakQuestion: c.hasSumPeakQuestion)
-            if let n = neighbour(energyKeV: c.energyKeV, listedGroups: listed, resolutionMnKaEV: fs.resolutionMnKaEV, edges: edges, nets: nets) {
+            if let n = neighbour(energyKeV: c.energyKeV, listedGroups: listed, resolutionMnKaEV: fs.resolutionMnKaEV, edges: edges, nets: nets, element: c.element) {
                 cand.besideLine = n.line
                 if n.net > 0 { cand.fractionOfNeighbour = c.net / n.net }
             }
