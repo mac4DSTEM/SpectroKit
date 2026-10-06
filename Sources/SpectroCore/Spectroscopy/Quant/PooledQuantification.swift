@@ -148,6 +148,12 @@ package nonisolated struct PooledQuantification: Sendable {
     package var quality: Double
     /// One line per setting that shaped the number (the results footer).
     package var footerLines: [String]
+    /// The settings the reported fit ran with (axis, width, range, continuum, estimator): the unlisted-line check proposes on them.
+    package var fitSettings: FitSettings
+    /// The unlisted-line check (WP3b F1), filled by `UnlistedLineChecker.withholding` once it has run; nil until then.
+    package var unlistedCheck: UnlistedLineCheck? = nil
+    /// The check is running and at%, wt% and the k-free ratios are held (`UnlistedLineChecker.holding`).
+    package var unlistedCheckPending = false
 
     package var hasAbundance: Bool { abundanceRefusal == nil }
     /// "unvalidated" whenever an at% was produced (ADR 054 item 3): the cross-section source is validation "none".
@@ -299,6 +305,8 @@ package nonisolated enum PooledQuantifier {
         }
         if let b = BeamEnergy.provenance(typedKeV: input.method.beamEnergyKeV, metadata: input.metadata) { footer.append(b) }
         footer.append("fit range 0.2 keV to \(String(format: "%g", min(axis.highValue, beam))) keV \u{00B7} \(input.pixelCount) px pooled (\(input.regionName))")
+        // WP3b F3's wording item (D5: list x range x estimator moved Ti by ~ +-20 % against a counting sigma of ~4 %).
+        footer.append(sigmaScopeLine)
         if let k = kSet {
             footer.append("k: \(k.source) (\(k.date)); \(sigmaKDescription(k))")
             if let r = referenceName { footer.append("k-free ratio: net / net(\(r))") }
@@ -315,8 +323,12 @@ package nonisolated enum PooledQuantifier {
             method: method, rows: rows, referenceElement: referenceIndex.map { rows[$0].element }, fit: fit,
             fileAxis: input.axis, usedAxis: axis, axisLocked: locked, refinement: refinement,
             plotModel: plotModel, plotBackground: plotBackground, kSet: kSet, abundanceRefusal: abundanceRefusal,
-            absorption: absorption, warnings: warnings, qualityLabel: qualityLabel, quality: quality, footerLines: footer)
+            absorption: absorption, warnings: warnings, qualityLabel: qualityLabel, quality: quality, footerLines: footer,
+            fitSettings: fitSettings)
     }
+
+    /// What every shown sigma covers (WP3b F3 wording): the fit's counting statistics, not the choice of model.
+    package static let sigmaScopeLine = "\u{03C3}: counting only; model choice can move a weak line by more"
 
     /// The weak-line bias note applies when Al K-alpha is in the fit with a non-zero area AND a quantified Mg or Si K-alpha line
     /// (the neighbourhood the bias was measured in) is fitted: without Al there is no tail to bias the neighbour.
