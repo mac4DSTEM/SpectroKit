@@ -114,6 +114,15 @@ package nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     package var absorptionCorrection = true
     /// Unset until the user types one: no thickness is assumed.
     package var thickness: Thickness?
+    /// v5.0 R3. The three fields below are Optional ON PURPOSE: a nil is omitted from the canonical JSON, so every
+    /// method recorded before they existed keeps its bytes and its hash.
+    /// Beam energy typed by the user, keV, for a file that does not state it (GMS EDS objects); nil takes the file's.
+    package var beamEnergyKeV: Double?
+    /// Expert: the order of the whole-range polynomial background (`.wholeRangePolynomial6`); nil is 6, eXSpy's.
+    package var polynomialOrder: Int?
+    /// Expert: keep the file's energy axis instead of refining offset, gain and width on the pooled spectrum (ADR 054
+    /// item 4); nil is "refine".
+    package var lockEnergyAxis: Bool?
 
     package nonisolated init() {}
 
