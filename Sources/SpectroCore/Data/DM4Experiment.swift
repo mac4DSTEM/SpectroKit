@@ -113,6 +113,8 @@ package nonisolated struct DM4ImageObject: Sendable, Equatable {
     /// (falls back to the survey's `ImageTags.Survey Image.Unique Image ID`).
     package let uniqueID: [UInt32]?
     package let eds: DM4EDSDetectorTags?
+    /// `ImageTags.Microscope Info.Voltage` as stored (volts in GMS), nil when the object carries none.
+    package let voltage: Double?
     /// `ImageTags.Meta Data.Data Order Swapped` (1 on the owner's 4D cubes, meaning unknown for an SI), nil when absent.
     package let dataOrderSwapped: Bool?
     /// Where the pixel blob starts in the file and how many bytes the tag declares.
@@ -653,6 +655,7 @@ package nonisolated enum DM4Experiment {
                     surveyImageID: id(tags + "SI.Acquisition.Survey Image.Unique Image ID"),
                     uniqueID: ownID(root + "UniqueID.") ?? id(tags + "Survey Image.Unique Image ID"),
                     eds: eds.isEmpty ? nil : eds,
+                    voltage: numbers[tags + "Microscope Info.Voltage"],
                     dataOrderSwapped: numbers[tags + "Meta Data.Data Order Swapped"].map { $0 != 0 },
                     dataOffset: blob.offset, dataByteCount: blob.bytes))
             }

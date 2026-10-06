@@ -46,8 +46,10 @@ package nonisolated struct GMSFourDIdentity: Equatable, Sendable {
     package var objectIndex: Int?
     package var scanWidth: Int
     package var scanHeight: Int
-    package init(objectIndex: Int?, scanWidth: Int, scanHeight: Int) {
-        self.objectIndex = objectIndex; self.scanWidth = scanWidth; self.scanHeight = scanHeight
+    /// The cube's accelerating voltage in kV (the session's), the beam energy when the EDS object states none.
+    package var voltageKV: Double?
+    package init(objectIndex: Int?, scanWidth: Int, scanHeight: Int, voltageKV: Double? = nil) {
+        self.objectIndex = objectIndex; self.scanWidth = scanWidth; self.scanHeight = scanHeight; self.voltageKV = voltageKV
     }
 }
 
@@ -167,6 +169,11 @@ package nonisolated enum SpectrumImageOpener {
             } else {
                 meta.registrationNote = "Not registered: the two objects do not share an Experiment ID."
             }
+        }
+        // DEVIATION from rosettasciio (which reads no beam energy for an EDS object): the object's own Microscope Info voltage,
+        // else the 4D cube's when both are one run; the source is kept for the provenance line.
+        if let b = BeamEnergy.resolve(rawObjectVoltage: eds.voltage, cubeKV: fourD?.voltageKV, sameRun: meta.sameScanAs4DCube) {
+            meta.beamEnergyKeV = b.keV; meta.beamEnergySource = b.source
         }
         // The scan-grid HAADF of the same run, when it sits on the EDS grid.
         var scan: [Float]?

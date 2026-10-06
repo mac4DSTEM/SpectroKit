@@ -207,7 +207,13 @@ package nonisolated enum PooledQuantifier {
         let fit: EDSFitResult
         do { fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings) }
         catch { throw QuantificationRefusal("The fit could not run: \(error).") }
-        warnings += fit.warnings
+        // The fit appends the weak-line bias note to every continuum fit; it is a statement about a weak line beside Al K-alpha
+        // (measured at Mg K-alpha on synthetic data), so it is kept only when that situation is in this result.
+        warnings += fit.warnings.filter { $0 != ContinuumForm.weakLineBiasNote }
+        if fit.warnings.contains(ContinuumForm.weakLineBiasNote),
+           weakLineBiasApplies(groupIDs: fit.groupIDs, values: fit.values, quantified: method.elements.filter { $0.role == .quantify }.map(\.symbol)) {
+            warnings.append(ContinuumForm.weakLineBiasNote)
+        }
 
         // Plot curves: the model, and the background as the fitted continuum columns.
         let lineModel = EDSLineModel.build(elements: active, axis: axis, beamEnergy: beam, resolutionMnKaEV: resolution,
@@ -287,10 +293,11 @@ package nonisolated enum PooledQuantifier {
         var footer = ["\(fit.methodLabel) \u{00B7} \(fit.backgroundLabel) \u{00B7} \(fit.escapeLabel)"]
         if locked { footer.append("energy axis: the file's (locked)") }
         else if let r = refinement {
-            footer.append(String(format: "energy axis: file %.3f keV + %.4f keV/ch \u{2192} refined %+.1f eV, gain %+.3f %%, FWHM(Mn K\u{03B1}) %.0f eV (RSS %.0f \u{2192} %.0f)%@",
-                                 r.fileOffset, r.fileScale, r.offsetShiftEV, r.gainShift * 100, r.resolutionMnKaEV, r.rssFile, r.rssRefined,
+            footer.append(String(format: "energy axis: file %.3f keV + %.4f keV/ch \u{2192} refined %+.1f eV, gain %+.3f %%, FWHM(Mn K\u{03B1}) %.0f eV%@",
+                                 r.fileOffset, r.fileScale, r.offsetShiftEV, r.gainShift * 100, r.resolutionMnKaEV,
                                  axis == r.refinedAxis ? "" : "; NOT used (residual not lower)"))
         }
+        if let b = BeamEnergy.provenance(typedKeV: input.method.beamEnergyKeV, metadata: input.metadata) { footer.append(b) }
         footer.append("fit range 0.2 keV to \(String(format: "%g", min(axis.highValue, beam))) keV \u{00B7} \(input.pixelCount) px pooled (\(input.regionName))")
         if let k = kSet {
             footer.append("k: \(k.source) (\(k.date)); \(sigmaKDescription(k))")
@@ -309,6 +316,13 @@ package nonisolated enum PooledQuantifier {
             fileAxis: input.axis, usedAxis: axis, axisLocked: locked, refinement: refinement,
             plotModel: plotModel, plotBackground: plotBackground, kSet: kSet, abundanceRefusal: abundanceRefusal,
             absorption: absorption, warnings: warnings, qualityLabel: qualityLabel, quality: quality, footerLines: footer)
+    }
+
+    /// The weak-line bias note applies when Al K-alpha is in the fit with a non-zero area AND a quantified Mg or Si K-alpha line
+    /// (the neighbourhood the bias was measured in) is fitted: without Al there is no tail to bias the neighbour.
+    package static func weakLineBiasApplies(groupIDs: [String], values: [Double], quantified: [String]) -> Bool {
+        guard let al = groupIDs.firstIndex(of: "Al_Ka"), values[al] > 0 else { return false }
+        return quantified.contains { ($0 == "Mg" || $0 == "Si") && groupIDs.contains($0 + "_Ka") }
     }
 
     /// The sigma_k sentence from the set itself: flat or per factor, and whether a reference carries 0.

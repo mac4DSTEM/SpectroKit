@@ -62,6 +62,8 @@ package nonisolated struct SpectrumImageMetadata: Equatable, Sendable {
     package var alphaTiltDegrees: Double?
     package var betaTiltDegrees: Double?
     package var beamEnergyKeV: Double?
+    /// Where `beamEnergyKeV` came from; said on the quantification's provenance line.
+    package var beamEnergySource: BeamEnergySource = .file
     package var instrument: String?
     /// True when this image came from the same GMS file as the 4D cube of the window, under one Experiment ID and on
     /// the same scan grid: registered by identity (WP2 R2). False for everything else, including a mismatch.
@@ -115,4 +117,42 @@ package nonisolated final class LoadedSpectrumImage: SpectrumImageSource {
     package var channels: Int { image.channels }
     package func sum(mask: PixelMask?) -> [UInt64] { image.sum(mask: mask) }
     package func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]] { image.windowSums(ranges) }
+}
+
+/// Where a beam energy came from. The phrase is what the provenance line says after the value.
+package nonisolated enum BeamEnergySource: String, Sendable, Equatable {
+    /// The spectrum image's own metadata (a Velox file; the EDS object's Microscope Info in a GMS file).
+    case file
+    /// The 4D cube of the same GMS run (same Experiment ID and scan grid), when the EDS object states none.
+    case fourDCube
+    /// Typed in the Quantify inspector; it overrides both.
+    case typed
+
+    package var phrase: String {
+        switch self {
+        case .file: "from the file"
+        case .fourDCube: "from the 4D cube, same run"
+        case .typed: "typed"
+        }
+    }
+}
+
+package nonisolated enum BeamEnergy {
+    /// The EDS object's own voltage first (`rawObjectVoltage` as stored: volts in GMS), else the 4D cube's session voltage
+    /// in kV, the cube counting only when the two objects are one run on one grid (`sameRun`). Nil when neither is usable.
+    package static func resolve(rawObjectVoltage: Double?, cubeKV: Double?, sameRun: Bool) -> (keV: Double, source: BeamEnergySource)? {
+        if let raw = rawObjectVoltage {
+            let kv = AcceleratingVoltage.kilovolts(fromAttribute: raw)
+            if kv.isFinite, kv > 0 { return (kv, .file) }
+        }
+        if sameRun, let kv = cubeKV, kv.isFinite, kv > 0 { return (kv, .fourDCube) }
+        return nil
+    }
+
+    /// "beam 200 kV · from the 4D cube, same run": the value the fit used and where it came from; a typed value wins.
+    package static func provenance(typedKeV: Double?, metadata: SpectrumImageMetadata) -> String? {
+        if let t = typedKeV, t > 0 { return "beam \(String(format: "%g", t)) kV \u{00B7} \(BeamEnergySource.typed.phrase)" }
+        guard let b = metadata.beamEnergyKeV, b > 0 else { return nil }
+        return "beam \(String(format: "%g", b)) kV \u{00B7} \(metadata.beamEnergySource.phrase)"
+    }
 }
