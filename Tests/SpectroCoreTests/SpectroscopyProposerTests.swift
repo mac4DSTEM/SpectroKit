@@ -394,24 +394,53 @@ final class SpectroscopyProposerTests: XCTestCase {
         XCTAssertTrue(quiet.notes.contains { $0.hasPrefix("Flank-misfit scaling:") || $0.contains("flank-misfit factor") })
     }
 
-    /// Pre-registered P9: the fit's own sigma (sqrt of the fitted-state variance) predicts the scatter of the Al K-alpha area over
-    /// 200 Poisson draws (the SD of an SD at 200 draws is 5 %): ratio 0.81, in [0.70, 0.95].
+    /// Lane Sigma (Gate D): the REPORTED covariance is a passive-set sandwich, so the fit's own sigma predicts the scatter of the
+    /// Al K-alpha area over 200 Poisson draws (the SD of an SD at 200 draws is 5 %). Before: the full-design pseudo-inverse counted the
+    /// bound-active Mg column as free and gave ratio 0.81 (P9); predicted after: [0.85, 1.15], pinned [0.90, 1.15]; measured 1.03 (seeds 9000+s).
+    /// NOT claimed: conservatism on weak lines. Fable's review measured empirical SD / sigma on a weak Mg line at 1.05 / 1.06 / 1.08 (LS, Mg 1/3/10 %),
+    /// i.e. the passive-set sigma is 5-8 % SMALL there, and about 12 % small under Poisson-ML (1.13 / 1.11); Al is within 4 %. The old full-design sigma
+    /// was 0.96-0.99 on the weak line. This test covers the strong line only.
     func testFitSigmaPredictsTheScatterOfTheAlphaArea() throws {
         let expected = Self.expected(areas: ["Al_Ka": 9000], dose: 10, continuum: Self.kramers)
         var areas: [Double] = [], predicted = 0.0
         let draws = 200
+        let st = Self.settings(["Al", "Mg"])
+        let model = EDSLineModel.build(elements: st.elements, axis: Self.axis, beamEnergy: 200, resolutionMnKaEV: 130)
+        let design = LinearDesign.build(model: model, axis: Self.axis, channels: Self.axis.fitChannels(from: 0.2, to: nil), background: st.background)
+        let al = model.groups.firstIndex { $0.id == "Al_Ka" }!, mg = model.groups.firstIndex { $0.id == "Mg_Ka" }!
+        let g = model.groups.count
         for s in 0..<draws {
-            let (model, design, result) = try nullVarianceFixture(counts: Self.draw(expected, seed: UInt64(9000 + s)))
-            let al = model.groups.firstIndex { $0.id == "Al_Ka" }!
+            let result = EDSFit.fit(design: design, model: model, counts: Self.draw(expected, seed: UInt64(9000 + s)), settings: st)
             areas.append(result.values[al])
-            predicted += try XCTUnwrap(FitNullVariance.compute(design: design, result: result)?.atFit[al]).squareRoot() / Double(draws)
+            predicted += result.covariance[al * g + al].squareRoot() / Double(draws)
+            if result.atBound[mg] {
+                XCTAssertEqual(result.covariance[al * g + mg], 0, "a bound-active area carries no covariance")
+                XCTAssertGreaterThan(result.covariance[mg * g + mg], 0, "...and the full-design marginal variance (as if freed)")
+            }
         }
         let m = areas.reduce(0, +) / Double(draws)
         let sd = (areas.reduce(0) { $0 + ($1 - m) * ($1 - m) } / Double(draws - 1)).squareRoot()
-        note("P9: Al Ka area SD \(sd) vs predicted sigma \(predicted) (ratio \(sd / predicted))")
-        // The LS sandwich counts bound-active columns as free, so it OVER-predicts the scatter of the strongest line by about 20 %
-        // (measured 0.81 here, the known figure of the fit lane): the band pins that, so a sigma 30 % too small (ratio 1.15) or too large fails.
-        XCTAssertGreaterThan(sd / predicted, 0.70)
-        XCTAssertLessThan(sd / predicted, 0.95)
+        note("Sigma: Al Ka area SD \(sd) vs reported sigma \(predicted) (ratio \(sd / predicted))")
+        XCTAssertGreaterThan(sd / predicted, 0.90)   // 0.85 would not catch a x1.2 sigma (it measures 0.86)
+        XCTAssertLessThan(sd / predicted, 1.15)
+    }
+
+    /// Lane Sigma: the proposer's null variance keeps the FULL design (the candidate is free under H0) and so does not move with the
+    /// reported-covariance change: pinned values on a fixed spectrum (seed 12), measured before the change with the same FitNullVariance code,
+    /// and independent of whether the fit computed its own covariance.
+    func testProposerNullVarianceKeepsTheFullDesign() throws {
+        let counts = Self.draw(Self.expected(areas: ["Al_Ka": 9000], dose: 10, continuum: Self.kramers), seed: 12)
+        let (model, design, result) = try nullVarianceFixture(counts: counts)
+        let v = try XCTUnwrap(FitNullVariance.compute(design: design, result: result))
+        let mg = model.groups.firstIndex { $0.id == "Mg_Ka" }!, al = model.groups.firstIndex { $0.id == "Al_Ka" }!
+        XCTAssertEqual(try XCTUnwrap(v.null[al]), 181677.5481505521, accuracy: 1e-9 * 181677.55)
+        XCTAssertEqual(try XCTUnwrap(v.atFit[al]), 592823.7630055768, accuracy: 1e-9 * 592823.76)
+        XCTAssertEqual(try XCTUnwrap(v.null[mg]), 59583.82281519766, accuracy: 1e-9 * 59583.82)
+        let withCov = EDSFit.fit(design: design, model: model, counts: counts, settings: Self.settings(["Al", "Mg"]))
+        let v2 = try XCTUnwrap(FitNullVariance.compute(design: design, result: withCov))
+        XCTAssertEqual(v2.null[al], v.null[al]); XCTAssertEqual(v2.atFit[mg], v.atFit[mg])
+        // The reported sigma of the strong line is the smaller, passive-set one; the proposer's atFit stays the full-design one.
+        let g = model.groups.count
+        XCTAssertLessThan(withCov.covariance[al * g + al], 0.8 * v.atFit[al]!)
     }
 }

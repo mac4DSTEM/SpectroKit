@@ -771,13 +771,13 @@ final class SpectroscopyFitTests: XCTestCase {
                 vals[id, default: []].append(r.values[i]); pred[id, default: 0] += r.sigma(at: i) / Double(reps)
             }
         }
-        XCTAssertTrue(kind.contains("unconstrained: bound-active columns counted free"), kind)
+        XCTAssertTrue(kind.contains("on the passive set"), kind)
         for id in ["Al_Ka", "Si_Ka", "Cu_Ka"] {
             let v = vals[id]!, m = v.reduce(0, +) / Double(reps)
             let sd = (v.reduce(0) { $0 + ($1 - m) * ($1 - m) } / Double(reps - 1)).squareRoot()
             note("default-continuum covariance \(id): predicted \(pred[id]!) empirical \(sd) ratio \(pred[id]! / sd)")
-            // Stated band: predicted / empirical within 0.80-1.25 (the empirical sd of 120 refits has ~6 % error). Measured: Al Ka 1.20
-            // (about 3 se above 1: the strongest line's sigma is over-predicted ~20 %, bound-active columns counted free), Si 0.89, Cu 0.99.
+            // Stated band: predicted / empirical within 0.80-1.25 (the empirical sd of 120 refits has ~6 % error). Measured before the passive-set
+            // change (lane Sigma): Al Ka 1.20 (bound-active columns counted free), Si 0.89, Cu 0.99; after: see the note.
             XCTAssertTrue((0.80 ... 1.25).contains(pred[id]! / sd), "\(id): ratio \(pred[id]! / sd)")
         }
     }

@@ -14,6 +14,8 @@
 //  "the fitted background under the candidate's lines" propagated through the amplitude's own estimator, so an
 //  overlapping neighbour or a continuum that the fit has to tell apart raises sigma_0 where it should.
 //  `EDSFit` does not expose K, so the sandwich is rebuilt here (about thirty lines, the same algebra).
+//  DELIBERATELY the FULL supported design, not the passive set `EDSFit` now reports (lane Sigma): under H0 the candidate
+//  is a free parameter, so a bound-active column (the candidate's own, at 0) must count as free and correlated with its neighbours.
 //
 
 import Foundation

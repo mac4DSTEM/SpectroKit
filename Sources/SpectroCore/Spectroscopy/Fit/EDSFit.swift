@@ -217,35 +217,59 @@ package nonisolated enum EDSFit {
                 for j in 0..<ff.cols { cols.append(Array(ff.column(j))) }
                 // Unit-norm columns for conditioning.
                 let norms = cols.map { c in max(c.reduce(0) { $0 + $1 * $1 }.squareRoot(), 1e-300) }
-                var scaled = ColumnMatrix(columns: cols.enumerated().map { (j, c) in c.map { $0 / norms[j] } })
-                var fullCov: ColumnMatrix?
-                switch settings.method {
-                case .leastSquares:
-                    // Sandwich: Var(y_i) = mu_i (Poisson), estimator theta = D^+ y.
-                    if let (_, kmat) = FitLinearAlgebra.pseudoInverse(scaled) {
-                        var c = ColumnMatrix(rows: k, cols: k)
+                let scaledCols = cols.enumerated().map { (j, c) in c.map { $0 / norms[j] } }
+                // Covariance (unscaled back to the column units) of the coefficients of the columns `keep`, as a
+                // keep.count x keep.count row-major array; nil when that sub-design is numerically rank deficient.
+                func covariance(of keep: [Int]) -> [Double]? {
+                    let m = keep.count
+                    var sub = ColumnMatrix(columns: keep.map { scaledCols[$0] })
+                    var out = [Double](repeating: 0, count: m * m)
+                    switch settings.method {
+                    case .leastSquares:
+                        // Sandwich: Var(y_i) = mu_i (Poisson), estimator theta = D^+ y.
+                        guard let (_, kmat) = FitLinearAlgebra.pseudoInverse(sub) else { return nil }
                         for i in 0..<n {
                             let v = max(mu[i], 0)
                             if v == 0 { continue }
-                            for a in 0..<k { let ka = kmat.data[i * k + a] * v
-                                for bb in 0..<k { c.data[bb * k + a] += ka * kmat.data[i * k + bb] } }
+                            for a in 0..<m { let ka = kmat.data[i * m + a] * v
+                                for bb in 0..<m { out[bb * m + a] += ka * kmat.data[i * m + bb] } }
                         }
-                        fullCov = c
+                    case .poissonML(let ir):
+                        sub = sub.scalingRows(mu.map { 1 / max($0, ir.muFloor).squareRoot() })
+                        guard let gi = FitLinearAlgebra.pseudoInverse(sub)?.gramInverse else { return nil }
+                        out = gi.data
                     }
-                    covKind = "sandwich covariance of unweighted least squares, Var(data) = model (Poisson); unconstrained: bound-active columns counted free"
-                case .poissonML(let ir):
-                    let w = mu.map { 1 / max($0, ir.muFloor).squareRoot() }
-                    scaled = scaled.scalingRows(w)
-                    fullCov = FitLinearAlgebra.pseudoInverse(scaled)?.gramInverse
-                    covKind = "inverse expected Fisher information (Poisson); unconstrained: bound-active columns counted free"
+                    for a in 0..<m { for bb in 0..<m { out[bb * m + a] /= norms[keep[a]] * norms[keep[bb]] } }
+                    return out
                 }
-                if fullCov == nil { covKind = "not computed (the design is numerically rank deficient)" }
-                if let c = fullCov {
+                // DEVIATION (eXSpy/HyperSpy report no area covariance at all; this is the fit's own): the estimator that
+                // produced the areas is least squares (or ML) on the PASSIVE set, the columns the bounds left free: a
+                // non-negative coefficient clamped at 0 is not a parameter the estimate varies with. Pseudo-inverting
+                // the full supported design counted those columns as free and correlated with the strong line, which
+                // over-stated the strongest line's sigma by about 19 % (0.81 on the P9 fixture). Weak lines go the other way: on a weak Mg line
+                // the passive-set sigma is 5-8 % SMALL under LS and ~12 % small under Poisson-ML (empirical SD / sigma 1.05-1.13, lane Sigma review).
+                // Passive columns: a positive area / non-negative background coefficient, and every free-sign column.
+                let passive = (0..<k).filter { $0 >= supportedCols.count || x[supportedCols[$0]] > 0 }
+                let full = covariance(of: Array(0..<k))
+                let pas: [Double]? = passive.isEmpty ? nil : (passive.count == k ? full : covariance(of: passive))
+                var posInPassive = [Int](repeating: -1, count: k)
+                for (p, j) in passive.enumerated() { posInPassive[j] = p }
+                let method = settings.method
+                let base: String
+                if case .leastSquares = method { base = "sandwich covariance of unweighted least squares, Var(data) = model (Poisson)" }
+                else { base = "inverse expected Fisher information (Poisson)" }
+                if full == nil { covKind = "not computed (the design is numerically rank deficient)" }
+                else if pas == nil && !passive.isEmpty { covKind = "not computed (the passive-set design is numerically rank deficient)" }
+                else if let full {
+                    covKind = base + " on the passive set (columns not held at a bound); a bound-active area carries the full-design marginal variance (as if freed) and no covariance"
                     for (ia, ja) in supportedCols.enumerated() {
                         guard ja < design.areaColumns.count, case .line(let gi) = design.areaColumns[ja].kind else { continue }
                         for (ib, jb) in supportedCols.enumerated() {
                             guard jb < design.areaColumns.count, case .line(let gj) = design.areaColumns[jb].kind else { continue }
-                            cov[gi * g + gj] = c.data[ib * k + ia] / (norms[ia] * norms[ib])
+                            let pa = posInPassive[ia], pb = posInPassive[ib]
+                            if pa >= 0, pb >= 0, let pas { cov[gi * g + gj] = pas[pb * passive.count + pa] }
+                            else if ia == ib { cov[gi * g + gj] = full[ib * k + ia] }
+                            else { cov[gi * g + gj] = 0 }
                         }
                     }
                 }
