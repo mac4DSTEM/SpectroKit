@@ -443,4 +443,19 @@ final class SpectroscopyProposerTests: XCTestCase {
         let g = model.groups.count
         XCTAssertLessThan(withCov.covariance[al * g + al], 0.8 * v.atFit[al]!)
     }
+
+    /// Mutation: the `Task.isCancelled` check at the top of `run(_:on:)` removed — the proposal then finishes (or fails otherwise).
+    func testACancelledTaskThrowsCancelledBeforeFinishing() async {
+        let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1100)
+        let counts = [Double](repeating: 20, count: axis.size)
+        let st = FitSettings.standard(elements: ["Al"], axis: axis, resolutionMnKaEV: 130, beamEnergy: 200)
+        let task = Task.detached { () -> Result<ProposalResult, Error> in
+            while !Task.isCancelled { await Task.yield() }
+            return Result { try ElementProposer().propose(counts: counts, axis: axis, settings: st) }
+        }
+        task.cancel()
+        let r = await task.value
+        guard case .failure(let e) = r else { return XCTFail("a cancelled task must not return a proposal") }
+        XCTAssertEqual(e as? ProposerError, .cancelled)
+    }
 }

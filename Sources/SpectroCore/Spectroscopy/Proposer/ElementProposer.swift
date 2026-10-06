@@ -65,6 +65,15 @@ package nonisolated struct ElementCandidate: Equatable, Sendable {
     package var hasSumPeakQuestion: Bool { conflicts.contains { $0.kind == .sumPeak } }
     /// How many detection limits the net is (the order in which to show candidates).
     package var significance: Double { net / detectionLimit }
+
+    /// Explicit so the room's tests can state a candidate (the memberwise one is internal).
+    package init(element: String, group: String, energyKeV: Double, net: Double, sigma: Double, sigmaZero: Double,
+                 criticalLevel: Double, detectionLimit: Double, conflicts: [LineConflict],
+                 suggestedRole: QuantificationMethod.ElementRole, holeRegionNote: String?, misfit: Double) {
+        self.element = element; self.group = group; self.energyKeV = energyKeV; self.net = net; self.sigma = sigma
+        self.sigmaZero = sigmaZero; self.criticalLevel = criticalLevel; self.detectionLimit = detectionLimit
+        self.conflicts = conflicts; self.suggestedRole = suggestedRole; self.holeRegionNote = holeRegionNote; self.misfit = misfit
+    }
 }
 
 /// A pile-up peak the fit modelled as a column of its own (no candidate sat near its energy).
@@ -93,6 +102,13 @@ package nonisolated struct ProposalResult: Sendable {
     /// At or above L_D but sitting on a pile-up energy of the detected parents: "sum peak or this element?", not a finding.
     package var sumPeakQuestions: [ElementCandidate] { candidates.filter { $0.isProposed && $0.hasSumPeakQuestion } }
     package var possible: [ElementCandidate] { candidates.filter { $0.aboveCriticalLevel && !$0.isProposed } }
+
+    /// Explicit so the room's tests can state a result (the memberwise one is internal).
+    package init(candidates: [ElementCandidate], sumPeaks: [SumPeakFinding], refused: [(element: String, reason: String)],
+                 currie: Currie, notes: [String], passes: Int, settled: Bool) {
+        self.candidates = candidates; self.sumPeaks = sumPeaks; self.refused = refused; self.currie = currie
+        self.notes = notes; self.passes = passes; self.settled = settled
+    }
 }
 
 package nonisolated enum ProposerError: Error, Equatable {
@@ -100,6 +116,8 @@ package nonisolated enum ProposerError: Error, Equatable {
     case noChannels
     /// The joint design is numerically rank deficient: no covariance, so no limit can be stated.
     case rankDeficient
+    /// The calling task was cancelled (checked before every fit, each a fraction of a second). Not a failure: the caller discards.
+    case cancelled
 }
 
 package nonisolated struct ElementProposer: Sendable {
@@ -186,6 +204,7 @@ package nonisolated struct ElementProposer: Sendable {
         }
 
         func run(_ groups: [FitLineGroup], on data: [Double]) throws -> Pass {
+            if Task.isCancelled { throw ProposerError.cancelled }
             let model = EDSLineModel(groups: groups, resolutionMnKaEV: s.resolutionMnKaEV, beamEnergy: s.beamEnergy,
                                      escapePeaks: s.escapePeaks, droppedLines: dropped)
             try EDSFit.validate(s.referenceShapes, axis: axis, model: model)

@@ -64,7 +64,7 @@ package nonisolated enum LineConflicts {
             out.append(LineConflict(
                 id: "sum-\(s.label)-\(element)", kind: .sumPeak, element: element, line: line,
                 energiesKeV: [s.energyKeV, lineEnergyKeV], requires: Array(Set(s.elements)).sorted(),
-                question: "\(s.label) peak (\(String(format: "%.3f", s.energyKeV)) keV) or \(element) \(line) (\(String(format: "%.3f", lineEnergyKeV)) keV)?"
+                question: "\(s.label) peak (\(String(format: "%.3f", s.energyKeV)) keV) or \(ElementWindows.label(ofLineID: line)) (\(String(format: "%.3f", lineEnergyKeV)) keV)?"
                     + (near ? " They are \(String(format: "%.0f", abs(lineEnergyKeV - s.energyKeV) * 1000)) eV apart, far inside the detector resolution." : ""),
                 remedy: "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."))
         }
