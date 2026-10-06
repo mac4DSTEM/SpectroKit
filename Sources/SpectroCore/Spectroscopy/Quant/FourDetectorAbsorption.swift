@@ -13,8 +13,14 @@
 //  and reported as a comparison only.
 //
 //  Refusals (never guessed, unlike eXSpy's 0/0/35 deg defaults): a nil tilt, or a
-//  segment with a nil azimuth, elevation or solid angle, or a take-off angle
-//  within 1 deg of grazing.
+//  segment with a nil azimuth, elevation or solid angle, or a take-off angle <= 0
+//  (the X-rays do not leave through the exit face: undefined). The 1e-6 deg bound
+//  below is a numerical guard, not a physics limit.
+//
+//  DEVIATION / not yet verified: `holderShadowFraction` is an INPUT HIDDEN FROM THE
+//  UI until Velox's alpha-sign convention is checked on an asymmetric case. For the
+//  symmetric four-segment Super-X the sign of alpha does not matter without shadow
+//  (Tbar identical for alpha = +-16.9 deg; Fable's check 0.487489...).
 //
 
 import Foundation
@@ -40,6 +46,7 @@ package nonisolated struct FourDetectorGeometry: AbsorptionGeometry {
         package let weight: Double      // effective solid angle
     }
     package let segments: [Resolved]
+    package var segmentSummary: [(takeOffDegrees: Double, weight: Double)] { segments.map { ($0.takeOffDegrees, $0.weight) } }
 
     /// Resolves the geometry or refuses with the reason. `tiltAlpha` nil refuses.
     package init(segments input: [DetectorSegment], tiltAlphaDegrees: Double?, tiltBetaDegrees: Double = 0) throws {
@@ -54,11 +61,7 @@ package nonisolated struct FourDetectorGeometry: AbsorptionGeometry {
                 throw QuantError.invalid("Segment \(s.label): solid angle must be positive and the shadow fraction within 0...1.")
             }
             let toa = TakeOff.angle(tiltAlpha: tilt, azimuth: az, elevation: el, tiltBeta: tiltBetaDegrees)
-            // The film is thin: an X-ray leaves through whichever face it meets,
-            // the path is t/|sin(take-off)|, so a negative take-off is the same slab.
-            guard abs(sin(toa * .pi / 180)) > sin(1 * Double.pi / 180) else {
-                throw QuantError.grazingTakeOff(segment: s.label, degrees: toa)
-            }
+            guard toa > 1e-6 else { throw QuantError.grazingTakeOff(segment: s.label, degrees: toa) }
             out.append(Resolved(takeOffDegrees: toa, weight: om * (1 - s.holderShadowFraction)))
         }
         guard out.contains(where: { $0.weight > 0 }) else { throw QuantError.invalid("Every segment is fully shadowed.") }
@@ -66,7 +69,7 @@ package nonisolated struct FourDetectorGeometry: AbsorptionGeometry {
     }
 
     private func transmissions(_ mac: Double, _ mt: Double) -> [Double] {
-        segments.map { Transmission.slab(mac * mt / abs(sin($0.takeOffDegrees * .pi / 180))) }
+        segments.map { Transmission.slab(mac * mt / sin($0.takeOffDegrees * .pi / 180)) }
     }
 
     /// The primary: solid-angle-weighted arithmetic mean.

@@ -86,7 +86,7 @@ final class SpectroscopyQuantTests: XCTestCase {
             XCTAssertGreaterThan(Self.table.energyRange(element: z)!.upperBound, 100, z)
         }
         XCTAssertThrowsError(try Self.table.mac(element: "Al", energyKeV: 500))
-        // The table covers all 90 elements eXSpy has (Z = 3...92 minus none); H and He are absent.
+        // The table has the 90 elements eXSpy has.
         XCTAssertTrue(Self.table.hasElement("Al")); XCTAssertTrue(Self.table.hasElement("U"))
     }
 
@@ -232,6 +232,9 @@ final class SpectroscopyQuantTests: XCTestCase {
                                                                options: .init(criterion: crit))
             assertRel(r.composition[0], single.composition[0], 1e-13, "four identical == single")
             assertRel(r.composition[0], 31.81690816938681, 1e-9)
+            XCTAssertEqual(r.segments.count, 4)
+            XCTAssertEqual(single.segments.map(\.takeOffDegrees), [35])
+            for s in r.segments { assertRel(s.takeOffDegrees, 35, 1e-12); XCTAssertEqual(s.weight, 0.17) }
         }
     }
 
@@ -266,6 +269,15 @@ final class SpectroscopyQuantTests: XCTestCase {
         assertRel(gs.geometricMeanTransmission(macM2PerKg: mac, massThickness: mt), exp(lg / dg), 1e-12)
     }
 
+    func testSymmetricSegmentsIgnoreTheTiltSign() throws {
+        let plus = try FourDetectorGeometry(segments: fourSegments(), tiltAlphaDegrees: 16.9)
+        let minus = try FourDetectorGeometry(segments: fourSegments(), tiltAlphaDegrees: -16.9)
+        assertRel(plus.meanTransmission(macM2PerKg: 300, massThickness: 0.003),
+                  minus.meanTransmission(macM2PerKg: 300, massThickness: 0.003), 1e-12)
+        XCTAssertEqual(plus.segmentSummary.count, 4)
+        XCTAssertEqual(plus.segmentSummary.map(\.weight), [0.2, 0.2, 0.2, 0.2])
+    }
+
     func testFourDetectorRefusals() {
         var segs = fourSegments()
         XCTAssertThrowsError(try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: nil)) { XCTAssertEqual($0 as? QuantError, .missingTilt) }
@@ -277,6 +289,12 @@ final class SpectroscopyQuantTests: XCTestCase {
         XCTAssertThrowsError(try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0))
         segs = fourSegments(); segs[1].azimuthDegrees = nil
         XCTAssertThrowsError(try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0))
+        // Take-off <= 0 (detector below the film plane): undefined, refused.
+        let below = [DetectorSegment(label: "B", azimuthDegrees: 0, elevationDegrees: -10, solidAngleSr: 0.1)]
+        XCTAssertThrowsError(try FourDetectorGeometry(segments: below, tiltAlphaDegrees: 0)) {
+            guard case .grazingTakeOff(let s, let d)? = $0 as? QuantError else { return XCTFail("\($0)") }
+            XCTAssertEqual(s, "B"); XCTAssertEqual(d, -10, accuracy: 1e-9)
+        }
         // Elevation 0 and no tilt: the detector looks along the film.
         let flat = [DetectorSegment(label: "F", azimuthDegrees: 0, elevationDegrees: 0, solidAngleSr: 0.1)]
         XCTAssertThrowsError(try FourDetectorGeometry(segments: flat, tiltAlphaDegrees: 0))
@@ -305,6 +323,11 @@ final class SpectroscopyQuantTests: XCTestCase {
         XCTAssertEqual(RatioSigma.kTerm(k, numerator: "Mg", denominator: "Si", sameKSetInBothRatios: true), 0)
         XCTAssertNil(KFactorSet(kind: .typed, elements: ["Mg"], values: [1], source: "  ", date: "2026-10-05"))
         XCTAssertNil(KFactorSet(kind: .typed, elements: ["Mg"], values: [-1], source: "x", date: "2026-10-05"))
+        // A reference element (k = 1) carries no sigma: Mg/Si against Si is 20 %, not 28 %.
+        let r = KFactorSet(kind: .computed, elements: ["Mg", "Si"], values: [0.93, 1], source: "x", date: "2026-10-05", reference: "Si")!
+        XCTAssertEqual(r.relativeSigma, [0.2, 0])
+        assertRel(RatioSigma.kTerm(r, numerator: "Mg", denominator: "Si")!, 0.2, 1e-12)
+        XCTAssertNil(KFactorSet(kind: .computed, elements: ["Mg"], values: [1], source: "x", date: "d", reference: "Si"))
     }
 
     // Toy models, labelled as such: they test the k ALGEBRA, not any published cross-section.

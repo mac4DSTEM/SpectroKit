@@ -4,15 +4,13 @@
 //        section, a fluorescence yield, a line weight, the detector efficiency and
 //        the atomic weight, with every ingredient named.
 //
-//  STATUS -- OPEN (2026-10-05): the Brown-Powell ionisation cross-section itself is
-//  NOT implemented. The instruction was to port it from the published paper with
-//  equation numbers; the publication and its coefficients could not be located
-//  and verified in this session (a web search found no source stating them), and
-//  inventing them is refused. `IonisationCrossSection` is the seam: the supervisor
-//  supplies a verified Brown-Powell (or any other) model that conforms to it, and
-//  only then does a computed k carry the name "Brown-Powell". Likewise
-//  `FluorescenceYield`: EPQ keeps omega in Java code (FluorescenceYield.java), not
-//  in a table file; no omega is bundled here.
+//  STATUS (round 2, 2026-10-05): the shipped cross-section is Bote-Salvat 2008
+//  (BoteSalvatCrossSection, from NIST EPQ), omega is Krause 1979
+//  (KrauseFluorescenceYield) and epsilon the generic SDD model (SDDEfficiency). There
+//  is NO Brown-Powell here -- no licence-clean source exists (ADR 054 addendum) -- so
+//  nothing in this file is called Brown-Powell and Velox parity is not claimed. The
+//  file name is kept from the WP3 plan. Any model that conforms to
+//  `IonisationCrossSection` / `FluorescenceYield` plugs in.
 //
 //  The k algebra below is derived, not ported. For a thin film the line intensity
 //      I_A = N_A sigma_A omega_A a_A eps(E_A),   N_A = C_A / A_A
@@ -50,6 +48,12 @@ package nonisolated struct LineIngredients: Sendable {
     package init(element: String, line: String, energyKeV: Double, lineWeight: Double) {
         self.element = element; self.line = line; self.energyKeV = energyKeV; self.lineWeight = lineWeight
     }
+
+    /// K-alpha: weight = (K-L3 + K-L2) / all K emission, from EPQ's line weights.
+    package static func kAlpha(element: String, energyKeV: Double, weights: EPQLineWeights) -> LineIngredients? {
+        guard let w = weights.fraction(element: element, shell: "K", transitions: ["K-L3", "K-L2"]) else { return nil }
+        return LineIngredients(element: element, line: "Ka", energyKeV: energyKeV, lineWeight: w)
+    }
 }
 
 package nonisolated struct ComputedKFactor: Sendable {
@@ -66,6 +70,19 @@ package nonisolated struct ComputedKFactor: Sendable {
     /// The text for the k badge.
     package var sourceDescription: String {
         "computed: \(cross.sourceName); omega: \(yield.sourceName); epsilon: \(efficiency.sourceName)"
+    }
+
+    /// The k set, reported "relative to <reference>", badged unvalidated, with its source
+    /// string naming the cross-section, omega and epsilon models. The reference
+    /// element carries sigma_k = 0 (it is 1 by definition).
+    package func kFactorSet(lines: [LineIngredients], reference: Int = 0, date: String) throws -> KFactorSet {
+        let k = try kFactors(lines: lines, reference: reference)
+        let ref = lines[reference].element
+        let src = "\(sourceDescription); relative to \(ref); beam \(beamEnergyKeV) keV; UNVALIDATED"
+        guard let s = KFactorSet(kind: .computed, elements: lines.map(\.element), values: k, source: src, date: date, reference: ref) else {
+            throw QuantError.invalid("The computed k-factors could not form a set (duplicate or non-positive).")
+        }
+        return s
     }
 
     /// Per-element k with `reference` (index into `lines`) normalised to 1.

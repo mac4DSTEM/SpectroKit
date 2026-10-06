@@ -13,10 +13,9 @@
 //  Port of eXSpy material/_material.py `mass_absorption_coefficient` (lines 318-376)
 //  and `_mass_absorption_mixture` (378-433), 7185a4d1.
 //  DEVIATION: the trailing (0, 0) sentinel is stripped. eXSpy leaves it in the
-//  searched array, which is then no longer sorted, so an energy above the last real
-//  point interpolates against a zero (log of zero, then nan_to_num); here that is
-//  `outsideTable`, a refusal. So is an energy below the first point (eXSpy wraps
-//  to index -1).
+//  searched array; an energy above the last real point then makes its index run past
+//  the end (IndexError) or interpolate against the zero. Here an energy above the
+//  last point, or below the first, is `outsideTable`, a refusal.
 //
 
 import Foundation

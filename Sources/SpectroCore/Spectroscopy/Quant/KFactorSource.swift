@@ -23,17 +23,25 @@ package nonisolated struct KFactorSet: Sendable, Equatable {
     /// Relative 1-sigma per factor (0.20 = 20 %), one per element. Velox's rule and
     /// the pre-registered default; editable.
     package var relativeSigma: [Double]
+    /// The element whose k is fixed at 1 (Velox style, k_i relative to it). Its factor
+    /// carries sigma_k = 0 by default, so a ratio against it has only the OTHER
+    /// factor's sigma (Mg/Si against Si: 20 %, not 28 %). nil: no reference, every
+    /// factor independent.
+    package var reference: String?
 
     package static let defaultRelativeSigma = 0.20
 
-    package init?(kind: Kind, elements: [String], values: [Double], source: String, date: String, relativeSigma: [Double]? = nil) {
+    package init?(kind: Kind, elements: [String], values: [Double], source: String, date: String,
+                  relativeSigma: [Double]? = nil, reference: String? = nil) {
         guard !elements.isEmpty, elements.count == values.count,
               !source.trimmingCharacters(in: .whitespaces).isEmpty, !date.isEmpty,
               values.allSatisfy({ $0 > 0 && $0.isFinite }) else { return nil }
-        let sig = relativeSigma ?? [Double](repeating: Self.defaultRelativeSigma, count: elements.count)
+        if let r = reference, !elements.contains(r) { return nil }
+        var sig = relativeSigma ?? [Double](repeating: Self.defaultRelativeSigma, count: elements.count)
+        if relativeSigma == nil, let r = reference, let i = elements.firstIndex(of: r) { sig[i] = 0 }
         guard sig.count == elements.count, sig.allSatisfy({ $0 >= 0 && $0.isFinite }) else { return nil }
         self.kind = kind; self.elements = elements; self.values = values
-        self.source = source; self.date = date; self.relativeSigma = sig
+        self.source = source; self.date = date; self.relativeSigma = sig; self.reference = reference
     }
 
     package func k(_ element: String) -> Double? { elements.firstIndex(of: element).map { values[$0] } }

@@ -17,6 +17,8 @@
 //     `np.max(new - old)` -- SIGNED -- and only then abs() (lines 512-518), so an
 //     iteration in which every element's change is negative can stop at once.
 //     `.exspySigned` reproduces it; the pins are asserted under both.
+//     With 3 or more elements the two can differ (the changes sum to zero), so
+//     parity with eXSpy for n >= 3 needs `.exspySigned`; on two elements they coincide.
 //   * The geometry is a protocol so a four-detector sum (FourDetectorAbsorption)
 //     drops in where eXSpy has one scalar take-off angle.
 //
@@ -27,6 +29,8 @@ import Foundation
 package nonisolated protocol AbsorptionGeometry: Sendable {
     /// `macM2PerKg`: mu/rho in m^2/kg; `massThickness`: rho t in kg/m^2. Returns T in (0, 1].
     func meanTransmission(macM2PerKg: Double, massThickness: Double) -> Double
+    /// What the correction used, for the result and the footer.
+    var segmentSummary: [(takeOffDegrees: Double, weight: Double)] { get }
 }
 
 package nonisolated enum Transmission {
@@ -40,6 +44,7 @@ package nonisolated enum Transmission {
 package nonisolated struct SingleDetectorGeometry: AbsorptionGeometry {
     package let takeOffDegrees: Double
     package init(takeOffDegrees: Double) { self.takeOffDegrees = takeOffDegrees }
+    package var segmentSummary: [(takeOffDegrees: Double, weight: Double)] { [(takeOffDegrees, 1)] }
 
     package func meanTransmission(macM2PerKg: Double, massThickness: Double) -> Double {
         let csc = 1 / sin(takeOffDegrees * .pi / 180)
@@ -87,6 +92,9 @@ package nonisolated struct AbsorptionResult: Sendable {
     package let atoms: [Double]?
     package let factors: [Double]
     package let iterations: Int
+    /// Per detector segment: take-off (deg) and effective weight (solid angle x (1 - shadow)).
+    /// One entry for a single detector (weight 1).
+    package let segments: [(takeOffDegrees: Double, weight: Double)]
 }
 
 package nonisolated enum AbsorptionCorrection {
@@ -95,7 +103,7 @@ package nonisolated enum AbsorptionCorrection {
         intensities: [Double], kFactors: [Double], setup: AbsorptionSetup, thicknessNm: Double,
         options: AbsorptionIterationOptions = .init(), singleLine: CliffLorimer.SingleLinePolicy = .refuse
     ) throws -> AbsorptionResult {
-        try iterate(options: options, count: intensities.count) { acf in
+        try iterate(options: options, count: intensities.count, summary: setup.geometry.segmentSummary) { acf in
             let w = try CliffLorimer.weightFractions(intensities: intensities, kFactors: kFactors, absorption: acf, singleLine: singleLine)
             let pct = w.map { $0 * 100 }
             let mt = try CliffLorimer.massThickness(weightPercent: pct, elements: setup.elements, thicknessNm: thicknessNm)
@@ -108,7 +116,7 @@ package nonisolated enum AbsorptionCorrection {
         intensities: [Double], zetaFactors: [Double], dose: Double, setup: AbsorptionSetup,
         options: AbsorptionIterationOptions = .init()
     ) throws -> AbsorptionResult {
-        try iterate(options: options, count: intensities.count) { acf in
+        try iterate(options: options, count: intensities.count, summary: setup.geometry.segmentSummary) { acf in
             let r = try ZetaFactor.quantify(intensities: intensities, zetaFactors: zetaFactors, dose: dose, absorption: acf)
             let pct = r.weightFractions.map { $0 * 100 }
             return (pct, r.massThickness, nil, try setup.factors(weightPercent: pct, massThickness: r.massThickness))
@@ -120,7 +128,7 @@ package nonisolated enum AbsorptionCorrection {
         intensities: [Double], sectionsBarn: [Double], dose: Double, probeAreaNm2: Double, setup: AbsorptionSetup,
         options: AbsorptionIterationOptions = .init()
     ) throws -> AbsorptionResult {
-        try iterate(options: options, count: intensities.count) { acf in
+        try iterate(options: options, count: intensities.count, summary: setup.geometry.segmentSummary) { acf in
             let r = try ZetaFactor.crossSection(intensities: intensities, sectionsBarn: sectionsBarn, dose: dose, absorption: acf)
             let pct = r.atomicFractions.map { $0 * 100 }
             // eXSpy get_abs_corr_cross_section: mass per m^2 from atoms, then the
@@ -148,7 +156,7 @@ package nonisolated enum AbsorptionCorrection {
     // The eXSpy loop. `step` maps the current factors (nil at the start) to
     // (composition %, mass thickness, atoms, next factors).
     private static func iterate(
-        options: AbsorptionIterationOptions, count: Int,
+        options: AbsorptionIterationOptions, count: Int, summary: [(takeOffDegrees: Double, weight: Double)],
         step: ([Double]?) throws -> ([Double], Double, [Double]?, [Double])
     ) throws -> AbsorptionResult {
         var factors: [Double]? = nil
@@ -161,7 +169,7 @@ package nonisolated enum AbsorptionCorrection {
             old = comp
             it += 1
             if abs(change) < options.convergence {
-                return AbsorptionResult(composition: comp, massThickness: mt, atoms: atoms, factors: next, iterations: it)
+                return AbsorptionResult(composition: comp, massThickness: mt, atoms: atoms, factors: next, iterations: it, segments: summary)
             }
             if it >= options.maxIterations { throw QuantError.didNotConverge(iterations: options.maxIterations) }
         }

@@ -32,7 +32,7 @@ package nonisolated enum QuantError: LocalizedError, Equatable {
         case .missingGeometry(let seg, let field):
             return "Detector segment \(seg) has no \(field); absorption is refused rather than guessed."
         case .grazingTakeOff(let seg, let deg):
-            return "Detector segment \(seg) looks along the specimen surface (take-off \(deg)°); the path length is undefined."
+            return "Detector segment \(seg) has no valid take-off angle (\(deg)°): its X-rays do not leave the film towards the detector, so the path length is undefined."
         case .didNotConverge(let n):
             return "Absorption correction did not converge after \(n) iterations."
         case .noDensity(let e): return "No bulk density for \(e); mass thickness cannot be computed."
