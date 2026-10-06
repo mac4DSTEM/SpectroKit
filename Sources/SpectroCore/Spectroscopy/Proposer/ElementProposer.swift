@@ -97,6 +97,9 @@ package nonisolated struct ProposalResult: Sendable {
     package let notes: [String]
     package let passes: Int
     package let settled: Bool
+    /// Pearson reduced chi-square of the settled fit these candidates came from (R7, wp3e F3.3: shown beside every suggestion;
+    /// a read of the fit, nothing here changes it). nil for a hand-built result.
+    package let reducedChiSquared: Double?
     /// At or above L_D and carrying NO sum-peak conflict: an element the data support.
     package var proposed: [ElementCandidate] { candidates.filter { $0.isProposed && !$0.hasSumPeakQuestion } }
     /// At or above L_D but sitting on a pile-up energy of the detected parents: "sum peak or this element?", not a finding.
@@ -105,7 +108,8 @@ package nonisolated struct ProposalResult: Sendable {
 
     /// Explicit so the room's tests can state a result (the memberwise one is internal).
     package init(candidates: [ElementCandidate], sumPeaks: [SumPeakFinding], refused: [(element: String, reason: String)],
-                 currie: Currie, notes: [String], passes: Int, settled: Bool) {
+                 currie: Currie, notes: [String], passes: Int, settled: Bool, reducedChiSquared: Double? = nil) {
+        self.reducedChiSquared = reducedChiSquared
         self.candidates = candidates; self.sumPeaks = sumPeaks; self.refused = refused; self.currie = currie
         self.notes = notes; self.passes = passes; self.settled = settled
     }
@@ -393,6 +397,7 @@ package nonisolated struct ElementProposer: Sendable {
         if forwardCapped { notes.append("The forward step stopped at \(maxForwardRounds) rounds: this spectrum keeps producing candidates, which points to a model misfit (continuum or line widths) rather than to that many elements.") }
         for w in fit.result.warnings where !notes.contains(w) { notes.append(w) }
         return ProposalResult(candidates: candidates, sumPeaks: sumPeaks, refused: refused, currie: currie,
-                              notes: notes, passes: passes, settled: settled)
+                              notes: notes, passes: passes, settled: settled,
+                              reducedChiSquared: fit.result.pearsonReducedChiSquared)
     }
 }

@@ -167,6 +167,8 @@ package nonisolated struct PooledQuantification: Sendable {
     package var abundanceCaveat: String? = nil
 
     package var hasAbundance: Bool { abundanceRefusal == nil }
+    /// "\u{03C7}\u{00B2}\u{1D63} 54.8 (Pearson)" or "reduced deviance 1.02": shown beside the at% always (R7).
+    package var qualityText: String { PooledQuantifier.qualityText(label: qualityLabel, value: quality) }
     /// "unvalidated" whenever an at% was produced (ADR 054 item 3): the cross-section source is validation "none".
     package static let abundanceValidation = "none"
 }
@@ -335,6 +337,7 @@ package nonisolated enum PooledQuantifier {
         footer.append("\(fitRange.footerText) \u{00B7} \(input.pixelCount) px pooled (\(input.regionName))")
         // WP3b F3's wording item (D5: list x range x estimator moved Ti by ~ +-20 % against a counting sigma of ~4 %).
         footer.append(sigmaScopeLine)
+        footer.append(sigmaFitLine(label: qualityLabel, value: quality))   // the fit's own misfit, stated beside the scope (no bar, no colour)
         if let k = kSet {
             footer.append("k: \(k.source) (\(k.date)); \(sigmaKDescription(k))")
             if let r = referenceName { footer.append("k-free ratio: net / net(\(r))") }
@@ -356,6 +359,28 @@ package nonisolated enum PooledQuantifier {
     }
 
     /// What every shown sigma covers (WP3b F3 wording): the fit's counting statistics, not the choice of model.
+    /// R7 (wp3e item 2): "\u{03C7}\u{00B2}\u{1D63} 54.8 (Pearson)" / "reduced deviance 1.02". Three significant figures at most; no
+    /// threshold: the expectation of 1 is a property of the statistic, not a measured cliff.
+    package static func qualityText(label: String, value: Double) -> String {
+        let (name, suffix) = qualityParts(label)
+        return "\(name) \(formattedQuality(value))\(suffix)"
+    }
+
+    /// "\u{03C3} is counting statistics at \u{03C7}\u{00B2}\u{1D63} = 1; this fit is at 54.8 (Pearson)": what every shown sigma assumes, and what this fit is.
+    package static func sigmaFitLine(label: String, value: Double) -> String {
+        let (name, suffix) = qualityParts(label)
+        return "\u{03C3} is counting statistics at \(name) = 1; this fit is at \(formattedQuality(value))\(suffix)"
+    }
+
+    private static func qualityParts(_ label: String) -> (name: String, suffix: String) {
+        label.hasSuffix(" (Pearson)") ? (String(label.dropLast(" (Pearson)".count)), " (Pearson)") : (label, "")
+    }
+
+    private static func formattedQuality(_ x: Double) -> String {
+        guard x.isFinite else { return "n/a" }
+        return String(format: abs(x) >= 100 ? "%.0f" : (abs(x) >= 10 ? "%.1f" : "%.2f"), x)
+    }
+
     package static let sigmaScopeLine = "\u{03C3}: counting only; model choice can move a weak line by more"
 
     /// The weak-line bias note applies when Al K-alpha is in the fit with a non-zero area AND a quantified Mg or Si K-alpha line
