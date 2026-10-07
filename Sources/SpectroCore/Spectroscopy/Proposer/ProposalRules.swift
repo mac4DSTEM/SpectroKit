@@ -37,6 +37,10 @@ package nonisolated struct ProposalRules: Equatable, Sendable {
     package var hygiene: Bool
     /// R1's second half, separately switchable: the beside-K drop. Off in `shipped` (see the header).
     package var besideK: Bool
+    /// WP4b (docs/archive/v5/wp4b-autoid-rules-preregistration-2026-10-07.md), an OPTION that is off in `none`, `registered` and `shipped`:
+    /// with `besideK`, an L or M pick beside a proposed K alpha is dropped only when its net / L_D is at or below that K candidate's;
+    /// a stronger L/M stays. Measured, not shipped: turning it on anywhere is the registration's ship rule, not this flag's existence.
+    package var besideKGuard: Bool
     package var corroboration: Bool
     package var release: Bool
     /// R1: an element with Z at or above this is never picked.
@@ -48,8 +52,8 @@ package nonisolated struct ProposalRules: Equatable, Sendable {
     /// R3: the net / L_D at which a held sum-peak candidate is released.
     package var releaseSignificance = 10.0
 
-    package init(hygiene: Bool, besideK: Bool? = nil, corroboration: Bool, release: Bool) {
-        self.hygiene = hygiene; self.besideK = besideK ?? hygiene; self.corroboration = corroboration; self.release = release
+    package init(hygiene: Bool, besideK: Bool? = nil, besideKGuard: Bool = false, corroboration: Bool, release: Bool) {
+        self.hygiene = hygiene; self.besideK = besideK ?? hygiene; self.besideKGuard = besideKGuard; self.corroboration = corroboration; self.release = release
     }
 
     /// No rule: `apply` returns the proposer's own picks.
@@ -65,7 +69,7 @@ package nonisolated struct ProposalRules: Equatable, Sendable {
     package static let shipped = ProposalRules(hygiene: true, besideK: false, corroboration: false, release: false)
     /// Where the cuts come from (said in the notes, never hidden).
     package static let source = "registered 2026-10-07 (WP4), cuts read off 78 Velox-session files: unvalidated"
-    package var isNone: Bool { !hygiene && !besideK && !corroboration && !release }
+    package var isNone: Bool { !hygiene && !besideK && !corroboration && !release }   // besideKGuard alone acts only with besideK
 
     package nonisolated struct Withheld: Equatable, Sendable {
         package let candidate: ElementCandidate
@@ -91,7 +95,14 @@ package nonisolated struct ProposalRules: Equatable, Sendable {
             if hygiene, z(c.element) >= actinideZ { return (.hygiene, "Z \u{2265} \(actinideZ)") }
             let isK = family(c.group) == .K
             if besideK, !isK, let w = XRayLines.fwhm(resolutionMnKaEV: resolutionMnKaEV, atEnergy: c.energyKeV),
-               let k = proposedAll.first(where: { $0.element != c.element && family($0.group) == .K && abs($0.energyKeV - c.energyKeV) <= besideKFWHM * w }) {
+               let k = proposedAll.first(where: {
+                   $0.element != c.element && family($0.group) == .K && abs($0.energyKeV - c.energyKeV) <= besideKFWHM * w
+                       // WP4b guard: a K candidate explains the peak only when it is at least as significant (net / L_D) as the L/M pick.
+                       && (!besideKGuard || c.significance <= $0.significance)
+               }) {
+                if besideKGuard {
+                    return (.hygiene, "within \(String(format: "%g", besideKFWHM)) FWHM of \(name(k.group)), \(String(format: "%.1f", c.significance)) \u{00D7} L_D \u{2264} \(String(format: "%.1f", k.significance)) \u{00D7} L_D")
+                }
                 return (.hygiene, "within \(String(format: "%g", besideKFWHM)) FWHM of \(name(k.group))")
             }
             if corroboration, !isK, c.significance < lineMinimumSignificance {
