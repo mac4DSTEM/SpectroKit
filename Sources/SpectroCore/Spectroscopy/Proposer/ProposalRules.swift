@@ -64,8 +64,9 @@ package nonisolated struct ProposalRules: Equatable, Sendable {
     /// was released as Ar, an element absent from truth) and R2 missed its hold-out bar (precision 38.7 % under 45 % on the nine June
     /// 2026 files); per the registration a cut that does not hold ships as the shown quantity (net / L_D beside each pick) and no
     /// rule. docs/archive/v5/wp4-autoid-results-2026-10-07.md. Changing a cut or turning a rule back on is a new registration.
-    /// The beside-K half of R1 is off too (the refuter's finding above): it ships only after a registration on a set that holds a
-    /// true L/M element beside a proposed K (Hf or Ta on Si with a Cu grid, FIB Pt + Ga, Ar-milled Ag), with an evidence guard.
+    /// The beside-K half of R1 is off too (the refuter's finding above). WP4b (ADR 062) tested it with the evidence guard on true
+    /// L/M + K pairs and refuted it: an L family's L_D is larger than a nearby K line's at equal area, so the guard still drops true Hf
+    /// beside Cu and Pt beside Ga. R2 was refuted in-sample there too. A new beside-K test needs a different evidence term.
     package static let shipped = ProposalRules(hygiene: true, besideK: false, corroboration: false, release: false)
     /// Where the cuts come from (said in the notes, never hidden).
     package static let source = "registered 2026-10-07 (WP4), cuts read off 78 Velox-session files: unvalidated"
