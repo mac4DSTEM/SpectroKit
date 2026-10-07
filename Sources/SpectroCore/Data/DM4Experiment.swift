@@ -444,11 +444,10 @@ package nonisolated enum DM4Experiment {
     /// keeps those too. `DM4Reader.parse` is left untouched on purpose (its
     /// behaviour is pinned byte for byte); the walker is duplicated, not shared.
     ///
-    /// DEVIATION from DM4Reader (which is not changed here): a type-18 string tag has the info
-    /// array [18, length] and then `length` bytes of text, nothing else. RosettaSciIO
-    /// `_api.py:121-127` (infoarray_size == 2: `parse_string_definition` reads the length from
-    /// the info array) and `:301-330` (`read_string` consumes exactly `length` bytes, one per
-    /// loop pass; `skip` seeks `length`). DM4Reader reads a further u32 here.
+    /// A type-18 string tag has the info array [18, length] and then `length` bytes of text,
+    /// nothing else. RosettaSciIO `_api.py:121-127` (infoarray_size == 2:
+    /// `parse_string_definition` reads the length from the info array) and `:301-330`
+    /// (`read_string` consumes exactly `length` bytes). DM4Reader agrees since 2026-10-08.
     private struct Walk {
         var cursor: Cursor
         var version = 4
