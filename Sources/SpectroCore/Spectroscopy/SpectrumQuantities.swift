@@ -340,7 +340,7 @@ package nonisolated enum ElementWindows {
     /// on the owner's file Mg's windows touch Cu Lα's flank and sit on Si Kα's peak, and the peak is the one to say.
     package static func conflictNote(_ conflicts: [WindowConflict]) -> String? {
         var names: [String] = []
-        for c in conflicts.filter(\.reachesIntegrationWindow) + conflicts.filter { !$0.reachesIntegrationWindow } {
+        for c in conflicts.filter(\.reachesIntegrationWindow) + conflicts.filter({ !$0.reachesIntegrationWindow }) {
             let n = label(ofLineID: c.other)
             if !names.contains(n) { names.append(n) }
         }
