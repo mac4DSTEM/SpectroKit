@@ -286,7 +286,7 @@ final class SpectroscopyProposerTests: XCTestCase {
         let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("mac4DSTEM/Core/Spectroscopy/Proposer")
         let files = try FileManager.default.contentsOfDirectory(atPath: dir.path).filter { $0.hasSuffix(".swift") }
-        XCTAssertEqual(Set(files), ["ElementProposer.swift", "FitNullVariance.swift", "LineConflicts.swift"])
+        XCTAssertEqual(Set(files), ["ElementProposer.swift", "FitNullVariance.swift", "LineConflicts.swift", "ProposalRules.swift"])   // ProposalRules (WP4, lane L12) is a post-selection on a result, never an edit of an element list: the scan below covers it too
         for f in files {
             let src = try String(contentsOf: dir.appendingPathComponent(f), encoding: .utf8)
                 .split(separator: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }.joined(separator: "\n")
