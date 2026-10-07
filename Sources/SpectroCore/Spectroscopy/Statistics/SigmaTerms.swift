@@ -69,20 +69,20 @@ package nonisolated struct SigmaTerms: Equatable, Sendable {
 
 /// What the fit lane (F) hands over: amplitudes and their covariance, row-major
 /// n x n, in the same order as `values`. T declares it; F conforms.
-package protocol FittedAmplitudes {
+nonisolated package protocol FittedAmplitudes {
     var values: [Double] { get }
     var covariance: [Double] { get }
 }
 
 extension FittedAmplitudes {
-    package var count: Int { values.count }
+    nonisolated package var count: Int { values.count }
 
-    package func variance(at i: Int) -> Double { covariance[i * count + i] }
-    package func sigma(at i: Int) -> Double { max(variance(at: i), 0).squareRoot() }
+    nonisolated package func variance(at i: Int) -> Double { covariance[i * count + i] }
+    nonisolated package func sigma(at i: Int) -> Double { max(variance(at: i), 0).squareRoot() }
 
     /// Delta-method relative variance of a_i / a_j:
     /// Var_i/a_i^2 + Var_j/a_j^2 - 2 Cov_ij/(a_i a_j).
-    package func ratioRelativeVariance(_ i: Int, _ j: Int) -> Double {
+    nonisolated package func ratioRelativeVariance(_ i: Int, _ j: Int) -> Double {
         let ai = values[i], aj = values[j]
         return variance(at: i) / (ai * ai) + variance(at: j) / (aj * aj)
             - 2 * covariance[i * count + j] / (ai * aj)
