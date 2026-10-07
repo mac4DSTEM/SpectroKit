@@ -1111,4 +1111,40 @@ package nonisolated struct VeloxEMDReader: Sendable {
             return out
         }
     }
+
+    // MARK: Stored element selection
+
+    /// Symbols by atomic number minus one (H to Lr), the same table rsciio's `atomic_number2name` spells for 1...103.
+    private static let elementSymbols = ("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr "
+        + "Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg "
+        + "Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr").split(separator: " ").map(String.init)
+
+    /// The element symbols out of a Velox quantification-settings JSON: its `elementSelection`, atomic numbers in the order stored.
+    /// nil when the key is missing or empty (Velox keeps no list for a session that selected nothing), and for any number outside 1...103.
+    package static func elementSelection(fromSettingsJSON data: Data) -> [String]? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let list = object["elementSelection"] as? [Any], !list.isEmpty else { return nil }
+        var out: [String] = []
+        for item in list {
+            guard let z = jsonInt(item), z >= 1, z <= elementSymbols.count else { return nil }
+            out.append(elementSymbols[z - 1])
+        }
+        return out
+    }
+
+    /// The elements the person had selected in Velox's own quantification, as the file stores them: the first entry (by name, as h5py
+    /// iterates) of `Operations/ImageQuantificationOperation` (EMD < 11) or `SharedProperties/EDSSpectrumQuantificationSettings`
+    /// (EMD >= 11), each entry a variable-length JSON string; rsciio's `_convert_element_list`. Symbols in the order stored; nil when the
+    /// file has no such group or its selection is empty. Never written back: this is what Velox's session knew, not an Auto ID result.
+    package func storedElementSelection() throws -> [String]? {
+        try HDF5Serial.run {
+            let file = try VeloxFile(path: path)
+            guard let versionText = file.readString("/Version"), let version = Self.parseVersion(versionText),
+                  version.format == "Velox" else { throw VeloxEMDError.notVelox(displayFileName(path)) }
+            let major = Int(version.version.split(separator: ".").first ?? "") ?? 0
+            let group = major >= 11 ? "/SharedProperties/EDSSpectrumQuantificationSettings" : "/Operations/ImageQuantificationOperation"
+            guard let entry = file.children(of: group).first, let text = file.readString(group + "/" + entry) else { return nil }
+            return Self.elementSelection(fromSettingsJSON: Data(text.utf8))
+        }
+    }
 }

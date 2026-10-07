@@ -141,14 +141,42 @@ package nonisolated enum ElementWindows {
     /// near it; it sets the window widths through eXSpy's width law and nothing else.
     package static let defaultResolutionMnKaEV = 130.0
 
-    /// Which line of `symbol` the windows use: with `family` nil eXSpy's default (`defaultLines`, one line below the
-    /// beam energy / 2), otherwise that family's alpha line when it lies inside the axis.
+    /// The family Velox quantifies an element with by default: K while the element's Kα is at most `veloxKFamilyLimitKeV`,
+    /// otherwise L (M only when the table has no L alpha; the person may still pick M).
+    ///
+    /// DEVIATION from eXSpy (`_get_lines_from_elements`, `XRayLines.defaultLines`: "the first alpha line below the beam energy / 2"):
+    /// at 200 kV on an 80 keV axis that picks Kα for Hf (55.8 keV) where Velox uses Lα. Velox's own table (the owner's
+    /// SI 1339 file, 200 kV, `docs/archive/v5/velox-family-table-200kV-2026-10-07.json`) gives K for Z <= 44 (Ru Kα 19.28 keV)
+    /// and L for Z >= 45 (Rh Kα 20.22 keV), never M; the 20 keV limit is the boundary that table shows, measured on 200 kV
+    /// files only. It changes which line a map or marker uses by default, never the fit, which takes whole families.
+    package static let veloxKFamilyLimitKeV = 20.0
+
+    package static func defaultFamily(of symbol: String) -> XRayFamily {
+        if let ka = XRayLines.line("\(symbol)_Ka"), ka.energy <= veloxKFamilyLimitKeV { return .K }
+        if XRayLines.line("\(symbol)_La") != nil { return .L }
+        if XRayLines.line("\(symbol)_Ma") != nil { return .M }
+        return .K
+    }
+
+    /// Which line of `symbol` the windows use: with `family` nil the default family's alpha line (`defaultFamily`), otherwise
+    /// that family's alpha line; either only when it lies inside the axis (and below the beam energy). When the default
+    /// family's alpha does not (a 10 keV axis for Ru), eXSpy's pick (`defaultLines`) stands in, so an element that has a line
+    /// on the axis keeps one.
     package static func lineID(of symbol: String, family: XRayFamily?, axis: EnergyAxis, beamEnergyKeV: Double?) -> String? {
-        if let family {
-            let id = "\(symbol)_\(family.rawValue)a"
-            return XRayLines.linesInRange([id], axis: axis, beamEnergy: beamEnergyKeV).first
+        guard !XRayLines.notRealLines.contains(symbol) else { return nil }   // H and He "Ka" are ionisation energies (`XRayLines.notRealLines`)
+        let id = "\(symbol)_\((family ?? defaultFamily(of: symbol)).rawValue)a"
+        if let hit = XRayLines.linesInRange([id], axis: axis, beamEnergy: beamEnergyKeV).first { return hit }
+        return family == nil ? XRayLines.defaultLines(elements: [symbol], axis: axis, beamEnergy: beamEnergyKeV).first : nil
+    }
+
+    /// One element of a map: its family (nil = the default) and the lines the person checked (empty = the family's alpha line).
+    package struct Pick: Sendable {
+        package var symbol: String
+        package var family: XRayFamily?
+        package var lines: [String]
+        package init(symbol: String, family: XRayFamily? = nil, lines: [String] = []) {
+            self.symbol = symbol; self.family = family; self.lines = lines
         }
-        return XRayLines.defaultLines(elements: [symbol], axis: axis, beamEnergy: beamEnergyKeV).first
     }
 
     /// The windows of every element in `elements` (symbol, family override), in that order. Windows are built
@@ -158,21 +186,41 @@ package nonisolated enum ElementWindows {
         elements: [(symbol: String, family: XRayFamily?)], axis: EnergyAxis,
         resolutionMnKaEV: Double = defaultResolutionMnKaEV, beamEnergyKeV: Double?
     ) -> [LineWindow] {
-        struct Pick { let symbol: String; let line: SpectralLine? }
-        let picks: [Pick] = elements.map { e in
-            guard let id = lineID(of: e.symbol, family: e.family, axis: axis, beamEnergyKeV: beamEnergyKeV),
-                  let line = try? SpectralLine(id: id, resolutionMnKaEV: resolutionMnKaEV) else { return Pick(symbol: e.symbol, line: nil) }
-            return Pick(symbol: e.symbol, line: line)
+        build(picks: elements.map { Pick(symbol: $0.symbol, family: $0.family) }, axis: axis,
+              resolutionMnKaEV: resolutionMnKaEV, beamEnergyKeV: beamEnergyKeV)
+    }
+
+    /// As `build(elements:)`, with the lines the person checked: one window per checked line that lies on the axis, in energy
+    /// order, after the element's neighbours (a line off the axis is dropped; none left is the element's "no usable line").
+    /// An element with no checked line gets its family's alpha window. All windows are built together. Two checked lines of one
+    /// element closer than a window (Al Kα 1.487 and Kβ 1.557 keV) would overlap; the later window's signal is clipped to start
+    /// where the earlier one ends and its background scale shrinks with it (`clipOverlaps`), so a summed map counts every
+    /// channel once — the sum of the clipped nets is the net over the union of the signal channels.
+    package static func build(
+        picks: [Pick], axis: EnergyAxis,
+        resolutionMnKaEV: Double = defaultResolutionMnKaEV, beamEnergyKeV: Double?
+    ) -> [LineWindow] {
+        struct Entry { let symbol: String; let line: SpectralLine? }
+        let entries: [Entry] = picks.flatMap { p -> [Entry] in
+            var ids: [String] = []
+            if p.lines.isEmpty {
+                ids = lineID(of: p.symbol, family: p.family, axis: axis, beamEnergyKeV: beamEnergyKeV).map { [$0] } ?? []
+            } else {
+                let inRange = XRayLines.linesInRange(p.lines, axis: axis, beamEnergy: beamEnergyKeV)
+                ids = inRange.sorted { (XRayLines.line($0)?.energy ?? 0, $0) < (XRayLines.line($1)?.energy ?? 0, $1) }
+            }
+            let lines = ids.compactMap { try? SpectralLine(id: $0, resolutionMnKaEV: resolutionMnKaEV) }
+            return lines.isEmpty ? [Entry(symbol: p.symbol, line: nil)] : lines.map { Entry(symbol: p.symbol, line: $0) }
         }
-        let lines = picks.compactMap(\.line)
+        let lines = entries.compactMap(\.line)
         let integration = WindowIntensity.integrationWindows(lines: lines)
         let background = BackgroundWindows.estimate(lines: lines)
         let candidates = WindowIntensity.candidateLines(
-            elements: elements.map(\.symbol), resolutionMnKaEV: resolutionMnKaEV, axis: axis)
+            elements: picks.map(\.symbol).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }, resolutionMnKaEV: resolutionMnKaEV, axis: axis)
         let conflicts = WindowIntensity.conflicts(lines: lines, background: background, candidates: candidates)
         var out: [LineWindow] = []
         var next = 0
-        for pick in picks {
+        for pick in entries {
             guard let line = pick.line else {
                 out.append(LineWindow(element: pick.symbol, id: pick.symbol, energy: 0, fwhm: 0, window: nil,
                                       failure: "No usable X-ray line inside the energy axis", conflicts: []))
@@ -187,6 +235,29 @@ package nonisolated enum ElementWindows {
                 out.append(LineWindow(element: pick.symbol, id: line.id, energy: line.energy, fwhm: line.fwhm, window: nil,
                                       failure: "A window of \(line.id) lies outside the energy axis", conflicts: conflicts[next]))
             }
+        }
+        return clipOverlaps(out)
+    }
+
+    /// Where two windows of ONE element overlap in signal channels, the later (higher-energy) one starts where the earlier
+    /// ends; its background scale is reduced by the kept fraction of its signal width (`scale = signalWidth / backgroundWidth`,
+    /// `_eds.py:679`). Windows of different elements are left as eXSpy builds them. A window fully inside the earlier one keeps
+    /// one channel (the net of an empty window would be the background alone).
+    package static func clipOverlaps(_ windows: [LineWindow]) -> [LineWindow] {
+        var out = windows
+        var lastEnd: [String: Int] = [:]
+        for i in out.indices.sorted(by: { (out[$0].energy, $0) < (out[$1].energy, $1) }) {
+            guard let w = out[i].window else { continue }
+            let element = out[i].element
+            if let end = lastEnd[element], end > w.signal.lowerBound {
+                let start = min(end, w.signal.upperBound - 1)
+                let kept = Double(w.signal.upperBound - start) / Double(max(w.signal.count, 1))
+                let bg = w.background.map { ResolvedWindow.Background(left: $0.left, right: $0.right, scale: $0.scale * kept) }
+                out[i] = LineWindow(element: element, id: out[i].id, energy: out[i].energy, fwhm: out[i].fwhm,
+                                    window: ResolvedWindow(signal: start..<w.signal.upperBound, background: bg),
+                                    failure: out[i].failure, conflicts: out[i].conflicts)
+            }
+            lastEnd[element] = max(lastEnd[element] ?? 0, out[i].window?.signal.upperBound ?? 0)
         }
         return out
     }
@@ -247,6 +318,21 @@ package nonisolated enum ElementWindows {
             break
         }
         return "\(parts[0]) \(name)"
+    }
+
+    /// "Kα", "Lβ1": the line's name without its element, as the Lines menu lists it.
+    package static func shortLabel(ofLineID id: String) -> String {
+        let full = label(ofLineID: id)
+        guard let space = full.firstIndex(of: " ") else { return full }
+        return String(full[full.index(after: space)...])
+    }
+
+    /// One element's lines in a sentence: "Al Kα+Kβ" for two lines of one family, "Pt Lα+Mα" across families; the
+    /// element named once. nil for no line.
+    package static func summary(ofLineIDs ids: [String]) -> String? {
+        guard let first = ids.first else { return nil }
+        let rest = ids.dropFirst().map { shortLabel(ofLineID: $0) }
+        return ([label(ofLineID: first)] + rest).joined(separator: "+")
     }
 
     /// "background overlaps Si Kα": one line for the conflicts of one result, at most two named. Lines whose INTEGRATION
