@@ -259,18 +259,34 @@ package nonisolated struct ElementProposer: Sendable {
         func claiming(_ active: Set<String>) -> Set<String> { active.filter { last[$0].map { $0.net >= $0.ld } ?? false } }
 
         /// The pile-up columns for a set of detected parents: every pair whose energy is in range and not claimed by a listed
-        /// line or by a claiming candidate (a claimed energy is the candidate's: the two cannot be told apart).
+        /// line or by a claiming candidate (a claimed energy is the candidate's: the two cannot be told apart). Pairs whose energies
+        /// coincide in the line table (Dy+Ti and Cs+Ho at 11.0061 keV) share ONE column: two identical design columns make the
+        /// joint design rank deficient (the whole run fails), and the fit cannot tell such pairs apart. The kept column's id and
+        /// label name every pair it stands for; a lone pair keeps its plain id and label.
+        /// Equality to rounding, not a tolerance: the line table carries four decimals, so only sums equal in the table merge
+        /// (registration: docs/archive/v5/sum-column-exact-dedup-preregistration-2026-10-08.md).
+        let exactSumToleranceKeV = 1e-9
         func sumColumns(_ parents: [SumParent], claiming claimers: Set<String>) -> [FitLineGroup] {
             var claimed = currentGroups.map { $0.lines[0].energy }
             claimed += poolGroups.filter { claimers.contains($0.id) }.map { $0.lines[0].energy }
-            var out: [FitLineGroup] = []
+            var pairs: [[(label: String, energyKeV: Double, elements: [String])]] = []
             for e in LineConflicts.sumEnergies(parents: parents) {
                 guard e.energyKeV > lo, e.energyKeV < hi, e.energyKeV < s.beamEnergy,
                       !claimed.contains(where: { abs($0 - e.energyKeV) <= LineConflicts.sumPeakToleranceKeV }),
-                      let w = XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: e.energyKeV) else { continue }
-                let id = "sum:" + e.elements.joined(separator: "+")
-                out.append(FitLineGroup(id: id, element: "sum", lines: [FitLine(id: id, energy: e.energyKeV, weight: 1, fwhm: w)], escapes: []))
-                sumElements[id] = (e.label, e.elements)
+                      XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: e.energyKeV) != nil else { continue }
+                // The first pair at an energy owns the column (its energy is the column's).
+                if let k = pairs.firstIndex(where: { abs($0[0].energyKeV - e.energyKeV) <= exactSumToleranceKeV }) {
+                    pairs[k].append(e)
+                } else { pairs.append([e]) }
+            }
+            var out: [FitLineGroup] = []
+            for group in pairs {
+                let first = group[0]
+                let id = "sum:" + group.map { $0.elements.joined(separator: "+") }.joined(separator: " / ")
+                let label = group.count == 1 ? first.label : group.map { $0.label.replacingOccurrences(of: " sum", with: "") }.joined(separator: " / ") + " sum"
+                let w = XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: first.energyKeV)!
+                out.append(FitLineGroup(id: id, element: "sum", lines: [FitLine(id: id, energy: first.energyKeV, weight: 1, fwhm: w)], escapes: []))
+                sumElements[id] = (label, group.count == 1 ? first.elements : Array(Set(group.flatMap(\.elements))).sorted())
             }
             return out
         }
