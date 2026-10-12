@@ -166,6 +166,14 @@ final class VeloxEMDReaderTests: XCTestCase {
     private static let imageOnlyBase64 = "7ZkxTwIxFMfbHsQLifHcEAmejYODA2zGSeOhmBgxaoijNyCSiBAkhsSYOOLmR3BkdHR0ZOQb4dW2R1tBiJBIwvstj9c+2uPuf3+S15ecd7AYS8QQw7ZRBDlIpSfoUj2X81ciYhFbIraJHMffc3ExvizWN+suzrJZVt0zkPukIzzaCJhHctm9UxYvRS711CF6XaFYvy9X75DnN3xVl7t/3BejKF8Dy5zvjDHWdC+jFcyzzyvBPFO6E85x5UaDyHJC+LAt1rOwlLZjXEFrpp7D+Unew4iEV9mM6r//TeROXH9fXQs0rOtqsC+a92+UL7qr4IugowH/r2Kgnfj9+xtMa3b/HT7czx9jxYawUsd4pA/cYemOSzMZuuXS62q94jdYXijeVpv0SV3/YwmeEQAAAAAAAAAAAADMGmafVfb50nG97qjil4pKfyA34b6j+lybazxCnwt0qeqyY/S3ypVSGk1Rl7zfHTbn0ecCj+F515h9tnlnWJ/yNcnz99R4PvC8Dj4APvDTB7opvc48/5u2D9wkdR8wdQwM8wHzPHWbR4sPyONcgvT7O2zcChSAhQ6Iooj+OSsxzlk7dLCD1P7lfpi6qrmgkUn4Ag=="
     /// A Version dataset of three elements.
     private static let multiVersionBase64 = "6/RwcePlkuJiAAEODgYWBgEGZPAfCjpkUPkw+QQozQilO6D0CiaYOCNYTgIqLgg1H11dSJCrK0j1fzQAs8eABUJzMIyCkQg8XB0DQHQElA9LTyeYUNWFpRYVZ+bnMbgkliQip0sHMu1lZGCFmMEI40NsZmSECDBD1SFoCbBSSaA8KKULwLVCUi4rkAbxmZggwhxQ85gZYUnbAM0FHYMqHoL9/F0YGZjgpUQFK2r+XwDlG0ig5lcF5tE0jJqusJeL6OFHqFx0kB4tF0fTEWY6WgEVOCGFX78KKK1xIMowZD4TGh9kj7uzvw84rwug5nsVKF2tVAYpgZWsFJQMDZV0FJTS8otyE0tA/LDUnPwKpVqY2eToYyZTH7we4R9NM6NgFIyCUTAKRsEoGAWjYBSMglEwCkYBIYBrHDZAAlVdcEFqcklRaW5wSVFqYi7l47CQcTAGnONgo2A0XSKnS9h46Au08S9YOgygkr2Q8XD44D3DAXZUe4gdhxvpAAA="
+    /// An image-only Velox file (`--image-typed`): three (3 rows, 5 columns, 2 frames) stacks, int16 / uint16 / float32, each with its own
+    /// detector, anisotropic pixel size and offset. The arrays and axes asserted below are what rsciio 049e7d70 reads from it (`--rsciio-truth`).
+    private static let typedImageBase64 = "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"
+    /// An image-only Velox file (`--image-wide`): one (3, 5, 1) stack of each stored type the typed file lacks, from uint8 to float64.
+    private static let wideImagesBase64 = "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"
+    /// An image-only Velox file (`--image-refused`) with two images the reader lists but refuses to read: a compound real/imaginary
+    /// float type (as Velox stores an FFT) and a 17000 x 17000 uint8 (289 M pixels, over the 2^28 it accepts; no chunk is written).
+    private static let refusedImagesBase64 = "7ZvPb9s2FMcl2caMAsPSy5p1RasJO/gwd/JvO+iwObM9F9jqoMmC7tTSMh0LUORUVlpnQbAeu9v+hBx73HHHHXvcn9E/YbdOFEVHUuQ4y4o2q78fwKHe49MjRT1SNl/0a7fV+fDK9SsSI5uV0tKKFOZ1QO5hVBb1j4JSDsrnQflCEXrZr1sN9FcD/3G7rfvtNrN+HUO0o6d5mZXAMtJtNzdY+SCQRTy9VKJ229SZmGNbahGXhOPymwu2K0sZ7kMWMm9ZluVI3Isy5dWz40+8ehbpK7M6HrkZr2SyonB1NvCXkkVor8R68PxS3YfNe72WLCmzXk4z0es/DuSV1eh8VVOI4WhcJa+L8fFbtC6qn2JdRBwlPF8DxYvrZ5//OYu17Mkc/u7b3vdyaBmSQ3aMQ+0JX2G1NVUrFLQvVG04dnaJy+Rtao2n2lHY/x8f4R4BAAAAAAAAAACXjfg+q9jn01ejdnd3yQ4N7Q90/2O7i/a5creCfuAWIS5Dcfcytr/VoIV+eVAjRaM6LNf1Ur9CGgOdloY1o1jvF6rCblgiNd0o0Pqg0i83itUqLQ77OikbjUGtQCt1Ycf3u2eb89KfH0TbP+8+27Izb5/ytxtc/v3m+daB48+i6xJY7nVADcq/bkbtRP7vB+qSQXAcnrf1f9muyHuJdWB0I+ovHsfiOVWvR+0eBfKztWVdB9L+WKizfCofEDnFFSJNmIndr/n6Y//4Y4XnwBxKrI41Jm6XWMP2E2qfs19X1VtSOoioa1np2i/ekel9x0nylb6Ar1neNyXyvjxyU0r6lXZyiZng0rLz4m5PPbttsS7malgr4t8v5YTnyvSc5+e+jMrz4hF5WAAAAAAAAAAAAAAA/n+cfg8ox0slUMT+Xz4upzyFLJ31PpASex8o93XUk+DZJRmP5HxePL+xKJ+XvZN4kWBJmJfPO47lx950Pu/0fI7moUbrUqQU7czTL5zfp/M+Yiq8SkkS+8jh5cNr4a3eh3ie6e8F+UkxXze+Qgy/4+dE7zI/J94XDrUWdanhjp2JtqaeSPlSRLxHdil7E67bbLY67OU4UbF1sOdXbBrEtk17R+iZTdsmfYsOWLXr7FPtKHRevpzov9UpvxHvlUTv6xfvOvO+btrEObhPJ/uWG/GfODJ37QGdspoS026YU2ptmj9T/8Sn5sAdsbri7QrN6w1mMaLmzsh/3bDsq47EWT/apvuA6Xe1sOqnmao3HE4o75HfYE24PGBSvsTdMX/sUn07dnC6N2W9UY11hWn8kX1KLWvL5ONYoHnfruN4AyuU+u2Kb9nbc02DB1PTMKhFHeKaY3t7bLlkx7cs6gzfuGk83jcnpstfvDwMy5sucVzv8Uhd3oA33J4w60KtVq3WG94f78qOMI8BAAAAAAAAAL//8fsfv/8BAAAAAAAAAPwD"
 
     private func rawBytes(_ base64: String) throws -> Data {
         let compressed = try XCTUnwrap(Data(base64Encoded: base64))
@@ -361,5 +369,218 @@ final class VeloxEMDReaderTests: XCTestCase {
         let path = try write(raw.prefix(raw.count / 2))
         XCTAssertFalse(VeloxEMDReader.isVeloxEMD(path: path))
         XCTAssertThrowsError(try VeloxEMDReader(path: path).readSpectrumImage())
+    }
+
+    // MARK: Image API (2026-10-12: one Velox parser for the suite; macTEM reads plain images through it)
+
+    /// What `make-tiny-fixture.py --rsciio-truth` prints for the typed file (rsciio 049e7d70): per image the frames as (y, x) rows
+    /// flattened, and the y/x axes in the unit rsciio compacted to (nm, um, pm from the image's own field of view). The values are
+    /// exact in the file's type, so the frames compare equal as Float32, not within a tolerance.
+    private struct RsciioImage {
+        let id: String, detector: String, type: VeloxImageElementType
+        let frames: [[Float]]
+        let unit: String, scaleX: Double, scaleY: Double, offsetX: Double, offsetY: Double
+    }
+
+    private static let metersPerUnit: [String: Double] = ["nm": 1e-9, "µm": 1e-6, "pm": 1e-12]
+
+    private static let int16Frames: [[Float]] = [
+        [-1, -32768, 32767, 300, 0, 17, -300, 42, -7, 1000, -12345, 256, -256, 5, -99],
+        [2, 32767, -32768, -300, 123, -18, 301, -43, 8, -1000, 12346, -257, 257, -6, 100]]
+    private static let uint16Frames: [[Float]] = [
+        [65535, 40000, 300, 0, 1, 32768, 32767, 65534, 256, 12, 511, 4096, 61000, 7, 40001],
+        [2, 300, 40000, 65535, 99, 32769, 1, 255, 65533, 13, 512, 4097, 2, 8, 40002]]
+    private static let float32Frames: [[Float]] = [
+        [-2.25, 0.5, 1000000.5, 3.0, -0.125, 1.5, -1000000.5, 0.0, 2.75, 123456.5, 0.25, -7.5, 65536.5, 0.0009765625, 8.0],
+        [7.5, -0.25, 2.0, -3.5, 0.0625, -1.5, 999999.5, -4.0, 0.125, -123456.5, -0.5, 7.25, -65536.5, 1.0, 0.5]]
+
+    private static let rsciioTruth: [RsciioImage] = [
+        RsciioImage(id: "0c5f3e9a7b1d4c2e8a6f1b0d9e7c5a32", detector: "HAADF", type: .int16, frames: int16Frames, unit: "nm",
+                    scaleX: 2.4999999999999996, scaleY: 3.9999999999999996, offsetX: 6.999999999999999, offsetY: -2.9999999999999996),
+        RsciioImage(id: "5b2178d0c4e94f3a9d17e6a2b8c05f41", detector: "DF4", type: .uint16, frames: uint16Frames, unit: "µm",
+                    scaleX: 1.25, scaleY: 2.0, offsetX: 0.39999999999999997, offsetY: -1.5),
+        RsciioImage(id: "d94a60b3e1f2478c95a0d3c7b6e18f29", detector: "BF", type: .float32, frames: float32Frames, unit: "pm",
+                    scaleX: 300.0, scaleY: 500.00000000000006, offsetX: -200.0, offsetY: 600.0)]
+
+    private func assertClose(_ value: Double, _ expected: Double, _ what: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertLessThanOrEqual(abs(value - expected), 1e-12 * abs(expected), "\(what): \(value) against \(expected)", file: file, line: line)
+    }
+
+    private func writeTyped() throws -> String { try writeFile(Self.typedImageBase64) }
+
+    /// Three groups under Data/Image, listed in name order with their detector, shape (rows x columns, then frames) and stored type.
+    /// The 3 x 5 shape is not square, so a swapped height and width fails.
+    func testImagesListsTheTypedFilesThreeStacks() throws {
+        let images = try VeloxEMDReader(path: try writeTyped()).images()
+        XCTAssertEqual(images.map(\.id), Self.rsciioTruth.map(\.id))
+        XCTAssertEqual(images.map(\.detectorName), ["HAADF", "DF4", "BF"])
+        XCTAssertEqual(images.map(\.height), [3, 3, 3], "Data dimension 0 is y")
+        XCTAssertEqual(images.map(\.width), [5, 5, 5], "Data dimension 1 is x")
+        XCTAssertEqual(images.map(\.frameCount), [2, 2, 2])
+        XCTAssertEqual(images.map { $0.elementType }, Self.rsciioTruth.map { Optional($0.type) })
+    }
+
+    /// Both frames of each type equal rsciio's arrays exactly: a signed read of the unsigned stack, an unsigned read of the signed
+    /// one, an integer read of the float one, a frame index ignored, or rows and columns swapped, each changes a value.
+    func testEveryFrameOfEveryTypeEqualsRsciio() throws {
+        let reader = VeloxEMDReader(path: try writeTyped())
+        for image in Self.rsciioTruth {
+            XCTAssertEqual(image.frames.count, 2)
+            for (frame, expected) in image.frames.enumerated() {
+                XCTAssertEqual(try reader.readImageFrame(id: image.id, frame: frame), expected, "\(image.detector) frame \(frame)")
+            }
+        }
+    }
+
+    private static let wideUInt8: [UInt8] = [0, 255, 128, 1, 127, 254, 2, 100, 200, 50, 255, 0, 17, 34, 51]
+    private static let wideInt8: [Int8] = [-128, 127, -1, 0, 1, -127, 126, -2, 64, -64, 100, -100, 5, -5, 42]
+    private static let wideUInt32: [UInt32] = [0, 4294967295, 2147483648, 16777216, 16777217, 1, 4278190080, 65535, 65536, 4294901760,
+                                               123456789, 3000000000, 7, 255, 256]
+    private static let wideInt32: [Int32] = [-2147483648, 2147483647, -1, 16777217, -16777217, 0, 1, -65536, 65535, 100000,
+                                             -123456789, 2000000000, -2000000000, 7, -7]
+    private static let wideUInt64: [UInt64] = [0, 1, 9223372036854775808, 18446744073709551615, 4294967296, 16777217, 1099511627776,
+                                               281474976710656, 65535, 255, 123456789012, 9007199254740993, 3, 4611686018427387904, 12]
+    private static let wideInt64: [Int64] = [-9223372036854775808, 9223372036854775807, -1, 4294967296, -4294967296, 0, 1, -16777217,
+                                             16777217, 1099511627776, -123456789012, 9007199254740993, -3, 4611686018427387904, -12]
+    private static let wideFloat64: [Double] = [0.5, -2.25, 1e10, 0.1, 123456789.123, -0.1, 3.4e38, 1e-30, 1.0000000001, -7.5,
+                                                2.5, 1e-3, -1e5, 16777217.0, 0.3333333333333333]
+
+    /// The seven stored types the typed file lacks, each named and read. The values come from `--rsciio-truth` (rsciio keeps the stored
+    /// dtype); the reader returns Float32, so the expected arrays are those values rounded to the nearest Float32 (`Float(_:)`), which is
+    /// what HDF5's conversion must also do for 16777217, 2^64 - 1 and 0.1: a truncating conversion fails here.
+    func testTheOtherStoredTypesAreNamedAndReadRoundedToFloat32() throws {
+        let reader = VeloxEMDReader(path: try writeFile(Self.wideImagesBase64))
+        let images = try reader.images()
+        XCTAssertEqual(images.map(\.id), ["0-uint8", "1-int8", "2-uint32", "3-int32", "4-uint64", "5-int64", "6-float64"])
+        let types: [VeloxImageElementType?] = [.uint8, .int8, .uint32, .int32, .uint64, .int64, .float64]
+        XCTAssertEqual(images.map { $0.elementType }, types)
+        XCTAssertEqual(images.map(\.frameCount), [Int](repeating: 1, count: 7))
+        let expected: [[Float]] = [
+            Self.wideUInt8.map { Float($0) }, Self.wideInt8.map { Float($0) }, Self.wideUInt32.map { Float($0) },
+            Self.wideInt32.map { Float($0) }, Self.wideUInt64.map { Float($0) }, Self.wideInt64.map { Float($0) },
+            Self.wideFloat64.map { Float($0) }]
+        for (image, values) in zip(images, expected) {
+            XCTAssertEqual(try reader.readImageFrame(id: image.id, frame: 0), values, image.id)
+        }
+    }
+
+    /// The pixel size and Offset the metadata reports are rsciio's axes: scale_x from the width, scale_y from the height, the
+    /// offsets from Offset.x / Offset.y, each through the unit rsciio compacted to. Widths differ from heights and x offsets from
+    /// y offsets, so a swap or a copy fails; column 1 of each Metadata carries another width, so any other column fails.
+    func testImageMetadataEqualsRsciiosAxesAfterUnitConversion() throws {
+        let images = try VeloxEMDReader(path: try writeTyped()).images()
+        for (image, truth) in zip(images, Self.rsciioTruth) {
+            let toMeters = try XCTUnwrap(Self.metersPerUnit[truth.unit], truth.unit)
+            let m = image.metadata
+            XCTAssertEqual(m.binaryResultDetector, truth.detector)
+            let size = try XCTUnwrap(m.pixelSizeMeters, truth.detector)
+            assertClose(size.width, truth.scaleX * toMeters, "\(truth.detector) pixel width")
+            assertClose(size.height, truth.scaleY * toMeters, "\(truth.detector) pixel height")
+            let offset = try XCTUnwrap(m.offset, truth.detector)
+            assertClose(offset.x, truth.offsetX * toMeters, "\(truth.detector) offset x")
+            assertClose(offset.y, truth.offsetY * toMeters, "\(truth.detector) offset y")
+            XCTAssertEqual(m.pixelUnit, "m")
+            XCTAssertEqual(m.pixelUnitY, "m")
+        }
+    }
+
+    /// rsciio reads the X unit for both axes, so its image path cannot tell the two apart; Velox writes both, and this parser
+    /// reports both: a Y unit read from the X key, or an Offset y read from x, fails here.
+    func testMetadataReportsBothPixelUnitsAndBothOffsets() throws {
+        let json = #"{"BinaryResult": {"Detector": "BF", "PixelSize": {"width": "2e-9", "height": "3"}, "PixelUnitX": "m", "PixelUnitY": "nm", "Offset": {"x": "1.5e-9", "y": "-4"}}}"#
+        let m = try VeloxMetadata.parse(jsonData: Data(json.utf8))
+        XCTAssertEqual(m.pixelUnit, "m")
+        XCTAssertEqual(m.pixelUnitY, "nm")
+        XCTAssertEqual(m.offset?.x, 1.5e-9)
+        XCTAssertEqual(m.offset?.y, -4)
+        XCTAssertEqual(m.pixelSizeMeters?.height, 3, "recorded as stored, in pixelUnitY")
+        // An Offset needs both coordinates, and a file that names no Y unit has none.
+        let half = try VeloxMetadata.parse(jsonData: Data(#"{"BinaryResult": {"PixelUnitX": "m", "Offset": {"x": "1"}}}"#.utf8))
+        XCTAssertNil(half.offset)
+        XCTAssertNil(half.pixelUnitY)
+    }
+
+    /// `isVeloxFile` is "a Velox file that holds something to read": a spectrum stream or image, or an image group with Data AND
+    /// Metadata. `isVeloxEMD` keeps meaning a spectrum image (the app routes `.emd` on it), so it stays false for image-only files.
+    func testIsVeloxFileAcceptsStreamAndImageFilesAndNothingElse() throws {
+        let typed = try writeTyped(), refused = try writeFile(Self.refusedImagesBase64)
+        XCTAssertTrue(VeloxEMDReader.isVeloxFile(path: typed))
+        XCTAssertTrue(VeloxEMDReader.isVeloxFile(path: refused))
+        XCTAssertTrue(VeloxEMDReader.isVeloxFile(path: try writeFile()), "the main file: stream, spectrum image and image")
+        // The main file with its Data/Image group renamed away (a heap name, same length): a stream and a spectrum image remain.
+        let noImages = try patched("\0Image\0", "\0Imagx\0")
+        XCTAssertEqual(try VeloxEMDReader(path: noImages).images().count, 0, "the rename took")
+        XCTAssertTrue(VeloxEMDReader.isVeloxFile(path: noImages), "no image group, still a spectrum image")
+        XCTAssertFalse(VeloxEMDReader.isVeloxFile(path: try writeFile(Self.imageOnlyBase64)), "an image group with Data and no Metadata")
+        let text = NSTemporaryDirectory() + "velox-not-\(UUID().uuidString).emd"
+        try Data("not hdf5".utf8).write(to: URL(fileURLWithPath: text))
+        addTeardownBlock { try? FileManager.default.removeItem(atPath: text) }
+        XCTAssertFalse(VeloxEMDReader.isVeloxFile(path: text))
+        XCTAssertFalse(VeloxEMDReader.isVeloxFile(path: NSTemporaryDirectory() + "velox-missing-file.emd"))
+        XCTAssertFalse(VeloxEMDReader.isVeloxFile(path: try writeFile(Self.multiVersionBase64)))
+        let raw = try rawBytes(Self.mainBase64), rawTyped = try rawBytes(Self.typedImageBase64)
+        XCTAssertFalse(VeloxEMDReader.isVeloxFile(path: try write(raw.prefix(raw.count / 2))))
+        XCTAssertFalse(VeloxEMDReader.isVeloxFile(path: try write(rawTyped.prefix(rawTyped.count / 2))))
+        // The spectrum-image question is unchanged: no image-only file answers yes.
+        XCTAssertFalse(VeloxEMDReader.isVeloxEMD(path: typed))
+        XCTAssertFalse(VeloxEMDReader.isVeloxEMD(path: refused))
+        XCTAssertFalse(VeloxEMDReader.isVeloxEMD(path: try writeFile(Self.imageOnlyBase64)))
+    }
+
+    /// An id the file does not list and a frame it does not hold are refused by name, never read.
+    func testReadImageFrameRefusesAnUnknownIdAndAFrameOutOfRange() throws {
+        let reader = VeloxEMDReader(path: try writeTyped())
+        let id = Self.rsciioTruth[0].id
+        // HDF5 resolves "<id>/." to the group itself: only the ids images() lists are images.
+        for bad in ["no-such-image", "", "../SpectrumStream/aaaa", id + "/Data", id + "/."] {
+            XCTAssertThrowsError(try reader.readImageFrame(id: bad, frame: 0), "id \(bad)") { error in
+                guard case VeloxEMDError.unknownImage = error else { return XCTFail("\(error)") }
+            }
+        }
+        for frame in [2, -1, 100] {
+            XCTAssertThrowsError(try reader.readImageFrame(id: id, frame: frame), "frame \(frame)") { error in
+                guard case VeloxEMDError.frameRangeInvalid = error else { return XCTFail("\(error)") }
+            }
+        }
+        XCTAssertNoThrow(try reader.readImageFrame(id: id, frame: 1))
+    }
+
+    /// A compound (FFT) image is listed with no element type and refused by name when read: no float read can take it. An image of
+    /// more pixels than the reader accepts is listed with its true shape and refused before anything is allocated from it.
+    func testAnImageWithNoFloatReadOrTooManyPixelsIsRefusedByName() throws {
+        let reader = VeloxEMDReader(path: try writeFile(Self.refusedImagesBase64))
+        let images = try reader.images()
+        XCTAssertEqual(images.map(\.id), ["9e1b4d7a2c6f4803b5a9d0e3f7c28b16", "f3a70c1e8d5b49266e2fb0a4c9d71e58"])
+        XCTAssertEqual(images.map(\.height), [3, 17000])
+        XCTAssertEqual(images.map(\.width), [5, 17000])
+        XCTAssertEqual(images.map(\.frameCount), [1, 1])
+        XCTAssertNil(images[0].elementType)
+        XCTAssertEqual(images[1].elementType, .uint8)
+        XCTAssertThrowsError(try reader.readImageFrame(id: images[0].id, frame: 0)) { error in
+            guard case VeloxEMDError.unsupportedImageType = error else { return XCTFail("\(error)") }
+        }
+        XCTAssertThrowsError(try reader.readImageFrame(id: images[1].id, frame: 0)) { error in
+            guard case VeloxEMDError.readFailed = error else { return XCTFail("\(error)") }
+        }
+    }
+
+    /// The spectrum image's own HAADF is an image too: (3, 2, 2) uint16, and frame 1 is the 10 x 1...6 the end-to-end test sums.
+    func testImagesOfTheMainFileAndOfFilesThatAreNotVelox() throws {
+        let reader = VeloxEMDReader(path: try writeFile())
+        let images = try reader.images()
+        XCTAssertEqual(images.map(\.id), ["img0"])
+        XCTAssertEqual(images[0].detectorName, "HAADF")
+        XCTAssertEqual([images[0].height, images[0].width, images[0].frameCount], [3, 2, 2])
+        XCTAssertEqual(images[0].elementType, .uint16)
+        XCTAssertEqual(try reader.readImageFrame(id: "img0", frame: 0), [1, 2, 3, 4, 5, 6])
+        XCTAssertEqual(try reader.readImageFrame(id: "img0", frame: 1), [10, 20, 30, 40, 50, 60])
+        // A group with Data and no Metadata is not an image this reader can describe.
+        XCTAssertEqual(try VeloxEMDReader(path: try writeFile(Self.imageOnlyBase64)).images().count, 0)
+        XCTAssertThrowsError(try VeloxEMDReader(path: try writeFile(Self.multiVersionBase64)).images()) { error in
+            guard case VeloxEMDError.notVeloxFile = error else { return XCTFail("\(error)") }
+        }
+        XCTAssertThrowsError(try VeloxEMDReader(path: NSTemporaryDirectory() + "velox-missing-file.emd").images()) { error in
+            guard case VeloxEMDError.cannotOpen = error else { return XCTFail("\(error)") }
+        }
     }
 }

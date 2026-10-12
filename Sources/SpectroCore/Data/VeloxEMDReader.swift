@@ -13,8 +13,13 @@
 //  §2.2): uint16 values; 65535 ends a pixel; any other value is the channel of
 //  one detected X-ray; pixels run row-major, and a frame is ny*nx markers.
 //
-//  Not read, by decision (ADR 053): Velox's derived element maps and its pruned
-//  `SpectrumImage` cube. No AppState: nothing in the app sees this yet.
+//  Not read by the spectrum path, by decision (ADR 053): Velox's derived element
+//  maps and its pruned `SpectrumImage` cube (`images()` below lists a map stored as
+//  an image like any other image). No AppState: nothing in the app sees this yet.
+//
+//  Images (2026-10-12): `images()` lists a file's `Data/Image` stacks and `readImageFrame` reads one
+//  frame of one as Float32, so macTEM's image reader needs no second Velox parser. A file that
+//  holds only images is a Velox file (`isVeloxFile`) but not a spectrum image (`isVeloxEMD`).
 //
 
 import Darwin
@@ -35,6 +40,12 @@ package enum VeloxEMDError: LocalizedError {
     case unsupportedFramePosition(String)
     /// The stream does not fit the grid the metadata implies: refused, never decoded into a wrong cube.
     case gridInconsistent(String)
+    /// A file that is not a Velox EMD at all (the image calls do not need a spectrum image).
+    case notVeloxFile(String)
+    /// `readImageFrame` was given an id that is not an image group of the file.
+    case unknownImage(String)
+    /// An image stored in a type no float read can take (Velox's FFT and DPC images are compound).
+    case unsupportedImageType(String)
 
     package var errorDescription: String? {
         switch self {
@@ -50,6 +61,9 @@ package enum VeloxEMDError: LocalizedError {
         case .readFailed(let operation): return "HDF5 read failed: \(operation)."
         case .unsupportedFramePosition(let what): return "Unsupported frame position: \(what)."
         case .gridInconsistent(let why): return "The spectrum stream does not match its grid: \(why)."
+        case .notVeloxFile(let name): return "\(name) is not a Velox EMD file."
+        case .unknownImage(let id): return "The Velox file holds no image named \(id)."
+        case .unsupportedImageType(let what): return "Unsupported image data type: \(what)."
         }
     }
 }
@@ -419,7 +433,12 @@ package nonisolated struct VeloxMetadata: Sendable {
     package let stagePositionMeters: (x: Double, y: Double, z: Double)?
     package let holderType: String?
     package let pixelSizeMeters: (width: Double, height: Double)?
+    /// `BinaryResult.PixelUnitX`: the unit of the pixel width and of `offset.x`. (rsciio reads this one for both axes.)
     package let pixelUnit: String?
+    /// `BinaryResult.PixelUnitY`: the unit of the pixel height and of `offset.y`. Velox writes it beside the X unit.
+    package let pixelUnitY: String?
+    /// `BinaryResult.Offset`, as stored: x in `pixelUnit`, y in `pixelUnitY`. nil unless both coordinates parse.
+    package let offset: (x: Double, y: Double)?
     package let instrumentModel: String?
     package let acquisitionStartUnixTime: Double?
     package let scanTransformation: VeloxScanTransformation?
@@ -493,6 +512,9 @@ package nonisolated struct VeloxMetadata: Sendable {
         let pixelSize = dict(binary, "PixelSize")
         var pixelTuple: (Double, Double)?
         if let w = jsonDouble(pixelSize?["width"]), let h = jsonDouble(pixelSize?["height"]) { pixelTuple = (w, h) }
+        let offsetDict = dict(binary, "Offset")
+        var offsetTuple: (Double, Double)?
+        if let x = jsonDouble(offsetDict?["x"]), let y = jsonDouble(offsetDict?["y"]) { offsetTuple = (x, y) }
 
         // The per-frame drift-correction affine sits in CustomProperties, each
         // entry as {"type": "double", "value": "..."}.
@@ -522,7 +544,8 @@ package nonisolated struct VeloxMetadata: Sendable {
             stagePositionMeters: positionTuple.map { (x: $0.0, y: $0.1, z: $0.2) },
             holderType: stage?["HolderType"] as? String,
             pixelSizeMeters: pixelTuple.map { (width: $0.0, height: $0.1) },
-            pixelUnit: binary?["PixelUnitX"] as? String,
+            pixelUnit: binary?["PixelUnitX"] as? String, pixelUnitY: binary?["PixelUnitY"] as? String,
+            offset: offsetTuple.map { (x: $0.0, y: $0.1) },
             instrumentModel: dict(root, "Instrument")?["InstrumentModel"] as? String,
             acquisitionStartUnixTime: jsonDouble(dict(dict(root, "Acquisition"), "AcquisitionStartDatetime")?["DateTime"]),
             scanTransformation: transformation)
@@ -535,6 +558,9 @@ nonisolated private let veloxReadOnly: UInt32 = 0
 nonisolated private let veloxDefaultProperty: hid_t = 0
 nonisolated private let veloxSelectSet: Int32 = 0
 nonisolated private let veloxIntegerClass: Int32 = 0
+nonisolated private let veloxFloatClass: Int32 = 1
+/// `H5T_SGN_2`: two's complement. `H5T_SGN_NONE` is 0; an integer is one or the other.
+nonisolated private let veloxSignedTwosComplement: Int32 = 1
 
 private nonisolated final class VeloxLinkCollector: @unchecked Sendable {
     var names: [String] = []
@@ -570,6 +596,8 @@ private nonisolated struct VeloxHDF5: @unchecked Sendable {
     typealias H5Tcopy = @convention(c) (hid_t) -> hid_t
     typealias H5TgetClass = @convention(c) (hid_t) -> Int32
     typealias H5TisVariableStr = @convention(c) (hid_t) -> Int32
+    typealias H5TgetSize = @convention(c) (hid_t) -> Int
+    typealias H5TgetSign = @convention(c) (hid_t) -> Int32
     typealias H5Oopen = @convention(c) (hid_t, UnsafePointer<CChar>?, hid_t) -> hid_t
     typealias H5Literate = @convention(c) (hid_t, UnsafePointer<CChar>?, UnsafeRawPointer?, UnsafeMutableRawPointer?) -> herr_t
     typealias H5Lvisit2 = @convention(c) (hid_t, Int32, Int32, H5Literate, UnsafeMutableRawPointer?) -> herr_t
@@ -580,8 +608,9 @@ private nonisolated struct VeloxHDF5: @unchecked Sendable {
     let h5sclose: H5Close, h5sgetNdims: H5SgetNdims, h5sgetDims: H5SgetDims
     let h5sselectHyperslab: H5SselectHyperslab, h5screateSimple: H5ScreateSimple
     let h5tcopy: H5Tcopy, h5tclose: H5Close, h5tgetClass: H5TgetClass, h5tisVariableStr: H5TisVariableStr
+    let h5tgetSize: H5TgetSize, h5tgetSign: H5TgetSign
     let h5oopen: H5Oopen, h5oclose: H5Close, h5lvisit2: H5Lvisit2, h5freeMemory: H5freeMemory
-    let uint8: hid_t, uint16: hid_t, uint32: hid_t, uint64: hid_t
+    let uint8: hid_t, uint16: hid_t, uint32: hid_t, uint64: hid_t, float32: hid_t
 
     static func load() throws -> VeloxHDF5 {
         let candidates: [String] = [
@@ -625,10 +654,12 @@ private nonisolated struct VeloxHDF5: @unchecked Sendable {
             h5tcopy: try symbol("H5Tcopy", as: H5Tcopy.self), h5tclose: try symbol("H5Tclose", as: H5Close.self),
             h5tgetClass: try symbol("H5Tget_class", as: H5TgetClass.self),
             h5tisVariableStr: try symbol("H5Tis_variable_str", as: H5TisVariableStr.self),
+            h5tgetSize: try symbol("H5Tget_size", as: H5TgetSize.self), h5tgetSign: try symbol("H5Tget_sign", as: H5TgetSign.self),
             h5oopen: try symbol("H5Oopen", as: H5Oopen.self), h5oclose: try symbol("H5Oclose", as: H5Close.self),
             h5lvisit2: try symbol("H5Lvisit2", as: H5Lvisit2.self), h5freeMemory: try symbol("H5free_memory", as: H5freeMemory.self),
             uint8: try global("H5T_NATIVE_UINT8_g"), uint16: try global("H5T_NATIVE_UINT16_g"),
-            uint32: try global("H5T_NATIVE_UINT32_g"), uint64: try global("H5T_NATIVE_UINT64_g"))
+            uint32: try global("H5T_NATIVE_UINT32_g"), uint64: try global("H5T_NATIVE_UINT64_g"),
+            float32: try global("H5T_NATIVE_FLOAT_g"))
     }
 }
 
@@ -670,6 +701,10 @@ private nonisolated final class VeloxFile {
         let id: hid_t
         let dims: [Int]
         let isInteger: Bool
+        /// The stored element type: HDF5 class (0 integer, 1 float), bytes per element, and whether an integer is signed.
+        let typeClass: Int32
+        let byteSize: Int
+        let isSigned: Bool
     }
 
     func open(_ path: String) throws -> Dataset {
@@ -682,7 +717,10 @@ private nonisolated final class VeloxFile {
         if rank > 0 { _ = h5.h5sgetDims(space, &dims, nil) }
         let type = h5.h5dgetType(id)
         defer { _ = h5.h5tclose(type) }
-        return Dataset(id: id, dims: dims.prefix(rank).map { Int($0) }, isInteger: h5.h5tgetClass(type) == veloxIntegerClass)
+        let typeClass = h5.h5tgetClass(type)
+        let isInteger = typeClass == veloxIntegerClass
+        return Dataset(id: id, dims: dims.prefix(rank).map { Int($0) }, isInteger: isInteger, typeClass: typeClass,
+                       byteSize: h5.h5tgetSize(type), isSigned: isInteger && h5.h5tgetSign(type) == veloxSignedTwosComplement)
     }
 
     func close(_ dataset: Dataset) { _ = h5.h5dclose(dataset.id) }
@@ -783,6 +821,26 @@ package nonisolated struct VeloxStreamInfo: Sendable {
     package let segments: [VeloxDetectorInfo]
 }
 
+/// The stored element type of an image stack, as HDF5 reports it.
+package nonisolated enum VeloxImageElementType: String, Sendable {
+    case uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64
+}
+
+/// One image stack under `Data/Image`, shape `(height, width, frameCount)` as Velox stores it: `Data` is `(y, x, frame)`.
+package nonisolated struct VeloxImageInfo: Sendable {
+    /// The group's name under `Data/Image` (a UUID in a Velox file).
+    package let id: String
+    /// `BinaryResult.Detector` of the first metadata column; "" when the file names none.
+    package let detectorName: String
+    package let height: Int
+    package let width: Int
+    package let frameCount: Int
+    /// nil for a type no float read can take, such as Velox's compound FFT and DPC images.
+    package let elementType: VeloxImageElementType?
+    /// Column 0 of the image's `Metadata`: rsciio's `[:, 0]`, and the one a single-frame image has.
+    package let metadata: VeloxMetadata
+}
+
 package nonisolated struct VeloxEMDReader: Sendable {
     package let path: String
 
@@ -791,12 +849,36 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// True for a Velox EMD that carries a spectrum stream or a spectrum image:
     /// root `Version` JSON with `format` "Velox", and `Data/SpectrumStream` or
     /// `Data/SpectrumImage`. False for anything else, including an unreadable file.
+    /// This is the question "can this be opened as a spectrum image?" and the app routes `.emd` files on it:
+    /// a file that holds only images answers false here and true to `isVeloxFile`.
     package static func isVeloxEMD(path: String) -> Bool {
         HDF5Serial.run {
             guard let file = try? VeloxFile(path: path) else { return false }
             guard let version = file.readString("/Version"), parseVersion(version)?.format == "Velox" else { return false }
             return file.exists("/Data/SpectrumStream") || file.exists("/Data/SpectrumImage")
         }
+    }
+
+    /// True for a Velox EMD that holds something this reader can read: a spectrum stream, a spectrum image, or an image group
+    /// with both `Data` and `Metadata` under `Data/Image`. Use it where plain images are wanted too (`images()`); use
+    /// `isVeloxEMD` to ask for a spectrum image. False for anything else, including an unreadable file.
+    /// DEVIATION: rsciio's `is_EMD_Velox` accepts `format` "Velox" and "DevelopersKit" and looks at no layout;
+    /// this accepts "Velox" only, and only a file with one of the layouts above.
+    package static func isVeloxFile(path: String) -> Bool {
+        HDF5Serial.run {
+            guard let file = try? openVeloxFile(path: path) else { return false }
+            if file.exists("/Data/SpectrumStream") || file.exists("/Data/SpectrumImage") { return true }
+            return file.children(of: "/Data/Image").contains { imageGroup(file: file, id: $0) != nil }
+        }
+    }
+
+    /// Opens the file and checks the root `Version` for `format` "Velox", throwing `notVeloxFile` when it is not.
+    private static func openVeloxFile(path: String) throws -> VeloxFile {
+        let file = try VeloxFile(path: path)
+        guard let version = file.readString("/Version"), parseVersion(version)?.format == "Velox" else {
+            throw VeloxEMDError.notVeloxFile(displayFileName(path))
+        }
+        return file
     }
 
     private static func parseVersion(_ json: String) -> (version: String, format: String)? {
@@ -1028,6 +1110,99 @@ package nonisolated struct VeloxEMDReader: Sendable {
         return VeloxScanImage(
             ny: grid.ny, nx: grid.nx, sum: sum, framesSummed: upper - lower,
             framesInFile: pick.entry.frames, detectorName: pick.detector)
+    }
+
+    // MARK: Images
+
+    /// `/Data/Image/<id>` when `id` names a group there that holds both `Data` and `Metadata`, else nil. An id with a "/" never does.
+    private static func imageGroup(file: VeloxFile, id: String) -> String? {
+        guard !id.isEmpty, !id.contains("/") else { return nil }
+        let group = "/Data/Image/" + id
+        return file.exists(group + "/Data") && file.exists(group + "/Metadata") ? group : nil
+    }
+
+    /// The type HDF5 can convert to Float32 on read: 1, 2, 4 or 8-byte integers and 4 or 8-byte floats. nil for anything else
+    /// (compound, enum, string, a 2-byte float, ...).
+    private static func imageElementType(of dataset: VeloxFile.Dataset) -> VeloxImageElementType? {
+        if dataset.typeClass == veloxIntegerClass {
+            switch (dataset.byteSize, dataset.isSigned) {
+            case (1, false): return .uint8
+            case (2, false): return .uint16
+            case (4, false): return .uint32
+            case (8, false): return .uint64
+            case (1, true): return .int8
+            case (2, true): return .int16
+            case (4, true): return .int32
+            case (8, true): return .int64
+            default: return nil
+            }
+        }
+        if dataset.typeClass == veloxFloatClass {
+            switch dataset.byteSize {
+            case 4: return .float32
+            case 8: return .float64
+            default: return nil
+            }
+        }
+        return nil
+    }
+
+    /// Every image stack of the file: the groups under `Data/Image` that hold a rank-3 `Data` and a `Metadata`, in name order (as
+    /// h5py iterates, and rsciio reads them). Empty when the file has none. A group whose `Metadata` is unreadable throws, as the
+    /// file is then damaged rather than short of images. Throws `notVeloxFile` for any HDF5 file whose `Version` is not Velox.
+    package func images() throws -> [VeloxImageInfo] {
+        try HDF5Serial.run {
+            let file = try Self.openVeloxFile(path: path)
+            var out: [VeloxImageInfo] = []
+            for name in file.children(of: "/Data/Image") {
+                guard let group = Self.imageGroup(file: file, id: name) else { continue }
+                let dataset = try file.open(group + "/Data")
+                defer { file.close(dataset) }
+                guard dataset.dims.count == 3 else { continue }
+                let metadata = try VeloxMetadata.parse(jsonData: file.readMetadataJSON(group: group, column: 0))
+                out.append(VeloxImageInfo(
+                    id: name, detectorName: metadata.binaryResultDetector ?? "",
+                    height: dataset.dims[0], width: dataset.dims[1], frameCount: dataset.dims[2],
+                    elementType: Self.imageElementType(of: dataset), metadata: metadata))
+            }
+            return out
+        }
+    }
+
+    /// One frame of one image as `height * width` Float32, row-major (y, then x). HDF5 converts the stored type on read, so every
+    /// `VeloxImageElementType` is read the same way. DEVIATION: rsciio returns the stored dtype; here int32, uint32, 64-bit values
+    /// beyond 2^24 and float64 round to the nearest Float32 (int8, int16, uint8, uint16 and float32 are exact); a float64 above
+    /// Float32's largest value becomes ±infinity (HDF5's conversion, even where IEEE rounding would give that value), and
+    /// NaN stays NaN.
+    /// One hyperslab `[0, 0, frame]` by `[height, width, 1]`: Velox chunks a frame at a time. Throws `unknownImage` for an id
+    /// `images()` does not list, `frameRangeInvalid` for a frame outside `0..<frameCount`, and `unsupportedImageType` for a type
+    /// whose `elementType` is nil.
+    package func readImageFrame(id: String, frame: Int) throws -> [Float] {
+        try HDF5Serial.run {
+            let file = try Self.openVeloxFile(path: path)
+            guard let group = Self.imageGroup(file: file, id: id) else { throw VeloxEMDError.unknownImage(id) }
+            let dataset = try file.open(group + "/Data")
+            defer { file.close(dataset) }
+            guard dataset.dims.count == 3 else { throw VeloxEMDError.unknownImage(id) }
+            let height = dataset.dims[0], width = dataset.dims[1], frames = dataset.dims[2]
+            guard frame >= 0, frame < frames else {
+                throw VeloxEMDError.frameRangeInvalid("frame \(frame) of image \(id) is outside its \(frames) frames")
+            }
+            guard Self.imageElementType(of: dataset) != nil else {
+                throw VeloxEMDError.unsupportedImageType(
+                    "image \(id) is stored as HDF5 type class \(dataset.typeClass), \(dataset.byteSize) bytes per element; "
+                    + "only integers of 1 to 8 bytes and 4 or 8-byte floats are read (Velox's FFT and DPC images are compound)")
+            }
+            let (pixels, overflow) = height.multipliedReportingOverflow(by: width)
+            guard !overflow, pixels > 0, pixels <= Self.maximumPixels else {
+                throw VeloxEMDError.readFailed("an image of \(height) x \(width) pixels is empty or larger than this reader accepts")
+            }
+            var out = [Float](repeating: 0, count: pixels)
+            try out.withUnsafeMutableBytes {
+                try file.readSlab(dataset, type: file.h5.float32, start: [0, 0, frame], count: [height, width, 1], into: $0.baseAddress!)
+            }
+            return out
+        }
     }
 
     /// Diagnostic: how many pixel markers fall in each frame window of the first stream, from its
