@@ -266,13 +266,20 @@ package nonisolated struct ElementProposer: Sendable {
         /// Equality to rounding, not a tolerance: the line table carries four decimals, so only sums equal in the table merge
         /// (registration: docs/archive/v5/sum-column-exact-dedup-preregistration-2026-10-08.md).
         let exactSumToleranceKeV = 1e-9
-        func sumColumns(_ parents: [SumParent], claiming claimers: Set<String>) -> [FitLineGroup] {
+        func sumColumns(_ parents: [SumParent], claiming claimers: Set<String>, design: [FitLineGroup]) -> [FitLineGroup] {
             var claimed = currentGroups.map { $0.lines[0].energy }
             claimed += poolGroups.filter { claimers.contains($0.id) }.map { $0.lines[0].energy }
+            // A group of THIS design (the groups the fit it serves holds) whose escape list has one entry has a ONE-COMPONENT escape
+            // column: one Gaussian at that energy. A pair at exactly that energy would be an identical column (rankDeficient), so it
+            // is not added. A pool group outside the design is never compared, and one-line LINE groups are not compared (owner,
+            // 2026-10-12, card A1 option a: dropping a pair into a line column would let La Ka = Cd Ka + Tl La fold into La).
+            // Registration: docs/archive/v5/sum-escape-only-preregistration-2026-10-12.md.
+            let oneComponentEscape = design.compactMap { $0.escapes.count == 1 ? $0.escapes[0].energy : nil }
             var pairs: [[(label: String, energyKeV: Double, elements: [String])]] = []
             for e in LineConflicts.sumEnergies(parents: parents) {
                 guard e.energyKeV > lo, e.energyKeV < hi, e.energyKeV < s.beamEnergy,
                       !claimed.contains(where: { abs($0 - e.energyKeV) <= LineConflicts.sumPeakToleranceKeV }),
+                      !oneComponentEscape.contains(where: { abs($0 - e.energyKeV) <= exactSumToleranceKeV }),
                       XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: e.energyKeV) != nil else { continue }
                 // The first pair at an energy owns the column (its energy is the column's).
                 if let k = pairs.firstIndex(where: { abs($0[0].energyKeV - e.energyKeV) <= exactSumToleranceKeV }) {
@@ -297,8 +304,9 @@ package nonisolated struct ElementProposer: Sendable {
             var iteration = 0
             while true {
                 iteration += 1; passes += 1
-                let sums = sumColumns(parents, claiming: claiming(active))
-                let p = try run(currentGroups + poolGroups.filter { active.contains($0.id) } + sums, on: counts)
+                let design = currentGroups + poolGroups.filter { active.contains($0.id) }
+                let sums = sumColumns(parents, claiming: claiming(active), design: design)
+                let p = try run(design + sums, on: counts)
                 for (gi, g) in p.model.groups.enumerated() { if let st = stat(p, gi) { last[g.id] = st } }
                 // Survivors: candidates above L_C.
                 let nextActive = Set(p.model.groups.enumerated().compactMap { gi, g -> String? in
@@ -320,7 +328,8 @@ package nonisolated struct ElementProposer: Sendable {
                     !entry.value.listed && !listedSums.contains { abs($0 - entry.value.energy) <= LineConflicts.sumPeakToleranceKeV }
                 }.map { SumParent(element: $0.key, energyKeV: $0.value.energy) }
                 let nextParents = (listed + found).sorted { $0.element < $1.element }
-                let stable = nextActive == active && sumColumns(nextParents, claiming: claiming(nextActive)).map(\.id) == sums.map(\.id)
+                let stable = nextActive == active && sumColumns(nextParents, claiming: claiming(nextActive),
+                                                                design: currentGroups + poolGroups.filter { nextActive.contains($0.id) }).map(\.id) == sums.map(\.id)
                 parents = nextParents
                 if stable { return p }
                 if iteration >= maxPasses { settled = false; return p }
@@ -349,7 +358,8 @@ package nonisolated struct ElementProposer: Sendable {
             for g in poolGroups where !active.contains(g.id) && !banned.contains(g.id) {
                 if cache[g.id] == nil {
                     trials += 1
-                    let p = try run(currentGroups + poolGroups.filter { active.contains($0.id) || $0.id == g.id } + sumColumns(parents, claiming: claiming(active).union([g.id])), on: counts)
+                    let design = currentGroups + poolGroups.filter { active.contains($0.id) || $0.id == g.id }
+                    let p = try run(design + sumColumns(parents, claiming: claiming(active).union([g.id]), design: design), on: counts)
                     guard let gi = p.model.groups.firstIndex(where: { $0.id == g.id }), let st = stat(p, gi) else { continue }
                     cache[g.id] = st
                     last[g.id] = st
