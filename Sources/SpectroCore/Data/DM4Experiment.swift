@@ -121,6 +121,13 @@ package nonisolated struct DM4ImageObject: Sendable, Equatable {
     package let metaDataFormat: String?
     /// `ImageTags.Meta Data.Signal` verbatim ("X-ray", "EELS", ...); `role()` reads its own copy, this is for consumers.
     package let metaDataSignal: String?
+    /// Every scalar number under this object's `ImageTags`, prefix removed (`Microscope Info.Voltage`, `EDS.Live time`).
+    /// Numeric arrays and structs are not in it. Added 2026-10-12 for consumers that show an object's metadata.
+    package let imageTagNumbers: [String: Double]
+    /// Every string under this object's `ImageTags`, prefix removed (`DataBar.Acquisition Date`): the type-18 strings
+    /// and the short UTF-16 arrays (units, dates). Each is cut at the walk's kept length (4 KiB, `keptStringBytes`),
+    /// so a longer UTF-16 string is absent and a longer type-18 string is cut. Added 2026-10-12.
+    package let imageTagStrings: [String: String]
     /// Where the pixel blob starts in the file and how many bytes the tag declares.
     package let dataOffset: Int
     package let dataByteCount: Int
@@ -616,6 +623,10 @@ package nonisolated enum DM4Experiment {
                                    units: strings[c + "Units"] ?? "")
                 }
                 let tags = root + "ImageTags."
+                // This object's own tags only: the trailing dot keeps `ImageList.1.` from matching `ImageList.10.`.
+                var tagNumbers = [String: Double](), tagStrings = [String: String]()
+                for (k, v) in numbers where k.hasPrefix(tags) { tagNumbers[String(k.dropFirst(tags.count))] = v }
+                for (k, v) in strings where k.hasPrefix(tags) { tagStrings[String(k.dropFirst(tags.count))] = v }
                 let name = strings[root + "Name"] ?? ""
                 // Do not rely on the keyword POSITIONS (.1 = ID, .2 = Label, as seen in the
                 // owner's files): scan every `Experiment keywords.N` for a known Label and an ID.
@@ -662,6 +673,7 @@ package nonisolated enum DM4Experiment {
                     dataOrderSwapped: numbers[tags + "Meta Data.Data Order Swapped"].map { $0 != 0 },
                     metaDataFormat: strings[tags + "Meta Data.Format"],
                     metaDataSignal: signal,
+                    imageTagNumbers: tagNumbers, imageTagStrings: tagStrings,
                     dataOffset: blob.offset, dataByteCount: blob.bytes))
             }
             return out
