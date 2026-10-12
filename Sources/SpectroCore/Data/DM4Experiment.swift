@@ -183,6 +183,18 @@ package nonisolated enum DM4Experiment {
         try Walk(source: Source.data(data)).objects
     }
 
+    /// The tag tree of a BARE DM tag stream: a complete DM3/DM4 stream whose root group is an image's `ImageTags` themselves
+    /// (no `ImageList`), as DigitalMicrograph stores it in private TIFF tag 65027. `list(data:)` returns [] on such a stream.
+    /// The same walk as `list(data:)` (one parser), its two maps returned as `imageTagNumbers` / `imageTagStrings` hold
+    /// them: scalar numbers (types 2-12), and type-18 strings plus short UTF-16 arrays (cut at 4 KiB).
+    /// KEYS are relative to the stream's root, with NO prefix and no leading dot: `Microscope Info.Voltage`,
+    /// `DataBar.Acquisition Date`; an unnamed group is its one-based position (`Items.1.Label`).
+    /// Bounds-checked as `list(data:)`: a cut or malformed stream throws `DM4Error.truncated` (or `.cannotOpen`).
+    package static func tagTree(data: Data) throws -> (numbers: [String: Double], strings: [String: String]) {
+        let walk = try Walk(source: Source.data(data))
+        return (walk.numbers, walk.strings)
+    }
+
     package static func readImage(data: Data, index: Int) throws -> DM4Image {
         try readImage(source: Source.data(data), index: index)
     }
@@ -760,7 +772,12 @@ package nonisolated enum DM4Experiment {
             take(n)?.reversed().reduce(0) { $0 << 8 | UInt64($1) } ?? 0
         }
         mutating func bytes(_ n: Int) -> [UInt8] { take(n).map { Array($0) } ?? [] }
-        mutating func string(_ n: Int) -> String { String(decoding: bytes(n), as: UTF8.self) }
+        /// A tag label. UTF-8 when valid, else Latin-1: DigitalMicrograph writes `Emission Current (\u{B5}A)` with a lone
+        /// 0xB5 byte (ncempy and RosettaSciIO `_api.py:328-330` read it as Latin-1); UTF-8 decoding made it U+FFFD.
+        mutating func string(_ n: Int) -> String {
+            let b = bytes(n)
+            return String(bytes: b, encoding: .utf8) ?? String(b.map { Character(Unicode.Scalar($0)) })
+        }
         mutating func value(_ encType: Int) -> Double {
             switch encType {
             case 2:  return Double(Int16(truncatingIfNeeded: le(2)))
