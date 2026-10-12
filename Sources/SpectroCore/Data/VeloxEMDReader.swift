@@ -761,12 +761,20 @@ private nonisolated final class VeloxFile {
         }
     }
 
+    static let maxMetadataBytes = 16 << 20
+
     /// One column of a `(60000, nFrames)` uint8 `Metadata` dataset: NUL-padded UTF-8 JSON.
     func readMetadataJSON(group: String, column: Int) throws -> Data {
         let dataset = try open(group + "/Metadata")
         defer { close(dataset) }
         guard dataset.dims.count == 2, column >= 0, column < dataset.dims[1] else {
             throw VeloxEMDError.missingMetadata("metadata column \(column) of \(group)")
+        }
+        // The row count comes out of the file. Every Velox file measured (111 Metadata datasets over the parity set, the
+        // reader's fixtures and rsciio's test files, 2026-10-12) has 60000 rows, 60 kB; 16 MiB is wide margin, and a corrupt
+        // or hostile file asking for more is refused before anything is allocated.
+        guard dataset.dims[0] <= Self.maxMetadataBytes else {
+            throw VeloxEMDError.readFailed("a metadata column of \(dataset.dims[0]) bytes in \(group) (the limit is \(Self.maxMetadataBytes))")
         }
         var bytes = [UInt8](repeating: 0, count: dataset.dims[0])
         try bytes.withUnsafeMutableBytes {
