@@ -117,6 +117,10 @@ package nonisolated struct DM4ImageObject: Sendable, Equatable {
     package let voltage: Double?
     /// `ImageTags.Meta Data.Data Order Swapped` (1 on the owner's 4D cubes, meaning unknown for an SI), nil when absent.
     package let dataOrderSwapped: Bool?
+    /// `ImageTags.Meta Data.Format` verbatim ("Spectrum image", "Image", "Diffraction image" as GMS writes it); not used for `role()`.
+    package let metaDataFormat: String?
+    /// `ImageTags.Meta Data.Signal` verbatim ("X-ray", "EELS", ...); `role()` reads its own copy, this is for consumers.
+    package let metaDataSignal: String?
     /// Where the pixel blob starts in the file and how many bytes the tag declares.
     package let dataOffset: Int
     package let dataByteCount: Int
@@ -656,6 +660,8 @@ package nonisolated enum DM4Experiment {
                     eds: eds.isEmpty ? nil : eds,
                     voltage: numbers[tags + "Microscope Info.Voltage"],
                     dataOrderSwapped: numbers[tags + "Meta Data.Data Order Swapped"].map { $0 != 0 },
+                    metaDataFormat: strings[tags + "Meta Data.Format"],
+                    metaDataSignal: signal,
                     dataOffset: blob.offset, dataByteCount: blob.bytes))
             }
             return out
