@@ -12,8 +12,11 @@ bootstrap below replaces it with the library's full rules.
 
 ## Hard rules until the bootstrap
 
-- **No extraction before mac4DSTEM cuts v5.0.** The code comes from the v5.0 tag with its history (`git filter-repo`
-  on a scratch clone, never mac4DSTEM's working tree). Until then mac4DSTEM owns the code and keeps changing it.
+- **No extraction before mac4DSTEM's v5.0 features are complete** and it freezes the paths below (macTEM ADR 003,
+  option A, 2026-10-12). The code comes from that freeze commit with its history (`git filter-repo` on a scratch
+  clone, never mac4DSTEM's working tree). Until then mac4DSTEM owns the code and keeps changing it.
+- **mac4DSTEM's v5.0 ships on SpectroKit**: it switches to the tag, the owner's microscope validation (pure-Al foil,
+  the alloy, the joint GMS run) runs against SpectroKit, then v5.0 is released. Tag and go public before that.
 - **mac4DSTEM and macTEM are read-only from here**: `git -C ../<repo> --no-optional-locks show <commit>:<path>`.
   Never build, test or write in them.
 - **Names** (the suite's standard): apps are `mac` + technique, libraries are domain + `Kit`, modules carry the
@@ -25,12 +28,12 @@ bootstrap below replaces it with the library's full rules.
 - **Public at the first tag** (`0.1.0`), the owner's decision of 2026-10-12. Pushing and making it public are the owner's.
 - One session per repo. `main` only, commit by explicit paths.
 
-## The bootstrap: the first session after the v5.0 cut
+## The bootstrap: the first session after the freeze
 
 1. Remove the tracked `.DS_Store` and add it to `.gitignore`.
 2. Write this library's own `CLAUDE.md`, `run-tests.sh` and reference lock, adapted from macTEM's.
 3. Extract `Core/Spectroscopy/` (not `Registration/`), `Core/Data/VeloxEMDReader.swift`, `Core/Data/HDF5Types.swift`,
-   their tests and fixtures, from the v5.0 tag with history.
+   their tests and fixtures, from the freeze commit with history.
 4. Write the `Package.swift`, give the API `public`, and make mac4DSTEM's 560 EDX tests pass here.
 5. Tag `0.1.0`.
 6. Gate each stage against exSpy: counts, energy axis, background, peak ID, Cliff–Lorimer, ζ, absorption. This is
