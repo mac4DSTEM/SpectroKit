@@ -31,7 +31,7 @@ final class SpectrumImageOpeningSpectro: XCTestCase {
         let map = try XCTUnwrap(t["recipe_map"] as? [[Int]])
         let names = try XCTUnwrap(t["recipe_names_in_map_order"] as? [String])
         let recipes = try XCTUnwrap(t["recipes"] as? [String: [String: Any]])
-        let image = try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: Self.dm4, fourD: nil))
+        let image = try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: Self.dm4))
         XCTAssertEqual([image.nx, image.ny, image.channels], [6, 4, 512])
         for (i, name) in names.enumerated() {
             var mask = PixelMask(repeating: false, count: 24)
@@ -67,7 +67,7 @@ final class SpectrumImageOpeningSpectro: XCTestCase {
         let file = try XCTUnwrap(edx["axis_file"] as? [String: Double])
         let offsetKeV = try XCTUnwrap(file["offset_keV"]), dispersionEV = try XCTUnwrap(file["dispersion_eV"])
         let elevation = try XCTUnwrap(((t["forward_model"] as? [String: Any])?["absorption"] as? [String: Any])?["elevation_deg"] as? Double)
-        let image = try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: Self.dm4, fourD: nil))
+        let image = try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: Self.dm4))
         XCTAssertEqual(image.energyAxis.offset, offsetKeV, accuracy: 1e-5)
         XCTAssertEqual(image.energyAxis.scale, dispersionEV / 1000, accuracy: 1e-6)
         XCTAssertEqual(image.energyAxis.energy(ofChannel: 24), offsetKeV + 24 * dispersionEV / 1000, accuracy: 1e-5)

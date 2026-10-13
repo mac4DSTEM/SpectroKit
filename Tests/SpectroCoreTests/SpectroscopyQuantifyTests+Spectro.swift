@@ -14,7 +14,7 @@ final class SpectroscopyQuantifySpectro: XCTestCase {
     static let tables = try! QuantificationTables(directory: resources)
 
     static func image() throws -> LoadedSpectrumImage {
-        try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: fixtures.appendingPathComponent("demo-edx-tiny.dm4").path, fourD: nil))
+        try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: fixtures.appendingPathComponent("demo-edx-tiny.dm4").path))
     }
 
     /// Truth: the summed expected counts of the named component over the whole map.

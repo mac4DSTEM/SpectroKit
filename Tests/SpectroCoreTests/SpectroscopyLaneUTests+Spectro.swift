@@ -6,6 +6,10 @@ import DSTEMCore
 /// v5.0 lane U: the first drive's wiring, text and presentation findings (docs/archive/v5/room-drive-2026-10-06.md, 3-13).
 /// Each test names the mutation that must turn it red.
 @MainActor
+/// The app labels a voltage supplied by the same run's 4D cube this way (Core/Data/GMSFourDRegistration.swift, which stays in
+/// mac4DSTEM); the library sees only `.supplied(label:)`, so these moving tests name the value, not the app's constant.
+private let suppliedCube = BeamEnergySource.supplied(label: "the 4D cube, same run")
+
 final class SpectroscopyLaneUSpectro: XCTestCase {
 
     private typealias Q = SpectroscopyQuantifySpectro
@@ -15,12 +19,12 @@ final class SpectroscopyLaneUSpectro: XCTestCase {
     /// The EDS object's own voltage wins (volts -> kV); else the cube's, only when it is one run; else nothing.
     /// Mutation: `sameRun` ignored in `BeamEnergy.resolve` - red.
     func testTheBeamEnergySourceIsTheObjectsThenTheSameRunCubes() {
-        XCTAssertEqual(BeamEnergy.resolve(rawObjectVoltage: 200_000, suppliedKV: 300, suppliedAs: .fourDCube, sameRun: true)?.keV, 200)
-        XCTAssertEqual(BeamEnergy.resolve(rawObjectVoltage: 200_000, suppliedKV: 300, suppliedAs: .fourDCube, sameRun: true)?.source, .file)
-        XCTAssertEqual(BeamEnergy.resolve(rawObjectVoltage: nil, suppliedKV: 200, suppliedAs: .fourDCube, sameRun: true)?.source, .fourDCube)
-        XCTAssertNil(BeamEnergy.resolve(rawObjectVoltage: nil, suppliedKV: 200, suppliedAs: .fourDCube, sameRun: false), "another run's voltage is not this file's")
-        XCTAssertNil(BeamEnergy.resolve(rawObjectVoltage: 0, suppliedKV: nil, suppliedAs: .fourDCube, sameRun: true))
-        XCTAssertEqual(BeamEnergy.resolve(rawObjectVoltage: 0, suppliedKV: 200, suppliedAs: .fourDCube, sameRun: true)?.source, .fourDCube, "a stored 0 is no voltage")
+        XCTAssertEqual(BeamEnergy.resolve(rawObjectVoltage: 200_000, suppliedKV: 300, suppliedAs: suppliedCube, sameRun: true)?.keV, 200)
+        XCTAssertEqual(BeamEnergy.resolve(rawObjectVoltage: 200_000, suppliedKV: 300, suppliedAs: suppliedCube, sameRun: true)?.source, .file)
+        XCTAssertEqual(BeamEnergy.resolve(rawObjectVoltage: nil, suppliedKV: 200, suppliedAs: suppliedCube, sameRun: true)?.source, suppliedCube)
+        XCTAssertNil(BeamEnergy.resolve(rawObjectVoltage: nil, suppliedKV: 200, suppliedAs: suppliedCube, sameRun: false), "another run's voltage is not this file's")
+        XCTAssertNil(BeamEnergy.resolve(rawObjectVoltage: 0, suppliedKV: nil, suppliedAs: suppliedCube, sameRun: true))
+        XCTAssertEqual(BeamEnergy.resolve(rawObjectVoltage: 0, suppliedKV: 200, suppliedAs: suppliedCube, sameRun: true)?.source, suppliedCube, "a stored 0 is no voltage")
     }
 
     /// The provenance line names the value and its source; a typed value overrides and says so.
@@ -28,7 +32,7 @@ final class SpectroscopyLaneUSpectro: XCTestCase {
     func testTheProvenanceNamesTheBeamAndItsSource() {
         var meta = SpectrumImageMetadata(fileName: "a.dm4", filePath: "", scanWidth: 1, scanHeight: 1, channelCount: 1, energyOffsetEV: 0, energyDispersionEV: 10)
         XCTAssertNil(BeamEnergy.provenance(typedKeV: nil, metadata: meta))
-        meta.beamEnergyKeV = 200; meta.beamEnergySource = .fourDCube
+        meta.beamEnergyKeV = 200; meta.beamEnergySource = suppliedCube
         XCTAssertEqual(BeamEnergy.provenance(typedKeV: nil, metadata: meta), "beam 200 kV \u{00B7} from the 4D cube, same run")
         meta.beamEnergySource = .file
         XCTAssertEqual(BeamEnergy.provenance(typedKeV: nil, metadata: meta), "beam 200 kV \u{00B7} from the file")
@@ -40,7 +44,7 @@ final class SpectroscopyLaneUSpectro: XCTestCase {
     func testTheFitFooterCarriesTheBeamProvenance() throws {
         var image = try Q.image()
         var meta = image.metadata
-        meta.beamEnergyKeV = 200; meta.beamEnergySource = .fourDCube
+        meta.beamEnergyKeV = 200; meta.beamEnergySource = suppliedCube
         image = LoadedSpectrumImage(image: image.image, metadata: meta, energyAxis: image.energyAxis, scanImage: image.scanImage)
         var m = Q.method(); m.beamEnergyKeV = nil
         let r = try PooledQuantifier.run(Q.input(m, image: image), tables: Q.tables)

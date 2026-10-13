@@ -104,7 +104,7 @@ final class SpectroCancellationTests: XCTestCase {
         let dm4 = Self.dir.appendingPathComponent("demo-edx-tiny.dm4").path
         let velox = Self.dir.appendingPathComponent("velox-tiny.emd").path
         for at in [1, 2, 3] {
-            assertCancels({ try SpectrumImageOpener.openGMSEDS(path: dm4, fourD: nil, cancelled: Flip(at: at).closure) }, "gms \(at)")
+            assertCancels({ try SpectrumImageOpener.openGMSEDS(path: dm4, cancelled: Flip(at: at).closure) }, "gms \(at)")
             assertCancels({ try SpectrumImageOpener.open(path: dm4, kind: .gmsEDSOnly, cancelled: Flip(at: at).closure) }, "open gms \(at)")
         }
         for at in [1, 2, 3] {
@@ -112,11 +112,11 @@ final class SpectroCancellationTests: XCTestCase {
         }
         assertCancels({ try SpectrumImageOpener.open(path: velox, kind: .veloxSpectrumImage, cancelled: Flip(at: 1).closure) }, "open velox")
         let r1 = Reports(), r2 = Reports()
-        let g = try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: dm4, fourD: nil, cancelled: { false }, progress: r1.closure))
+        let g = try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: dm4, cancelled: { false }, progress: r1.closure))
         let v = try SpectrumImageOpener.open(path: velox, kind: .veloxSpectrumImage, cancelled: { false }, progress: r2.closure)
         assertMonotoneEndingAtOne(r1, minimum: 3); assertMonotoneEndingAtOne(r2, minimum: 3)
         // Defaults reproduce the plain open.
-        let g2 = try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: dm4, fourD: nil))
+        let g2 = try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: dm4))
         XCTAssertEqual(g.sum(mask: nil), g2.sum(mask: nil))
         XCTAssertEqual(v.sum(mask: nil), try SpectrumImageOpener.openVelox(path: velox).sum(mask: nil))
     }
