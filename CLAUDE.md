@@ -1,7 +1,7 @@
 # CLAUDE.md — start here
 
 SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS now, EELS later), imported by tagged
-version by mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. **Extracted (S2 done); S3 next.** This file is a pointer until
+version by mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. **0.1.0 tagged locally (S3 done); S4 (mac4DSTEM) next.** This file is a pointer until
 the library's own full rules replace it.
 
 ## Read first
@@ -40,7 +40,7 @@ the library's own full rules replace it.
 
 - **S2 (this repo, done)**: `git filter-repo` extraction from `5ba712a0`, merge into `main`. `Package.swift`: one
   `SpectroCore` target for now, Swift 6 language mode, nonisolated default; the old `-DACCELERATE_NEW_LAPACK`
-  `unsafeFlags` still present, only until S3. `Bundle.module` for the six CSVs; `#filePath` fixture paths. `swift test`
+  `unsafeFlags` still present, only until S3 (gone in S3). `Bundle.module` for the six CSVs; `#filePath` fixture paths. `swift test`
   passes exactly the 258 names. The golden baseline (mac4DSTEM's `SpectroGoldenTests`, recorded at `71929a01`) matches
   byte for byte for the scenarios the library can reach.
   **Done 2026-10-13**: `tools/test.sh` (= `swift test` with mac4DSTEM's vendored libhdf5/libsz/libaec, taken by
@@ -48,8 +48,33 @@ the library's own full rules replace it.
   failed / 0 skipped, names equal to the partition's list; `SpectroGoldenTests` 6 of mac4DSTEM's 7 scenarios
   byte-identical (`demo-spectrum-fixture` is the app's demo source and stays there), red on a one-character baseline
   mutation. Zero warnings in Swift 6. Open for S3: where the library's own tests and CI get libhdf5.
-- **S3 (this repo, next)**: LAPACK C shim, no `unsafeFlags`; the Debug `-O` decision; a throwaway remote consumer resolves;
-  ζ stays `package` (not public in 0.1.0); tag `0.1.0` locally.
+- **S3 (this repo, done 2026-10-13)**: tag `0.1.0` (local; pushing it, `main`, and making the repo public are the owner's).
+  - **LAPACK**: C target `CSpectroLAPACK` (`sk_dgelsy`, `sk_dgeqrf`, `sk_dorgqr`, `sk_dtrtri`: values in, `info` out; the
+    public header includes no Accelerate). `ACCELERATE_NEW_LAPACK` comes from its `cSettings`, not a `#define` in the .c:
+    Accelerate is a precompiled clang module and does not see an in-source define (tried: `__LAPACK_int` undeclared). The
+    objects call the same `_dgelsy$NEWLAPACK`… symbols as S2's Swift did. Golden byte-identical after; 258 names identical.
+    Mutations: rcond = 0.9 → 18 fit tests + golden red; dtrtri diag 'U' → 2 covariance tests + golden red; **rcond ×1e9
+    (1e-12 → 1e-3) stays green**: no fixture's design is near rank-deficient, so dgelsy's rank threshold is untested (gap).
+    Gate B (Sonnet, did not write it): PASS, every argument checked against the old calls.
+  - **Debug `-O` dropped** (a versioned dependency cannot carry unsafe flags). Measured (Mac17,9; median s; Debug -Onone /
+    Debug -O / Release): Velox 483 MB 16.1 / 0.86 / 0.80; 936 MB 24.5 / 1.05 / 0.96; 1745 MB 82.4 / 3.87 / 3.79; velox-tiny
+    ~0.001 all; ElementProposer (eds-proposer-sim) 956 / 19.8 / 19.9; PooledQuantifier sim 31.6 / 0.75 / 0.67, DM4 4.88 /
+    0.10 / 0.096; SpectroGoldenTests 1349 / 26.5. `@_optimize(speed)` does not help at -Onone (28.8 vs 31.6; disassembly
+    unoptimised). So optimisation is the consumer's: **S4 must decide how mac4DSTEM's Debug builds SpectroKit optimised**
+    (else EDX in Debug is 20–50× slower). The proposer's ~20 s even optimised is its own performance item.
+  - **Tests**: `tools/test.sh` = `swift test -c release` (`-Xswiftc -O` on Debug crashes swift-frontend on a test file,
+    `swifterror`). libhdf5, in order: `MAC4DSTEM_HDF5_PATH`; mac4DSTEM's vendored 2.1.1 by `git show` at `5ba712a0` (the exact
+    binaries the app ships); Homebrew `hdf5` (soname 320) for CI and machines without mac4DSTEM. Not vendored: SwiftPM clones
+    the whole repo into every consumer, and the library deliberately ships no libhdf5 (the host does).
+    Both sources run the 258 + golden green and byte-identical (Homebrew 2.2.0 checked in S3); no CI exists yet.
+  - **Consumer**: a throwaway package resolved `exact: "0.1.0"` from a `file://` clone, built in Debug with no unsafe-flag
+    refusal, and called `QuantificationTables.bundled()` and `SpectrumImageOpener.open(path:kind:)` on velox-tiny
+    (`openVelox` itself is `package`; `open(…, .veloxSpectrumImage)` is its public door).
+    Result at `d26baf0`: `Package.resolved` 0.1.0; velox-tiny 2 x 3 x 8, 11 counts, 200 keV. The consumer must supply
+    libhdf5 (here `MAC4DSTEM_HDF5_PATH`), as any host does.
+  - ζ stays `package` (`ZetaFactor`, `AbsorptionCorrection.zeta`); the only validation value is
+    `PooledQuantification.abundanceValidation = "none"`; S3 changed no validation line. LICENSE (GPL-3.0) and NOTICE (exSpy,
+    HyperSpy, rsciio, EPQ, FFAST, Krause, HDF5) added; `Licenses/` holds HDF5's and libaec's texts.
 - **S4 (mac4DSTEM)**: the switch to the tag.
 - **Then**: the per-stage exSpy gates (counts, energy axis, background, peak ID, Cliff–Lorimer, ζ, absorption), which
   are also the diagnosis of why Auto ID misses Mg in 37 of 38 Al-Mg-Si files. Backlog item: `VeloxEMDReader` reads a
