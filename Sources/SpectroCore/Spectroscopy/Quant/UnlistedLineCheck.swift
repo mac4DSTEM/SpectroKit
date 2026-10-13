@@ -33,7 +33,7 @@
 
 import Foundation
 
-package nonisolated struct UnlistedLineCheck: Sendable, Equatable {
+public nonisolated struct UnlistedLineCheck: Sendable, Equatable {
     package struct Candidate: Sendable, Equatable {
         package var element: String
         /// The proposer's best group, e.g. "Ge_Ka".
@@ -81,7 +81,7 @@ package nonisolated struct UnlistedLineCheck: Sendable, Equatable {
     package var largest: Move?
     /// Why the check could not run (the proposer or the refit failed). The candidates found, if any, are still named; at% is
     /// not withheld on a failure of the check, and the line says it was not checked.
-    package var failure: String?
+    public var failure: String?
 
     package init(candidates: [Candidate], moves: [Move], largest: Move? = nil, failure: String? = nil) {
         self.candidates = candidates; self.moves = moves; self.largest = largest; self.failure = failure
@@ -94,7 +94,7 @@ package nonisolated struct UnlistedLineCheck: Sendable, Equatable {
         return String(format: "largest move %.1f \u{03C3} (%@)", r, m.element)
     }
 
-    package static func failed(_ reason: String) -> UnlistedLineCheck { .init(candidates: [], moves: [], failure: reason) }
+    public static func failed(_ reason: String) -> UnlistedLineCheck { .init(candidates: [], moves: [], failure: reason) }
 
     /// True when fitting the element candidates moves a quantified net by more than its sigma. A statement about the numbers:
     /// since A2 it blanks nothing (the caveat carries it).
@@ -102,10 +102,10 @@ package nonisolated struct UnlistedLineCheck: Sendable, Equatable {
     /// What each candidate is called on screen: an element symbol, or the excess beside a listed line.
     package var names: [String] { candidates.map(\.shownName) }
     /// The candidates that are elements (clear of every listed line): the ones that can be added as Fit only.
-    package var elementNames: [String] { candidates.filter { $0.besideLine == nil }.map(\.element) }
+    public var elementNames: [String] { candidates.filter { $0.besideLine == nil }.map(\.element) }
 
     /// The one line under the table.
-    package var line: String {
+    public var line: String {
         if let failure, candidates.isEmpty { return "Unlisted lines: not checked (\(failure))" }
         if candidates.isEmpty { return "Unlisted lines: none at or above L_D" }
         return "Unlisted lines found: \(names.joined(separator: ", "))"   // the room's two buttons carry the actions
@@ -134,7 +134,7 @@ package nonisolated struct UnlistedLineCheck: Sendable, Equatable {
     }
 
     /// The export's `#` line: what was found, how, and what it did to the numbers.
-    package var summary: String {
+    public var summary: String {
         if let failure, candidates.isEmpty { return "not checked: \(failure)" }
         if candidates.isEmpty { return "no unlisted line at or above Currie L_D (proposer on this pooled spectrum, sum-peak questions counted)" }
         let found = candidates.map { c -> String in
@@ -152,17 +152,17 @@ package nonisolated struct UnlistedLineCheck: Sendable, Equatable {
     }
 }
 
-package nonisolated enum UnlistedLineChecker {
+public nonisolated enum UnlistedLineChecker {
 
     /// The proposer on the reported fit's own settings: its axis (refined or the file's), width, range, continuum and escape
     /// setting, with the listed elements (quantified and Fit only) as the current set. The proposer forces least squares.
-    package static func proposerSettings(_ q: PooledQuantification) -> FitSettings {
+    public static func proposerSettings(_ q: PooledQuantification) -> FitSettings {
         var s = q.fitSettings
         s.method = .leastSquares
         return s
     }
 
-    package static func propose(counts: [Double], quantification q: PooledQuantification,
+    public static func propose(counts: [Double], quantification q: PooledQuantification,
                                 proposer: ElementProposer = ElementProposer(),
                                 cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                                 progress: (@Sendable (Double) -> Void)? = nil) throws -> ProposalResult {
@@ -170,7 +170,7 @@ package nonisolated enum UnlistedLineChecker {
     }
 
     /// "Al_Ka" -> "Al K\u{03B1}", "Lu_Ma" -> "Lu M\u{03B1}", "Cu_Lb1" -> "Cu L\u{03B2}1".
-    package static func displayName(_ id: String) -> String {
+    public static func displayName(_ id: String) -> String {
         let parts = id.split(separator: "_", maxSplits: 1).map(String.init)
         guard parts.count == 2 else { return id }
         let line = parts[1].map { c -> String in
@@ -180,7 +180,7 @@ package nonisolated enum UnlistedLineChecker {
     }
 
     /// 44913 -> "44 913" (a plain space, whatever the locale).
-    package static func grouped(_ x: Double) -> String {
+    public static func grouped(_ x: Double) -> String {
         let digits = String(Int(x.rounded()))
         var out = "", n = 0
         for ch in digits.reversed() {
@@ -197,7 +197,7 @@ package nonisolated enum UnlistedLineChecker {
     /// R8: a split edge is the K edge of an element (Al 1.5596 keV, Si 1.839): the candidate of the element that OWNS the edge is
     /// that element's own line group sitting on its own edge, never an "excess beside the split". `element` is the candidate's
     /// symbol; nil (or an edge with no known owner) exempts nothing.
-    package static func neighbour(energyKeV e: Double, listedGroups: [FitLineGroup], resolutionMnKaEV: Double,
+    public static func neighbour(energyKeV e: Double, listedGroups: [FitLineGroup], resolutionMnKaEV: Double,
                                   edges: [Double], nets: [String: Double] = [:], element: String? = nil) -> (line: String, net: Double)? {
         guard let fwhm = XRayLines.fwhm(resolutionMnKaEV: resolutionMnKaEV, atEnergy: e) else { return nil }
         // The STRONGEST (alpha, the group's first) line of each listed group is the reference, the nearest in FWHM units wins; the
@@ -223,14 +223,14 @@ package nonisolated enum UnlistedLineChecker {
     }
 
     /// The decision for one proposal. `input` is the reported fit's input (counts, axis, method); `q` its result.
-    package static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification) -> UnlistedLineCheck {
+    public static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification) -> UnlistedLineCheck {
         // The closure never answers true, so the throwing core cannot throw.
         try! check(proposal: proposal, input: input, quantification: q, cancelled: { false }, progress: nil)
     }
 
     /// The same decision, cancellable (ADR 064 amendment 2 §2): the refit is the long step; `SpectroCancelled` is thrown (never
     /// folded into the check's `failure`) and nothing is returned. `progress` is monotone in 0...1 and ends at 1.
-    package static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification,
+    public static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification,
                               cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                               progress: (@Sendable (Double) -> Void)? = nil) throws -> UnlistedLineCheck {
         try SpectroCancellation.check(cancelled)
@@ -288,7 +288,7 @@ package nonisolated enum UnlistedLineChecker {
     /// The result as it may be shown: the check attached and the caveat set (A2: at%, wt% and the k-free ratios are never
     /// blanked by the check; they stay with the caveat that says what is unlisted and the largest move). To restore the old
     /// blanking, re-add `blankAbundance` from 94e26370 and call it here when `c.withholds`.
-    package static func withholding(_ q: PooledQuantification, _ c: UnlistedLineCheck) -> PooledQuantification {
+    public static func withholding(_ q: PooledQuantification, _ c: UnlistedLineCheck) -> PooledQuantification {
         var out = q
         out.unlistedCheck = c
         out.unlistedCheckPending = false
@@ -298,7 +298,7 @@ package nonisolated enum UnlistedLineChecker {
 
     /// The result while the check runs: everything shown at once, with the caveat "unlisted-line check running", replaced when
     /// the check lands (a number never vanishes).
-    package static func holding(_ q: PooledQuantification) -> PooledQuantification {
+    public static func holding(_ q: PooledQuantification) -> PooledQuantification {
         var out = q
         out.abundanceCaveat = "unlisted-line check running"
         out.unlistedCheckPending = true

@@ -12,13 +12,13 @@
 
 import Foundation
 
-package nonisolated enum SpectroscopyExport {
+public nonisolated enum SpectroscopyExport {
     package static let columns = ["element", "line", "net_counts", "sigma_net", "kfree_ratio", "sigma_kfree",
                                   "at_percent", "sigma_at_percent", "validation", "flags", "estimator"]
 
     /// The results table, one row per fitted element, with the fit's provenance as `#` header lines.
     /// The first `#` line names the producing app: `title` is that name (E6, SpectroKit slot plan), defaulting to this app's.
-    package static func csv(_ q: PooledQuantification, regionName: String,
+    public static func csv(_ q: PooledQuantification, regionName: String,
                             title: String = "mac4DSTEM Spectroscopy quantification") -> String {
         var out: [String] = []
         out.append("# \(title), region: \(regionName)")
@@ -56,16 +56,16 @@ package nonisolated enum SpectroscopyExport {
 
     /// `{"method": <the method's canonical JSON, byte for byte>, "sha256": "<its hash>"}`: the hash is over exactly the
     /// bytes of the `method` value, so a reader can verify it without re-encoding.
-    package static func methodJSON(_ m: QuantificationMethod) -> String {
+    public static func methodJSON(_ m: QuantificationMethod) -> String {
         "{\"method\":\(m.canonicalJSON),\"sha256\":\"\(m.hash)\"}\n"
     }
 
     /// The inspector's readouts of what the step will write: the elements of the table and the method's short hash.
-    package static func elementsLine(_ q: PooledQuantification) -> String { q.rows.map(\.element).joined(separator: ", ") }
-    package static func shortHash(_ m: QuantificationMethod) -> String { String(m.hash.prefix(8)) }
+    public static func elementsLine(_ q: PooledQuantification) -> String { q.rows.map(\.element).joined(separator: ", ") }
+    public static func shortHash(_ m: QuantificationMethod) -> String { String(m.hash.prefix(8)) }
 
     /// The default file name: the spectrum image's stem, the region, what it is.
-    package static func fileStem(imageName: String, regionName: String) -> String {
+    public static func fileStem(imageName: String, regionName: String) -> String {
         let base = (imageName as NSString).deletingPathExtension
         let raw = "\(base) \(regionName)"
         let allowed = raw.map { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_" }

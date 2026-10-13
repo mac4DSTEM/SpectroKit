@@ -13,15 +13,15 @@ package nonisolated enum FitMethod: Sendable, Equatable {
     case poissonML(IRLSSettings)
 }
 
-package nonisolated struct FitSettings: Sendable, Equatable {
-    package var elements: [String]
-    package var resolutionMnKaEV: Double
-    package var beamEnergy: Double
+public nonisolated struct FitSettings: Sendable, Equatable {
+    public var elements: [String]
+    public var resolutionMnKaEV: Double
+    public var beamEnergy: Double
     /// Fitted energy range in keV; nil bound = the axis end.
     package var fitFrom: Double?
     package var fitTo: Double?
-    package var background: FitBackground
-    package var escapePeaks: Bool = true
+    public var background: FitBackground
+    public var escapePeaks: Bool = true
     package var referenceShapes: ReferenceShapes = .none
     package var method: FitMethod = .leastSquares
 
@@ -54,7 +54,7 @@ package nonisolated struct FitSettings: Sendable, Equatable {
     /// `ContinuumForm.weakLineBiasNote`); nil gives the Kramers-only form, which IS the default: the registered selection (report2) had no tie
     /// clause, 397 (with eps) vs 402 (without) counts at se ~33 is unresolved, so the no-filler rule decides: eps would add a generic EPQ SDD
     /// model to every footer for zero measured gain. eps stays an option.
-    package static func standard(elements: [String], axis: EnergyAxis, resolutionMnKaEV: Double,
+    public static func standard(elements: [String], axis: EnergyAxis, resolutionMnKaEV: Double,
                                  beamEnergy: Double, efficiency: (any DetectorEfficiency)? = nil) -> FitSettings {
         FitSettings(elements: elements, resolutionMnKaEV: resolutionMnKaEV, beamEnergy: beamEnergy,
                     fitFrom: 0.2, fitTo: defaultFitTo(axis: axis, beamEnergy: beamEnergy),
@@ -63,23 +63,23 @@ package nonisolated struct FitSettings: Sendable, Equatable {
 }
 
 /// Conforms to `FittedAmplitudes` (Statistics/SigmaTerms.swift): `values`, row-major `covariance`.
-package nonisolated struct EDSFitResult: FittedAmplitudes, Sendable {
-    package var groupIDs: [String]
+public nonisolated struct EDSFitResult: FittedAmplitudes, Sendable {
+    public var groupIDs: [String]
     /// Line areas in counts, one per group (alpha line + its tied family), >= 0.
-    package var values: [Double]
+    public var values: [Double]
     /// Covariance of `values`, row-major (see `covarianceKind`).
-    package var covariance: [Double]
+    public var covariance: [Double]
     package var covarianceKind: String
     /// False for a group with no support in the fitted range (its area is reported 0, variance 0).
     package var supported: [Bool]
     /// True where the area is held at 0 by the non-negativity constraint.
-    package var atBound: [Bool]
+    public var atBound: [Bool]
     /// Si-escape areas per group; nil where the group has no line above the Si K edge.
     package var escapeValues: [Double?]
     package var backgroundNames: [String]
     package var backgroundCoefficients: [Double]
 
-    package var channels: Range<Int>
+    public var channels: Range<Int>
     package var model: [Double]
     package var residual: [Double]
     /// (data - model) / sqrt(max(model, `standardizedFloor`)); the floor keeps r finite as model -> 0.
@@ -99,11 +99,11 @@ package nonisolated struct EDSFitResult: FittedAmplitudes, Sendable {
     package var reducedDeviance: Double
 
     // Settings as run, for the footer.
-    package var methodLabel: String
+    public var methodLabel: String
     package var referenceShapesLabel: String
     package var escapeLabel: String
     /// The background as run, named (the continuum form and orders, or the parity polynomial).
-    package var backgroundLabel: String
+    public var backgroundLabel: String
     /// How the solver ended: "converged", "stationary (no deviance decrease, KKT satisfied)", "cap reached", "stalled (KKT violated)".
     package var exit: String
     /// Everything a footer must say that is not a number: dropped lines, ML with a negative model, a large escape ratio, a cap.
@@ -118,10 +118,10 @@ package nonisolated struct EDSFitResult: FittedAmplitudes, Sendable {
     package var devianceHistory: [Double]
 
     package var count: Int { values.count }
-    package func sigma(at i: Int) -> Double { max(covariance[i * count + i], 0).squareRoot() }
+    public func sigma(at i: Int) -> Double { max(covariance[i * count + i], 0).squareRoot() }
 }
 
-package nonisolated enum EDSFitError: Error, Equatable {
+public nonisolated enum EDSFitError: Error, Equatable {
     case noChannels
     case lengthMismatch
     /// A reference profile does not have one value per channel of the axis.

@@ -16,13 +16,13 @@
 
 import Foundation
 
-package nonisolated struct Currie: Equatable, Sendable {
+public nonisolated struct Currie: Equatable, Sendable {
     package let alpha: Double
     package let beta: Double
 
     /// Currie's convention (alpha = beta = 0.05): a choice, reported with every result. L_C and L_D
     /// that follow from it are the dataset's properties.
-    package static let standard = Currie(alpha: 0.05, beta: 0.05)
+    public static let standard = Currie(alpha: 0.05, beta: 0.05)
 
     package init(alpha: Double, beta: Double) {
         precondition(alpha > 0 && alpha < 0.5 && beta > 0 && beta < 0.5, "alpha, beta in (0, 0.5)")

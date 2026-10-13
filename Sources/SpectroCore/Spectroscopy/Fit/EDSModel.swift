@@ -32,7 +32,7 @@ package nonisolated struct FitLine: Sendable, Equatable {
     package let fwhm: Double      // keV
 }
 
-package nonisolated struct FitLineGroup: Sendable, Equatable {
+public nonisolated struct FitLineGroup: Sendable, Equatable {
     /// The alpha line's id, e.g. "Fe_Ka"; also the group's name.
     package let id: String
     package let element: String
@@ -42,11 +42,11 @@ package nonisolated struct FitLineGroup: Sendable, Equatable {
     package let escapes: [FitLine]
 }
 
-package nonisolated struct EDSLineModel: Sendable, Equatable {
+public nonisolated struct EDSLineModel: Sendable, Equatable {
     package static let siKEdge = 1.839
     package static let sigma2fwhm = 2 * (2 * log(2.0)).squareRoot()
 
-    package let groups: [FitLineGroup]
+    public let groups: [FitLineGroup]
     package let resolutionMnKaEV: Double
     package let beamEnergy: Double
     package let escapePeaks: Bool
@@ -55,7 +55,7 @@ package nonisolated struct EDSLineModel: Sendable, Equatable {
     package let droppedLines: [String]
 
     /// Groups in alphabetical order of the alpha line (eXSpy `_get_lines_from_elements` sorts).
-    package static func build(
+    public static func build(
         elements: [String], axis: EnergyAxis, beamEnergy: Double, resolutionMnKaEV: Double, escapePeaks: Bool = true
     ) -> EDSLineModel {
         let mains = XRayLines.defaultLines(

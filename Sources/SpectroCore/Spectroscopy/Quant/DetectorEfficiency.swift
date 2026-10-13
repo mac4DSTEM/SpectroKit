@@ -9,7 +9,7 @@
 
 import Foundation
 
-package nonisolated protocol DetectorEfficiency: Sendable {
+public nonisolated protocol DetectorEfficiency: Sendable {
     /// Shown in the k badge, e.g. "typed table: Thermo Super-X datasheet 2024".
     var sourceName: String { get }
     /// 0...1 (relative values are fine: only ratios enter k).

@@ -7,7 +7,7 @@
 
 import Foundation
 
-package enum DM4Error: LocalizedError {
+public enum DM4Error: LocalizedError {
     case cannotOpen(String)
     case notLittleEndian
     case noDatacube
@@ -18,7 +18,7 @@ package enum DM4Error: LocalizedError {
     /// finds it gone — see `DM4Reader.requireDiskAlive()`.
     case volumeGone(String)
 
-    package var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .cannotOpen(let detail): return "Could not open DM file: \(detail)"
         case .notLittleEndian: return "This DM file is big-endian (Mac-authored); only little-endian DM files are supported."

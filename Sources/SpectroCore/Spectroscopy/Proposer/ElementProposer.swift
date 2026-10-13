@@ -35,21 +35,21 @@
 
 import Foundation
 
-package nonisolated struct ElementCandidate: Equatable, Sendable {
-    package let element: String
+public nonisolated struct ElementCandidate: Equatable, Sendable {
+    public let element: String
     /// The line group with the largest net / L_D, e.g. "Mg_Ka".
-    package let group: String
+    public let group: String
     /// Energy of the group's alpha line, keV.
-    package let energyKeV: Double
+    public let energyKeV: Double
     /// Fitted line area in counts (>= 0: the fit is non-negative).
-    package let net: Double
+    public let net: Double
     /// Standard deviation of the area at the fitted state (it contains the line's own Poisson variance).
-    package let sigma: Double
+    public let sigma: Double
     /// Standard deviation of the area with the candidate absent (the basis of L_C and L_D).
     package let sigmaZero: Double
     package let criticalLevel: Double
     package let detectionLimit: Double
-    package let conflicts: [LineConflict]
+    public let conflicts: [LineConflict]
     /// Cu defaults to Quantify (the Q phase); everything else to Fit only.
     package let suggestedRole: QuantificationMethod.ElementRole
     /// Cu only, when a hole spectrum was given: what the hole region said.
@@ -64,7 +64,7 @@ package nonisolated struct ElementCandidate: Equatable, Sendable {
     package var isProposed: Bool { aboveDetectionLimit }
     package var hasSumPeakQuestion: Bool { conflicts.contains { $0.kind == .sumPeak } }
     /// How many detection limits the net is (the order in which to show candidates).
-    package var significance: Double { net / detectionLimit }
+    public var significance: Double { net / detectionLimit }
 
     /// Explicit so the room's tests can state a candidate (the memberwise one is internal).
     package init(element: String, group: String, energyKeV: Double, net: Double, sigma: Double, sigmaZero: Double,
@@ -87,23 +87,23 @@ package nonisolated struct SumPeakFinding: Equatable, Sendable {
     package var detected: Bool { net >= detectionLimit }
 }
 
-package nonisolated struct ProposalResult: Sendable {
+public nonisolated struct ProposalResult: Sendable {
     /// One per pool element with a line group in the fitted range, strongest first.
     package let candidates: [ElementCandidate]
     package let sumPeaks: [SumPeakFinding]
-    package let refused: [(element: String, reason: String)]
+    public let refused: [(element: String, reason: String)]
     package let currie: Currie
     /// The fit settings and warnings that shaped the result, in plain words (the footer).
-    package let notes: [String]
+    public let notes: [String]
     package let passes: Int
     package let settled: Bool
     /// Pearson reduced chi-square of the settled fit these candidates came from (R7, wp3e F3.3: shown beside every suggestion;
     /// a read of the fit, nothing here changes it). nil for a hand-built result.
-    package let reducedChiSquared: Double?
+    public let reducedChiSquared: Double?
     /// At or above L_D and carrying NO sum-peak conflict: an element the data support.
-    package var proposed: [ElementCandidate] { candidates.filter { $0.isProposed && !$0.hasSumPeakQuestion } }
+    public var proposed: [ElementCandidate] { candidates.filter { $0.isProposed && !$0.hasSumPeakQuestion } }
     /// At or above L_D but sitting on a pile-up energy of the detected parents: "sum peak or this element?", not a finding.
-    package var sumPeakQuestions: [ElementCandidate] { candidates.filter { $0.isProposed && $0.hasSumPeakQuestion } }
+    public var sumPeakQuestions: [ElementCandidate] { candidates.filter { $0.isProposed && $0.hasSumPeakQuestion } }
     package var possible: [ElementCandidate] { candidates.filter { $0.aboveCriticalLevel && !$0.isProposed } }
 
     /// Explicit so the room's tests can state a result (the memberwise one is internal).
@@ -115,7 +115,7 @@ package nonisolated struct ProposalResult: Sendable {
     }
 }
 
-package nonisolated enum ProposerError: Error, Equatable {
+public nonisolated enum ProposerError: Error, Equatable {
     case lengthMismatch
     case noChannels
     /// The joint design is numerically rank deficient: no covariance, so no limit can be stated.
@@ -124,7 +124,7 @@ package nonisolated enum ProposerError: Error, Equatable {
     case cancelled
 }
 
-package nonisolated struct ElementProposer: Sendable {
+public nonisolated struct ElementProposer: Sendable {
     package var currie: Currie
     /// The elements tested; nil is `defaultPool`.
     package var pool: [String]?
@@ -156,7 +156,7 @@ package nonisolated struct ElementProposer: Sendable {
         return out
     }
 
-    package init(currie: Currie = .standard, pool: [String]? = nil, maxPasses: Int = 5, maxForwardRounds: Int = 24, minimumLineEnergyKeV: Double = 0.45) {
+    public init(currie: Currie = .standard, pool: [String]? = nil, maxPasses: Int = 5, maxForwardRounds: Int = 24, minimumLineEnergyKeV: Double = 0.45) {
         self.currie = currie; self.pool = pool; self.maxPasses = maxPasses; self.maxForwardRounds = maxForwardRounds; self.minimumLineEnergyKeV = minimumLineEnergyKeV
     }
 
@@ -178,7 +178,7 @@ package nonisolated struct ElementProposer: Sendable {
     ///     its own `ProposerError.cancelled` (the room and its tests already match it) rather than `SpectroCancelled`; nothing partial is returned.
     ///   - progress: monotone in 0...1, ends at 1. The number of fits is not known in advance, so it is fits done over fits done plus the
     ///     fits the current step still has planned, clamped never to fall.
-    package func propose(counts: [Double], axis: EnergyAxis, settings: FitSettings,
+    public func propose(counts: [Double], axis: EnergyAxis, settings: FitSettings,
                          holeCounts: [Double]? = nil,
                          cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                          progress: (@Sendable (Double) -> Void)? = nil) throws -> ProposalResult {

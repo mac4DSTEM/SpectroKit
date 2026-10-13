@@ -6,7 +6,7 @@
 
 import Foundation
 
-package nonisolated enum QuantError: LocalizedError, Equatable {
+public nonisolated enum QuantError: LocalizedError, Equatable {
     case countMismatch(String)
     case unknownElement(String)
     /// Fewer than two lines above `minIntensity`: Cliff-Lorimer is a ratio method.
@@ -21,7 +21,7 @@ package nonisolated enum QuantError: LocalizedError, Equatable {
     case outsideTable(String, energyKeV: Double)
     case invalid(String)
 
-    package var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .countMismatch(let s): return s
         case .unknownElement(let e): return "No atomic data for element \(e)."

@@ -15,11 +15,11 @@
 
 import Foundation
 
-package nonisolated enum MapSmoothing: String, CaseIterable, Sendable, Codable {
+public nonisolated enum MapSmoothing: String, CaseIterable, Sendable, Codable {
     case none, box3, box5, gaussian1, gaussian2
 
     /// What a tile header and a file name say ("net · 3 × 3"); empty for none.
-    package var label: String {
+    public var label: String {
         switch self {
         case .none: ""
         case .box3: "3 \u{00D7} 3"
@@ -30,7 +30,7 @@ package nonisolated enum MapSmoothing: String, CaseIterable, Sendable, Codable {
     }
 
     /// A file-name-safe form ("3x3", "s1px"); empty for none.
-    package var fileTag: String {
+    public var fileTag: String {
         switch self {
         case .none: ""
         case .box3: "3x3"
@@ -54,7 +54,7 @@ package nonisolated enum MapSmoothing: String, CaseIterable, Sendable, Codable {
     }
 
     /// The filtered map, row-major `width × height`; the input when none, or when the shape does not match.
-    package func apply(_ map: [Double], width: Int, height: Int) -> [Double] {
+    public func apply(_ map: [Double], width: Int, height: Int) -> [Double] {
         guard self != .none, width > 0, height > 0, map.count == width * height else { return map }
         let k = kernel
         let rows = Self.pass(map, length: width, count: height, stride: 1, lineStride: width, kernel: k)

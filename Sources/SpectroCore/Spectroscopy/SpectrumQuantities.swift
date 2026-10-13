@@ -15,14 +15,14 @@ import Foundation
 // MARK: - Regions
 
 /// A half-open pixel rectangle `[x0, x1) x [y0, y1)` on the spectrum image's own grid.
-package nonisolated struct PixelRect: Equatable, Sendable {
-    package var x0: Int, y0: Int, x1: Int, y1: Int
-    package init(x0: Int, y0: Int, x1: Int, y1: Int) { self.x0 = x0; self.y0 = y0; self.x1 = x1; self.y1 = y1 }
-    package var width: Int { max(x1 - x0, 0) }
-    package var height: Int { max(y1 - y0, 0) }
+public nonisolated struct PixelRect: Equatable, Sendable {
+    public var x0: Int, y0: Int, x1: Int, y1: Int
+    public init(x0: Int, y0: Int, x1: Int, y1: Int) { self.x0 = x0; self.y0 = y0; self.x1 = x1; self.y1 = y1 }
+    public var width: Int { max(x1 - x0, 0) }
+    public var height: Int { max(y1 - y0, 0) }
 
     /// The rectangle spanned by two pixel corners (inclusive of both), clamped to the grid; nil when it holds no pixel.
-    package static func spanning(_ a: (x: Int, y: Int), _ b: (x: Int, y: Int), nx: Int, ny: Int) -> PixelRect? {
+    public static func spanning(_ a: (x: Int, y: Int), _ b: (x: Int, y: Int), nx: Int, ny: Int) -> PixelRect? {
         let r = PixelRect(x0: max(min(a.x, b.x), 0), y0: max(min(a.y, b.y), 0),
                           x1: min(max(a.x, b.x) + 1, nx), y1: min(max(a.y, b.y) + 1, ny))
         return r.width > 0 && r.height > 0 ? r : nil
@@ -30,12 +30,12 @@ package nonisolated struct PixelRect: Equatable, Sendable {
 }
 
 /// A vertex in continuous pixel-grid coordinates: x in [0, nx], y in [0, ny], pixel (i, j) covering [i, i+1) x [j, j+1).
-package nonisolated struct PixelPoint: Equatable, Sendable {
-    package var x: Double, y: Double
-    package init(x: Double, y: Double) { self.x = x; self.y = y }
+public nonisolated struct PixelPoint: Equatable, Sendable {
+    public var x: Double, y: Double
+    public init(x: Double, y: Double) { self.x = x; self.y = y }
 }
 
-package nonisolated enum SpectrumRegionShape: Equatable, Sendable {
+public nonisolated enum SpectrumRegionShape: Equatable, Sendable {
     case rectangle(PixelRect)
     /// The ellipse inscribed in the rectangle: a pixel is in when its centre is.
     case ellipse(PixelRect)
@@ -44,7 +44,7 @@ package nonisolated enum SpectrumRegionShape: Equatable, Sendable {
     case polygon([PixelPoint])
 
     /// The smallest pixel rectangle that holds the shape (the whole outline for a polygon).
-    package var bounds: PixelRect {
+    public var bounds: PixelRect {
         switch self {
         case .rectangle(let r), .ellipse(let r): return r
         case .polygon(let v):
@@ -56,7 +56,7 @@ package nonisolated enum SpectrumRegionShape: Equatable, Sendable {
     }
 
     /// Row-major `y * nx + x`, true = in. Pixels outside the grid are ignored.
-    package func mask(nx: Int, ny: Int) -> PixelMask {
+    public func mask(nx: Int, ny: Int) -> PixelMask {
         var m = PixelMask(repeating: false, count: nx * ny)
         let r = bounds
         // Clamped to the grid; a shape wholly off it (or empty) has an empty range, never a reversed one.
@@ -98,28 +98,28 @@ package nonisolated enum SpectrumRegionShape: Equatable, Sendable {
 // MARK: - Line windows
 
 /// One line (or an element that has none) with its windows resolved on an axis.
-package nonisolated struct LineWindow: Equatable, Sendable {
-    package let element: String
+public nonisolated struct LineWindow: Equatable, Sendable {
+    public let element: String
     /// `Element_Line`, e.g. "Al_Ka"; the bare symbol when the element has no line on the axis.
-    package let id: String
+    public let id: String
     package let energy: Double
     package let fwhm: Double
-    package let window: ResolvedWindow?
+    public let window: ResolvedWindow?
     /// Why there is no window: no line on the axis, a window edge outside it, an empty background window.
-    package let failure: String?
-    package let conflicts: [WindowConflict]
+    public let failure: String?
+    public let conflicts: [WindowConflict]
 }
 
 /// The net counts of one line in one spectrum, with the sums they came from.
-package nonisolated struct LineNetCount: Equatable, Sendable {
-    package let id: String
+public nonisolated struct LineNetCount: Equatable, Sendable {
+    public let id: String
     package let element: String
-    package let net: Double
-    package let sigma: Double
-    package let signal: UInt64
+    public let net: Double
+    public let sigma: Double
+    public let signal: UInt64
     /// left + right background sums; nil when the line has no background window.
-    package let background: UInt64?
-    package let scale: Double?
+    public let background: UInt64?
+    public let scale: Double?
 
     /// s·B >= G: the background windows hold at least as much as the signal window, so the net count is not a
     /// measurement of this line (the windows sit on neighbouring peaks, or the element is absent). Decided by the sums of
@@ -130,16 +130,16 @@ package nonisolated struct LineNetCount: Equatable, Sendable {
     }
 
     /// "not a measurement: the background windows (s·B = …) hold more than the signal window (G = …); they sit on neighbouring peaks"
-    package var notAMeasurementText: String? {
+    public var notAMeasurementText: String? {
         guard backgroundExceedsSignal, let b = background, let s = scale else { return nil }
         return "not a measurement: the background windows (s·B = \(Int((s * Double(b)).rounded()))) hold more than the signal window (G = \(signal)); they sit on neighbouring peaks"
     }
 }
 
-package nonisolated enum ElementWindows {
+public nonisolated enum ElementWindows {
     /// Detector resolution at Mn Kα when the file does not state one (eV). The simulated dataset and a Super-X G1 sit
     /// near it; it sets the window widths through eXSpy's width law and nothing else.
-    package static let defaultResolutionMnKaEV = 130.0
+    public static let defaultResolutionMnKaEV = 130.0
 
     /// The family Velox quantifies an element with by default: K while the element's Kα is at most `veloxKFamilyLimitKeV`,
     /// otherwise L (M only when the table has no L alpha; the person may still pick M).
@@ -151,7 +151,7 @@ package nonisolated enum ElementWindows {
     /// files only. It changes which line a map or marker uses by default, never the fit, which takes whole families.
     package static let veloxKFamilyLimitKeV = 20.0
 
-    package static func defaultFamily(of symbol: String) -> XRayFamily {
+    public static func defaultFamily(of symbol: String) -> XRayFamily {
         if let ka = XRayLines.line("\(symbol)_Ka"), ka.energy <= veloxKFamilyLimitKeV { return .K }
         if XRayLines.line("\(symbol)_La") != nil { return .L }
         if XRayLines.line("\(symbol)_Ma") != nil { return .M }
@@ -170,11 +170,11 @@ package nonisolated enum ElementWindows {
     }
 
     /// One element of a map: its family (nil = the default) and the lines the person checked (empty = the family's alpha line).
-    package struct Pick: Sendable {
+    public struct Pick: Sendable {
         package var symbol: String
         package var family: XRayFamily?
         package var lines: [String]
-        package init(symbol: String, family: XRayFamily? = nil, lines: [String] = []) {
+        public init(symbol: String, family: XRayFamily? = nil, lines: [String] = []) {
             self.symbol = symbol; self.family = family; self.lines = lines
         }
     }
@@ -196,7 +196,7 @@ package nonisolated enum ElementWindows {
     /// element closer than a window (Al Kα 1.487 and Kβ 1.557 keV) would overlap; the later window's signal is clipped to start
     /// where the earlier one ends and its background scale shrinks with it (`clipOverlaps`), so a summed map counts every
     /// channel once — the sum of the clipped nets is the net over the union of the signal channels.
-    package static func build(
+    public static func build(
         picks: [Pick], axis: EnergyAxis,
         resolutionMnKaEV: Double = defaultResolutionMnKaEV, beamEnergyKeV: Double?
     ) -> [LineWindow] {
@@ -263,7 +263,7 @@ package nonisolated enum ElementWindows {
     }
 
     /// Net counts and sigma of every window in one spectrum; nil where the line has no window.
-    package static func netCounts(spectrum: [UInt64], windows: [LineWindow]) -> [LineNetCount?] {
+    public static func netCounts(spectrum: [UInt64], windows: [LineWindow]) -> [LineNetCount?] {
         func sum(_ r: Range<Int>) -> UInt64 {
             let lo = max(r.lowerBound, 0), hi = min(r.upperBound, spectrum.count)
             var s: UInt64 = 0
@@ -285,13 +285,13 @@ package nonisolated enum ElementWindows {
     }
 
     /// Net-count map of every window that has one (outer = window, `nil` where there is none).
-    package static func maps(image: some SpectrumImage, windows: [LineWindow]) -> [[Double]?] {
+    public static func maps(image: some SpectrumImage, windows: [LineWindow]) -> [[Double]?] {
         // The closure never answers true, so the throwing core cannot throw.
         try! maps(image: image, windows: windows, cancelled: { false }, progress: nil)
     }
 
     /// The same maps, cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` with nothing returned; `progress` 0...1, ends at 1.
-    package static func maps(image: some SpectrumImage, windows: [LineWindow],
+    public static func maps(image: some SpectrumImage, windows: [LineWindow],
                              cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                              progress: (@Sendable (Double) -> Void)? = nil) throws -> [[Double]?] {
         let resolved = windows.compactMap(\.window)
@@ -306,11 +306,11 @@ package nonisolated enum ElementWindows {
 
     /// The integrated-intensity map of every window that has one (the room's "int" mode): the exact signal-window sum per
     /// pixel, no background taken off, so it is the net map plus the background term the net map subtracts.
-    package static func integratedMaps(image: some SpectrumImage, windows: [LineWindow]) -> [[Double]?] {
+    public static func integratedMaps(image: some SpectrumImage, windows: [LineWindow]) -> [[Double]?] {
         try! integratedMaps(image: image, windows: windows, cancelled: { false }, progress: nil)
     }
 
-    package static func integratedMaps(image: some SpectrumImage, windows: [LineWindow],
+    public static func integratedMaps(image: some SpectrumImage, windows: [LineWindow],
                                        cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                                        progress: (@Sendable (Double) -> Void)? = nil) throws -> [[Double]?] {
         let sums = try image.windowSums(windows.compactMap { $0.window?.signal }, cancelled: cancelled, progress: progress)
@@ -323,7 +323,7 @@ package nonisolated enum ElementWindows {
     }
 
     /// "Al Kα", "Cu Lα", "Mg Kβ": the table's line name with Greek letters.
-    package static func label(ofLineID id: String) -> String {
+    public static func label(ofLineID id: String) -> String {
         let parts = id.split(separator: "_")
         guard parts.count == 2 else { return id }
         var name = String(parts[1])
@@ -335,7 +335,7 @@ package nonisolated enum ElementWindows {
     }
 
     /// "Kα", "Lβ1": the line's name without its element, as the Lines menu lists it.
-    package static func shortLabel(ofLineID id: String) -> String {
+    public static func shortLabel(ofLineID id: String) -> String {
         let full = label(ofLineID: id)
         guard let space = full.firstIndex(of: " ") else { return full }
         return String(full[full.index(after: space)...])
@@ -343,7 +343,7 @@ package nonisolated enum ElementWindows {
 
     /// One element's lines in a sentence: "Al Kα+Kβ" for two lines of one family, "Pt Lα+Mα" across families; the
     /// element named once. nil for no line.
-    package static func summary(ofLineIDs ids: [String]) -> String? {
+    public static func summary(ofLineIDs ids: [String]) -> String? {
         guard let first = ids.first else { return nil }
         let rest = ids.dropFirst().map { shortLabel(ofLineID: $0) }
         return ([label(ofLineID: first)] + rest).joined(separator: "+")
@@ -352,7 +352,7 @@ package nonisolated enum ElementWindows {
     /// "background overlaps Si Kα": one line for the conflicts of one result, at most two named. Lines whose INTEGRATION
     /// window the background reaches come first (a peak in the background), then those it only touches on a flank (a tail):
     /// on the owner's file Mg's windows touch Cu Lα's flank and sit on Si Kα's peak, and the peak is the one to say.
-    package static func conflictNote(_ conflicts: [WindowConflict]) -> String? {
+    public static func conflictNote(_ conflicts: [WindowConflict]) -> String? {
         var names: [String] = []
         for c in conflicts.filter(\.reachesIntegrationWindow) + conflicts.filter({ !$0.reachesIntegrationWindow }) {
             let n = label(ofLineID: c.other)

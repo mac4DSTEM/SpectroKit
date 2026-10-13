@@ -12,7 +12,7 @@
 
 import Foundation
 
-package nonisolated enum EnergyAxisError: Error, Equatable, Sendable {
+public nonisolated enum EnergyAxisError: Error, Equatable, Sendable {
     /// hyperspy's `ValueError("The value is out of the axis limits")`.
     case outsideAxis(value: Double)
     /// hyperspy's `IndexError` from `_get_array_slices` (a slice wholly beyond one end).
@@ -20,15 +20,15 @@ package nonisolated enum EnergyAxisError: Error, Equatable, Sendable {
     case notANumber
 }
 
-package nonisolated struct EnergyAxis: Equatable, Sendable {
+public nonisolated struct EnergyAxis: Equatable, Sendable {
     /// Energy of channel 0, keV.
-    package let offset: Double
+    public let offset: Double
     /// Channel width, keV (> 0).
-    package let scale: Double
-    package let size: Int
+    public let scale: Double
+    public let size: Int
     package var units: String { "keV" }
 
-    package init(offset: Double, scale: Double, size: Int) {
+    public init(offset: Double, scale: Double, size: Int) {
         // DEVIATION: hyperspy also handles a negative scale (its rounding branch
         // swaps on the sign); EDS detectors never write one, so it is refused here.
         precondition(scale > 0 && size > 0, "EnergyAxis needs scale > 0 and size > 0")
@@ -40,7 +40,7 @@ package nonisolated struct EnergyAxis: Equatable, Sendable {
     package var lowValue: Double { offset }
 
     /// Energy of channel `i`.
-    package func energy(ofChannel i: Int) -> Double { offset + scale * Double(i) }
+    public func energy(ofChannel i: Int) -> Double { offset + scale * Double(i) }
 
     /// hyperspy `value2index(value)` with the default `rounding=round`
     /// (axes.py:1283-1334 at 2.4.0). The index is first truncated at 1e-12

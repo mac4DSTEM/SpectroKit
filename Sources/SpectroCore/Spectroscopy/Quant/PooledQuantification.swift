@@ -49,7 +49,7 @@ package nonisolated struct QuantificationRefusal: LocalizedError, Equatable {
 }
 
 /// The data files the computed k and the absorption correction read (EPQ / FFAST / Krause; Resources/Spectroscopy).
-package nonisolated struct QuantificationTables: Sendable {
+public nonisolated struct QuantificationTables: Sendable {
     package let mac: MassAbsorptionTable
     package let cross: BoteSalvatCrossSection
     package let krause: KrauseFluorescenceYield
@@ -63,15 +63,15 @@ package nonisolated struct QuantificationTables: Sendable {
     }
 
     /// The files shipped in the app bundle (Resources/Spectroscopy), nil when any is missing.
-    package static func bundled(in bundle: Bundle = .main) -> QuantificationTables? {
+    public static func bundled(in bundle: Bundle = .main) -> QuantificationTables? {
         guard let url = bundle.url(forResource: "LineWeights", withExtension: "csv", subdirectory: "Spectroscopy")
             ?? bundle.url(forResource: "LineWeights", withExtension: "csv") else { return nil }
         return try? QuantificationTables(directory: url.deletingLastPathComponent())
     }
 }
 
-package nonisolated struct PooledQuantificationInput: Sendable {
-    package var counts: [UInt64]
+public nonisolated struct PooledQuantificationInput: Sendable {
+    public var counts: [UInt64]
     package var axis: EnergyAxis
     package var method: QuantificationMethod
     package var metadata: SpectrumImageMetadata
@@ -80,9 +80,9 @@ package nonisolated struct PooledQuantificationInput: Sendable {
     package var resolutionMnKaEV: Double
     /// A refinement already computed for the same spectrum, elements and background (the controller caches it:
     /// it is the slow step and does not depend on the estimator, k or absorption).
-    package var refinement: AxisRefinementResult?
+    public var refinement: AxisRefinementResult?
 
-    package init(counts: [UInt64], axis: EnergyAxis, method: QuantificationMethod, metadata: SpectrumImageMetadata,
+    public init(counts: [UInt64], axis: EnergyAxis, method: QuantificationMethod, metadata: SpectrumImageMetadata,
                  regionName: String, pixelCount: Int, resolutionMnKaEV: Double = 130,
                  refinement: AxisRefinementResult? = nil) {
         self.counts = counts; self.axis = axis; self.method = method; self.metadata = metadata
@@ -91,66 +91,66 @@ package nonisolated struct PooledQuantificationInput: Sendable {
     }
 }
 
-package nonisolated struct PooledQuantification: Sendable {
-    package enum AbsorptionStatus: Sendable, Equatable {
+public nonisolated struct PooledQuantification: Sendable {
+    public enum AbsorptionStatus: Sendable, Equatable {
         case off
         /// Applied: the segment summary for the footer ("4 segments, take-off 21.6-68.3 deg") and the thickness.
         case applied(String)
         case refused(String)
     }
 
-    package struct Row: Sendable, Equatable {
-        package var element: String
-        package var groupID: String
+    public struct Row: Sendable, Equatable {
+        public var element: String
+        public var groupID: String
         /// Fitted area of the group's alpha line, counts (>= 0).
-        package var net: Double
-        package var sigma: Double
+        public var net: Double
+        public var sigma: Double
         package var supported: Bool
         /// The non-negativity bound holds the area at 0: the number is an upper-limit region, not a measurement.
-        package var atBound: Bool
-        package var isReference: Bool
+        public var atBound: Bool
+        public var isReference: Bool
         /// Net / reference net; the reference row is 1 with no sigma.
-        package var kFreeRatio: Double?
-        package var kFreeSigma: Double?
-        package var atomicPercent: Double?
-        package var atomicSigma: Double?
-        package var weightPercent: Double?
-        package var weightSigma: Double?
+        public var kFreeRatio: Double?
+        public var kFreeSigma: Double?
+        public var atomicPercent: Double?
+        public var atomicSigma: Double?
+        public var weightPercent: Double?
+        public var weightSigma: Double?
         package var atomicTerms: SigmaTerms?
         package var weightTerms: SigmaTerms?
         /// "counting 0.6 % + k 20 % + ... = 21 % -> +-1.1 at%"
         /// Relative |GM - AM| of this row's at% / wt% (model spread, NOT an uncertainty and not in the terms or the sigma); nil when absorption was not applied.
         package var absorptionSpreadAtomic: Double?
         package var absorptionSpreadWeight: Double?
-        package var atomicTermsText: String
-        package var weightTermsText: String
-        package var failure: String?
+        public var atomicTermsText: String
+        public var weightTermsText: String
+        public var failure: String?
         /// WP3c: set when the row is NOT on the element's K-alpha group because K-alpha lies outside the fitted range (its
         /// column has no support there): names the group the row is on and why. nil on a K-alpha row.
-        package var lineNote: String? = nil
+        public var lineNote: String? = nil
     }
 
-    package var method: QuantificationMethod
-    package var rows: [Row]
+    public var method: QuantificationMethod
+    public var rows: [Row]
     package var referenceElement: String?
-    package var fit: EDSFitResult
+    public var fit: EDSFitResult
     package var fileAxis: EnergyAxis
-    package var usedAxis: EnergyAxis
-    package var axisLocked: Bool
-    package var refinement: AxisRefinementResult?
+    public var usedAxis: EnergyAxis
+    public var axisLocked: Bool
+    public var refinement: AxisRefinementResult?
     /// Full-length (axis) curves for the plot; zero outside `fit.channels`.
-    package var plotModel: [Double]
-    package var plotBackground: [Double]
+    public var plotModel: [Double]
+    public var plotBackground: [Double]
     package var kSet: KFactorSet?
     /// nil when at% was computed; the reason otherwise.
-    package var abundanceRefusal: String?
-    package var absorption: AbsorptionStatus
-    package var warnings: [String]
+    public var abundanceRefusal: String?
+    public var absorption: AbsorptionStatus
+    public var warnings: [String]
     /// "chi2_red 1.04 (Pearson)" or "reduced deviance 1.02".
     package var qualityLabel: String
     package var quality: Double
     /// One line per setting that shaped the number (the results footer).
-    package var footerLines: [String]
+    public var footerLines: [String]
     /// The settings the reported fit ran with (axis, width, range, continuum, estimator): the unlisted-line check proposes on them.
     package var fitSettings: FitSettings
     /// The fitted range as run and where its upper end came from (WP3c; the footer's "fit range" line).
@@ -159,28 +159,28 @@ package nonisolated struct PooledQuantification: Sendable {
     /// filled with the unlisted-line check (`FitRangeSensitivityCheck.attaching`), nil until then or when it does not apply.
     package var rangeSensitivity: FitRangeSensitivity? = nil
     /// The unlisted-line check (WP3b F1), filled by `UnlistedLineChecker.withholding` once it has run; nil until then.
-    package var unlistedCheck: UnlistedLineCheck? = nil
+    public var unlistedCheck: UnlistedLineCheck? = nil
     /// The check is running and at%, wt% and the k-free ratios are held (`UnlistedLineChecker.holding`).
     package var unlistedCheckPending = false
     /// A2: a caveat on the at% rows ("assumes the listed elements only; unlisted: Cu (net 139 411) ..."), set by the unlisted-line
     /// check; "unlisted-line check running" while it runs; nil when the check found nothing. Never blanks a number.
-    package var abundanceCaveat: String? = nil
+    public var abundanceCaveat: String? = nil
 
-    package var hasAbundance: Bool { abundanceRefusal == nil }
+    public var hasAbundance: Bool { abundanceRefusal == nil }
     /// "\u{03C7}\u{00B2}\u{1D63} 54.8 (Pearson)" or "reduced deviance 1.02": shown beside the at% always (R7).
-    package var qualityText: String { PooledQuantifier.qualityText(label: qualityLabel, value: quality) }
+    public var qualityText: String { PooledQuantifier.qualityText(label: qualityLabel, value: quality) }
     /// "unvalidated" whenever an at% was produced (ADR 054 item 3): the cross-section source is validation "none".
-    package static let abundanceValidation = "none"
+    public static let abundanceValidation = "none"
 }
 
-package nonisolated enum PooledQuantifier {
+public nonisolated enum PooledQuantifier {
 
     // MARK: Entry
 
     /// Cancellable (ADR 064 amendment 2 §2): `cancelled` is asked at the step boundaries (before the axis refinement, inside it
     /// once per simplex iteration, before the fit and before the rows); `SpectroCancelled` propagates, never swallowed into a
     /// warning or a refusal, and nothing partial is returned. `progress` is monotone in 0...1 and ends at 1.
-    package static func run(_ input: PooledQuantificationInput, tables: QuantificationTables?,
+    public static func run(_ input: PooledQuantificationInput, tables: QuantificationTables?,
                             cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                             progress: (@Sendable (Double) -> Void)? = nil) throws -> PooledQuantification {
         try SpectroCancellation.check(cancelled)
@@ -377,7 +377,7 @@ package nonisolated enum PooledQuantifier {
     /// What every shown sigma covers (WP3b F3 wording): the fit's counting statistics, not the choice of model.
     /// R7 (wp3e item 2): "\u{03C7}\u{00B2}\u{1D63} 54.8 (Pearson)" / "reduced deviance 1.02". Three significant figures at most; no
     /// threshold: the expectation of 1 is a property of the statistic, not a measured cliff.
-    package static func qualityText(label: String, value: Double) -> String {
+    public static func qualityText(label: String, value: Double) -> String {
         let (name, suffix) = qualityParts(label)
         return "\(name) \(formattedQuality(value))\(suffix)"
     }

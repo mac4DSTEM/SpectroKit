@@ -7,7 +7,7 @@
 
 import Foundation
 
-package nonisolated enum FitBackground: Sendable, Equatable {
+public nonisolated enum FitBackground: Sendable, Equatable {
     /// Default: the empirical continuum with the Al K step, fitted jointly with the lines.
     case continuum(ContinuumForm)
     /// Expert, eXSpy parity: a polynomial of `order` over the fitted range inside the model

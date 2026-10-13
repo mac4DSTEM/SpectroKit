@@ -30,25 +30,25 @@ package nonisolated struct AxisRefinementSettings: Sendable, Equatable {
     package init() {}
 }
 
-package nonisolated struct AxisRefinementResult: Sendable, Equatable {
+public nonisolated struct AxisRefinementResult: Sendable, Equatable {
     // The file's values, kept beside the refined ones.
     package let fileOffset: Double
     package let fileScale: Double
     package let fileResolutionMnKaEV: Double
     package let offset: Double
     package let scale: Double
-    package let resolutionMnKaEV: Double
+    public let resolutionMnKaEV: Double
     package let rssFile: Double
     package let rssRefined: Double
     package let iterations: Int
     package let converged: Bool
 
-    package var refinedAxis: EnergyAxis { EnergyAxis(offset: offset, scale: scale, size: size) }
+    public var refinedAxis: EnergyAxis { EnergyAxis(offset: offset, scale: scale, size: size) }
     package let size: Int
     /// Offset correction in eV (refined - file).
-    package var offsetShiftEV: Double { (offset - fileOffset) * 1000 }
+    public var offsetShiftEV: Double { (offset - fileOffset) * 1000 }
     /// Relative gain correction (refined / file - 1).
-    package var gainShift: Double { scale / fileScale - 1 }
+    public var gainShift: Double { scale / fileScale - 1 }
 }
 
 package nonisolated enum EnergyAxisRefinement {

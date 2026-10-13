@@ -25,9 +25,9 @@
 import Foundation
 
 /// Pixels to include in a sum: row-major `y * nx + x`, `true` = in. `nil` means every pixel.
-package typealias PixelMask = [Bool]
+public typealias PixelMask = [Bool]
 
-package nonisolated protocol SpectrumImage: Sendable {
+public nonisolated protocol SpectrumImage: Sendable {
     var ny: Int { get }
     var nx: Int { get }
     var channels: Int { get }
@@ -52,7 +52,7 @@ package nonisolated protocol SpectrumImage: Sendable {
 extension SpectrumImage {
     package nonisolated var pixelCount: Int { ny * nx }
 
-    package func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?) throws -> [UInt64] {
+    public func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?) throws -> [UInt64] {
         try SpectroCancellation.check(cancelled)
         let out = sum(mask: mask)
         progress?(1)
@@ -85,23 +85,23 @@ package nonisolated protocol CSRSpectrumStore: Sendable {
 // MARK: - Dense
 
 /// `(ny, nx, channels)` row-major counts.
-package nonisolated struct DenseSpectrumImage: SpectrumImage {
-    package let ny: Int
-    package let nx: Int
-    package let channels: Int
+public nonisolated struct DenseSpectrumImage: SpectrumImage {
+    public let ny: Int
+    public let nx: Int
+    public let channels: Int
     package let counts: [UInt32]
 
-    package init(ny: Int, nx: Int, channels: Int, counts: [UInt32]) {
+    public init(ny: Int, nx: Int, channels: Int, counts: [UInt32]) {
         precondition(counts.count == ny * nx * channels, "DenseSpectrumImage: counts must be ny*nx*channels")
         self.ny = ny; self.nx = nx; self.channels = channels; self.counts = counts
     }
 
-    package func sum(mask: PixelMask?) -> [UInt64] {
+    public func sum(mask: PixelMask?) -> [UInt64] {
         // The closure never answers true, so the throwing core cannot throw.
         try! sum(mask: mask, cancelled: { false }, progress: nil)
     }
 
-    package func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+    public func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                      progress: (@Sendable (Double) -> Void)? = nil) throws -> [UInt64] {
         precondition(mask == nil || mask!.count == ny * nx, "mask length must be ny*nx")
         var out = [UInt64](repeating: 0, count: channels)
@@ -118,11 +118,11 @@ package nonisolated struct DenseSpectrumImage: SpectrumImage {
         return out
     }
 
-    package func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]] {
+    public func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]] {
         try! windowSums(ranges, cancelled: { false }, progress: nil)
     }
 
-    package func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+    public func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                             progress: (@Sendable (Double) -> Void)? = nil) throws -> [[UInt64]] {
         let n = ny * nx
         var out = [[UInt64]](repeating: [UInt64](repeating: 0, count: n), count: ranges.count)
@@ -150,7 +150,7 @@ package nonisolated struct DenseSpectrumImage: SpectrumImage {
 
 // MARK: - Sparse
 
-package nonisolated enum CSRSpectrumError: Error, Equatable, Sendable {
+public nonisolated enum CSRSpectrumError: Error, Equatable, Sendable {
     case rowOffsetCount(expected: Int, got: Int)
     case arraysDisagree
     case offsetsDecrease(pixel: Int)

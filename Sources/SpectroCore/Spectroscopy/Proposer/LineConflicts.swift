@@ -14,20 +14,20 @@
 
 import Foundation
 
-package nonisolated struct LineConflict: Equatable, Sendable {
-    package enum Kind: String, Sendable { case sumPeak, fibContamination, gridOrSample }
+public nonisolated struct LineConflict: Equatable, Sendable {
+    public enum Kind: String, Sendable { case sumPeak, fibContamination, gridOrSample }
 
-    package let id: String
-    package let kind: Kind
+    public let id: String
+    public let kind: Kind
     /// The candidate the conflict is attached to: element symbol and the line group's name.
-    package let element: String
-    package let line: String?
+    public let element: String
+    public let line: String?
     /// Peak positions the conflict is about.
     package let energiesKeV: [Double]
     /// Elements that must be detected for the conflict to apply (a sum peak's parents).
     package let requires: [String]
     /// The question shown to the owner.
-    package let question: String
+    public let question: String
     /// What can settle it.
     package let remedy: String
 }
@@ -39,7 +39,7 @@ package nonisolated struct SumParent: Equatable, Sendable {
     package init(element: String, energyKeV: Double) { self.element = element; self.energyKeV = energyKeV }
 }
 
-package nonisolated enum LineConflicts {
+public nonisolated enum LineConflicts {
     /// A candidate's alpha line counts as "on" a sum-peak energy within this many keV (about half the
     /// Mn K-alpha FWHM of a Super-X detector). A sum energy with no candidate within it gets its own column in
     /// the fit instead (ElementProposer), so it can neither be missed nor be mistaken for an element.
@@ -100,5 +100,5 @@ package nonisolated enum LineConflicts {
     }
 
     /// The elements `refusal` covers: always reported with their reasons.
-    package static let refusedElements = ["H", "He", "Li", "Be"]
+    public static let refusedElements = ["H", "He", "Li", "Be"]
 }

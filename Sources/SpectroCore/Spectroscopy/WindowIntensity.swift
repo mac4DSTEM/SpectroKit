@@ -35,7 +35,7 @@ package nonisolated struct SpectralLine: Equatable, Sendable {
     }
 }
 
-package nonisolated enum SpectralLineError: Error, Equatable, Sendable {
+public nonisolated enum SpectralLineError: Error, Equatable, Sendable {
     case unknownLine(String)
     /// Fiori-Newbury has no real width: 2.5 (E - E_MnKα) 1000 + res² < 0.
     case widthUndefined(String, resolutionMnKaEV: Double)
@@ -81,15 +81,15 @@ package nonisolated enum BackgroundWindows {
 }
 
 /// One line's windows resolved to channels. Nothing here depends on how the counts are stored.
-package nonisolated struct ResolvedWindow: Equatable, Sendable {
-    package struct Background: Equatable, Sendable {
-        package let left: Range<Int>
-        package let right: Range<Int>
+public nonisolated struct ResolvedWindow: Equatable, Sendable {
+    public struct Background: Equatable, Sendable {
+        public let left: Range<Int>
+        public let right: Range<Int>
         /// `(i5 - i4) / ((i1 - i0) + (i3 - i2))` on the rounded indices (`_eds.py:679`).
-        package let scale: Double
+        public let scale: Double
     }
-    package let signal: Range<Int>
-    package let background: Background?
+    public let signal: Range<Int>
+    public let background: Background?
 
     /// The channel ranges to sum, in the order `netCounts(fromSums:)` reads them: signal, then
     /// (left, right) when there is a background.
@@ -112,7 +112,7 @@ package nonisolated struct ResolvedWindow: Equatable, Sendable {
     }
 }
 
-package nonisolated enum WindowIntensityError: Error, Equatable, Sendable {
+public nonisolated enum WindowIntensityError: Error, Equatable, Sendable {
     /// `(i1 - i0) + (i3 - i2) == 0`: Python's float division raises ZeroDivisionError here.
     case emptyBackgroundWindows
     case axis(EnergyAxisError)
@@ -196,7 +196,7 @@ package nonisolated enum WindowIntensity {
 // MARK: - Which other lines a background window sits on
 
 /// One place where line `line`'s (merged) background window lies on another line.
-package nonisolated struct WindowConflict: Equatable, Sendable {
+public nonisolated struct WindowConflict: Equatable, Sendable {
     package enum Side: String, Sendable { case left, right }
     /// The line whose net counts the background correction biases.
     package let line: String

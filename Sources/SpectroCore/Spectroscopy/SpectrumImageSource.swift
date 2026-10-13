@@ -13,16 +13,16 @@
 import Foundation
 
 /// One analytical (X-ray) detector segment as the file records it. Every value is optional: a file writes what it writes.
-package nonisolated struct SpectrumDetectorSegment: Equatable, Sendable {
-    package var name: String
-    package var azimuthDegrees: Double?
-    package var elevationDegrees: Double?
+public nonisolated struct SpectrumDetectorSegment: Equatable, Sendable {
+    public var name: String
+    public var azimuthDegrees: Double?
+    public var elevationDegrees: Double?
     /// As stored: sr, whole detector or one segment depending on the file (Velox `CollectionAngle`). A relative weight
     /// among ONE file's segments, never summed to a total.
-    package var solidAngle: Double?
+    public var solidAngle: Double?
     /// Seconds, as stored, semantics unverified.
-    package var liveTime: Double?
-    package var realTime: Double?
+    public var liveTime: Double?
+    public var realTime: Double?
 
     package init(name: String, azimuthDegrees: Double? = nil, elevationDegrees: Double? = nil,
                  solidAngle: Double? = nil, liveTime: Double? = nil, realTime: Double? = nil) {
@@ -31,49 +31,49 @@ package nonisolated struct SpectrumDetectorSegment: Equatable, Sendable {
     }
 }
 
-package nonisolated enum SpectrumImageOrigin: String, Equatable, Sendable {
+public nonisolated enum SpectrumImageOrigin: String, Equatable, Sendable {
     case veloxEMD
     case gmsDM4
 }
 
 /// What the shell needs to know about an opened EDX spectrum image. The numbers are the file's own, as read.
-package nonisolated struct SpectrumImageMetadata: Equatable, Sendable {
-    package var fileName: String
-    package var filePath: String
+public nonisolated struct SpectrumImageMetadata: Equatable, Sendable {
+    public var fileName: String
+    public var filePath: String
     /// Scan columns × rows of the spectrum image's own grid (M2: the native grid, never resampled onto the 4D scan's).
-    package var scanWidth: Int
-    package var scanHeight: Int
+    public var scanWidth: Int
+    public var scanHeight: Int
     /// Energy channels per spectrum.
-    package var channelCount: Int
+    public var channelCount: Int
     /// The energy axis as the file states it: E(i) = offset + i · dispersion. Refinement on the pooled spectrum
     /// (ADR 054 item 4) is shown beside it, never written over it.
-    package var energyOffsetEV: Double
-    package var energyDispersionEV: Double
+    public var energyOffsetEV: Double
+    public var energyDispersionEV: Double
     /// Real-space pixel size, when the file carries one.
-    package var scanPixelSize: Double?
-    package var scanPixelUnit: String?
+    public var scanPixelSize: Double?
+    public var scanPixelUnit: String?
 
-    package var origin: SpectrumImageOrigin?
+    public var origin: SpectrumImageOrigin?
     /// Frames summed into the counts (Velox); nil when the file has no frame notion (GMS).
-    package var frames: Int?
+    public var frames: Int?
     /// Pixels (from the first) that one more, partial frame also reached (Velox, a stopped acquisition).
     package var partialFramePixels: Int = 0
-    package var detectors: [SpectrumDetectorSegment] = []
-    package var alphaTiltDegrees: Double?
-    package var betaTiltDegrees: Double?
-    package var beamEnergyKeV: Double?
+    public var detectors: [SpectrumDetectorSegment] = []
+    public var alphaTiltDegrees: Double?
+    public var betaTiltDegrees: Double?
+    public var beamEnergyKeV: Double?
     /// Where `beamEnergyKeV` came from; said on the quantification's provenance line.
-    package var beamEnergySource: BeamEnergySource = .file
-    package var instrument: String?
+    public var beamEnergySource: BeamEnergySource = .file
+    public var instrument: String?
     /// True when the caller registered this image by identity to another object of the same file (same Experiment ID, same
     /// scan grid; WP2 R2). The file read never sets it; false for everything else, including a mismatch.
     /// The stored name (and `registrationNote`'s position) is pinned by the S0 golden baseline, which dumps this struct by
     /// reflection; rename both at the freeze commit together with a re-baseline (SpectroKit plan, E5).
-    package var sameScanAs4DCube = false
+    public var sameScanAs4DCube = false
     /// Why the image was not registered to the object beside it, when the caller tried and it was not (shown, never hidden).
-    package var registrationNote: String?
+    public var registrationNote: String?
 
-    package nonisolated init(
+    public nonisolated init(
         fileName: String, filePath: String, scanWidth: Int, scanHeight: Int,
         channelCount: Int, energyOffsetEV: Double, energyDispersionEV: Double,
         scanPixelSize: Double? = nil, scanPixelUnit: String? = nil
@@ -89,11 +89,11 @@ package nonisolated struct SpectrumImageMetadata: Equatable, Sendable {
         self.scanPixelUnit = scanPixelUnit
     }
 
-    package var pixelCount: Int { scanWidth * scanHeight }
+    public var pixelCount: Int { scanWidth * scanHeight }
 }
 
 /// An opened EDX spectrum image: the counts (`SpectrumImage`), the axis, the metadata, and the scan image on its grid.
-package nonisolated protocol SpectrumImageSource: SpectrumImage, AnyObject {
+public nonisolated protocol SpectrumImageSource: SpectrumImage, AnyObject {
     var metadata: SpectrumImageMetadata { get }
     var energyAxis: EnergyAxis { get }
     /// The HAADF (or best scan) image on the spectrum grid, `ny * nx` row-major, when the file has one.
@@ -101,36 +101,36 @@ package nonisolated protocol SpectrumImageSource: SpectrumImage, AnyObject {
 }
 
 /// The one concrete source: a `DenseSpectrumImage` or `SparseSpectrumImage` plus what the file said about it.
-package nonisolated final class LoadedSpectrumImage: SpectrumImageSource {
-    package let image: any SpectrumImage
-    package let metadata: SpectrumImageMetadata
-    package let energyAxis: EnergyAxis
-    package let scanImage: [Float]?
+public nonisolated final class LoadedSpectrumImage: SpectrumImageSource {
+    public let image: any SpectrumImage
+    public let metadata: SpectrumImageMetadata
+    public let energyAxis: EnergyAxis
+    public let scanImage: [Float]?
 
-    package init(image: any SpectrumImage, metadata: SpectrumImageMetadata, energyAxis: EnergyAxis, scanImage: [Float]? = nil) {
+    public init(image: any SpectrumImage, metadata: SpectrumImageMetadata, energyAxis: EnergyAxis, scanImage: [Float]? = nil) {
         precondition(metadata.scanWidth == image.nx && metadata.scanHeight == image.ny && metadata.channelCount == image.channels,
                      "LoadedSpectrumImage: the metadata must describe the image")
         precondition(scanImage == nil || scanImage!.count == image.ny * image.nx, "scanImage must be ny*nx")
         self.image = image; self.metadata = metadata; self.energyAxis = energyAxis; self.scanImage = scanImage
     }
 
-    package var ny: Int { image.ny }
-    package var nx: Int { image.nx }
-    package var channels: Int { image.channels }
-    package func sum(mask: PixelMask?) -> [UInt64] { image.sum(mask: mask) }
-    package func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]] { image.windowSums(ranges) }
-    package func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+    public var ny: Int { image.ny }
+    public var nx: Int { image.nx }
+    public var channels: Int { image.channels }
+    public func sum(mask: PixelMask?) -> [UInt64] { image.sum(mask: mask) }
+    public func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]] { image.windowSums(ranges) }
+    public func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                      progress: (@Sendable (Double) -> Void)? = nil) throws -> [UInt64] {
         try image.sum(mask: mask, cancelled: cancelled, progress: progress)
     }
-    package func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+    public func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                             progress: (@Sendable (Double) -> Void)? = nil) throws -> [[UInt64]] {
         try image.windowSums(ranges, cancelled: cancelled, progress: progress)
     }
 }
 
 /// Where a beam energy came from. The phrase is what the provenance line says after the value.
-package nonisolated enum BeamEnergySource: Sendable, Equatable {
+public nonisolated enum BeamEnergySource: Sendable, Equatable {
     /// The spectrum image's own metadata (a Velox file; the EDS object's Microscope Info in a GMS file).
     case file
     /// Typed in the Quantify inspector; it overrides every other.
@@ -139,7 +139,7 @@ package nonisolated enum BeamEnergySource: Sendable, Equatable {
     /// (`BeamEnergySource.fourDCube`, defined in the app layer).
     case supplied(label: String)
 
-    package var phrase: String {
+    public var phrase: String {
         switch self {
         case .file: "from the file"
         case .typed: "typed"
@@ -154,10 +154,10 @@ private nonisolated func spectroKilovolts(fromStored raw: Double) -> Double {
     raw > 1_000 ? raw / 1_000 : raw
 }
 
-package nonisolated enum BeamEnergy {
+public nonisolated enum BeamEnergy {
     /// The EDS object's own voltage first (`rawObjectVoltage` as stored: volts in GMS), else a supplied voltage in kV
     /// (`suppliedAs` names where it came from), counting only when it belongs to the same run (`sameRun`). Nil when neither is usable.
-    package static func resolve(rawObjectVoltage: Double?, suppliedKV: Double?, suppliedAs: BeamEnergySource,
+    public static func resolve(rawObjectVoltage: Double?, suppliedKV: Double?, suppliedAs: BeamEnergySource,
                                 sameRun: Bool) -> (keV: Double, source: BeamEnergySource)? {
         if let raw = rawObjectVoltage {
             let kv = spectroKilovolts(fromStored: raw)

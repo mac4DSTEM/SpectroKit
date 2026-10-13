@@ -21,8 +21,8 @@
 
 import Foundation
 
-package nonisolated struct ProposalRules: Equatable, Sendable {
-    package enum Rule: String, Sendable, CaseIterable {
+public nonisolated struct ProposalRules: Equatable, Sendable {
+    public enum Rule: String, Sendable, CaseIterable {
         case hygiene = "R1", corroboration = "R2", release = "R3"
         /// Plain words, as the row's hover and the notes say them.
         package var title: String {
@@ -34,15 +34,15 @@ package nonisolated struct ProposalRules: Equatable, Sendable {
         }
     }
 
-    package var hygiene: Bool
+    public var hygiene: Bool
     /// R1's second half, separately switchable: the beside-K drop. Off in `shipped` (see the header).
     package var besideK: Bool
     /// WP4b (docs/archive/v5/wp4b-autoid-rules-preregistration-2026-10-07.md), an OPTION that is off in `none`, `registered` and `shipped`:
     /// with `besideK`, an L or M pick beside a proposed K alpha is dropped only when its net / L_D is at or below that K candidate's;
     /// a stronger L/M stays. Measured, not shipped: turning it on anywhere is the registration's ship rule, not this flag's existence.
     package var besideKGuard: Bool
-    package var corroboration: Bool
-    package var release: Bool
+    public var corroboration: Bool
+    public var release: Bool
     /// R1: an element with Z at or above this is never picked.
     package var actinideZ = 89
     /// R1: an L or M pick closer than this many FWHM to another proposed candidate's K alpha is dropped.
@@ -67,25 +67,25 @@ package nonisolated struct ProposalRules: Equatable, Sendable {
     /// The beside-K half of R1 is off too (the refuter's finding above). WP4b (ADR 062) tested it with the evidence guard on true
     /// L/M + K pairs and refuted it: an L family's L_D is larger than a nearby K line's at equal area, so the guard still drops true Hf
     /// beside Cu and Pt beside Ga. R2 was refuted in-sample there too. A new beside-K test needs a different evidence term.
-    package static let shipped = ProposalRules(hygiene: true, besideK: false, corroboration: false, release: false)
+    public static let shipped = ProposalRules(hygiene: true, besideK: false, corroboration: false, release: false)
     /// Where the cuts come from (said in the notes, never hidden).
-    package static let source = "registered 2026-10-07 (WP4), cuts read off 78 Velox-session files: unvalidated"
-    package var isNone: Bool { !hygiene && !besideK && !corroboration && !release }   // besideKGuard alone acts only with besideK
+    public static let source = "registered 2026-10-07 (WP4), cuts read off 78 Velox-session files: unvalidated"
+    public var isNone: Bool { !hygiene && !besideK && !corroboration && !release }   // besideKGuard alone acts only with besideK
 
-    package nonisolated struct Withheld: Equatable, Sendable {
-        package let candidate: ElementCandidate
-        package let rule: Rule
+    public nonisolated struct Withheld: Equatable, Sendable {
+        public let candidate: ElementCandidate
+        public let rule: Rule
         /// "Z >= 89", "within 1.5 FWHM of Cu Ka", "1.9 x L_D < 3".
-        package let why: String
+        public let why: String
     }
 
-    package nonisolated struct Release: Equatable, Sendable {
-        package let candidate: ElementCandidate
+    public nonisolated struct Release: Equatable, Sendable {
+        public let candidate: ElementCandidate
     }
 
     /// Pure: the same result and rules always give the same picks. `resolutionMnKaEV` sets the FWHM that R1's distance is counted in
     /// (the room's detector width; the harness uses the app's default, 130 eV).
-    package func apply(_ r: ProposalResult, resolutionMnKaEV: Double = 130) -> RuledProposal {
+    public func apply(_ r: ProposalResult, resolutionMnKaEV: Double = 130) -> RuledProposal {
         let proposedAll = r.candidates.filter(\.isProposed)   // held candidates included: a K peak is a K peak
         func z(_ element: String) -> Int { XRayLines.lines(of: element).first?.atomicNumber ?? 0 }
         func family(_ group: String) -> XRayFamily { XRayLines.line(group)?.family ?? .K }
@@ -130,20 +130,20 @@ package nonisolated struct ProposalRules: Equatable, Sendable {
 }
 
 /// A proposal after the rules: what the room picks, what each rule withheld or released, and the raw result untouched.
-package nonisolated struct RuledProposal: Sendable {
+public nonisolated struct RuledProposal: Sendable {
     package let raw: ProposalResult
-    package let rules: ProposalRules
+    public let rules: ProposalRules
     /// The picks, strongest first (the proposer's own order).
-    package let picks: [ElementCandidate]
-    package let withheld: [ProposalRules.Withheld]
-    package let released: [ProposalRules.Release]
+    public let picks: [ElementCandidate]
+    public let withheld: [ProposalRules.Withheld]
+    public let released: [ProposalRules.Release]
     /// Still at or above L_D and on a pile-up energy: not an element, shown as the sum-peak question.
-    package let heldQuestions: [ElementCandidate]
+    public let heldQuestions: [ElementCandidate]
     /// L and M picks that cleared R2 (empty when R2 is off).
     package let lineGroupsCorroborated: [String]
 
     /// "Rule R3: ..." for the pick's hover; nil when no rule acted on this element (a K pick above L_D is the proposer's own).
-    package func ruleReason(for element: String) -> String? {
+    public func ruleReason(for element: String) -> String? {
         if let r = released.first(where: { $0.candidate.element == element }) {
             return String(format: "Rule R3 (sum-peak release): %.1f \u{00D7} L_D \u{2265} %g.", r.candidate.significance, rules.releaseSignificance)
         }

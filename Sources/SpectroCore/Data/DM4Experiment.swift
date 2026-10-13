@@ -24,7 +24,7 @@
 import Foundation
 
 /// What an image object of a GMS file is for.
-package nonisolated enum DM4ImageRole: String, Sendable, Equatable {
+public nonisolated enum DM4ImageRole: String, Sendable, Equatable {
     /// The RGBA preview image GMS stores first (data type 23).
     case thumbnail
     /// The larger-field ADF/HAADF image the scan rectangle is drawn on.
@@ -87,16 +87,16 @@ package nonisolated struct DM4EDSDetectorTags: Sendable, Equatable {
     }
 }
 
-package nonisolated struct DM4ImageObject: Sendable, Equatable {
+public nonisolated struct DM4ImageObject: Sendable, Equatable {
     /// One-based position in `ImageList` (the `N` of `ImageList.N`).
-    package let index: Int
+    public let index: Int
     package let name: String
-    package let role: DM4ImageRole
+    public let role: DM4ImageRole
     package let roleSource: DM4RoleSource
     /// The first `Meta Data.Experiment keywords.N.Label` in the known set, nil if none.
     package let label: String?
     /// The first `Meta Data.Experiment keywords.N.Experiment ID`; equal across the objects of one run.
-    package let experimentID: String?
+    public let experimentID: String?
     /// Gatan `ImageData.DataType` code.
     package let dataType: Int
     /// `ImageData.Dimensions` in file order, FASTEST FIRST (DM order: x, y, then slower).
@@ -114,7 +114,7 @@ package nonisolated struct DM4ImageObject: Sendable, Equatable {
     package let uniqueID: [UInt32]?
     package let eds: DM4EDSDetectorTags?
     /// `ImageTags.Microscope Info.Voltage` as stored (volts in GMS), nil when the object carries none.
-    package let voltage: Double?
+    public let voltage: Double?
     /// `ImageTags.Meta Data.Data Order Swapped` (1 on the owner's 4D cubes, meaning unknown for an SI), nil when absent.
     package let dataOrderSwapped: Bool?
     /// `ImageTags.Meta Data.Format` verbatim ("Spectrum image", "Image", "Diffraction image" as GMS writes it); not used for `role()`.
@@ -164,12 +164,12 @@ package nonisolated struct DM4EDSSpectrumImage: Sendable, Equatable {
     package let energyAxis: DM4Axis
 }
 
-package nonisolated enum DM4Experiment {
+public nonisolated enum DM4Experiment {
 
     // MARK: Entry points
 
     /// Lists every image object of the file at `path`, in `ImageList` order.
-    package static func list(path: String) throws -> [DM4ImageObject] {
+    public static func list(path: String) throws -> [DM4ImageObject] {
         try Walk(source: try Source.file(path)).objects
     }
 
@@ -179,7 +179,7 @@ package nonisolated enum DM4Experiment {
         try readImage(source: try Source.file(path), index: index)
     }
 
-    package static func list(data: Data) throws -> [DM4ImageObject] {
+    public static func list(data: Data) throws -> [DM4ImageObject] {
         try Walk(source: Source.data(data)).objects
     }
 

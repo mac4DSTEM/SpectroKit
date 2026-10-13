@@ -43,7 +43,7 @@
 
 import Foundation
 
-package nonisolated struct ContinuumForm: Sendable, Equatable {
+public nonisolated struct ContinuumForm: Sendable, Equatable {
     /// Equal when both are absent, or both carry the same source name AND the same values on a fixed energy grid (a typed
     /// parameter that sourceName does not spell out cannot hide).
     private static func sameEfficiency(_ x: (any DetectorEfficiency)?, _ y: (any DetectorEfficiency)?) -> Bool {
@@ -57,7 +57,7 @@ package nonisolated struct ContinuumForm: Sendable, Equatable {
         }
     }
 
-    package static func == (a: ContinuumForm, b: ContinuumForm) -> Bool {
+    public static func == (a: ContinuumForm, b: ContinuumForm) -> Bool {
         a.beamEnergy == b.beamEnergy && a.edges == b.edges && a.orders == b.orders && a.nonNegative == b.nonNegative
             && sameEfficiency(a.efficiency, b.efficiency)
     }
@@ -65,7 +65,7 @@ package nonisolated struct ContinuumForm: Sendable, Equatable {
     /// Beam energy E0 in keV (the continuum ends there).
     package var beamEnergy: Double
     /// Absorption-edge energies (keV) where the polynomial may jump.
-    package var edges: [Double]
+    public var edges: [Double]
     /// Polynomial order per segment; `edges.count + 1` entries.
     package var orders: [Int]
     /// Bernstein basis with non-negative coefficients (default). False: free-sign monomials in t.
@@ -146,7 +146,7 @@ package nonisolated struct ContinuumForm: Sendable, Equatable {
     /// Wording after the tail experiment: supplying the true Al K-alpha tail as a reference shape on generator S takes the
     /// noise-free bias from about -300 to about +35 (Kramers-only), so on S the whole deficit is the tail; on generator A (no tail)
     /// an equal -300 is the continuum-line projection.
-    package static let weakLineBiasNote =
+    public static let weakLineBiasNote =
         "a weak line next to Al K\u{03B1} reads low by \u{2248} 300 counts per pooled spectrum on synthetic data "
         + "(cause: the Al K\u{03B1} incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); "
         + "unmeasured on real data. Weak-line bias measured on synthetic data: \u{0394} = \u{2212}295 \u{00B1} 31 counts at 900 planted Mg K\u{03B1} "

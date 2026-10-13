@@ -8,13 +8,13 @@
 import Foundation
 
 /// Thrown by a long call whose `cancelled` closure returned true. Nothing it was building is returned or kept.
-package nonisolated struct SpectroCancelled: Error, Equatable {
-    package init() {}
+public nonisolated struct SpectroCancelled: Error, Equatable {
+    public init() {}
 }
 
-package nonisolated enum SpectroCancellation {
+public nonisolated enum SpectroCancellation {
     /// The default `cancelled` closure: Swift task cancellation, so a caller inside a Task needs to pass nothing.
-    package static let task: @Sendable () -> Bool = { Task.isCancelled }
+    public static let task: @Sendable () -> Bool = { Task.isCancelled }
 
     /// Throws `SpectroCancelled` when `cancelled()` is true. Call at block or step boundaries, never per value.
     package static func check(_ cancelled: @Sendable () -> Bool) throws {

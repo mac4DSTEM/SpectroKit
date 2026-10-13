@@ -15,29 +15,29 @@
 import Foundation
 
 /// K, L or M family of an X-ray line (the first letter of its name).
-package nonisolated enum XRayFamily: String, Sendable, Equatable {
+public nonisolated enum XRayFamily: String, Sendable, Equatable {
     case K, L, M
 }
 
 /// One emission line: `Fe_Ka` is element "Fe", name "Ka".
-package nonisolated struct XRayLine: Sendable, Equatable {
-    package let atomicNumber: Int
-    package let element: String
-    package let name: String
-    package let energy: Double      // keV
-    package let weight: Double      // relative to the family's alpha line (eXSpy / EPQ)
+public nonisolated struct XRayLine: Sendable, Equatable {
+    public let atomicNumber: Int
+    public let element: String
+    public let name: String
+    public let energy: Double      // keV
+    public let weight: Double      // relative to the family's alpha line (eXSpy / EPQ)
 
     /// eXSpy's identifier, `Element_Line`.
-    package var id: String { element + "_" + name }
-    package var family: XRayFamily { XRayFamily(rawValue: String(name.prefix(1)))! }
+    public var id: String { element + "_" + name }
+    public var family: XRayFamily { XRayFamily(rawValue: String(name.prefix(1)))! }
 }
 
-package nonisolated enum XRayLines {
+public nonisolated enum XRayLines {
     /// Mn Kα, the reference of the line-width law (`_get_energy_xray_line("Mn_Ka")`).
     package static let mnKaEnergy: Double = 5.8987
 
     /// Every line of the table in file order (Z ascending, eXSpy's per-element order).
-    package static let all: [XRayLine] = {
+    public static let all: [XRayLine] = {
         var out: [XRayLine] = []
         for row in XRayLineData.rows.split(separator: "\n") {
             let f = row.split(separator: " ")
@@ -54,14 +54,14 @@ package nonisolated enum XRayLines {
     /// DEVIATION: eXSpy lists H "Ka" (0.0013598 keV) and He "Ka" (0.0024587 keV), the ionisation
     /// energies, which are not X-ray lines (validation.md §1d.3). They stay in `all` as shipped;
     /// `lines(of:)` and the line choices below never return them.
-    package static let notRealLines: Set<String> = ["H", "He"]
+    public static let notRealLines: Set<String> = ["H", "He"]
 
     /// `energy` of `Element_Line`, nil when the table has no such line (hyperspy: KeyError).
-    package static func line(_ id: String) -> XRayLine? { byId[id] }
+    public static func line(_ id: String) -> XRayLine? { byId[id] }
 
     /// The lines of `element` in eXSpy's file order (empty for H, He, and for Li, Np, Pu, Am which
     /// the table carries without lines: eXSpy drops them silently, validation.md §1d.4).
-    package static func lines(of element: String) -> [XRayLine] {
+    public static func lines(of element: String) -> [XRayLine] {
         notRealLines.contains(element) ? [] : all.filter { $0.element == element }
     }
 
@@ -74,7 +74,7 @@ package nonisolated enum XRayLines {
     ///
     /// DEVIATION: eXSpy's `math.sqrt` raises ValueError when 2.5 (E - E_MnKα) 1000 + res² < 0 (a low
     /// line on a good detector, e.g. C Kα at 110 eV); this returns nil instead of NaN.
-    package static func fwhm(resolutionMnKaEV: Double, atEnergy e: Double) -> Double? {
+    public static func fwhm(resolutionMnKaEV: Double, atEnergy e: Double) -> Double? {
         let fwhmE = 2.5 * (e - mnKaEnergy) * 1000.0 + resolutionMnKaEV * resolutionMnKaEV
         guard fwhmE >= 0 else { return nil }
         return fwhmE.squareRoot() / 1000.0
@@ -93,7 +93,7 @@ package nonisolated enum XRayLines {
     }
 
     /// `_get_xray_lines_in_spectral_range`: low < E < min(high, beam energy), strictly.
-    package static func linesInRange(_ ids: [String], axis: EnergyAxis, beamEnergy: Double?) -> [String] {
+    public static func linesInRange(_ ids: [String], axis: EnergyAxis, beamEnergy: Double?) -> [String] {
         var high = axis.highValue
         if let b = beamEnergy, b < high { high = b }
         return ids.filter { id in

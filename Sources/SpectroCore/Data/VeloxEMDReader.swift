@@ -25,7 +25,7 @@
 import Darwin
 import Foundation
 
-package enum VeloxEMDError: LocalizedError {
+public enum VeloxEMDError: LocalizedError {
     case libraryUnavailable(String)
     case cannotOpen(String)
     case notVelox(String)
@@ -47,7 +47,7 @@ package enum VeloxEMDError: LocalizedError {
     /// An image stored in a type no float read can take (Velox's FFT and DPC images are compound).
     case unsupportedImageType(String)
 
-    package var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .libraryUnavailable(let detail): return "Could not load the bundled HDF5 library: \(detail)"
         case .cannotOpen(let name): return "Could not open \(name) as an HDF5 file."
@@ -386,35 +386,35 @@ private nonisolated func jsonInt(_ value: Any?) -> Int? {
 }
 
 /// One analytical (X-ray) detector segment: the Super-X is four of these.
-package nonisolated struct VeloxDetectorInfo: Equatable, Sendable {
-    package let index: Int
-    package let name: String
-    package let type: String
-    package let enabled: Bool?
-    package let inserted: Bool?
+public nonisolated struct VeloxDetectorInfo: Equatable, Sendable {
+    public let index: Int
+    public let name: String
+    public let type: String
+    public let enabled: Bool?
+    public let inserted: Bool?
     /// Radians, as stored.
-    package let azimuthRadians: Double?
-    package let elevationRadians: Double?
+    public let azimuthRadians: Double?
+    public let elevationRadians: Double?
     /// Key `CollectionAngle`, in steradians AS STORED. Whether it is the segment's or the whole detector's differs by
     /// file (0.225, 0.7 and 4.35 seen): use it only as a relative weight among ONE file's segments, never summed to a total.
-    package let solidAngleSteradians: Double?
-    package let dispersionEV: Double?
-    package let offsetEnergyEV: Double?
+    public let solidAngleSteradians: Double?
+    public let dispersionEV: Double?
+    public let offsetEnergyEV: Double?
     /// Column-0 values of the stream's per-frame metadata, recorded as read. SEMANTICS UNVERIFIED: the meaning
     /// differs by file (cumulative in one, per-frame in another, 0 on the owner's file: formats.md §2.2), so
     /// they are reported and never interpreted or used.
-    package let realTimeColumn0: Double?
-    package let liveTimeColumn0: Double?
+    public let realTimeColumn0: Double?
+    public let liveTimeColumn0: Double?
 
-    package var azimuthDegrees: Double? { azimuthRadians.map { $0 * 180 / .pi } }
-    package var elevationDegrees: Double? { elevationRadians.map { $0 * 180 / .pi } }
-    package var isAnalytical: Bool { type == "AnalyticalDetector" }
+    public var azimuthDegrees: Double? { azimuthRadians.map { $0 * 180 / .pi } }
+    public var elevationDegrees: Double? { elevationRadians.map { $0 * 180 / .pi } }
+    public var isAnalytical: Bool { type == "AnalyticalDetector" }
 }
 
 /// Energy of channel `k` is `offsetKeV + k * scaleKeV`.
-package nonisolated struct VeloxEnergyAxis: Equatable, Sendable {
-    package let offsetKeV: Double
-    package let scaleKeV: Double
+public nonisolated struct VeloxEnergyAxis: Equatable, Sendable {
+    public let offsetKeV: Double
+    public let scaleKeV: Double
     package init(offsetKeV: Double, scaleKeV: Double) {
         self.offsetKeV = offsetKeV; self.scaleKeV = scaleKeV
     }
@@ -422,59 +422,59 @@ package nonisolated struct VeloxEnergyAxis: Equatable, Sendable {
 
 /// The 2x3 affine Velox records per frame when it drift-corrects the SI. RECORDED
 /// ONLY: the stream is the raw detector order and this reader applies nothing.
-package nonisolated struct VeloxScanTransformation: Equatable, Sendable {
-    package let a11: Double, a12: Double, a13: Double
-    package let a21: Double, a22: Double, a23: Double
+public nonisolated struct VeloxScanTransformation: Equatable, Sendable {
+    public let a11: Double, a12: Double, a13: Double
+    public let a21: Double, a22: Double, a23: Double
     package init(a11: Double, a12: Double, a13: Double, a21: Double, a22: Double, a23: Double) {
         self.a11 = a11; self.a12 = a12; self.a13 = a13; self.a21 = a21; self.a22 = a22; self.a23 = a23
     }
 }
 
-package nonisolated struct VeloxMetadata: Sendable {
-    package let detectors: [VeloxDetectorInfo]
+public nonisolated struct VeloxMetadata: Sendable {
+    public let detectors: [VeloxDetectorInfo]
     /// The detector whose events the first stream carries (`BinaryResult.Detector`).
-    package let binaryResultDetector: String?
-    package let binaryResultDetectorIndex: Int?
-    package let energyAxis: VeloxEnergyAxis?
+    public let binaryResultDetector: String?
+    public let binaryResultDetectorIndex: Int?
+    public let energyAxis: VeloxEnergyAxis?
     /// `ScanSize`, the full raster, not the spectrum image (that is `ScanSize x ScanArea`).
-    package let scanSizeWidth: Int?
-    package let scanSizeHeight: Int?
+    public let scanSizeWidth: Int?
+    public let scanSizeHeight: Int?
     /// Fractions of the full raster: left, top, right, bottom.
-    package let scanArea: (left: Double, top: Double, right: Double, bottom: Double)?
-    package let scanRotationRadians: Double?
-    package let dwellTimeSeconds: Double?
-    package let frameTimeSeconds: Double?
-    package let accelerationVoltageVolts: Double?
-    package let screenCurrentAmperes: Double?
-    package let stageAlphaRadians: Double?
-    package let stageBetaRadians: Double?
-    package let stagePositionMeters: (x: Double, y: Double, z: Double)?
-    package let holderType: String?
-    package let pixelSizeMeters: (width: Double, height: Double)?
+    public let scanArea: (left: Double, top: Double, right: Double, bottom: Double)?
+    public let scanRotationRadians: Double?
+    public let dwellTimeSeconds: Double?
+    public let frameTimeSeconds: Double?
+    public let accelerationVoltageVolts: Double?
+    public let screenCurrentAmperes: Double?
+    public let stageAlphaRadians: Double?
+    public let stageBetaRadians: Double?
+    public let stagePositionMeters: (x: Double, y: Double, z: Double)?
+    public let holderType: String?
+    public let pixelSizeMeters: (width: Double, height: Double)?
     /// `BinaryResult.PixelUnitX`: the unit of the pixel width and of `offset.x`. (rsciio reads this one for both axes.)
-    package let pixelUnit: String?
+    public let pixelUnit: String?
     /// `BinaryResult.PixelUnitY`: the unit of the pixel height and of `offset.y`. Velox writes it beside the X unit.
-    package let pixelUnitY: String?
+    public let pixelUnitY: String?
     /// `BinaryResult.Offset`, as stored: x in `pixelUnit`, y in `pixelUnitY`. nil unless both coordinates parse.
-    package let offset: (x: Double, y: Double)?
-    package let instrumentModel: String?
-    package let acquisitionStartUnixTime: Double?
-    package let scanTransformation: VeloxScanTransformation?
+    public let offset: (x: Double, y: Double)?
+    public let instrumentModel: String?
+    public let acquisitionStartUnixTime: Double?
+    public let scanTransformation: VeloxScanTransformation?
 
-    package var superXDetectors: [VeloxDetectorInfo] { detectors.filter { $0.isAnalytical } }
-    package var alphaDegrees: Double? { stageAlphaRadians.map { $0 * 180 / .pi } }
-    package var betaDegrees: Double? { stageBetaRadians.map { $0 * 180 / .pi } }
+    public var superXDetectors: [VeloxDetectorInfo] { detectors.filter { $0.isAnalytical } }
+    public var alphaDegrees: Double? { stageAlphaRadians.map { $0 * 180 / .pi } }
+    public var betaDegrees: Double? { stageBetaRadians.map { $0 * 180 / .pi } }
 
     /// The grid `ScanSize x ScanArea` implies, `(ny, nx)`; nil unless both are
     /// integers to within 1/100 of a pixel (the Velox rasters are exact binary fractions).
-    package var derivedGrid: (ny: Int, nx: Int)? {
+    public var derivedGrid: (ny: Int, nx: Int)? {
         guard let w = scanSizeWidth, let h = scanSizeHeight, let a = scanArea else { return nil }
         let nx = Double(w) * (a.right - a.left), ny = Double(h) * (a.bottom - a.top)
         guard abs(nx - nx.rounded()) < 0.01, abs(ny - ny.rounded()) < 0.01, nx >= 1, ny >= 1 else { return nil }
         return (Int(ny.rounded()), Int(nx.rounded()))
     }
 
-    package static func parse(jsonData: Data) throws -> VeloxMetadata {
+    public static func parse(jsonData: Data) throws -> VeloxMetadata {
         guard let root = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
             throw VeloxEMDError.missingMetadata("a JSON object as metadata")
         }
@@ -894,26 +894,26 @@ package nonisolated struct VeloxStreamInfo: Sendable {
 }
 
 /// The stored element type of an image stack, as HDF5 reports it.
-package nonisolated enum VeloxImageElementType: String, Sendable {
+public nonisolated enum VeloxImageElementType: String, Sendable {
     case uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64
 }
 
 /// One image stack under `Data/Image`, shape `(height, width, frameCount)` as Velox stores it: `Data` is `(y, x, frame)`.
-package nonisolated struct VeloxImageInfo: Sendable {
+public nonisolated struct VeloxImageInfo: Sendable {
     /// The group's name under `Data/Image` (a UUID in a Velox file).
-    package let id: String
+    public let id: String
     /// `BinaryResult.Detector` of the first metadata column; "" when the file names none.
-    package let detectorName: String
-    package let height: Int
-    package let width: Int
-    package let frameCount: Int
+    public let detectorName: String
+    public let height: Int
+    public let width: Int
+    public let frameCount: Int
     /// nil for a type no float read can take, such as Velox's compound FFT and DPC images.
-    package let elementType: VeloxImageElementType?
+    public let elementType: VeloxImageElementType?
     /// Column 0 of the image's `Metadata`: rsciio's `[:, 0]`, and the one a single-frame image has.
-    package let metadata: VeloxMetadata
+    public let metadata: VeloxMetadata
 }
 
-package nonisolated struct VeloxEMDReader: Sendable {
+public nonisolated struct VeloxEMDReader: Sendable {
     package let path: String
     /// Values per block read. The default is 32 M (64 MB); a test lowers it so a small file spans several blocks.
     package var blockValues = VeloxEMDReader.defaultBlockValues
@@ -921,7 +921,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// another thread can take it between two blocks); nil in production.
     package var betweenBlocks: (@Sendable (_ blockIndex: Int) -> Void)?
 
-    package init(path: String) { self.path = path }
+    public init(path: String) { self.path = path }
 
     /// True for a Velox EMD that carries a spectrum stream or a spectrum image:
     /// root `Version` JSON with `format` "Velox", and `Data/SpectrumStream` or
@@ -941,7 +941,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// `isVeloxEMD` to ask for a spectrum image. False for anything else, including an unreadable file.
     /// DEVIATION: rsciio's `is_EMD_Velox` accepts `format` "Velox" and "DevelopersKit" and looks at no layout;
     /// this accepts "Velox" only, and only a file with one of the layouts above.
-    package static func isVeloxFile(path: String) -> Bool {
+    public static func isVeloxFile(path: String) -> Bool {
         HDF5Serial.run {
             guard let file = try? openVeloxFile(path: path) else { return false }
             if file.exists("/Data/SpectrumStream") || file.exists("/Data/SpectrumImage") { return true }
@@ -1280,7 +1280,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// h5py iterates, and rsciio reads them). Empty when the file has none. A group whose `Metadata` is unreadable throws, as the
     /// file is then damaged rather than short of images. Throws `notVeloxFile` for any HDF5 file whose `Version` is not Velox.
     /// `cancelled` is polled before each image group. A short operation: the lock is held across it.
-    package func images(cancelled: @Sendable () -> Bool = SpectroCancellation.task) throws -> [VeloxImageInfo] {
+    public func images(cancelled: @Sendable () -> Bool = SpectroCancellation.task) throws -> [VeloxImageInfo] {
         try HDF5Serial.run {
             try SpectroCancellation.check(cancelled)
             let file = try Self.openVeloxFile(path: path)
@@ -1310,7 +1310,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// `images()` does not list, `frameRangeInvalid` for a frame outside `0..<frameCount`, and `unsupportedImageType` for a type
     /// whose `elementType` is nil.
     /// `cancelled` is polled before the open and before the one block read (a frame is a single `H5Dread`).
-    package func readImageFrame(id: String, frame: Int, cancelled: @Sendable () -> Bool = SpectroCancellation.task) throws -> [Float] {
+    public func readImageFrame(id: String, frame: Int, cancelled: @Sendable () -> Bool = SpectroCancellation.task) throws -> [Float] {
         try HDF5Serial.run {
             try SpectroCancellation.check(cancelled)
             let file = try Self.openVeloxFile(path: path)

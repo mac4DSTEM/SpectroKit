@@ -17,27 +17,27 @@
 import Foundation
 import CryptoKit
 
-package nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
+public nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
 
     /// Bumped when a field's meaning changes; a decoder refuses a newer one (`decode`).
     package static let currentVersion = 1
 
     /// Item 1: least squares, unweighted, is the named default; Poisson maximum likelihood is Expert.
-    package enum Estimator: String, CaseIterable, Codable, Sendable {
+    public enum Estimator: String, CaseIterable, Codable, Sendable {
         case leastSquares
         case poissonMaximumLikelihood
     }
 
     /// Item 2: a fitted whole-spectrum empirical continuum with the Al K-edge step (Velox's
     /// "Empirical") by default; eXSpy's whole-range sixth-order polynomial is the parity path.
-    package enum Background: String, CaseIterable, Codable, Sendable {
+    public enum Background: String, CaseIterable, Codable, Sendable {
         case empiricalWithAlEdge
         case wholeRangePolynomial6
     }
 
     /// Item 3 and the addendum: k is computed (Bote-Salvat sigma, Krause omega_K, EPQ's SDD
     /// efficiency; unvalidated) or typed with its source. No zeta in the menu.
-    package enum KFactorSource: String, CaseIterable, Codable, Sendable {
+    public enum KFactorSource: String, CaseIterable, Codable, Sendable {
         case computed
         /// The name the room used before the addendum replaced Brown-Powell; same value as `computed`.
         package static var brownPowell: KFactorSource { .computed }
@@ -45,22 +45,22 @@ package nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     }
 
     /// Item 6: quantified, fitted only (its lines are modelled but it gets no at%), or off.
-    package enum ElementRole: String, CaseIterable, Codable, Sendable {
+    public enum ElementRole: String, CaseIterable, Codable, Sendable {
         case quantify
         case fitOnly
         case off
     }
 
-    package struct ElementState: Codable, Equatable, Identifiable, Sendable {
+    public struct ElementState: Codable, Equatable, Identifiable, Sendable {
         /// The element symbol, e.g. "Mg".
-        package var symbol: String
-        package var role: ElementRole
+        public var symbol: String
+        public var role: ElementRole
         /// Picked by the user; the proposer never drops a manual pick (ADR 054).
         package var isManual: Bool
 
-        package var id: String { symbol }
+        public var id: String { symbol }
 
-        package nonisolated init(symbol: String, role: ElementRole, isManual: Bool) {
+        public nonisolated init(symbol: String, role: ElementRole, isManual: Bool) {
             self.symbol = symbol
             self.role = role
             self.isManual = isManual
@@ -68,13 +68,13 @@ package nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     }
 
     /// A typed k with its own uncertainty, relative to the method's reference element.
-    package struct TypedK: Codable, Equatable, Sendable {
-        package var element: String
-        package var k: Double
+    public struct TypedK: Codable, Equatable, Sendable {
+        public var element: String
+        public var k: Double
         /// Relative 1-sigma (0.20 = 20 %); nil takes `QuantificationMethod.sigmaK`.
-        package var relativeSigma: Double?
+        public var relativeSigma: Double?
 
-        package nonisolated init(element: String, k: Double, relativeSigma: Double? = nil) {
+        public nonisolated init(element: String, k: Double, relativeSigma: Double? = nil) {
             self.element = element
             self.k = k
             self.relativeSigma = relativeSigma
@@ -82,52 +82,52 @@ package nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     }
 
     /// Item 9: typed thickness ± sigma, nanometres.
-    package struct Thickness: Codable, Equatable, Sendable {
-        package var nanometres: Double
-        package var sigmaNanometres: Double
+    public struct Thickness: Codable, Equatable, Sendable {
+        public var nanometres: Double
+        public var sigmaNanometres: Double
 
-        package nonisolated init(nanometres: Double, sigmaNanometres: Double) {
+        public nonisolated init(nanometres: Double, sigmaNanometres: Double) {
             self.nanometres = nanometres
             self.sigmaNanometres = sigmaNanometres
         }
     }
 
     package var version: Int = QuantificationMethod.currentVersion
-    package var estimator: Estimator = .leastSquares
-    package var background: Background = .empiricalWithAlEdge
-    package var elements: [ElementState] = []
-    package var kFactorSource: KFactorSource = .computed
+    public var estimator: Estimator = .leastSquares
+    public var background: Background = .empiricalWithAlEdge
+    public var elements: [ElementState] = []
+    public var kFactorSource: KFactorSource = .computed
     /// Where the k-factors came from, in words (a computed set's `sourceDescription`, a typed set's
     /// citation). Required non-empty for `.typed` (`isComplete`); for `.computed` it is filled when the
     /// quantification runs.
-    package var kSource: String = ""
+    public var kSource: String = ""
     /// ISO date the factors were typed or computed.
-    package var kDate: String = ""
+    public var kDate: String = ""
     /// The element whose k is fixed at 1 (Velox style); nil = no reference.
-    package var kReference: String?
+    public var kReference: String?
     /// Typed factors (empty for `.computed`).
-    package var typedK: [TypedK] = []
+    public var typedK: [TypedK] = []
     /// Default relative sigma_k per factor (Velox's rule, WP3 flag 5).
-    package var sigmaK: Double = 0.20
+    public var sigmaK: Double = 0.20
     /// ADR 053 item 5: four-detector weighted transmission (solid-angle-weighted mean), badged; on by
     /// default, refused by the quantification (not here) when geometry or tilt is unknown.
-    package var absorptionCorrection = true
+    public var absorptionCorrection = true
     /// Unset until the user types one: no thickness is assumed.
-    package var thickness: Thickness?
+    public var thickness: Thickness?
     /// v5.0 R3 (and WP3c for `fitToKeV`). The four fields below are Optional ON PURPOSE: a nil is omitted from the canonical JSON, so every
     /// method recorded before they existed keeps its bytes and its hash.
     /// Beam energy typed by the user, keV, for a file that does not state it (GMS EDS objects); nil takes the file's.
-    package var beamEnergyKeV: Double?
+    public var beamEnergyKeV: Double?
     /// Expert: the order of the whole-range polynomial background (`.wholeRangePolynomial6`); nil is 6, eXSpy's.
-    package var polynomialOrder: Int?
+    public var polynomialOrder: Int?
     /// Expert: keep the file's energy axis instead of refining offset, gain and width on the pooled spectrum (ADR 054
     /// item 4); nil is "refine".
-    package var lockEnergyAxis: Bool?
+    public var lockEnergyAxis: Bool?
     /// Expert (WP3c): the upper end of the fitted range, keV; nil is the default, min(axis end, beam energy, 20 keV)
     /// (`FitSettings.defaultFitTo`). A typed value past the axis end or the beam energy is clamped to them, and the footer says so.
-    package var fitToKeV: Double?
+    public var fitToKeV: Double?
 
-    package nonisolated init() {}
+    public nonisolated init() {}
 
     // MARK: - Byte-stable form
 
@@ -138,19 +138,19 @@ package nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     }
 
     /// Sorted-key JSON. Encoding a decoded method returns the same string.
-    package var canonicalJSON: String {
+    public var canonicalJSON: String {
         // try! is safe: every field is a Codable string, number, bool or optional of them.
         String(decoding: try! Self.encoder().encode(self), as: UTF8.self)
     }
 
     /// SHA-256 of `canonicalJSON`, lowercase hex.
-    package var hash: String {
+    public var hash: String {
         SHA256.hash(data: Data(canonicalJSON.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 
     /// Nil for malformed JSON, a `version` below 1, or a `version` newer than this build knows (a method this build cannot
     /// read must not be read as a different one).
-    package static func decode(_ json: String) -> QuantificationMethod? {
+    public static func decode(_ json: String) -> QuantificationMethod? {
         guard let m = try? JSONDecoder().decode(QuantificationMethod.self, from: Data(json.utf8)),
               m.version >= 1, m.version <= currentVersion else { return nil }
         return m

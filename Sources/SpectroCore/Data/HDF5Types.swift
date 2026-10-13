@@ -1,9 +1,9 @@
 import Foundation
 
 /// HDF5 C ABI scalar aliases shared by the dynamic reader and writer.
-package typealias hid_t = Int64
-package typealias herr_t = Int32
-package typealias hsize_t = UInt64
+public typealias hid_t = Int64
+public typealias herr_t = Int32
+public typealias hsize_t = UInt64
 
 /// EVERY HDF5 CALL IN THE PROCESS RUNS UNDER THIS LOCK (2026-09-15 night).
 ///
@@ -25,17 +25,17 @@ package typealias hsize_t = UInt64
 /// a saved result — and crashed the probe's variant on the first attempt;
 /// the audit is by grep for `HDF5WriteLibrary.load()` and `HDF5Library.load()`:
 /// every one must sit under this lock, because `H5open` is an API call too.
-package nonisolated enum HDF5Serial {
+public nonisolated enum HDF5Serial {
     private static let lock = NSRecursiveLock()
-    package static func run<T>(_ body: () throws -> T) rethrows -> T {
+    public static func run<T>(_ body: () throws -> T) rethrows -> T {
         lock.lock(); defer { lock.unlock() }
         return try body()
     }
     /// For the one synchronous stretch that must outlive a closure's scope
     /// (the export's dataset setup, whose handles the loop below it uses).
     /// Pair on the same thread, and never span an `await`.
-    package static func acquire() { lock.lock() }
-    package static func release() { lock.unlock() }
+    public static func acquire() { lock.lock() }
+    public static func release() { lock.unlock() }
 
     /// THE QUIT BARRIER (Slot 4¾ review, 2026-10-02). `exit()`, where every
     /// Quit ends, runs HDF5's own atexit handler `H5_term_library`, which takes
@@ -48,7 +48,7 @@ package nonisolated enum HDF5Serial {
     /// other thread able to enter. The lock is recursive, so an exit on a
     /// thread that holds it goes straight through; nothing that holds it waits
     /// on the main thread. Cost: a quit waits for at most one locked operation.
-    package static func installExitBarrier() {
+    public static func installExitBarrier() {
         lock.lock(); defer { lock.unlock() }
         guard !exitBarrierInstalled else { return }
         exitBarrierInstalled = atexit { HDF5Serial.acquire() } == 0

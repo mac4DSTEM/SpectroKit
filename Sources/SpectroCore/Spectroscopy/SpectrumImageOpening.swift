@@ -16,12 +16,12 @@ extension VeloxEventStore: CSRSpectrumStore {
     package nonisolated var channels: Int { geometry.channels }
 }
 
-package nonisolated enum SpectrumImageOpenError: LocalizedError, Equatable {
+public nonisolated enum SpectrumImageOpenError: LocalizedError, Equatable {
     case notASpectrumImage(String)
     case noEnergyAxis(String)
     case unsupportedEnergyUnits(String)
 
-    package var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .notASpectrumImage(let name): return "\(name) is not an EDX spectrum image."
         case .noEnergyAxis(let name): return "\(name) carries no usable energy axis (offset and a positive dispersion)."
@@ -31,7 +31,7 @@ package nonisolated enum SpectrumImageOpenError: LocalizedError, Equatable {
 }
 
 /// What a file is, for the open path.
-package nonisolated enum SpectrumFileKind: Equatable, Sendable {
+public nonisolated enum SpectrumFileKind: Equatable, Sendable {
     /// A Velox EMD with a spectrum stream: opens as a spectrum image, never as a cube.
     case veloxSpectrumImage
     /// A GMS DM4 with an EDS spectrum image and no diffraction-stack object: opens as a spectrum image.
@@ -40,10 +40,10 @@ package nonisolated enum SpectrumFileKind: Equatable, Sendable {
     case other
 }
 
-package nonisolated enum SpectrumImageOpener {
+public nonisolated enum SpectrumImageOpener {
 
     /// Header-only for a DM4 (the tag walk seeks past every blob), one HDF5 open for an EMD. Run off the main actor.
-    package static func kind(ofFileAt path: String) -> SpectrumFileKind {
+    public static func kind(ofFileAt path: String) -> SpectrumFileKind {
         switch URL(fileURLWithPath: path).pathExtension.lowercased() {
         case "emd":
             return VeloxEMDReader.isVeloxEMD(path: path) ? .veloxSpectrumImage : .other
@@ -58,7 +58,7 @@ package nonisolated enum SpectrumImageOpener {
 
     /// Opens a file of a spectrum kind. For `.other` it throws `notASpectrumImage`.
     /// Cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` at a step boundary with nothing kept; `progress` 0...1, ends at 1.
-    package static func open(path: String, kind: SpectrumFileKind,
+    public static func open(path: String, kind: SpectrumFileKind,
                              cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                              progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage {
         try SpectroCancellation.check(cancelled)
@@ -132,7 +132,7 @@ package nonisolated enum SpectrumImageOpener {
     /// The EDS spectrum image of a GMS DM4, or nil when the file has none. Pure: it never registers the image to another
     /// object of the file (`sameScanAs4DCube` stays false); a caller that knows one does so from `DM4Experiment.list`
     /// (the app does, in `Core/Data/GMSFourDRegistration.swift`).
-    package static func openGMSEDS(path: String,
+    public static func openGMSEDS(path: String,
                                    cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                                    progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage? {
         try SpectroCancellation.check(cancelled)

@@ -22,8 +22,8 @@
 import Foundation
 
 /// The fitted range as run: 0.2 keV to `toKeV`, and where `toKeV` came from.
-package nonisolated struct FitRangeChoice: Sendable, Equatable {
-    package enum Source: String, Sendable, Equatable {
+public nonisolated struct FitRangeChoice: Sendable, Equatable {
+    public enum Source: String, Sendable, Equatable {
         /// The default 20 keV limit, below the axis end and the beam energy.
         case defaultLimit
         /// The default reached the axis end or the beam energy before 20 keV (every fixture axis ends at 19.997-20.03 keV).
@@ -35,7 +35,7 @@ package nonisolated struct FitRangeChoice: Sendable, Equatable {
     }
 
     package var fromKeV = 0.2
-    package var toKeV: Double
+    public var toKeV: Double
     package var source: Source
     /// The FILE's axis end (what the footer names) and the beam energy.
     package var axisEndKeV: Double
@@ -49,7 +49,7 @@ package nonisolated struct FitRangeChoice: Sendable, Equatable {
     /// fit runs to the used axis end exactly as before WP3c (so a 19.997 keV file whose refined axis ends at 20.002 keV fits the
     /// same channels as it always did); past it, the fit stops at 20 keV. Deciding on the refined axis instead put a 20.002 keV
     /// refined end "past the default" and ran a second fit on every 20 keV file (P3.log, lane C, refuted and fixed).
-    package init(method: QuantificationMethod, fileAxis: EnergyAxis, usedAxis: EnergyAxis, beamEnergy: Double) {
+    public init(method: QuantificationMethod, fileAxis: EnergyAxis, usedAxis: EnergyAxis, beamEnergy: Double) {
         axisEndKeV = fileAxis.highValue
         beamEnergyKeV = beamEnergy
         let reach = min(usedAxis.highValue, beamEnergy)
@@ -94,7 +94,7 @@ package nonisolated struct FitRangeChoice: Sendable, Equatable {
 }
 
 /// What a fit to the axis end does to each quantified net (WP3c). Kept out of every sigma.
-package nonisolated struct FitRangeSensitivity: Sendable, Equatable {
+public nonisolated struct FitRangeSensitivity: Sendable, Equatable {
     package struct Move: Sendable, Equatable {
         package var element: String
         package var group: String
@@ -130,7 +130,7 @@ package nonisolated struct FitRangeSensitivity: Sendable, Equatable {
     }
 }
 
-package nonisolated enum FitRangeSensitivityCheck {
+public nonisolated enum FitRangeSensitivityCheck {
 
     /// The range of the one extra fit, or nil when no statement applies: a typed range (the user chose it), the polynomial
     /// parity path (it already fits the whole axis), or a default that already reaches the axis end or the beam energy (every
@@ -142,14 +142,14 @@ package nonisolated enum FitRangeSensitivityCheck {
 
     /// The extra fit: `input` is the reported fit's input, `q` its result. Nil when `alternative` is nil. No tables: only nets
     /// are read. The refit reuses `q`'s axis refinement, as the unlisted-line check's refit does.
-    package static func run(input: PooledQuantificationInput, quantification q: PooledQuantification) -> FitRangeSensitivity? {
+    public static func run(input: PooledQuantificationInput, quantification q: PooledQuantification) -> FitRangeSensitivity? {
         // The closure never answers true, so the throwing core cannot throw.
         try! run(input: input, quantification: q, cancelled: { false }, progress: nil)
     }
 
     /// The same extra fit, cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` is thrown (never folded into `failure`),
     /// nothing is returned. `progress` is monotone in 0...1 and ends at 1.
-    package static func run(input: PooledQuantificationInput, quantification q: PooledQuantification,
+    public static func run(input: PooledQuantificationInput, quantification q: PooledQuantification,
                             cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                             progress: (@Sendable (Double) -> Void)? = nil) throws -> FitRangeSensitivity? {
         try SpectroCancellation.check(cancelled)
@@ -176,7 +176,7 @@ package nonisolated enum FitRangeSensitivityCheck {
     }
 
     /// The result with the statement attached and its line added to the footer (and so to the export's `#` lines).
-    package static func attaching(_ q: PooledQuantification, _ s: FitRangeSensitivity) -> PooledQuantification {
+    public static func attaching(_ q: PooledQuantification, _ s: FitRangeSensitivity) -> PooledQuantification {
         var out = q
         out.rangeSensitivity = s
         out.footerLines.removeAll { $0.hasPrefix("range sensitivity") }
