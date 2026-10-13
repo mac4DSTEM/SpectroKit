@@ -1,0 +1,1314 @@
+# SpectroGolden demo-spectrum-fixture
+demo.dims: n 3 sum-bits 440 fnv b7d07133a90c8359
+demo.energyAxis.offset = 0000000000000000 0
+demo.energyAxis.scale = 3f847ae147ae147b 0.01
+demo.energyAxis.size = 1024
+demo.metadata.fileName = "Demo spectrum image"
+demo.metadata.filePath = <omitted: machine path>
+demo.metadata.scanWidth = 32
+demo.metadata.scanHeight = 32
+demo.metadata.channelCount = 1024
+demo.metadata.energyOffsetEV = 0000000000000000 0
+demo.metadata.energyDispersionEV = 4024000000000000 10
+demo.metadata.scanPixelSize = 3ff0000000000000 1
+demo.metadata.scanPixelUnit = "nm"
+demo.metadata.origin = nil
+demo.metadata.frames = nil
+demo.metadata.partialFramePixels = 0
+demo.metadata.detectors: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+demo.metadata.alphaTiltDegrees = nil
+demo.metadata.betaTiltDegrees = nil
+demo.metadata.beamEnergyKeV = nil
+demo.metadata.beamEnergySource = .file
+demo.metadata.instrument = nil
+demo.metadata.sameScanAs4DCube = false
+demo.metadata.registrationNote = nil
+demo.scanImage = nil
+demo.sumWhole: n 1024 sum-bits 10e2 fnv 3c0caeb7ae1781b9
+demo.sumEveryThirdPixel: n 1024 sum-bits 5ce fnv 3ebbdf68bfa66685
+demo.windowSums: array 5
+demo.windowSums[0]: n 1024 sum-bits 10e2 fnv 889b49f318de042d
+demo.windowSums[1]: n 1024 sum-bits 0 fnv b9d103fd6854a325
+demo.windowSums[2]: n 1024 sum-bits 0 fnv b9d103fd6854a325
+demo.windowSums[3]: n 1024 sum-bits 0 fnv b9d103fd6854a325
+demo.windowSums[4]: n 1024 sum-bits 0 fnv b9d103fd6854a325
+demo.windows: array 3
+demo.windows[0].element = "Al"
+demo.windows[0].id = "Al_Ka"
+demo.windows[0].energy = 3ff7c8b439581062 1.4864999999999999
+demo.windows[0].fwhm = 3fb39ce32e588742 0.076612662138839688
+demo.windows[0].window.signal = 141..<156
+demo.windows[0].window.background.left = 104..<111
+demo.windows[0].window.background.right = 190..<198
+demo.windows[0].window.background.scale = 3ff0000000000000 1
+demo.windows[0].failure = nil
+demo.windows[0].conflicts: array 3
+demo.windows[0].conflicts[0].line = "Al_Ka"
+demo.windows[0].conflicts[0].side = .left
+demo.windows[0].conflicts[0].other = "Mg_Ka"
+demo.windows[0].conflicts[0].otherEnergy = 3ff40ebedfa43fe6 1.2536
+demo.windows[0].conflicts[0].overlap = 1.108173042388971...1.108173042388971
+demo.windows[0].conflicts[0].reachesIntegrationWindow = false
+demo.windows[0].conflicts[1].line = "Al_Ka"
+demo.windows[0].conflicts[1].side = .right
+demo.windows[0].conflicts[1].other = "Si_Ka"
+demo.windows[0].conflicts[1].otherEnergy = 3ffbd5cfaacd9e84 1.7397
+demo.windows[0].conflicts[1].overlap = 1.9009761606685873...1.9009761606685873
+demo.windows[0].conflicts[1].reachesIntegrationWindow = false
+demo.windows[0].conflicts[2].line = "Al_Ka"
+demo.windows[0].conflicts[2].side = .right
+demo.windows[0].conflicts[2].other = "Si_Kb"
+demo.windows[0].conflicts[2].otherEnergy = 3ffd6c226809d495 1.8389
+demo.windows[0].conflicts[2].overlap = 1.9009761606685873...1.981614241002881
+demo.windows[0].conflicts[2].reachesIntegrationWindow = true
+demo.windows[1].element = "Mg"
+demo.windows[1].id = "Mg_Ka"
+demo.windows[1].energy = 3ff40ebedfa43fe6 1.2536
+demo.windows[1].fwhm = 3fb29d59bd72b4f7 0.072713478805514473
+demo.windows[1].window.signal = 118..<133
+demo.windows[1].window.background.left = 104..<111
+demo.windows[1].window.background.right = 164..<172
+demo.windows[1].window.background.scale = 3ff0000000000000 1
+demo.windows[1].failure = nil
+demo.windows[1].conflicts: array 4
+demo.windows[1].conflicts[0].line = "Mg_Ka"
+demo.windows[1].conflicts[0].side = .right
+demo.windows[1].conflicts[0].other = "Al_Ka"
+demo.windows[1].conflicts[0].otherEnergy = 3ff7c8b439581062 1.4864999999999999
+demo.windows[1].conflicts[0].overlap = 1.6397253242776793...1.6397253242776793
+demo.windows[1].conflicts[0].reachesIntegrationWindow = false
+demo.windows[1].conflicts[1].line = "Mg_Ka"
+demo.windows[1].conflicts[1].side = .right
+demo.windows[1].conflicts[1].other = "Al_Kb"
+demo.windows[1].conflicts[1].otherEnergy = 3ff8f41f212d7732 1.5596000000000001
+demo.windows[1].conflicts[1].overlap = 1.6397253242776793...1.7151924162676317
+demo.windows[1].conflicts[1].reachesIntegrationWindow = false
+demo.windows[1].conflicts[2].line = "Mg_Ka"
+demo.windows[1].conflicts[2].side = .right
+demo.windows[1].conflicts[2].other = "Si_Ka"
+demo.windows[1].conflicts[2].otherEnergy = 3ffbd5cfaacd9e84 1.7397
+demo.windows[1].conflicts[2].overlap = 1.6397253242776793...1.716337986416519
+demo.windows[1].conflicts[2].reachesIntegrationWindow = true
+demo.windows[1].conflicts[3].line = "Mg_Ka"
+demo.windows[1].conflicts[3].side = .right
+demo.windows[1].conflicts[3].other = "Si_Kb"
+demo.windows[1].conflicts[3].otherEnergy = 3ffd6c226809d495 1.8389
+demo.windows[1].conflicts[3].overlap = 1.6745771470549515...1.716337986416519
+demo.windows[1].conflicts[3].reachesIntegrationWindow = false
+demo.windows[2].element = "Si"
+demo.windows[2].id = "Si_Ka"
+demo.windows[2].energy = 3ffbd5cfaacd9e84 1.7397
+demo.windows[2].fwhm = 3fb4a4b27dd91753 0.080638080334293691
+demo.windows[2].window.signal = 166..<182
+demo.windows[2].window.background.left = 104..<111
+demo.windows[2].window.background.right = 190..<198
+demo.windows[2].window.background.scale = 3ff1111111111111 1.0666666666666667
+demo.windows[2].failure = nil
+demo.windows[2].conflicts: array 2
+demo.windows[2].conflicts[0].line = "Si_Ka"
+demo.windows[2].conflicts[0].side = .left
+demo.windows[2].conflicts[0].other = "Mg_Ka"
+demo.windows[2].conflicts[0].otherEnergy = 3ff40ebedfa43fe6 1.2536
+demo.windows[2].conflicts[0].overlap = 1.108173042388971...1.108173042388971
+demo.windows[2].conflicts[0].reachesIntegrationWindow = false
+demo.windows[2].conflicts[1].line = "Si_Ka"
+demo.windows[2].conflicts[1].side = .right
+demo.windows[2].conflicts[1].other = "Si_Kb"
+demo.windows[2].conflicts[1].otherEnergy = 3ffd6c226809d495 1.8389
+demo.windows[2].conflicts[1].overlap = 1.9009761606685873...1.981614241002881
+demo.windows[2].conflicts[1].reachesIntegrationWindow = true
+demo.netMaps: array 3
+demo.netMaps[0]: n 1024 sum 40b0e10000000000 4321 fnv b8076b48467c7822
+demo.netMaps[1]: n 1024 sum 0000000000000000 0 fnv b9d103fd6854a325
+demo.netMaps[2]: n 1024 sum 0000000000000000 0 fnv b9d103fd6854a325
+demo.integratedMaps: array 3
+demo.integratedMaps[0]: n 1024 sum 40b0e10000000000 4321 fnv b8076b48467c7822
+demo.integratedMaps[1]: n 1024 sum 0000000000000000 0 fnv b9d103fd6854a325
+demo.integratedMaps[2]: n 1024 sum 0000000000000000 0 fnv b9d103fd6854a325
+demo.netCountsWhole: array 3
+demo.netCountsWhole[0].id = "Al_Ka"
+demo.netCountsWhole[0].element = "Al"
+demo.netCountsWhole[0].net = 40b0e10000000000 4321
+demo.netCountsWhole[0].sigma = 40506efefef7255c 65.73431371817918
+demo.netCountsWhole[0].signal = 4321
+demo.netCountsWhole[0].background = 0
+demo.netCountsWhole[0].scale = 3ff0000000000000 1
+demo.netCountsWhole[1].id = "Mg_Ka"
+demo.netCountsWhole[1].element = "Mg"
+demo.netCountsWhole[1].net = 0000000000000000 0
+demo.netCountsWhole[1].sigma = 0000000000000000 0
+demo.netCountsWhole[1].signal = 0
+demo.netCountsWhole[1].background = 0
+demo.netCountsWhole[1].scale = 3ff0000000000000 1
+demo.netCountsWhole[2].id = "Si_Ka"
+demo.netCountsWhole[2].element = "Si"
+demo.netCountsWhole[2].net = 0000000000000000 0
+demo.netCountsWhole[2].sigma = 0000000000000000 0
+demo.netCountsWhole[2].signal = 0
+demo.netCountsWhole[2].background = 0
+demo.netCountsWhole[2].scale = 3ff1111111111111 1.0666666666666667
+whole.quantification.method.version = 1
+whole.quantification.method.estimator = .leastSquares
+whole.quantification.method.background = .empiricalWithAlEdge
+whole.quantification.method.elements: array 3
+whole.quantification.method.elements[0].symbol = "Al"
+whole.quantification.method.elements[0].role = .quantify
+whole.quantification.method.elements[0].isManual = false
+whole.quantification.method.elements[1].symbol = "Mg"
+whole.quantification.method.elements[1].role = .quantify
+whole.quantification.method.elements[1].isManual = false
+whole.quantification.method.elements[2].symbol = "Si"
+whole.quantification.method.elements[2].role = .quantify
+whole.quantification.method.elements[2].isManual = false
+whole.quantification.method.kFactorSource = .computed
+whole.quantification.method.kSource = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not the owner's Super-X calibration; FFAST MACs"
+whole.quantification.method.kDate = "EPQ 249dd3f8 + Krause 1979 + FFAST"
+whole.quantification.method.kReference = nil
+whole.quantification.method.typedK: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.quantification.method.sigmaK = 3fc999999999999a 0.20000000000000001
+whole.quantification.method.absorptionCorrection = true
+whole.quantification.method.thickness = nil
+whole.quantification.method.beamEnergyKeV = 4069000000000000 200
+whole.quantification.method.polynomialOrder = nil
+whole.quantification.method.lockEnergyAxis = nil
+whole.quantification.method.fitToKeV = nil
+whole.quantification.rows: array 3
+whole.quantification.rows[0].element = "Al"
+whole.quantification.rows[0].groupID = "Al_Ka"
+whole.quantification.rows[0].net = 40af6e8a40d2ae97 4023.2700258100626
+whole.quantification.rows[0].sigma = 405d7f863c47637f 117.99256808253811
+whole.quantification.rows[0].supported = true
+whole.quantification.rows[0].atBound = false
+whole.quantification.rows[0].isReference = true
+whole.quantification.rows[0].kFreeRatio = 3ff0000000000000 1
+whole.quantification.rows[0].kFreeSigma = nil
+whole.quantification.rows[0].atomicPercent = nil
+whole.quantification.rows[0].atomicSigma = nil
+whole.quantification.rows[0].weightPercent = nil
+whole.quantification.rows[0].weightSigma = nil
+whole.quantification.rows[0].atomicTerms = nil
+whole.quantification.rows[0].weightTerms = nil
+whole.quantification.rows[0].absorptionSpreadAtomic = nil
+whole.quantification.rows[0].absorptionSpreadWeight = nil
+whole.quantification.rows[0].atomicTermsText = ""
+whole.quantification.rows[0].weightTermsText = ""
+whole.quantification.rows[0].failure = nil
+whole.quantification.rows[0].lineNote = nil
+whole.quantification.rows[1].element = "Mg"
+whole.quantification.rows[1].groupID = "Mg_Ka"
+whole.quantification.rows[1].net = 0000000000000000 0
+whole.quantification.rows[1].sigma = 4050549ea502ef4b 65.32218289648624
+whole.quantification.rows[1].supported = true
+whole.quantification.rows[1].atBound = true
+whole.quantification.rows[1].isReference = false
+whole.quantification.rows[1].kFreeRatio = 0000000000000000 0
+whole.quantification.rows[1].kFreeSigma = 3f90a031b3409796 0.016236092153256353
+whole.quantification.rows[1].atomicPercent = nil
+whole.quantification.rows[1].atomicSigma = nil
+whole.quantification.rows[1].weightPercent = nil
+whole.quantification.rows[1].weightSigma = nil
+whole.quantification.rows[1].atomicTerms = nil
+whole.quantification.rows[1].weightTerms = nil
+whole.quantification.rows[1].absorptionSpreadAtomic = nil
+whole.quantification.rows[1].absorptionSpreadWeight = nil
+whole.quantification.rows[1].atomicTermsText = ""
+whole.quantification.rows[1].weightTermsText = ""
+whole.quantification.rows[1].failure = nil
+whole.quantification.rows[1].lineNote = nil
+whole.quantification.rows[2].element = "Si"
+whole.quantification.rows[2].groupID = "Si_Ka"
+whole.quantification.rows[2].net = 0000000000000000 0
+whole.quantification.rows[2].sigma = 4030661404b210a2 16.398742955658811
+whole.quantification.rows[2].supported = true
+whole.quantification.rows[2].atBound = true
+whole.quantification.rows[2].isReference = false
+whole.quantification.rows[2].kFreeRatio = 0000000000000000 0
+whole.quantification.rows[2].kFreeSigma = 3f70b1f7de497674 0.0040759737354086785
+whole.quantification.rows[2].atomicPercent = nil
+whole.quantification.rows[2].atomicSigma = nil
+whole.quantification.rows[2].weightPercent = nil
+whole.quantification.rows[2].weightSigma = nil
+whole.quantification.rows[2].atomicTerms = nil
+whole.quantification.rows[2].weightTerms = nil
+whole.quantification.rows[2].absorptionSpreadAtomic = nil
+whole.quantification.rows[2].absorptionSpreadWeight = nil
+whole.quantification.rows[2].atomicTermsText = ""
+whole.quantification.rows[2].weightTermsText = ""
+whole.quantification.rows[2].failure = nil
+whole.quantification.rows[2].lineNote = nil
+whole.quantification.referenceElement = "Al"
+whole.quantification.fit.groupIDs: array 3
+whole.quantification.fit.groupIDs[0] = "Al_Ka"
+whole.quantification.fit.groupIDs[1] = "Mg_Ka"
+whole.quantification.fit.groupIDs[2] = "Si_Ka"
+whole.quantification.fit.values: n 3 sum 40af6e8a40d2ae97 4023.2700258100626 fnv ff981d9904bce9ad
+whole.quantification.fit.values[0] = 40af6e8a40d2ae97 4023.2700258100626
+whole.quantification.fit.values[1] = 0000000000000000 0
+whole.quantification.fit.values[2] = 0000000000000000 0
+whole.quantification.fit.covariance: n 9 sum 40d20689c2183e11 18458.152471600162 fnv e314ad4a24417e8e
+whole.quantification.fit.covarianceKind = "sandwich covariance of unweighted least squares, Var(data) = model (Poisson) on the passive set (columns not held at a bound); a bound-active area carries the full-design marginal variance (as if freed) and no covariance"
+whole.quantification.fit.supported: n 3 sum-bits 3 fnv 8b2de55a4af806c4
+whole.quantification.fit.atBound: n 3 sum-bits 2 fnv 51cef117f81654e5
+whole.quantification.fit.escapeValues: array 3
+whole.quantification.fit.escapeValues[0] = nil
+whole.quantification.fit.escapeValues[1] = nil
+whole.quantification.fit.escapeValues[2] = nil
+whole.quantification.fit.backgroundNames: array 16
+whole.quantification.fit.backgroundNames[0] = "continuum s0 t^0"
+whole.quantification.fit.backgroundNames[1] = "continuum s0 t^1"
+whole.quantification.fit.backgroundNames[2] = "continuum s0 t^2"
+whole.quantification.fit.backgroundNames[3] = "continuum s0 t^3"
+whole.quantification.fit.backgroundNames[4] = "continuum s0 t^4"
+whole.quantification.fit.backgroundNames[5] = "continuum s0 t^5"
+whole.quantification.fit.backgroundNames[6] = "continuum s0 t^6"
+whole.quantification.fit.backgroundNames[7] = "continuum s0 t^7"
+whole.quantification.fit.backgroundNames[8] = "continuum s0 t^8"
+whole.quantification.fit.backgroundNames[9] = "continuum s0 t^9"
+whole.quantification.fit.backgroundNames[10] = "continuum s1 t^0"
+whole.quantification.fit.backgroundNames[11] = "continuum s1 t^1"
+whole.quantification.fit.backgroundNames[12] = "continuum s1 t^2"
+whole.quantification.fit.backgroundNames[13] = "continuum s1 t^3"
+whole.quantification.fit.backgroundNames[14] = "continuum s1 t^4"
+whole.quantification.fit.backgroundNames[15] = "continuum s1 t^5"
+whole.quantification.fit.backgroundCoefficients: n 16 sum 40a62eee58ba34c8 2839.4655206860953 fnv 1d2f449ee889c995
+whole.quantification.fit.channels = 52..<1024
+whole.quantification.fit.model: n 972 sum 40b2216d4649cdc1 4641.4268537642793 fnv fe34272184da94de
+whole.quantification.fit.residual: n 972 sum c073f6d4649cdc12 -319.42685376427937 fnv 128cfbff566d0205
+whole.quantification.fit.standardizedResidual: n 972 sum c05885ca87826ee1 -98.090486409545989 fnv f86618114088ef4d
+whole.quantification.fit.negativeModelChannels = 0
+whole.quantification.fit.degreesOfFreedom = 953
+whole.quantification.fit.reducedChiSquared = 4038b03736fb0d5f 24.688342510501908
+whole.quantification.fit.pearsonReducedChiSquared = 3fddd7c4c52bd07e 0.46629447226519705
+whole.quantification.fit.deviance = 408ac82856d2e8bd 857.01969685337792
+whole.quantification.fit.reducedDeviance = 3fecc6f3bd310f91 0.89928614570134091
+whole.quantification.fit.methodLabel = "least squares, unweighted"
+whole.quantification.fit.referenceShapesLabel = "reference shapes: none"
+whole.quantification.fit.escapeLabel = "escape peaks: none (no line above the Si K edge, 1.839 keV)"
+whole.quantification.fit.backgroundLabel = "continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data"
+whole.quantification.fit.exit = "converged"
+whole.quantification.fit.warnings: array 1
+whole.quantification.fit.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
+whole.quantification.fit.droppedLines: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.quantification.fit.escapeRatios: array 3
+whole.quantification.fit.escapeRatios[0] = nil
+whole.quantification.fit.escapeRatios[1] = nil
+whole.quantification.fit.escapeRatios[2] = nil
+whole.quantification.fit.iterations = 3
+whole.quantification.fit.converged = true
+whole.quantification.fit.irls = nil
+whole.quantification.fit.devianceHistory: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.quantification.fileAxis.offset = 0000000000000000 0
+whole.quantification.fileAxis.scale = 3f847ae147ae147b 0.01
+whole.quantification.fileAxis.size = 1024
+whole.quantification.usedAxis.offset = bfdefc674632be43 -0.48415548186583041
+whole.quantification.usedAxis.scale = 3f8b2de630cfd598 0.013271139492625747
+whole.quantification.usedAxis.size = 1024
+whole.quantification.axisLocked = false
+whole.quantification.refinement.fileOffset = 0000000000000000 0
+whole.quantification.refinement.fileScale = 3f847ae147ae147b 0.01
+whole.quantification.refinement.fileResolutionMnKaEV = 4060400000000000 130
+whole.quantification.refinement.offset = bfdefc674632be43 -0.48415548186583041
+whole.quantification.refinement.scale = 3f8b2de630cfd598 0.013271139492625747
+whole.quantification.refinement.resolutionMnKaEV = 406391d3aa5fbf23 156.55708807659639
+whole.quantification.refinement.rssFile = 40e318c98bc7e623 39110.298313092695
+whole.quantification.refinement.rssRefined = 40d8cf8547bce654 25406.082503533296
+whole.quantification.refinement.iterations = 248
+whole.quantification.refinement.converged = true
+whole.quantification.refinement.size = 1024
+whole.quantification.plotModel: n 1024 sum 40b2216d4649cdc1 4641.4268537642793 fnv e72b362f561c835e
+whole.quantification.plotBackground: n 1024 sum 4081a865b6095f10 565.04966361352308 fnv d70664d19b2615cf
+whole.quantification.kSet.kind = .computed
+whole.quantification.kSet.elements: array 3
+whole.quantification.kSet.elements[0] = "Al"
+whole.quantification.kSet.elements[1] = "Mg"
+whole.quantification.kSet.elements[2] = "Si"
+whole.quantification.kSet.values: n 3 sum 4007a1fa23c03134 2.9540903847720532 fnv 1d39a9bcbb0b172
+whole.quantification.kSet.values[0] = 3ff0000000000000 1
+whole.quantification.kSet.values[1] = 3fed9f7bb092a466 0.92571815955046755
+whole.quantification.kSet.values[2] = 3ff074366f371035 1.0283722252215857
+whole.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not the owner's Super-X calibration; FFAST MACs; relative to Al; beam 200.0 keV; UNVALIDATED"
+whole.quantification.kSet.date = "EPQ 249dd3f8 + Krause 1979 + FFAST"
+whole.quantification.kSet.relativeSigma: n 3 sum 3fd999999999999a 0.40000000000000002 fnv d44e691b71094fb9
+whole.quantification.kSet.relativeSigma[0] = 0000000000000000 0
+whole.quantification.kSet.relativeSigma[1] = 3fc999999999999a 0.20000000000000001
+whole.quantification.kSet.relativeSigma[2] = 3fc999999999999a 0.20000000000000001
+whole.quantification.kSet.reference = "Al"
+whole.quantification.abundanceRefusal = "Cliff-Lorimer needs at least two lines above the intensity floor; this spectrum has 1."
+whole.quantification.absorption.refused = "The stage tilt is not known, so the absorption geometry cannot be computed."
+whole.quantification.warnings: array 1
+whole.quantification.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
+whole.quantification.qualityLabel = "χ²ᵣ (Pearson)"
+whole.quantification.quality = 3fddd7c4c52bd07e 0.46629447226519705
+whole.quantification.footerLines: array 9
+whole.quantification.footerLines[0] = "least squares, unweighted · continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data · escape peaks: none (no line above the Si K edge, 1.839 keV)"
+whole.quantification.footerLines[1] = "energy axis: file 0.000 keV + 0.0100 keV/ch → refined -484.2 eV, gain +32.711 %, FWHM(Mn Kα) 157 eV"
+whole.quantification.footerLines[2] = "beam 200 kV · typed"
+whole.quantification.footerLines[3] = "fit range 0.2–13.0922 keV (default; the axis end) · 1024 px pooled (Whole map)"
+whole.quantification.footerLines[4] = "σ: counting only; model choice can move a weak line by more"
+whole.quantification.footerLines[5] = "σ is counting statistics at χ²ᵣ = 1; this fit is at 0.47 (Pearson)"
+whole.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not the owner's Super-X calibration; FFAST MACs; relative to Al; beam 200.0 keV; UNVALIDATED (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Al)"
+whole.quantification.footerLines[7] = "k-free ratio: net / net(Al)"
+whole.quantification.footerLines[8] = "absorption: not applied — The stage tilt is not known, so the absorption geometry cannot be computed."
+whole.quantification.fitSettings.elements: array 3
+whole.quantification.fitSettings.elements[0] = "Al"
+whole.quantification.fitSettings.elements[1] = "Mg"
+whole.quantification.fitSettings.elements[2] = "Si"
+whole.quantification.fitSettings.resolutionMnKaEV = 406391d3aa5fbf23 156.55708807659639
+whole.quantification.fitSettings.beamEnergy = 4069000000000000 200
+whole.quantification.fitSettings.fitFrom = 3fc999999999999a 0.20000000000000001
+whole.quantification.fitSettings.fitTo = 402a2f377d120bb1 13.09222021909031
+whole.quantification.fitSettings.background.continuum.beamEnergy = 4069000000000000 200
+whole.quantification.fitSettings.background.continuum.edges: n 1 sum 3ff8f41f212d7732 1.5596000000000001 fnv 81bcb0c79f3d52e2
+whole.quantification.fitSettings.background.continuum.edges[0] = 3ff8f41f212d7732 1.5596000000000001
+whole.quantification.fitSettings.background.continuum.orders: n 2 sum-bits e fnv 54226316c5c52fc9
+whole.quantification.fitSettings.background.continuum.nonNegative = true
+whole.quantification.fitSettings.background.continuum.efficiency = nil
+whole.quantification.fitSettings.escapePeaks = true
+whole.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.quantification.fitSettings.method = .leastSquares
+whole.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
+whole.quantification.fitRange.toKeV = 402a2f377d120bb1 13.09222021909031
+whole.quantification.fitRange.source = .defaultReach
+whole.quantification.fitRange.axisEndKeV = 402475c28f5c28f6 10.23
+whole.quantification.fitRange.beamEnergyKeV = 4069000000000000 200
+whole.quantification.fitRange.reachKeV = 402a2f377d120bb1 13.09222021909031
+whole.quantification.fitRange.typedKeV = nil
+whole.quantification.rangeSensitivity = nil
+whole.quantification.unlistedCheck = nil
+whole.quantification.unlistedCheckPending = false
+whole.quantification.abundanceCaveat = nil
+whole.csv-fnv = fcb625db6f3b1a78
+whole.rangeSensitivity = nil
+whole.unlistedProposal.candidates: array 70
+whole.unlistedProposal.candidates[0].element = "O"
+whole.unlistedProposal.candidates[0].group = "O_Ka"
+whole.unlistedProposal.candidates[0].energyKeV = 3fe0cbfb15b573eb 0.52490000000000003
+whole.unlistedProposal.candidates[0].net = 0000000000000000 0
+whole.unlistedProposal.candidates[0].sigma = 40350e18c9447f54 21.055065707419388
+whole.unlistedProposal.candidates[0].sigmaZero = 40350e18c9447f54 21.055065707419388
+whole.unlistedProposal.candidates[0].criticalLevel = 404150f5cc94a32a 34.632501194550358
+whole.unlistedProposal.candidates[0].detectionLimit = 4051fe1d6c4ff2f4 71.970545843196135
+whole.unlistedProposal.candidates[0].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[0].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[0].holeRegionNote = nil
+whole.unlistedProposal.candidates[0].misfit = 4000c8ac18ca116d 2.0979844986597329
+whole.unlistedProposal.candidates[1].element = "F"
+whole.unlistedProposal.candidates[1].group = "F_Ka"
+whole.unlistedProposal.candidates[1].energyKeV = 3fe5a858793dd97f 0.67679999999999996
+whole.unlistedProposal.candidates[1].net = 0000000000000000 0
+whole.unlistedProposal.candidates[1].sigma = 40556ed15d703c64 85.731528625111935
+whole.unlistedProposal.candidates[1].sigmaZero = 40556ed15d703c64 85.731528625111935
+whole.unlistedProposal.candidates[1].criticalLevel = 4061a0819024a3ac 141.01581580310938
+whole.unlistedProposal.candidates[1].detectionLimit = 4071cbcb7813779e 284.73717506031414
+whole.unlistedProposal.candidates[1].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[1].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[1].holeRegionNote = nil
+whole.unlistedProposal.candidates[1].misfit = 4011e0ba9d72d14e 4.4694618798569774
+whole.unlistedProposal.candidates[2].element = "Na"
+whole.unlistedProposal.candidates[2].group = "Na_Ka"
+whole.unlistedProposal.candidates[2].energyKeV = 3ff0a7ef9db22d0e 1.0409999999999999
+whole.unlistedProposal.candidates[2].net = 0000000000000000 0
+whole.unlistedProposal.candidates[2].sigma = 405416b2e733a8a4 80.354669380615235
+whole.unlistedProposal.candidates[2].sigmaZero = 405416b2e733a8a4 80.354669380615235
+whole.unlistedProposal.candidates[2].criticalLevel = 4060857e50c4f29f 132.17166937319141
+whole.unlistedProposal.candidates[2].detectionLimit = 4070b0c838b3c691 267.0488822004782
+whole.unlistedProposal.candidates[2].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[2].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[2].holeRegionNote = nil
+whole.unlistedProposal.candidates[2].misfit = 40084633e9b2098a 3.0342787034471188
+whole.unlistedProposal.candidates[3].element = "P"
+whole.unlistedProposal.candidates[3].group = "P_Ka"
+whole.unlistedProposal.candidates[3].energyKeV = 40001b3d07c84b5e 2.0133000000000001
+whole.unlistedProposal.candidates[3].net = 0000000000000000 0
+whole.unlistedProposal.candidates[3].sigma = 404244e58294a9bf 36.538254091824903
+whole.unlistedProposal.candidates[3].sigmaZero = 404244e58294a9bf 36.538254091824903
+whole.unlistedProposal.candidates[3].criticalLevel = 404e0ccf69ebb82b 60.10007976541268
+whole.unlistedProposal.candidates[3].detectionLimit = 405eb9f709a707f5 122.90570298492078
+whole.unlistedProposal.candidates[3].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[3].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[3].holeRegionNote = nil
+whole.unlistedProposal.candidates[3].misfit = 400f24cfce1e7845 3.8929744818733831
+whole.unlistedProposal.candidates[4].element = "S"
+whole.unlistedProposal.candidates[4].group = "S_Ka"
+whole.unlistedProposal.candidates[4].energyKeV = 40027525460aa64c 2.3071999999999999
+whole.unlistedProposal.candidates[4].net = 0000000000000000 0
+whole.unlistedProposal.candidates[4].sigma = 3ff8bdbf26a37e3d 1.5463248738596029
+whole.unlistedProposal.candidates[4].sigmaZero = 3ff8bdbf26a37e3d 1.5463248738596029
+whole.unlistedProposal.candidates[4].criticalLevel = 4004590b08bdca75 2.5434780772132464
+whole.unlistedProposal.candidates[4].detectionLimit = 401f2b850472c70f 7.7924996085219069
+whole.unlistedProposal.candidates[4].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[4].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[4].holeRegionNote = nil
+whole.unlistedProposal.candidates[4].misfit = 3ff598d9e838812e 1.3498171874162597
+whole.unlistedProposal.candidates[5].element = "Cl"
+whole.unlistedProposal.candidates[5].group = "Cl_Ka"
+whole.unlistedProposal.candidates[5].energyKeV = 4004faacd9e83e42 2.6223999999999998
+whole.unlistedProposal.candidates[5].net = 0000000000000000 0
+whole.unlistedProposal.candidates[5].sigma = 400645d7b2ee2608 2.7841028193404362
+whole.unlistedProposal.candidates[5].sigmaZero = 400645d7b2ee2608 2.7841028193404362
+whole.unlistedProposal.candidates[5].criticalLevel = 4012515924e2c3fd 4.5794416201979375
+whole.unlistedProposal.candidates[5].detectionLimit = 4027ba9622bd424a 11.864426694491289
+whole.unlistedProposal.candidates[5].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[5].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[5].holeRegionNote = nil
+whole.unlistedProposal.candidates[5].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[6].element = "Ar"
+whole.unlistedProposal.candidates[6].group = "Ar_Ka"
+whole.unlistedProposal.candidates[6].energyKeV = 4007a95e9e1b089a 2.9577
+whole.unlistedProposal.candidates[6].net = 0000000000000000 0
+whole.unlistedProposal.candidates[6].sigma = 400c0a80e1bafc04 3.5051286349475976
+whole.unlistedProposal.candidates[6].sigmaZero = 400c0a80e1bafc04 3.5051286349475976
+whole.unlistedProposal.candidates[6].criticalLevel = 40170fcb30cb2417 5.7654235481250202
+whole.unlistedProposal.candidates[6].detectionLimit = 402c79082ea5a264 14.236390550345455
+whole.unlistedProposal.candidates[6].conflicts: array 1
+whole.unlistedProposal.candidates[6].conflicts[0].id = "sum-Al+Al sum-Ar"
+whole.unlistedProposal.candidates[6].conflicts[0].kind = .sumPeak
+whole.unlistedProposal.candidates[6].conflicts[0].element = "Ar"
+whole.unlistedProposal.candidates[6].conflicts[0].line = "Ar_Ka"
+whole.unlistedProposal.candidates[6].conflicts[0].energiesKeV: n 2 sum 4017b9096bb98c7e 5.9306999999999999 fnv ccfdcc7427df7932
+whole.unlistedProposal.candidates[6].conflicts[0].energiesKeV[0] = 4007c8b439581062 2.9729999999999999
+whole.unlistedProposal.candidates[6].conflicts[0].energiesKeV[1] = 4007a95e9e1b089a 2.9577
+whole.unlistedProposal.candidates[6].conflicts[0].requires: array 1
+whole.unlistedProposal.candidates[6].conflicts[0].requires[0] = "Al"
+whole.unlistedProposal.candidates[6].conflicts[0].question = "Al+Al sum peak (2.973 keV) or Ar Kα (2.958 keV)? They are 15 eV apart, far inside the detector resolution."
+whole.unlistedProposal.candidates[6].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+whole.unlistedProposal.candidates[6].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[6].holeRegionNote = nil
+whole.unlistedProposal.candidates[6].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[7].element = "K"
+whole.unlistedProposal.candidates[7].group = "K_Ka"
+whole.unlistedProposal.candidates[7].energyKeV = 400a82a9930be0df 3.3138000000000001
+whole.unlistedProposal.candidates[7].net = 0000000000000000 0
+whole.unlistedProposal.candidates[7].sigma = 40012d7941bc2473 2.147203935197973
+whole.unlistedProposal.candidates[7].sigmaZero = 40012d7941bc2473 2.147203935197973
+whole.unlistedProposal.candidates[7].criticalLevel = 400c413353d49021 3.5318361806148606
+whole.unlistedProposal.candidates[7].detectionLimit = 402389d6a7c4c65e 9.7692158153251363
+whole.unlistedProposal.candidates[7].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[7].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[7].holeRegionNote = nil
+whole.unlistedProposal.candidates[7].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[8].element = "Ca"
+whole.unlistedProposal.candidates[8].group = "Ca_Ka"
+whole.unlistedProposal.candidates[8].energyKeV = 400d889a02752546 3.6917
+whole.unlistedProposal.candidates[8].net = 0000000000000000 0
+whole.unlistedProposal.candidates[8].sigma = 40034f0c50cc1ab4 2.4135977089202587
+whole.unlistedProposal.candidates[8].sigmaZero = 40034f0c50cc1ab4 2.4135977089202587
+whole.unlistedProposal.candidates[8].criticalLevel = 400fc297321d175e 3.9700149455192522
+whole.unlistedProposal.candidates[8].detectionLimit = 40254a8896e909fc 10.645573345133919
+whole.unlistedProposal.candidates[8].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[8].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[8].holeRegionNote = nil
+whole.unlistedProposal.candidates[8].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[9].element = "Sc"
+whole.unlistedProposal.candidates[9].group = "Sc_Ka"
+whole.unlistedProposal.candidates[9].energyKeV = 40105cc63f141206 4.0906000000000002
+whole.unlistedProposal.candidates[9].net = 0000000000000000 0
+whole.unlistedProposal.candidates[9].sigma = 3fe8d8d31c17568b 0.77646785246425176
+whole.unlistedProposal.candidates[9].sigmaZero = 3fe8d8d31c17568b 0.77646785246425176
+whole.unlistedProposal.candidates[9].criticalLevel = 3ff46f50101c5188 1.2771759633370454
+whole.unlistedProposal.candidates[9].detectionLimit = 40150a2203c3255e 5.259895380769505
+whole.unlistedProposal.candidates[9].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[9].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[9].holeRegionNote = nil
+whole.unlistedProposal.candidates[9].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[10].element = "Ti"
+whole.unlistedProposal.candidates[10].group = "Ti_Ka"
+whole.unlistedProposal.candidates[10].energyKeV = 40120b295e9e1b09 4.5109000000000004
+whole.unlistedProposal.candidates[10].net = 0000000000000000 0
+whole.unlistedProposal.candidates[10].sigma = 3fe0b2117f08cd21 0.52173685847666118
+whole.unlistedProposal.candidates[10].sigmaZero = 3fe0b2117f08cd21 0.52173685847666118
+whole.unlistedProposal.candidates[10].criticalLevel = 3feb7637816b287a 0.8581807639796033
+whole.unlistedProposal.candidates[10].detectionLimit = 4011b007dc0fc6b8 4.4219049820546203
+whole.unlistedProposal.candidates[10].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[10].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[10].holeRegionNote = nil
+whole.unlistedProposal.candidates[10].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[11].element = "V"
+whole.unlistedProposal.candidates[11].group = "V_Ka"
+whole.unlistedProposal.candidates[11].energyKeV = 4013cf0d844d013b 4.9522000000000004
+whole.unlistedProposal.candidates[11].net = 0000000000000000 0
+whole.unlistedProposal.candidates[11].sigma = 3ff77b679348815e 1.4676280740023553
+whole.unlistedProposal.candidates[11].sigmaZero = 3ff77b679348815e 1.4676280740023553
+whole.unlistedProposal.candidates[11].criticalLevel = 40034ff0b8f7bab8 2.4140333605385784
+whole.unlistedProposal.candidates[11].detectionLimit = 401e226ab4acb752 7.533610175172571
+whole.unlistedProposal.candidates[11].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[11].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[11].holeRegionNote = nil
+whole.unlistedProposal.candidates[11].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[12].element = "Cr"
+whole.unlistedProposal.candidates[12].group = "Cr_Ka"
+whole.unlistedProposal.candidates[12].energyKeV = 4015a8a71de69ad4 5.4146999999999998
+whole.unlistedProposal.candidates[12].net = 0000000000000000 0
+whole.unlistedProposal.candidates[12].sigma = 3fff0520f1bda3b1 1.9387521212577037
+whole.unlistedProposal.candidates[12].sigmaZero = 3fff0520f1bda3b1 1.9387521212577037
+whole.unlistedProposal.candidates[12].criticalLevel = 400982ff461019ba 3.188963458410595
+whole.unlistedProposal.candidates[12].detectionLimit = 40222abca0e28b2a 9.0834703709166043
+whole.unlistedProposal.candidates[12].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[12].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[12].holeRegionNote = nil
+whole.unlistedProposal.candidates[12].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[13].element = "Mn"
+whole.unlistedProposal.candidates[13].group = "Mn_Ka"
+whole.unlistedProposal.candidates[13].energyKeV = 40179844d013a92a 5.8986999999999998
+whole.unlistedProposal.candidates[13].net = 0000000000000000 0
+whole.unlistedProposal.candidates[13].sigma = 3ffe4eb001e8b5f6 1.8942108225413654
+whole.unlistedProposal.candidates[13].sigmaZero = 3ffe4eb001e8b5f6 1.8942108225413654
+whole.unlistedProposal.candidates[13].criticalLevel = 4008ecf3e19d01a8 3.1156995416678974
+whole.unlistedProposal.candidates[13].detectionLimit = 4021dfb6eea8ff21 8.936942537431209
+whole.unlistedProposal.candidates[13].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[13].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[13].holeRegionNote = nil
+whole.unlistedProposal.candidates[13].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[14].element = "Fe"
+whole.unlistedProposal.candidates[14].group = "Fe_Ka"
+whole.unlistedProposal.candidates[14].energyKeV = 40199d97f62b6ae8 6.4039000000000001
+whole.unlistedProposal.candidates[14].net = 0000000000000000 0
+whole.unlistedProposal.candidates[14].sigma = 3ff63ce3e42ed008 1.3898657716172256
+whole.unlistedProposal.candidates[14].sigmaZero = 3ff63ce3e42ed008 1.3898657716172256
+whole.unlistedProposal.candidates[14].criticalLevel = 400249fc4cd09680 2.2861257554203007
+whole.unlistedProposal.candidates[14].detectionLimit = 401d1c764885931a 7.2777949649360156
+whole.unlistedProposal.candidates[14].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[14].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[14].holeRegionNote = nil
+whole.unlistedProposal.candidates[14].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[15].element = "Co"
+whole.unlistedProposal.candidates[15].group = "Co_Ka"
+whole.unlistedProposal.candidates[15].energyKeV = 401bb8a0902de00d 6.9302999999999999
+whole.unlistedProposal.candidates[15].net = 0000000000000000 0
+whole.unlistedProposal.candidates[15].sigma = 3fe10069f2330670 0.53130051903299425
+whole.unlistedProposal.candidates[15].sigmaZero = 3fe10069f2330670 0.53130051903299425
+whole.unlistedProposal.candidates[15].criticalLevel = 3febf7156e0a25ba 0.87391158573262051
+whole.unlistedProposal.candidates[15].detectionLimit = 4011d03f57378608 4.4533666255606548
+whole.unlistedProposal.candidates[15].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[15].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[15].holeRegionNote = nil
+whole.unlistedProposal.candidates[15].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[16].element = "Ni"
+whole.unlistedProposal.candidates[16].group = "Ni_Ka"
+whole.unlistedProposal.candidates[16].energyKeV = 401de9930be0ded3 7.4781000000000004
+whole.unlistedProposal.candidates[16].net = 0000000000000000 0
+whole.unlistedProposal.candidates[16].sigma = 3fdcafbca9de0dfd 0.44822613323796628
+whole.unlistedProposal.candidates[16].sigmaZero = 3fdcafbca9de0dfd 0.44822613323796628
+whole.unlistedProposal.candidates[16].criticalLevel = 3fe797afaa53fb21 0.73726638095090291
+whole.unlistedProposal.candidates[16].detectionLimit = 4010b865e649fb62 4.1800762159972198
+whole.unlistedProposal.candidates[16].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[16].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[16].holeRegionNote = nil
+whole.unlistedProposal.candidates[16].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[17].element = "Cu"
+whole.unlistedProposal.candidates[17].group = "Cu_Ka"
+whole.unlistedProposal.candidates[17].energyKeV = 402018793dd97f63 8.0478000000000005
+whole.unlistedProposal.candidates[17].net = 0000000000000000 0
+whole.unlistedProposal.candidates[17].sigma = 3ff47d7b5426bfa4 1.2806351935541693
+whole.unlistedProposal.candidates[17].sigmaZero = 3ff47d7b5426bfa4 1.2806351935541693
+whole.unlistedProposal.candidates[17].criticalLevel = 4000da065c1e085b 2.1064574429192766
+whole.unlistedProposal.candidates[17].detectionLimit = 401bac8057d304f5 6.9184583399339674
+whole.unlistedProposal.candidates[17].conflicts: array 1
+whole.unlistedProposal.candidates[17].conflicts[0].id = "cu-grid"
+whole.unlistedProposal.candidates[17].conflicts[0].kind = .gridOrSample
+whole.unlistedProposal.candidates[17].conflicts[0].element = "Cu"
+whole.unlistedProposal.candidates[17].conflicts[0].line = "Cu_Ka"
+whole.unlistedProposal.candidates[17].conflicts[0].energiesKeV: n 1 sum 402018793dd97f63 8.0478000000000005 fnv 531237518ebd7b74
+whole.unlistedProposal.candidates[17].conflicts[0].energiesKeV[0] = 402018793dd97f63 8.0478000000000005
+whole.unlistedProposal.candidates[17].conflicts[0].requires: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[17].conflicts[0].question = "Cu from the grid or from the Q phase?"
+whole.unlistedProposal.candidates[17].conflicts[0].remedy = "Measure Cu on a hole region (no sample): net Cu there is grid and holder signal."
+whole.unlistedProposal.candidates[17].suggestedRole = .quantify
+whole.unlistedProposal.candidates[17].holeRegionNote = "No hole region available: Cu grid and Q phase cannot be separated."
+whole.unlistedProposal.candidates[17].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[18].element = "Zn"
+whole.unlistedProposal.candidates[18].group = "Zn_Ka"
+whole.unlistedProposal.candidates[18].energyKeV = 4021471de69ad42c 8.6388999999999996
+whole.unlistedProposal.candidates[18].net = 0000000000000000 0
+whole.unlistedProposal.candidates[18].sigma = 3ffb136e7e9cff4f 1.6922440477209937
+whole.unlistedProposal.candidates[18].sigmaZero = 3ffb136e7e9cff4f 1.6922440477209937
+whole.unlistedProposal.candidates[18].criticalLevel = 4006449860502938 2.7834937595809173
+whole.unlistedProposal.candidates[18].detectionLimit = 40208b892e0292e9 8.2725309732572487
+whole.unlistedProposal.candidates[18].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[18].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[18].holeRegionNote = nil
+whole.unlistedProposal.candidates[18].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[19].element = "Ga"
+whole.unlistedProposal.candidates[19].group = "Ga_Ka"
+whole.unlistedProposal.candidates[19].energyKeV = 402280ded288ce70 9.2516999999999996
+whole.unlistedProposal.candidates[19].net = 0000000000000000 0
+whole.unlistedProposal.candidates[19].sigma = 3ff837c9e8b979f6 1.5136202898789839
+whole.unlistedProposal.candidates[19].sigmaZero = 3ff837c9e8b979f6 1.5136202898789839
+whole.unlistedProposal.candidates[19].criticalLevel = 4003eadf5a3f2213 2.489683823634786
+whole.unlistedProposal.candidates[19].detectionLimit = 401ebd5955f41ead 7.6849111013649862
+whole.unlistedProposal.candidates[19].conflicts: array 1
+whole.unlistedProposal.candidates[19].conflicts[0].id = "ga-fib"
+whole.unlistedProposal.candidates[19].conflicts[0].kind = .fibContamination
+whole.unlistedProposal.candidates[19].conflicts[0].element = "Ga"
+whole.unlistedProposal.candidates[19].conflicts[0].line = "Ga_Ka"
+whole.unlistedProposal.candidates[19].conflicts[0].energiesKeV: n 2 sum 4002d0e560418938 2.3520000000000003 fnv 5a574e0a43bd414a
+whole.unlistedProposal.candidates[19].conflicts[0].energiesKeV[0] = 3ff1916872b020c5 1.0980000000000001
+whole.unlistedProposal.candidates[19].conflicts[0].energiesKeV[1] = 3ff410624dd2f1aa 1.254
+whole.unlistedProposal.candidates[19].conflicts[0].requires: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[19].conflicts[0].question = "Ga from FIB? Ga is implanted by FIB milling; its Lα (1.098 keV) sits 156 eV below Mg Kα (1.254 keV)."
+whole.unlistedProposal.candidates[19].conflicts[0].remedy = "Ga Kα (9.25 keV) present? Check a thin or unmilled region; keep Ga fitted but excluded from Quantify."
+whole.unlistedProposal.candidates[19].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[19].holeRegionNote = nil
+whole.unlistedProposal.candidates[19].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[20].element = "Ge"
+whole.unlistedProposal.candidates[20].group = "Ge_Ka"
+whole.unlistedProposal.candidates[20].energyKeV = 4023c5d63886594b 9.8864000000000001
+whole.unlistedProposal.candidates[20].net = 0000000000000000 0
+whole.unlistedProposal.candidates[20].sigma = 3fe629437809e9ec 0.6925370544916496
+whole.unlistedProposal.candidates[20].sigmaZero = 3fe629437809e9ec 0.6925370544916496
+whole.unlistedProposal.candidates[20].criticalLevel = 3ff239d814900478 1.1391220858788795
+whole.unlistedProposal.candidates[20].detectionLimit = 4013ef6605fcfed6 4.9837876258531733
+whole.unlistedProposal.candidates[20].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[20].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[20].holeRegionNote = nil
+whole.unlistedProposal.candidates[20].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[21].element = "As"
+whole.unlistedProposal.candidates[21].group = "As_Ka"
+whole.unlistedProposal.candidates[21].energyKeV = 40251652bd3c3611 10.5436
+whole.unlistedProposal.candidates[21].net = 0000000000000000 0
+whole.unlistedProposal.candidates[21].sigma = 3fe20f5d8729cf0f 0.56437565230450726
+whole.unlistedProposal.candidates[21].sigmaZero = 3fe20f5d8729cf0f 0.56437565230450726
+whole.unlistedProposal.candidates[21].criticalLevel = 3fedb4c25e7ce8d8 0.928315338656172
+whole.unlistedProposal.candidates[21].detectionLimit = 40123faa935436d0 4.5621741314077582
+whole.unlistedProposal.candidates[21].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[21].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[21].holeRegionNote = nil
+whole.unlistedProposal.candidates[21].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[22].element = "Se"
+whole.unlistedProposal.candidates[22].group = "Se_Ka"
+whole.unlistedProposal.candidates[22].energyKeV = 402671a9fbe76c8b 11.222
+whole.unlistedProposal.candidates[22].net = 0000000000000000 0
+whole.unlistedProposal.candidates[22].sigma = 3ff811f265269b3c 1.5043815566256873
+whole.unlistedProposal.candidates[22].sigmaZero = 3ff811f265269b3c 1.5043815566256873
+whole.unlistedProposal.candidates[22].criticalLevel = 4003cbc014cf6147 2.474487459734664
+whole.unlistedProposal.candidates[22].detectionLimit = 401e9e3a10845de1 7.6545183735647422
+whole.unlistedProposal.candidates[22].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[22].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[22].holeRegionNote = nil
+whole.unlistedProposal.candidates[22].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[23].element = "Br"
+whole.unlistedProposal.candidates[23].group = "Br_Ka"
+whole.unlistedProposal.candidates[23].energyKeV = 4027d8fc504816f0 11.9238
+whole.unlistedProposal.candidates[23].net = 0000000000000000 0
+whole.unlistedProposal.candidates[23].sigma = 3ffb8300e33ac410 1.7194832683710537
+whole.unlistedProposal.candidates[23].sigmaZero = 3ffb8300e33ac410 1.7194832683710537
+whole.unlistedProposal.candidates[23].criticalLevel = 4006a05adaa6f403 2.8282982904625
+whole.unlistedProposal.candidates[23].detectionLimit = 4020b96a6b2df84e 8.3621400350204134
+whole.unlistedProposal.candidates[23].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[23].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[23].holeRegionNote = nil
+whole.unlistedProposal.candidates[23].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[24].element = "Rb"
+whole.unlistedProposal.candidates[24].group = "Rb_La"
+whole.unlistedProposal.candidates[24].energyKeV = 3ffb1b089a027525 1.6940999999999999
+whole.unlistedProposal.candidates[24].net = 0000000000000000 0
+whole.unlistedProposal.candidates[24].sigma = 4053cf3d2df121e6 79.238109097939372
+whole.unlistedProposal.candidates[24].sigmaZero = 4053cf3d2df121e6 79.238109097939372
+whole.unlistedProposal.candidates[24].criticalLevel = 40604ab9110f49f8 130.33509114252206
+whole.unlistedProposal.candidates[24].detectionLimit = 40707602f8fe1dea 263.37572573913951
+whole.unlistedProposal.candidates[24].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[24].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[24].holeRegionNote = nil
+whole.unlistedProposal.candidates[24].misfit = 40151e8c48e8b62f 5.2798320190463945
+whole.unlistedProposal.candidates[25].element = "Sr"
+whole.unlistedProposal.candidates[25].group = "Sr_La"
+whole.unlistedProposal.candidates[25].energyKeV = 3ffce76c8b439581 1.8065
+whole.unlistedProposal.candidates[25].net = 0000000000000000 0
+whole.unlistedProposal.candidates[25].sigma = 4040fd4a58245fa4 33.978831308136506
+whole.unlistedProposal.candidates[25].sigmaZero = 4040fd4a58245fa4 33.978831308136506
+whole.unlistedProposal.candidates[25].criticalLevel = 404bf1f233b2a100 55.890203916760584
+whole.unlistedProposal.candidates[25].detectionLimit = 405c9f19d36df0ca 114.48595128761659
+whole.unlistedProposal.candidates[25].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[25].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[25].holeRegionNote = nil
+whole.unlistedProposal.candidates[25].misfit = 401524bf18e9522e 5.2858852283866735
+whole.unlistedProposal.candidates[26].element = "Y"
+whole.unlistedProposal.candidates[26].group = "Y_La"
+whole.unlistedProposal.candidates[26].energyKeV = 3ffec2f837b4a234 1.9226000000000001
+whole.unlistedProposal.candidates[26].net = 0000000000000000 0
+whole.unlistedProposal.candidates[26].sigma = 404c0824f4306781 56.063627742419165
+whole.unlistedProposal.candidates[26].sigmaZero = 404c0824f4306781 56.063627742419165
+whole.unlistedProposal.candidates[26].criticalLevel = 40570dda810d0277 92.216461432175365
+whole.unlistedProposal.candidates[26].detectionLimit = 4067646e50eaaa5c 187.13846631844615
+whole.unlistedProposal.candidates[26].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[26].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[26].holeRegionNote = nil
+whole.unlistedProposal.candidates[26].misfit = 40125a0bb3f27fd5 4.5879352680930952
+whole.unlistedProposal.candidates[27].element = "Zr"
+whole.unlistedProposal.candidates[27].group = "Zr_La"
+whole.unlistedProposal.candidates[27].energyKeV = 400056a161e4f766 2.0423
+whole.unlistedProposal.candidates[27].net = 0000000000000000 0
+whole.unlistedProposal.candidates[27].sigma = 403be694f36defce 27.900710310306572
+whole.unlistedProposal.candidates[27].sigmaZero = 403be694f36defce 27.900710310306572
+whole.unlistedProposal.candidates[27].criticalLevel = 4046f24035e2360d 45.892584548430115
+whole.unlistedProposal.candidates[27].detectionLimit = 40579f67d59d85d7 94.490712550955649
+whole.unlistedProposal.candidates[27].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[27].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[27].holeRegionNote = nil
+whole.unlistedProposal.candidates[27].misfit = 400d6683f5a29099 3.6750563802944041
+whole.unlistedProposal.candidates[28].element = "Nb"
+whole.unlistedProposal.candidates[28].group = "Nb_La"
+whole.unlistedProposal.candidates[28].energyKeV = 400153c36113404f 2.1659000000000002
+whole.unlistedProposal.candidates[28].net = 0000000000000000 0
+whole.unlistedProposal.candidates[28].sigma = 4020ecfb77266304 8.4628560289725172
+whole.unlistedProposal.candidates[28].sigmaZero = 4020ecfb77266304 8.4628560289725172
+whole.unlistedProposal.candidates[28].criticalLevel = 402bd71f232509d0 13.920159433623581
+whole.unlistedProposal.candidates[28].detectionLimit = 403e8bbda21248f6 30.545862321342575
+whole.unlistedProposal.candidates[28].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[28].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[28].holeRegionNote = nil
+whole.unlistedProposal.candidates[28].misfit = 3fff9e626c9d11b6 1.9761680834500175
+whole.unlistedProposal.candidates[29].element = "Mo"
+whole.unlistedProposal.candidates[29].group = "Mo_La"
+whole.unlistedProposal.candidates[29].energyKeV = 400258793dd97f63 2.2932000000000001
+whole.unlistedProposal.candidates[29].net = 0000000000000000 0
+whole.unlistedProposal.candidates[29].sigma = 400443db4f953535 2.5331331460389728
+whole.unlistedProposal.candidates[29].sigmaZero = 400443db4f953535 2.5331331460389728
+whole.unlistedProposal.candidates[29].criticalLevel = 4010aaa1e7a13c89 4.1666332428131989
+whole.unlistedProposal.candidates[29].detectionLimit = 402613dee57bbad6 11.038809939721812
+whole.unlistedProposal.candidates[29].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[29].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[29].holeRegionNote = nil
+whole.unlistedProposal.candidates[29].misfit = 3fff51fb89c1de3d 1.9575152760643413
+whole.unlistedProposal.candidates[30].element = "Ru"
+whole.unlistedProposal.candidates[30].group = "Ru_La"
+whole.unlistedProposal.candidates[30].energyKeV = 400477ced916872b 2.5585
+whole.unlistedProposal.candidates[30].net = 0000000000000000 0
+whole.unlistedProposal.candidates[30].sigma = 400717e96d1ff140 2.8866756940243761
+whole.unlistedProposal.candidates[30].sigmaZero = 400717e96d1ff140 2.8866756940243761
+whole.unlistedProposal.candidates[30].criticalLevel = 4012fe1d6395b026 4.7481589851486543
+whole.unlistedProposal.candidates[30].detectionLimit = 4028675a61702e73 12.201861424392723
+whole.unlistedProposal.candidates[30].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[30].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[30].holeRegionNote = nil
+whole.unlistedProposal.candidates[30].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[31].element = "Rh"
+whole.unlistedProposal.candidates[31].group = "Rh_La"
+whole.unlistedProposal.candidates[31].energyKeV = 4005930be0ded289 2.6968000000000001
+whole.unlistedProposal.candidates[31].net = 0000000000000000 0
+whole.unlistedProposal.candidates[31].sigma = 400c40f97d96590e 3.5317258655078438
+whole.unlistedProposal.candidates[31].sigmaZero = 400c40f97d96590e 3.5317258655078438
+whole.unlistedProposal.candidates[31].criticalLevel = 40173c979c5cf44b 5.8091720992789062
+whole.unlistedProposal.candidates[31].detectionLimit = 402ca5d49a377298 14.323887652653227
+whole.unlistedProposal.candidates[31].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[31].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[31].holeRegionNote = nil
+whole.unlistedProposal.candidates[31].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[32].element = "Pd"
+whole.unlistedProposal.candidates[32].group = "Pd_La"
+whole.unlistedProposal.candidates[32].energyKeV = 4006b573eab367a1 2.8386
+whole.unlistedProposal.candidates[32].net = 0000000000000000 0
+whole.unlistedProposal.candidates[32].sigma = 400df14869652a92 3.7428138956068517
+whole.unlistedProposal.candidates[32].sigmaZero = 400df14869652a92 3.7428138956068517
+whole.unlistedProposal.candidates[32].criticalLevel = 4018a0225803299c 6.1563810111933002
+whole.unlistedProposal.candidates[32].detectionLimit = 402e095f55dda7e9 15.018305476482015
+whole.unlistedProposal.candidates[32].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[32].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[32].holeRegionNote = nil
+whole.unlistedProposal.candidates[32].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[33].element = "Ag"
+whole.unlistedProposal.candidates[33].group = "Ag_La"
+whole.unlistedProposal.candidates[33].energyKeV = 4007e00d1b71758e 2.9843999999999999
+whole.unlistedProposal.candidates[33].net = 0000000000000000 0
+whole.unlistedProposal.candidates[33].sigma = 40144c518ec33e81 5.0745298678081108
+whole.unlistedProposal.candidates[33].sigmaZero = 40144c518ec33e81 5.0745298678081108
+whole.unlistedProposal.candidates[33].criticalLevel = 4020b1977bf80f1f 8.3468588581377485
+whole.unlistedProposal.candidates[33].detectionLimit = 40336635fae54e46 19.399261170370913
+whole.unlistedProposal.candidates[33].conflicts: array 1
+whole.unlistedProposal.candidates[33].conflicts[0].id = "sum-Al+Al sum-Ag"
+whole.unlistedProposal.candidates[33].conflicts[0].kind = .sumPeak
+whole.unlistedProposal.candidates[33].conflicts[0].element = "Ag"
+whole.unlistedProposal.candidates[33].conflicts[0].line = "Ag_La"
+whole.unlistedProposal.candidates[33].conflicts[0].energiesKeV: n 2 sum 4017d460aa64c2f8 5.9573999999999998 fnv 3854f55e8c8b86cc
+whole.unlistedProposal.candidates[33].conflicts[0].energiesKeV[0] = 4007c8b439581062 2.9729999999999999
+whole.unlistedProposal.candidates[33].conflicts[0].energiesKeV[1] = 4007e00d1b71758e 2.9843999999999999
+whole.unlistedProposal.candidates[33].conflicts[0].requires: array 1
+whole.unlistedProposal.candidates[33].conflicts[0].requires[0] = "Al"
+whole.unlistedProposal.candidates[33].conflicts[0].question = "Al+Al sum peak (2.973 keV) or Ag Lα (2.984 keV)? They are 11 eV apart, far inside the detector resolution."
+whole.unlistedProposal.candidates[33].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+whole.unlistedProposal.candidates[33].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[33].holeRegionNote = nil
+whole.unlistedProposal.candidates[33].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[34].element = "Cd"
+whole.unlistedProposal.candidates[34].group = "Cd_La"
+whole.unlistedProposal.candidates[34].energyKeV = 40091205bc01a36e 3.1337999999999999
+whole.unlistedProposal.candidates[34].net = 0000000000000000 0
+whole.unlistedProposal.candidates[34].sigma = 4013fab3f19cf1a6 4.9948270561257342
+whole.unlistedProposal.candidates[34].sigmaZero = 4013fab3f19cf1a6 4.9948270561257342
+whole.unlistedProposal.candidates[34].criticalLevel = 40206e78041748f0 8.2157593992637601
+whole.unlistedProposal.candidates[34].detectionLimit = 4033231683048816 19.137062252622933
+whole.unlistedProposal.candidates[34].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[34].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[34].holeRegionNote = nil
+whole.unlistedProposal.candidates[34].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[35].element = "In"
+whole.unlistedProposal.candidates[35].group = "In_La"
+whole.unlistedProposal.candidates[35].energyKeV = 400a4bc6a7ef9db2 3.2869999999999999
+whole.unlistedProposal.candidates[35].net = 0000000000000000 0
+whole.unlistedProposal.candidates[35].sigma = 400f18a44e3bd248 3.8870321380621
+whole.unlistedProposal.candidates[35].sigmaZero = 400f18a44e3bd248 3.8870321380621
+whole.unlistedProposal.candidates[35].criticalLevel = 4019930b97bf1800 6.3935989103683823
+whole.unlistedProposal.candidates[35].detectionLimit = 402efc489599964d 15.492741274832179
+whole.unlistedProposal.candidates[35].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[35].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[35].holeRegionNote = nil
+whole.unlistedProposal.candidates[35].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[36].element = "Sn"
+whole.unlistedProposal.candidates[36].group = "Sn_La"
+whole.unlistedProposal.candidates[36].energyKeV = 400b8d4fdf3b645a 3.444
+whole.unlistedProposal.candidates[36].net = 0000000000000000 0
+whole.unlistedProposal.candidates[36].sigma = 4011e6219d71bfff 4.4747376061131936
+whole.unlistedProposal.candidates[36].sigmaZero = 4011e6219d71bfff 4.4747376061131936
+whole.unlistedProposal.candidates[36].criticalLevel = 401d70ef6ff7528a 7.3602883810714363
+whole.unlistedProposal.candidates[36].detectionLimit = 40316d1636e8e86c 17.426120216238289
+whole.unlistedProposal.candidates[36].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[36].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[36].holeRegionNote = nil
+whole.unlistedProposal.candidates[36].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[37].element = "Sb"
+whole.unlistedProposal.candidates[37].group = "Sb_La"
+whole.unlistedProposal.candidates[37].energyKeV = 400cd66cf41f212d 3.6046999999999998
+whole.unlistedProposal.candidates[37].net = 0000000000000000 0
+whole.unlistedProposal.candidates[37].sigma = 40075f0390358f34 2.9213935152382877
+whole.unlistedProposal.candidates[37].sigmaZero = 40075f0390358f34 2.9213935152382877
+whole.unlistedProposal.candidates[37].criticalLevel = 401338975087ee3f 4.80526471929221
+whole.unlistedProposal.candidates[37].detectionLimit = 4028a1d44e626c8c 12.316072892679834
+whole.unlistedProposal.candidates[37].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[37].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[37].holeRegionNote = nil
+whole.unlistedProposal.candidates[37].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[38].element = "Te"
+whole.unlistedProposal.candidates[38].group = "Te_La"
+whole.unlistedProposal.candidates[38].energyKeV = 400e2786c226809d 3.7692999999999999
+whole.unlistedProposal.candidates[38].net = 0000000000000000 0
+whole.unlistedProposal.candidates[38].sigma = 3ffd90dab0866271 1.8478648086076215
+whole.unlistedProposal.candidates[38].sigmaZero = 3ffd90dab0866271 1.8478648086076215
+whole.unlistedProposal.candidates[38].criticalLevel = 400850d424dcb2dd 3.0394671325542348
+whole.unlistedProposal.candidates[38].detectionLimit = 402191a71048d7bc 8.7844777192038848
+whole.unlistedProposal.candidates[38].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[38].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[38].holeRegionNote = nil
+whole.unlistedProposal.candidates[38].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[39].element = "I"
+whole.unlistedProposal.candidates[39].group = "I_La"
+whole.unlistedProposal.candidates[39].energyKeV = 400f8068db8bac71 3.9377
+whole.unlistedProposal.candidates[39].net = 0000000000000000 0
+whole.unlistedProposal.candidates[39].sigma = 3ff2561177995b23 1.146012751754548
+whole.unlistedProposal.candidates[39].sigmaZero = 3ff2561177995b23 1.146012751754548
+whole.unlistedProposal.candidates[39].criticalLevel = 3ffe290e1ea71f9f 1.8850232312561059
+whole.unlistedProposal.candidates[39].detectionLimit = 4019e7010b088c6a 6.4755899166076265
+whole.unlistedProposal.candidates[39].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[39].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[39].holeRegionNote = nil
+whole.unlistedProposal.candidates[39].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[40].element = "Cs"
+whole.unlistedProposal.candidates[40].group = "Cs_La"
+whole.unlistedProposal.candidates[40].energyKeV = 401125460aa64c30 4.2864000000000004
+whole.unlistedProposal.candidates[40].net = 0000000000000000 0
+whole.unlistedProposal.candidates[40].sigma = 3fda3c213b026669 0.40992003214487355
+whole.unlistedProposal.candidates[40].sigmaZero = 3fda3c213b026669 0.40992003214487355
+whole.unlistedProposal.candidates[40].criticalLevel = 3fe5938675da2ae4 0.67425845163355946
+whole.unlistedProposal.candidates[40].detectionLimit = 4010375b992b8753 4.0540603573625331
+whole.unlistedProposal.candidates[40].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[40].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[40].holeRegionNote = nil
+whole.unlistedProposal.candidates[40].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[41].element = "Ba"
+whole.unlistedProposal.candidates[41].group = "Ba_La"
+whole.unlistedProposal.candidates[41].energyKeV = 4011dd7dbf487fcc 4.4663000000000004
+whole.unlistedProposal.candidates[41].net = 0000000000000000 0
+whole.unlistedProposal.candidates[41].sigma = 3feed3f3f0f778f3 0.96337315620237829
+whole.unlistedProposal.candidates[41].sigmaZero = 3feed3f3f0f778f3 0.96337315620237829
+whole.unlistedProposal.candidates[41].criticalLevel = 3ff95a8dbd735bd3 1.5846078300871695
+whole.unlistedProposal.candidates[41].detectionLimit = 40177fc0da6eaa84 5.8747591142697537
+whole.unlistedProposal.candidates[41].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[41].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[41].holeRegionNote = nil
+whole.unlistedProposal.candidates[41].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[42].element = "La"
+whole.unlistedProposal.candidates[42].group = "La_La"
+whole.unlistedProposal.candidates[42].energyKeV = 40129a9fbe76c8b4 4.6509999999999998
+whole.unlistedProposal.candidates[42].net = 0000000000000000 0
+whole.unlistedProposal.candidates[42].sigma = 3ff9aa8c04b25dbd 1.6041374381510274
+whole.unlistedProposal.candidates[42].sigmaZero = 3ff9aa8c04b25dbd 1.6041374381510274
+whole.unlistedProposal.candidates[42].criticalLevel = 40051bcb42ce85a0 2.6385712832713608
+whole.unlistedProposal.candidates[42].detectionLimit = 401fee453e83823a 7.9826860206381358
+whole.unlistedProposal.candidates[42].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[42].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[42].holeRegionNote = nil
+whole.unlistedProposal.candidates[42].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[43].element = "Ce"
+whole.unlistedProposal.candidates[43].group = "Ce_La"
+whole.unlistedProposal.candidates[43].energyKeV = 40135c432ca57a78 4.8400999999999996
+whole.unlistedProposal.candidates[43].net = 0000000000000000 0
+whole.unlistedProposal.candidates[43].sigma = 3fff8bfce55b67d9 1.9716767272243401
+whole.unlistedProposal.candidates[43].sigmaZero = 3fff8bfce55b67d9 1.9716767272243401
+whole.unlistedProposal.candidates[43].criticalLevel = 4009f1e8b27c326a 3.2431196159507651
+whole.unlistedProposal.candidates[43].detectionLimit = 4022623157189782 9.1917826859969445
+whole.unlistedProposal.candidates[43].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[43].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[43].holeRegionNote = nil
+whole.unlistedProposal.candidates[43].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[44].element = "Pr"
+whole.unlistedProposal.candidates[44].group = "Pr_La"
+whole.unlistedProposal.candidates[44].energyKeV = 40142219652bd3c3 5.0332999999999997
+whole.unlistedProposal.candidates[44].net = 0000000000000000 0
+whole.unlistedProposal.candidates[44].sigma = 40018603d18b03aa 2.1904369707630922
+whole.unlistedProposal.candidates[44].sigmaZero = 40018603d18b03aa 2.1904369707630922
+whole.unlistedProposal.candidates[44].criticalLevel = 400cd2d680f6ed65 3.6029481959682692
+whole.unlistedProposal.candidates[44].detectionLimit = 4023d2a83e55f500 9.9114398460319535
+whole.unlistedProposal.candidates[44].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[44].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[44].holeRegionNote = nil
+whole.unlistedProposal.candidates[44].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[45].element = "Nd"
+whole.unlistedProposal.candidates[45].group = "Nd_La"
+whole.unlistedProposal.candidates[45].energyKeV = 4014ebb98c7e2824 5.2302
+whole.unlistedProposal.candidates[45].net = 0000000000000000 0
+whole.unlistedProposal.candidates[45].sigma = 4003821d8e052f01 2.4385329337436592
+whole.unlistedProposal.candidates[45].sigmaZero = 4003821d8e052f01 2.4385329337436592
+whole.unlistedProposal.candidates[45].criticalLevel = 40100b4b615b136e 4.0110297405088726
+whole.unlistedProposal.candidates[45].detectionLimit = 402574885f3591bb 10.727602935113159
+whole.unlistedProposal.candidates[45].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[45].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[45].holeRegionNote = nil
+whole.unlistedProposal.candidates[45].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[46].element = "Sm"
+whole.unlistedProposal.candidates[46].group = "Sm_La"
+whole.unlistedProposal.candidates[46].energyKeV = 40168b4395810625 5.6360000000000001
+whole.unlistedProposal.candidates[46].net = 0000000000000000 0
+whole.unlistedProposal.candidates[46].sigma = 4003716a52260c08 2.4303785722600004
+whole.unlistedProposal.candidates[46].sigmaZero = 4003716a52260c08 2.4303785722600004
+whole.unlistedProposal.candidates[46].criticalLevel = 400ffb1ea06c10cd 3.9976170094470036
+whole.unlistedProposal.candidates[46].detectionLimit = 402566cc4e1086b4 10.700777472989422
+whole.unlistedProposal.candidates[46].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[46].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[46].holeRegionNote = nil
+whole.unlistedProposal.candidates[46].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[47].element = "Eu"
+whole.unlistedProposal.candidates[47].group = "Eu_La"
+whole.unlistedProposal.candidates[47].energyKeV = 4017624dd2f1a9fc 5.8460000000000001
+whole.unlistedProposal.candidates[47].net = 0000000000000000 0
+whole.unlistedProposal.candidates[47].sigma = 4001d78a7d555fc2 2.2302446166686147
+whole.unlistedProposal.candidates[47].sigmaZero = 4001d78a7d555fc2 2.2302446166686147
+whole.unlistedProposal.candidates[47].criticalLevel = 400d58efb3e78e9e 3.6684259467163676
+whole.unlistedProposal.candidates[47].detectionLimit = 402415b4d7ce459c 10.042395347528149
+whole.unlistedProposal.candidates[47].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[47].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[47].holeRegionNote = nil
+whole.unlistedProposal.candidates[47].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[48].element = "Gd"
+whole.unlistedProposal.candidates[48].group = "Gd_La"
+whole.unlistedProposal.candidates[48].energyKeV = 40183afb7e90ff97 6.0575999999999999
+whole.unlistedProposal.candidates[48].net = 0000000000000000 0
+whole.unlistedProposal.candidates[48].sigma = 3ffddb949eb727e4 1.8661085319349633
+whole.unlistedProposal.candidates[48].sigmaZero = 3ffddb949eb727e4 1.8661085319349633
+whole.unlistedProposal.candidates[48].criticalLevel = 40088e491c99a6e6 3.0694753870383122
+whole.unlistedProposal.candidates[48].detectionLimit = 4021b0618c2751c0 8.8444942281720387
+whole.unlistedProposal.candidates[48].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[48].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[48].holeRegionNote = nil
+whole.unlistedProposal.candidates[48].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[49].element = "Tb"
+whole.unlistedProposal.candidates[49].group = "Tb_La"
+whole.unlistedProposal.candidates[49].energyKeV = 40191758e219652c 6.2728000000000002
+whole.unlistedProposal.candidates[49].net = 0000000000000000 0
+whole.unlistedProposal.candidates[49].sigma = 3ff7af6c00d68c4d 1.4803276093232569
+whole.unlistedProposal.candidates[49].sigmaZero = 3ff7af6c00d68c4d 1.4803276093232569
+whole.unlistedProposal.candidates[49].criticalLevel = 40037ab8828b153c 2.4349222372717616
+whole.unlistedProposal.candidates[49].detectionLimit = 401e4d327e4011d6 7.5753879286389374
+whole.unlistedProposal.candidates[49].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[49].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[49].holeRegionNote = nil
+whole.unlistedProposal.candidates[49].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[50].element = "Dy"
+whole.unlistedProposal.candidates[50].group = "Dy_La"
+whole.unlistedProposal.candidates[50].energyKeV = 4019fb15b573eab3 6.4951999999999996
+whole.unlistedProposal.candidates[50].net = 0000000000000000 0
+whole.unlistedProposal.candidates[50].sigma = 3ff0f207158ef6ca 1.0590887872817114
+whole.unlistedProposal.candidates[50].sigmaZero = 3ff0f207158ef6ca 1.0590887872817114
+whole.unlistedProposal.candidates[50].criticalLevel = 3ffbdf6ba93f6e5c 1.7420460330239598
+whole.unlistedProposal.candidates[50].detectionLimit = 4018c22fd054b3c8 6.1896355201433337
+whole.unlistedProposal.candidates[50].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[50].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[50].holeRegionNote = nil
+whole.unlistedProposal.candidates[50].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[51].element = "Ho"
+whole.unlistedProposal.candidates[51].group = "Ho_La"
+whole.unlistedProposal.candidates[51].energyKeV = 401ae0f9096bb98c 6.7196999999999996
+whole.unlistedProposal.candidates[51].net = 0000000000000000 0
+whole.unlistedProposal.candidates[51].sigma = 3fe114ccf46fabec 0.53378913632820746
+whole.unlistedProposal.candidates[51].sigmaZero = 3fe114ccf46fabec 0.53378913632820746
+whole.unlistedProposal.candidates[51].criticalLevel = 3fec189def6f6c97 0.87800499691674616
+whole.unlistedProposal.candidates[51].detectionLimit = 4011d8a17790d7c0 4.4615534479289067
+whole.unlistedProposal.candidates[51].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[51].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[51].holeRegionNote = nil
+whole.unlistedProposal.candidates[51].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[52].element = "Er"
+whole.unlistedProposal.candidates[52].group = "Er_La"
+whole.unlistedProposal.candidates[52].energyKeV = 401bcb5dcc63f141 6.9485999999999999
+whole.unlistedProposal.candidates[52].net = 0000000000000000 0
+whole.unlistedProposal.candidates[52].sigma = 3fb0e73dfcbb5a65 0.066028475000487655
+whole.unlistedProposal.candidates[52].sigmaZero = 3fb0e73dfcbb5a65 0.066028475000487655
+whole.unlistedProposal.candidates[52].criticalLevel = 3fbbcdae0f8ceadf 0.10860717658662676
+whole.unlistedProposal.candidates[52].detectionLimit = 400761ced862c7e2 2.9227578072686677
+whole.unlistedProposal.candidates[52].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[52].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[52].holeRegionNote = nil
+whole.unlistedProposal.candidates[52].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[53].element = "Tm"
+whole.unlistedProposal.candidates[53].group = "Tm_La"
+whole.unlistedProposal.candidates[53].energyKeV = 401cb8a0902de00d 7.1802999999999999
+whole.unlistedProposal.candidates[53].net = 0000000000000000 0
+whole.unlistedProposal.candidates[53].sigma = 3fe3d133e4106766 0.61928743881001647
+whole.unlistedProposal.candidates[53].sigmaZero = 3fe3d133e4106766 0.61928743881001647
+whole.unlistedProposal.candidates[53].criticalLevel = 3ff04c56828e7804 1.0186371898521438
+whole.unlistedProposal.candidates[53].detectionLimit = 4012f8a53cfc389c 4.7428178337997018
+whole.unlistedProposal.candidates[53].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[53].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[53].holeRegionNote = nil
+whole.unlistedProposal.candidates[53].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[54].element = "Yb"
+whole.unlistedProposal.candidates[54].group = "Yb_La"
+whole.unlistedProposal.candidates[54].energyKeV = 401da9c779a6b50b 7.4157999999999999
+whole.unlistedProposal.candidates[54].net = 0000000000000000 0
+whole.unlistedProposal.candidates[54].sigma = 3ff143111f0a5c9d 1.0788737499731618
+whole.unlistedProposal.candidates[54].sigmaZero = 3ff143111f0a5c9d 1.0788737499731618
+whole.unlistedProposal.candidates[54].criticalLevel = 3ffc64b7dafb0691 1.7745894006660914
+whole.unlistedProposal.candidates[54].detectionLimit = 401904d5e9327fe2 6.2547222554275965
+whole.unlistedProposal.candidates[54].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[54].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[54].holeRegionNote = nil
+whole.unlistedProposal.candidates[54].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[55].element = "Lu"
+whole.unlistedProposal.candidates[55].group = "Lu_La"
+whole.unlistedProposal.candidates[55].energyKeV = 401e9f559b3d07c8 7.6555999999999997
+whole.unlistedProposal.candidates[55].net = 0000000000000000 0
+whole.unlistedProposal.candidates[55].sigma = 3ff73d019a7c0ba3 1.4523941072991213
+whole.unlistedProposal.candidates[55].sigmaZero = 3ff73d019a7c0ba3 1.4523941072991213
+whole.unlistedProposal.candidates[55].criticalLevel = 40031c9f4cbc31a4 2.3889757151539062
+whole.unlistedProposal.candidates[55].detectionLimit = 401def1948712e3e 7.4834948844032265
+whole.unlistedProposal.candidates[55].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[55].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[55].holeRegionNote = nil
+whole.unlistedProposal.candidates[55].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[56].element = "Hf"
+whole.unlistedProposal.candidates[56].group = "Hf_La"
+whole.unlistedProposal.candidates[56].energyKeV = 401f989374bc6a7f 7.899
+whole.unlistedProposal.candidates[56].net = 0000000000000000 0
+whole.unlistedProposal.candidates[56].sigma = 3ffb67ec887cc6b2 1.7128720599688845
+whole.unlistedProposal.candidates[56].sigmaZero = 3ffb67ec887cc6b2 1.7128720599688845
+whole.unlistedProposal.candidates[56].criticalLevel = 40068a157ffac779 2.8174238203436599
+whole.unlistedProposal.candidates[56].detectionLimit = 4020ae47bdd7e20a 8.3403910947827349
+whole.unlistedProposal.candidates[56].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[56].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[56].holeRegionNote = nil
+whole.unlistedProposal.candidates[56].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[57].element = "Ta"
+whole.unlistedProposal.candidates[57].group = "Ta_La"
+whole.unlistedProposal.candidates[57].energyKeV = 40204ac083126e98 8.1460000000000008
+whole.unlistedProposal.candidates[57].net = 0000000000000000 0
+whole.unlistedProposal.candidates[57].sigma = 3ffd39d590ab2b7d 1.826619687187047
+whole.unlistedProposal.candidates[57].sigmaZero = 3ffd39d590ab2b7d 1.826619687187047
+whole.unlistedProposal.candidates[57].criticalLevel = 40080942d6eb3f07 3.0045220175305789
+whole.unlistedProposal.candidates[57].detectionLimit = 40216dde69501dd0 8.7145874891565711
+whole.unlistedProposal.candidates[57].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[57].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[57].holeRegionNote = nil
+whole.unlistedProposal.candidates[57].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[58].element = "W"
+whole.unlistedProposal.candidates[58].group = "W_La"
+whole.unlistedProposal.candidates[58].energyKeV = 4020cb923a29c77a 8.3976000000000006
+whole.unlistedProposal.candidates[58].net = 0000000000000000 0
+whole.unlistedProposal.candidates[58].sigma = 3ffc318091b0f9b6 1.7620855036799248
+whole.unlistedProposal.candidates[58].sigmaZero = 3ffc318091b0f9b6 1.7620855036799248
+whole.unlistedProposal.candidates[58].criticalLevel = 40072fde0af311bb 2.8983727317265369
+whole.unlistedProposal.candidates[58].detectionLimit = 4021012c0354072a 8.502288917548487
+whole.unlistedProposal.candidates[58].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[58].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[58].holeRegionNote = nil
+whole.unlistedProposal.candidates[58].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[59].element = "Re"
+whole.unlistedProposal.candidates[59].group = "Re_La"
+whole.unlistedProposal.candidates[59].energyKeV = 40214e075f6fd220 8.6524000000000001
+whole.unlistedProposal.candidates[59].net = 0000000000000000 0
+whole.unlistedProposal.candidates[59].sigma = 3ff802019e7fbbbc 1.5004898253789483
+whole.unlistedProposal.candidates[59].sigmaZero = 3ff802019e7fbbbc 1.5004898253789483
+whole.unlistedProposal.candidates[59].criticalLevel = 4003bea3f1134902 2.4680861314783451
+whole.unlistedProposal.candidates[59].detectionLimit = 401e911decc8459c 7.6417157170521044
+whole.unlistedProposal.candidates[59].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[59].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[59].holeRegionNote = nil
+whole.unlistedProposal.candidates[59].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[60].element = "Os"
+whole.unlistedProposal.candidates[60].group = "Os_La"
+whole.unlistedProposal.candidates[60].energyKeV = 4021d25460aa64c3 8.9108000000000001
+whole.unlistedProposal.candidates[60].net = 0000000000000000 0
+whole.unlistedProposal.candidates[60].sigma = 3ff1a579b7c56f08 1.1028992823184485
+whole.unlistedProposal.candidates[60].sigmaZero = 3ff1a579b7c56f08 1.1028992823184485
+whole.unlistedProposal.candidates[60].criticalLevel = 3ffd0695fd421d33 1.8141078846836762
+whole.unlistedProposal.candidates[60].detectionLimit = 401955c4fa560b34 6.3337592234627671
+whole.unlistedProposal.candidates[60].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[60].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[60].holeRegionNote = nil
+whole.unlistedProposal.candidates[60].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[61].element = "Ir"
+whole.unlistedProposal.candidates[61].group = "Ir_La"
+whole.unlistedProposal.candidates[61].energyKeV = 4022597f62b6ae7d 9.1747999999999994
+whole.unlistedProposal.candidates[61].net = 0000000000000000 0
+whole.unlistedProposal.candidates[61].sigma = 3fe4a71c16c51311 0.64539913604002852
+whole.unlistedProposal.candidates[61].sigmaZero = 3fe4a71c16c51311 0.64539913604002852
+whole.unlistedProposal.candidates[61].criticalLevel = 3ff0fc42c3e37b5b 1.0615871097467877
+whole.unlistedProposal.candidates[61].detectionLimit = 4013509b5da6ba48 4.8287176735889901
+whole.unlistedProposal.candidates[61].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[61].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[61].holeRegionNote = nil
+whole.unlistedProposal.candidates[61].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[62].element = "Pt"
+whole.unlistedProposal.candidates[62].group = "Pt_La"
+whole.unlistedProposal.candidates[62].energyKeV = 4022e25aee631f8a 9.4420999999999999
+whole.unlistedProposal.candidates[62].net = 0000000000000000 0
+whole.unlistedProposal.candidates[62].sigma = 3faa999382d625c5 0.051952943536047104
+whole.unlistedProposal.candidates[62].sigmaZero = 3faa999382d625c5 0.051952943536047104
+whole.unlistedProposal.candidates[62].criticalLevel = 3fb5e060c90c548e 0.085454987606072147
+whole.unlistedProposal.candidates[62].detectionLimit = 400702fa03fabe7d 2.8764534293075585
+whole.unlistedProposal.candidates[62].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[62].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[62].holeRegionNote = nil
+whole.unlistedProposal.candidates[62].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[63].element = "Au"
+whole.unlistedProposal.candidates[63].group = "Au_La"
+whole.unlistedProposal.candidates[63].energyKeV = 40236d0e56041893 9.7129999999999992
+whole.unlistedProposal.candidates[63].net = 0000000000000000 0
+whole.unlistedProposal.candidates[63].sigma = 3fe6df3cd51eb481 0.71475068688381793
+whole.unlistedProposal.candidates[63].sigmaZero = 3fe6df3cd51eb481 0.71475068688381793
+whole.unlistedProposal.candidates[63].criticalLevel = 3ff2cf8121e8fe73 1.1756602596869044
+whole.unlistedProposal.candidates[63].detectionLimit = 40143a3a8ca97bd4 5.0568639734692233
+whole.unlistedProposal.candidates[63].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[63].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[63].holeRegionNote = nil
+whole.unlistedProposal.candidates[63].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[64].element = "Hg"
+whole.unlistedProposal.candidates[64].group = "Hg_La"
+whole.unlistedProposal.candidates[64].energyKeV = 4023fa5e353f7cee 9.9890000000000008
+whole.unlistedProposal.candidates[64].net = 0000000000000000 0
+whole.unlistedProposal.candidates[64].sigma = 3fe58fe96b6173f7 0.6738173577574561
+whole.unlistedProposal.candidates[64].sigmaZero = 3fe58fe96b6173f7 0.6738173577574561
+whole.unlistedProposal.candidates[64].criticalLevel = 3ff1bbb9353348da 1.1083309248102098
+whole.unlistedProposal.candidates[64].detectionLimit = 4013b056964ea107 4.9222053037158338
+whole.unlistedProposal.candidates[64].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[64].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[64].holeRegionNote = nil
+whole.unlistedProposal.candidates[64].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[65].element = "Tl"
+whole.unlistedProposal.candidates[65].group = "Tl_La"
+whole.unlistedProposal.candidates[65].energyKeV = 4024895182a9930c 10.2682
+whole.unlistedProposal.candidates[65].net = 0000000000000000 0
+whole.unlistedProposal.candidates[65].sigma = 3fdb7496d5ab91c4 0.42899103990773946
+whole.unlistedProposal.candidates[65].sigmaZero = 3fdb7496d5ab91c4 0.42899103990773946
+whole.unlistedProposal.candidates[65].criticalLevel = 3fe694800e3c4986 0.70562746792192921
+whole.unlistedProposal.candidates[65].detectionLimit = 40107799ff440efc 4.1167983899392731
+whole.unlistedProposal.candidates[65].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[65].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[65].holeRegionNote = nil
+whole.unlistedProposal.candidates[65].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[66].element = "Pb"
+whole.unlistedProposal.candidates[66].group = "Pb_La"
+whole.unlistedProposal.candidates[66].energyKeV = 40251a36e2eb1c43 10.5512
+whole.unlistedProposal.candidates[66].net = 0000000000000000 0
+whole.unlistedProposal.candidates[66].sigma = 3f9db71338f03d4c 0.029018688535925194
+whole.unlistedProposal.candidates[66].sigmaZero = 3f9db71338f03d4c 0.029018688535925194
+whole.unlistedProposal.candidates[66].criticalLevel = 3fa8704334c8199c 0.047731495087691672
+whole.unlistedProposal.candidates[66].detectionLimit = 4006687611103a01 2.8010064442707976
+whole.unlistedProposal.candidates[66].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[66].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[66].holeRegionNote = nil
+whole.unlistedProposal.candidates[66].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[67].element = "Bi"
+whole.unlistedProposal.candidates[67].group = "Bi_La"
+whole.unlistedProposal.candidates[67].energyKeV = 4025ad916872b021 10.839
+whole.unlistedProposal.candidates[67].net = 0000000000000000 0
+whole.unlistedProposal.candidates[67].sigma = 3fe3c6c2b1b0aa72 0.61801275925729571
+whole.unlistedProposal.candidates[67].sigmaZero = 3fe3c6c2b1b0aa72 0.61801275925729571
+whole.unlistedProposal.candidates[67].criticalLevel = 3ff043c00054097d 1.0165405285666502
+whole.unlistedProposal.candidates[67].detectionLimit = 4012f459fbdf0158 4.7386245112287142
+whole.unlistedProposal.candidates[67].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[67].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[67].holeRegionNote = nil
+whole.unlistedProposal.candidates[67].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[68].element = "Th"
+whole.unlistedProposal.candidates[68].group = "Th_La"
+whole.unlistedProposal.candidates[68].energyKeV = 4029efc504816f00 12.968299999999999
+whole.unlistedProposal.candidates[68].net = 0000000000000000 0
+whole.unlistedProposal.candidates[68].sigma = 401333e6dea078b5 4.8006853852695501
+whole.unlistedProposal.candidates[68].sigmaZero = 401333e6dea078b5 4.8006853852695501
+whole.unlistedProposal.candidates[68].criticalLevel = 401f95f05fd45596 7.8964247678135475
+whole.unlistedProposal.candidates[68].detectionLimit = 40327f96aed769f2 18.498392989722511
+whole.unlistedProposal.candidates[68].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[68].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[68].holeRegionNote = nil
+whole.unlistedProposal.candidates[68].misfit = 3ff0000000000000 1
+whole.unlistedProposal.candidates[69].element = "U"
+whole.unlistedProposal.candidates[69].group = "U_Ma"
+whole.unlistedProposal.candidates[69].energyKeV = 40095dcc63f14120 3.1707999999999998
+whole.unlistedProposal.candidates[69].net = 0000000000000000 0
+whole.unlistedProposal.candidates[69].sigma = 401cb1617e197d71 7.1732234671647896
+whole.unlistedProposal.candidates[69].sigmaZero = 401cb1617e197d71 7.1732234671647896
+whole.unlistedProposal.candidates[69].criticalLevel = 40279909c43457a5 11.798902636899422
+whole.unlistedProposal.candidates[69].detectionLimit = 403a4da8432196cc 26.30334872789426
+whole.unlistedProposal.candidates[69].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedProposal.candidates[69].suggestedRole = .fitOnly
+whole.unlistedProposal.candidates[69].holeRegionNote = nil
+whole.unlistedProposal.candidates[69].misfit = 3ff0000000000000 1
+whole.unlistedProposal.sumPeaks: array 1
+whole.unlistedProposal.sumPeaks[0].label = "Al+Al sum"
+whole.unlistedProposal.sumPeaks[0].elements: array 2
+whole.unlistedProposal.sumPeaks[0].elements[0] = "Al"
+whole.unlistedProposal.sumPeaks[0].elements[1] = "Al"
+whole.unlistedProposal.sumPeaks[0].energyKeV = 4007c8b439581062 2.9729999999999999
+whole.unlistedProposal.sumPeaks[0].net = 0000000000000000 0
+whole.unlistedProposal.sumPeaks[0].sigmaZero = 400926ecd5895443 3.1440064127478151
+whole.unlistedProposal.sumPeaks[0].detectionLimit = 402a18c86df9b55c 13.048404156429278
+whole.unlistedProposal.refused: array 7
+whole.unlistedProposal.refused[0].element = "H"
+whole.unlistedProposal.refused[0].reason = "H has no characteristic X-ray line: it cannot be detected by EDX."
+whole.unlistedProposal.refused[1].element = "He"
+whole.unlistedProposal.refused[1].reason = "He has no characteristic X-ray line: it cannot be detected by EDX."
+whole.unlistedProposal.refused[2].element = "Li"
+whole.unlistedProposal.refused[2].reason = "Li K (about 54 eV) lies below the detector's energy range and is absorbed in its window; it cannot be quantified by EDX."
+whole.unlistedProposal.refused[3].element = "Be"
+whole.unlistedProposal.refused[3].reason = "Be K (about 109 eV) lies below the detector's energy range and is absorbed in its window; it cannot be quantified by EDX."
+whole.unlistedProposal.refused[4].element = "B"
+whole.unlistedProposal.refused[4].reason = "Its line at 0.18 keV lies below the proposer's lowest tested line (0.45 keV): under the detector window the continuum is too model-dependent for a net area to be trusted. List it by hand if you know it is there."
+whole.unlistedProposal.refused[5].element = "C"
+whole.unlistedProposal.refused[5].reason = "Its line at 0.28 keV lies below the proposer's lowest tested line (0.45 keV): under the detector window the continuum is too model-dependent for a net area to be trusted. List it by hand if you know it is there."
+whole.unlistedProposal.refused[6].element = "N"
+whole.unlistedProposal.refused[6].reason = "Its line at 0.39 keV lies below the proposer's lowest tested line (0.45 keV): under the detector window the continuum is too model-dependent for a net area to be trusted. List it by hand if you know it is there."
+whole.unlistedProposal.currie.alpha = 3fa999999999999a 0.050000000000000003
+whole.unlistedProposal.currie.beta = 3fa999999999999a 0.050000000000000003
+whole.unlistedProposal.notes: array 6
+whole.unlistedProposal.notes[0] = "Lines below 0.45 keV are not tested (a measured limit of the continuum model, not a property of the method)."
+whole.unlistedProposal.notes[1] = "Detection: fitted net ≥ Currie L_D (α = β = 0.05, a convention; L_C and L_D are properties of this spectrum), σ₀ from the fit's own variance with the candidate absent."
+whole.unlistedProposal.notes[2] = "Fit: least squares, unweighted; continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data; escape peaks: none (no line above the Si K edge, 1.839 keV); reference shapes: none; 111 candidate line groups: 3 joint fits pruned at L_C, then 111 single-candidate tests of the pruned ones against the settled model."
+whole.unlistedProposal.notes[3] = "Flank-misfit scaling: no proposed or near-miss candidate (net/L_D ≥ 0.5) had its σ₀ inflated."
+whole.unlistedProposal.notes[4] = "Look-elsewhere: 111 line groups were tested, so about 111 × 5.0e-04 = 0.06 chance proposals per spectrum are expected; a candidate near net/L_D = 1 is as likely chance as real."
+whole.unlistedProposal.notes[5] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
+whole.unlistedProposal.passes = 3
+whole.unlistedProposal.settled = true
+whole.unlistedProposal.reducedChiSquared = 3fdddfcb296970b6 0.46678427738312267
+whole.unlistedCheck.candidates: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedCheck.moves: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.unlistedCheck.largest = nil
+whole.unlistedCheck.failure = nil
+whole.withholding: array 2
+whole.withholding[0]: array 3
+whole.withholding[0][0] = nil
+whole.withholding[0][1] = nil
+whole.withholding[0][2] = nil
+whole.withholding[1]: n 3 sum 40af6e8a40d2ae97 4023.2700258100626 fnv ff981d9904bce9ad
+whole.withholding[1][0] = 40af6e8a40d2ae97 4023.2700258100626
+whole.withholding[1][1] = 0000000000000000 0
+whole.withholding[1][2] = 0000000000000000 0
+whole.withholding.caveat = nil
+whole.csv-withholding-fnv = dd8ced67473cdcd5
