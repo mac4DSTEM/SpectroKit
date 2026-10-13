@@ -65,10 +65,12 @@ package nonisolated struct SpectrumImageMetadata: Equatable, Sendable {
     /// Where `beamEnergyKeV` came from; said on the quantification's provenance line.
     package var beamEnergySource: BeamEnergySource = .file
     package var instrument: String?
-    /// True when this image came from the same GMS file as the 4D cube of the window, under one Experiment ID and on
-    /// the same scan grid: registered by identity (WP2 R2). False for everything else, including a mismatch.
+    /// True when the caller registered this image by identity to another object of the same file (same Experiment ID, same
+    /// scan grid; WP2 R2). The file read never sets it; false for everything else, including a mismatch.
+    /// The stored name (and `registrationNote`'s position) is pinned by the S0 golden baseline, which dumps this struct by
+    /// reflection; rename both at the freeze commit together with a re-baseline (SpectroKit plan, E5).
     package var sameScanAs4DCube = false
-    /// Why a file's EDS object was not registered to the 4D cube beside it, when it was not (shown, never hidden).
+    /// Why the image was not registered to the object beside it, when the caller tried and it was not (shown, never hidden).
     package var registrationNote: String?
 
     package nonisolated init(
@@ -128,32 +130,40 @@ package nonisolated final class LoadedSpectrumImage: SpectrumImageSource {
 }
 
 /// Where a beam energy came from. The phrase is what the provenance line says after the value.
-package nonisolated enum BeamEnergySource: String, Sendable, Equatable {
+package nonisolated enum BeamEnergySource: Sendable, Equatable {
     /// The spectrum image's own metadata (a Velox file; the EDS object's Microscope Info in a GMS file).
     case file
-    /// The 4D cube of the same GMS run (same Experiment ID and scan grid), when the EDS object states none.
-    case fourDCube
-    /// Typed in the Quantify inspector; it overrides both.
+    /// Typed in the Quantify inspector; it overrides every other.
     case typed
+    /// Supplied by the caller when the file states none; `label` completes "from ...". The app's 4D cube is one
+    /// (`BeamEnergySource.fourDCube`, defined in the app layer).
+    case supplied(label: String)
 
     package var phrase: String {
         switch self {
         case .file: "from the file"
-        case .fourDCube: "from the 4D cube, same run"
         case .typed: "typed"
+        case .supplied(let label): "from \(label)"
         }
     }
 }
 
+/// Copy of `AcceleratingVoltage.kilovolts(fromAttribute:)` (Core/Data/FourDDataSource.swift) so the spectroscopy code needs
+/// nothing from the 4D layer; keep the two in step (SpectroKit S1, plan E1). Values above 1000 are read as volts.
+private nonisolated func spectroKilovolts(fromStored raw: Double) -> Double {
+    raw > 1_000 ? raw / 1_000 : raw
+}
+
 package nonisolated enum BeamEnergy {
-    /// The EDS object's own voltage first (`rawObjectVoltage` as stored: volts in GMS), else the 4D cube's session voltage
-    /// in kV, the cube counting only when the two objects are one run on one grid (`sameRun`). Nil when neither is usable.
-    package static func resolve(rawObjectVoltage: Double?, cubeKV: Double?, sameRun: Bool) -> (keV: Double, source: BeamEnergySource)? {
+    /// The EDS object's own voltage first (`rawObjectVoltage` as stored: volts in GMS), else a supplied voltage in kV
+    /// (`suppliedAs` names where it came from), counting only when it belongs to the same run (`sameRun`). Nil when neither is usable.
+    package static func resolve(rawObjectVoltage: Double?, suppliedKV: Double?, suppliedAs: BeamEnergySource,
+                                sameRun: Bool) -> (keV: Double, source: BeamEnergySource)? {
         if let raw = rawObjectVoltage {
-            let kv = AcceleratingVoltage.kilovolts(fromAttribute: raw)
+            let kv = spectroKilovolts(fromStored: raw)
             if kv.isFinite, kv > 0 { return (kv, .file) }
         }
-        if sameRun, let kv = cubeKV, kv.isFinite, kv > 0 { return (kv, .fourDCube) }
+        if sameRun, let kv = suppliedKV, kv.isFinite, kv > 0 { return (kv, suppliedAs) }
         return nil
     }
 

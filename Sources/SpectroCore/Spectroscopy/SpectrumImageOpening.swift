@@ -34,23 +34,10 @@ package nonisolated enum SpectrumImageOpenError: LocalizedError, Equatable {
 package nonisolated enum SpectrumFileKind: Equatable, Sendable {
     /// A Velox EMD with a spectrum stream: opens as a spectrum image, never as a cube.
     case veloxSpectrumImage
-    /// A GMS DM4 with an EDS spectrum image and no 4D object: opens as a spectrum image.
+    /// A GMS DM4 with an EDS spectrum image and no diffraction-stack object: opens as a spectrum image.
     case gmsEDSOnly
-    /// Everything else, including a GMS file with a 4D cube (which opens as a cube, with its EDS attached after).
+    /// Everything else, including a GMS file with a diffraction stack (which the app opens as a 4D cube, with its EDS attached after).
     case other
-}
-
-/// The 4D cube a GMS file's EDS object may be registered to.
-package nonisolated struct GMSFourDIdentity: Equatable, Sendable {
-    /// `ImageList.N` index of the opened 4D object, when known.
-    package var objectIndex: Int?
-    package var scanWidth: Int
-    package var scanHeight: Int
-    /// The cube's accelerating voltage in kV (the session's), the beam energy when the EDS object states none.
-    package var voltageKV: Double?
-    package init(objectIndex: Int?, scanWidth: Int, scanHeight: Int, voltageKV: Double? = nil) {
-        self.objectIndex = objectIndex; self.scanWidth = scanWidth; self.scanHeight = scanHeight; self.voltageKV = voltageKV
-    }
 }
 
 package nonisolated enum SpectrumImageOpener {
@@ -78,11 +65,11 @@ package nonisolated enum SpectrumImageOpener {
         switch kind {
         case .veloxSpectrumImage: return try openVelox(path: path, cancelled: cancelled, progress: progress)
         case .gmsEDSOnly:
-            guard let image = try openGMSEDS(path: path, fourD: nil, cancelled: cancelled, progress: progress) else {
-                throw SpectrumImageOpenError.notASpectrumImage(displayFileName(path))
+            guard let image = try openGMSEDS(path: path, cancelled: cancelled, progress: progress) else {
+                throw SpectrumImageOpenError.notASpectrumImage(spectroDisplayFileName(path))
             }
             return image
-        case .other: throw SpectrumImageOpenError.notASpectrumImage(displayFileName(path))
+        case .other: throw SpectrumImageOpenError.notASpectrumImage(spectroDisplayFileName(path))
         }
     }
 
@@ -90,7 +77,7 @@ package nonisolated enum SpectrumImageOpener {
 
     package static func openVelox(path: String, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                                   progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage {
-        let name = displayFileName(path)
+        let name = spectroDisplayFileName(path)
         try SpectroCancellation.check(cancelled)
         progress?(0)
         // The read is the long step (three passes over the stream): its cancel is ours, its progress maps to 0...0.9.
@@ -142,17 +129,17 @@ package nonisolated enum SpectrumImageOpener {
 
     // MARK: GMS
 
-    /// The EDS spectrum image of a GMS DM4, or nil when the file has none. With `fourD`, the image is registered to
-    /// that cube BY IDENTITY when both objects carry the same Experiment ID and the EDS grid equals the cube's scan
-    /// grid (`sameScanAs4DCube`); otherwise it is still attached, with the reason in `registrationNote`.
-    package static func openGMSEDS(path: String, fourD: GMSFourDIdentity?,
+    /// The EDS spectrum image of a GMS DM4, or nil when the file has none. Pure: it never registers the image to another
+    /// object of the file (`sameScanAs4DCube` stays false); a caller that knows one does so from `DM4Experiment.list`
+    /// (the app does, in `Core/Data/GMSFourDRegistration.swift`).
+    package static func openGMSEDS(path: String,
                                    cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                                    progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage? {
         try SpectroCancellation.check(cancelled)
         progress?(0)
         let objects = try DM4Experiment.list(path: path)
         guard let eds = objects.first(where: { $0.role == .eds }) else { return nil }
-        let name = displayFileName(path)
+        let name = spectroDisplayFileName(path)
         try SpectroCancellation.check(cancelled)
         progress?(0.1)
         // The blob read is one call into Core/Data (pass-through only there): cancellation takes effect before and after it.
@@ -181,20 +168,9 @@ package nonisolated enum SpectrumImageOpener {
                 name: "EDS", azimuthDegrees: t.azimuthDegrees, elevationDegrees: t.elevationDegrees,
                 solidAngle: t.solidAngle, liveTime: t.liveTime, realTime: t.realTime)]
         }
-        if let cube = fourD {
-            let object = cube.objectIndex.flatMap { i in objects.first { $0.index == i } }
-                ?? objects.first { $0.role == .diffraction }
-            if let id = eds.experimentID, id == object?.experimentID, cube.scanWidth == d.nx, cube.scanHeight == d.ny {
-                meta.sameScanAs4DCube = true
-            } else if cube.scanWidth != d.nx || cube.scanHeight != d.ny {
-                meta.registrationNote = "Not registered: the EDS scan is \(d.nx) × \(d.ny) px, the 4D scan \(cube.scanWidth) × \(cube.scanHeight)."
-            } else {
-                meta.registrationNote = "Not registered: the two objects do not share an Experiment ID."
-            }
-        }
-        // DEVIATION from rosettasciio (which reads no beam energy for an EDS object): the object's own Microscope Info voltage,
-        // else the 4D cube's when both are one run; the source is kept for the provenance line.
-        if let b = BeamEnergy.resolve(rawObjectVoltage: eds.voltage, cubeKV: fourD?.voltageKV, sameRun: meta.sameScanAs4DCube) {
+        // DEVIATION from rosettasciio (which reads no beam energy for an EDS object): the object's own Microscope Info voltage;
+        // the source is kept for the provenance line. A caller may supply another when the object states none.
+        if let b = BeamEnergy.resolve(rawObjectVoltage: eds.voltage, suppliedKV: nil, suppliedAs: .file, sameRun: false) {
             meta.beamEnergyKeV = b.keV; meta.beamEnergySource = b.source
         }
         // The scan-grid HAADF of the same run, when it sits on the EDS grid.

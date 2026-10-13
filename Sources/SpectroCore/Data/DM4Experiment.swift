@@ -282,10 +282,10 @@ package nonisolated enum DM4Experiment {
                 handle = try FileHandle(forReadingFrom: URL(fileURLWithPath: path))
                 size = Int(try handle.seekToEnd())
             } catch {
-                throw DM4Error.cannotOpen("\(dm4DisplayFileName(path)) — \(error.localizedDescription)")
+                throw DM4Error.cannotOpen("\(spectroDisplayFileName(path)) — \(error.localizedDescription)")
             }
             let counter = Counter()
-            let name = dm4DisplayFileName(path)
+            let name = spectroDisplayFileName(path)
             return Source(size: size, fetch: { offset, count in
                 do {
                     try handle.seek(toOffset: UInt64(offset))
@@ -795,11 +795,4 @@ package nonisolated enum DM4Experiment {
         }
         mutating func seek(_ to: Int) { offset = to }
     }
-}
-
-/// Private copy of `displayFileName` (FourDDataSource.swift) so this file needs nothing from
-/// the 4D layer; keep the two in step (SpectroKit S1, plan E2).
-private nonisolated func dm4DisplayFileName(_ path: String) -> String {
-    let name = (path as NSString).lastPathComponent
-    return name.isEmpty ? path : name
 }

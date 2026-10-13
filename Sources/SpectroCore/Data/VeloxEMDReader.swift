@@ -712,7 +712,7 @@ private nonisolated final class VeloxFile {
             let lib = try VeloxHDF5.load()
             return (lib, path.withCString { lib.h5fopen($0, veloxReadOnly, veloxDefaultProperty) })
         }
-        guard id >= 0 else { throw VeloxEMDError.cannotOpen(displayFileName(path)) }
+        guard id >= 0 else { throw VeloxEMDError.cannotOpen(spectroDisplayFileName(path)) }
         h5 = lib
         file = id
     }
@@ -953,7 +953,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
     private static func openVeloxFile(path: String) throws -> VeloxFile {
         let file = try VeloxFile(path: path)
         guard let version = file.readString("/Version"), parseVersion(version)?.format == "Velox" else {
-            throw VeloxEMDError.notVeloxFile(displayFileName(path))
+            throw VeloxEMDError.notVeloxFile(spectroDisplayFileName(path))
         }
         return file
     }
@@ -985,7 +985,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
             try SpectroCancellation.check(cancelled)
             let file = try VeloxFile(path: path)
             guard let versionText = file.readString("/Version"), let version = Self.parseVersion(versionText),
-                  version.format == "Velox" else { throw VeloxEMDError.notVelox(displayFileName(path)) }
+                  version.format == "Velox" else { throw VeloxEMDError.notVelox(spectroDisplayFileName(path)) }
             let streams = file.children(of: "/Data/SpectrumStream").map(StreamRef.init)
             guard !streams.isEmpty else { throw VeloxEMDError.noSpectrumStream }
 
@@ -1461,7 +1461,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
         try HDF5Serial.run {
             let file = try VeloxFile(path: path)
             guard let versionText = file.readString("/Version"), let version = Self.parseVersion(versionText),
-                  version.format == "Velox" else { throw VeloxEMDError.notVelox(displayFileName(path)) }
+                  version.format == "Velox" else { throw VeloxEMDError.notVelox(spectroDisplayFileName(path)) }
             let major = Int(version.version.split(separator: ".").first ?? "") ?? 0
             let group = major >= 11 ? "/SharedProperties/EDSSpectrumQuantificationSettings" : "/Operations/ImageQuantificationOperation"
             guard let entry = file.children(of: group).first, let text = file.readString(group + "/" + entry) else { return nil }
