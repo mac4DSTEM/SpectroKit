@@ -1,6 +1,5 @@
 import XCTest
 import DSTEMCore
-@testable import mac4DSTEM
 
 /// SpectroKit S0 (ADR 064 amendment 2 §2): the long spectroscopy calls take `cancelled` (default `SpectroCancellation.task`) and an
 /// optional `progress`. Per family: cancel at the first step and cancel INSIDE the call both throw `SpectroCancelled` and return
@@ -271,7 +270,7 @@ final class SpectroCancellationTests: XCTestCase {
         let full = FileManager.default.temporaryDirectory.appendingPathComponent("spk-full-\(UUID().uuidString).bundle")
         defer { try? FileManager.default.removeItem(at: full) }
         try FileManager.default.createDirectory(at: full, withIntermediateDirectories: true)
-        try FileManager.default.copyItem(at: SpectroscopyQuantifyTests.resources, to: full.appendingPathComponent("Spectroscopy"))
+        try FileManager.default.copyItem(at: SpectroscopyQuantifySpectro.resources, to: full.appendingPathComponent("Spectroscopy"))
         XCTAssertNotNil(QuantificationTables.bundled(in: try XCTUnwrap(Bundle(url: full))))
         XCTAssertEqual(QuantificationTables.bundled() == nil, QuantificationTables.bundled(in: .main) == nil)
     }

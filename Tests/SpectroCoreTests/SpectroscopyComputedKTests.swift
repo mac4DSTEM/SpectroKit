@@ -1,6 +1,5 @@
 import XCTest
 import DSTEMCore
-@testable import mac4DSTEM
 
 /// WP3 lane K round 2: computed k from NIST EPQ data (Bote-Salvat 2008 sigma, Krause 1979 omega,
 /// generic SDD epsilon). NO JVM was available, so EVERY expected number below is from an

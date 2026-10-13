@@ -1,7 +1,5 @@
 import XCTest
 import DSTEMCore
-import DSTEMSession
-@testable import mac4DSTEM
 
 /// v5.0 lane A4: the absorption correction against the simulator's TRUTH geometry (open item "The absorption test checks
 /// plumbing only"). Pool: 1e4 identical recipe-A matrix pixels of `tools/demo-edx/forward.py` (Al 98.8 / Mg 0.6 / Si 0.6 at%,

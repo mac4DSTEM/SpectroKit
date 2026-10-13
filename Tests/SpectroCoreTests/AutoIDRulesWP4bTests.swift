@@ -8,7 +8,6 @@
 
 import DSTEMCore
 import XCTest
-@testable import mac4DSTEM
 
 @MainActor
 final class AutoIDRulesWP4bTests: XCTestCase {

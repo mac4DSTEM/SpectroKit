@@ -1,6 +1,5 @@
 import XCTest
 import DSTEMCore
-@testable import mac4DSTEM
 
 /// WP3 lane K: k-factors, Cliff-Lorimer / zeta / cross-section quantification and
 /// absorption. Every expected number below was produced by running eXSpy 7185a4d1
