@@ -227,9 +227,16 @@ package nonisolated enum VeloxStreamDecoder {
 
     /// Builds the event store from one or more detector streams, summing them.
     /// `frames` must be a validated, non-empty range (the caller resolves `.recordedDefault`).
+    /// `cancelled` is polled at every block and between the phases (count, scatter, sort, compact); a true answer throws
+    /// `SpectroCancelled` and nothing built is kept. `progress` (monotone, ends at 1) counts finished stream passes (two per
+    /// stream, count then scatter) and the finished store; a caller wanting block resolution reports it from its block
+    /// sources, as `VeloxEMDReader.readSpectrumImage` does.
     package static func buildEventStore(
-        streams: [BlockSource], geometry: VeloxStreamGeometry, frames: Range<Int>
+        streams: [BlockSource], geometry: VeloxStreamGeometry, frames: Range<Int>,
+        cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+        progress: (@Sendable (Double) -> Void)? = nil
     ) throws -> VeloxEventStore {
+        try SpectroCancellation.check(cancelled)
         guard !frames.isEmpty, frames.lowerBound >= 0 else {
             throw VeloxEMDError.frameRangeInvalid("\(frames) is empty or negative")
         }
@@ -243,17 +250,22 @@ package nonisolated enum VeloxStreamDecoder {
         var perPixel = [Int](repeating: 0, count: pixels + 1)
         var outOfRange = 0
         var ends: [(frame: Int, navigation: Int, done: Bool)] = []
+        let passesTotal = 2 * streams.count
+        var passesDone = 0
         try perPixel.withUnsafeMutableBufferPointer { counts in
             for stream in streams {
                 var cursor = Cursor()
                 var visitor = CountingVisitor(perPixel: counts.baseAddress!, channels: geometry.channels)
                 try stream { block in
+                    try SpectroCancellation.check(cancelled)
                     if cursor.done { return false }
                     scan(block, frameSize: pixels, first: first, last: last, cursor: &cursor, visitor: &visitor)
                     return !cursor.done
                 }
                 outOfRange += visitor.outOfRange
                 ends.append((cursor.frame, cursor.navigation, cursor.done))
+                passesDone += 1
+                progress?(Double(passesDone) / Double(passesTotal + 1))
             }
         }
 
@@ -272,17 +284,22 @@ package nonisolated enum VeloxStreamDecoder {
                 var cursor = Cursor()
                 var visitor = FillVisitor(cursorPerPixel: cursorPerPixel.baseAddress!, events: events, channels: geometry.channels)
                 try stream { block in
+                    try SpectroCancellation.check(cancelled)
                     if cursor.done { return false }
                     scan(block, frameSize: pixels, first: first, last: last, cursor: &cursor, visitor: &visitor)
                     return !cursor.done
                 }
+                passesDone += 1
+                progress?(Double(passesDone) / Double(passesTotal + 1))
             }
         }
+        try SpectroCancellation.check(cancelled)
 
         // Sort each pixel's channels in place, count the distinct ones, then compact to CSR.
         var rowOffsets = [Int](repeating: 0, count: pixels + 1)
         var distinct = 0
         for p in 0..<pixels {
+            if p & 0xFFFF == 0 { try SpectroCancellation.check(cancelled) }   // every 65536 pixels, never per value
             var segment = UnsafeMutableBufferPointer(start: events + bucketStart[p], count: perPixel[p])
             segment.sort()
             var n = 0
@@ -331,6 +348,7 @@ package nonisolated enum VeloxStreamDecoder {
             }
         }
         let agree = ends.allSatisfy { $0.frame == head.frame && $0.navigation == head.navigation && $0.done == head.done }
+        progress?(1)
         return VeloxEventStore(
             geometry: geometry, rowOffsets: rowOffsets, channelIndex: channelIndex, counts: counts,
             frameRange: frames, completeFrames: complete, partialFramePixels: partial,
@@ -575,11 +593,34 @@ private nonisolated let collectVeloxLink: @convention(c)
         return 0
     }
 
+/// Where the Velox reader looks for libhdf5, in order. The default is this app's list (E6, SpectroKit slot plan): the
+/// `MAC4DSTEM_HDF5_PATH` override, the host app's `Frameworks/libhdf5.dylib` (the dylib is the host's, not the package's),
+/// then the loader's search path. A host with other names sets `libraryCandidates` once, before the first read.
+package nonisolated enum VeloxHDF5Library {
+    /// The default list: exactly the lookup the reader has always done.
+    package static let defaultCandidates: @Sendable () -> [String] = {
+        [
+            ProcessInfo.processInfo.environment["MAC4DSTEM_HDF5_PATH"],
+            Bundle.main.privateFrameworksURL?.appendingPathComponent("libhdf5.dylib").path,
+            Bundle.main.executableURL?.deletingLastPathComponent().appendingPathComponent("../Frameworks/libhdf5.dylib").standardized.path,
+            "libhdf5.dylib"
+        ].compactMap { $0 }
+    }
+
+    /// Owned by `HDF5Serial`: read and written only under its lock (the reader loads the library under it).
+    nonisolated(unsafe) private static var custom: (@Sendable () -> [String])?
+
+    package static var libraryCandidates: @Sendable () -> [String] {
+        get { HDF5Serial.run { custom ?? defaultCandidates } }
+        set { HDF5Serial.run { custom = newValue } }
+    }
+}
+
 /// The HDF5 calls the Velox reader needs, loaded from the same bundled library
 /// `H5Reader` uses. Why not `H5Reader`'s binding: it is `private` to that file, which
 /// this work may not change, and it lacks the unsigned native types a uint16 stream
-/// needs. Every entry runs under `HDF5Serial` (HDF5Types.swift): callers of this type
-/// hold the lock across a whole logical operation.
+/// needs. Every entry runs under `HDF5Serial` (HDF5Types.swift): the lock is taken inside each `VeloxFile` member that
+/// calls the library, so it is held for one call (at most one block read), never across a whole logical operation.
 private nonisolated struct VeloxHDF5: @unchecked Sendable {
     typealias H5open = @convention(c) () -> herr_t
     typealias H5EsetAuto2 = @convention(c) (hid_t, UnsafeMutableRawPointer?, UnsafeMutableRawPointer?) -> herr_t
@@ -613,12 +654,7 @@ private nonisolated struct VeloxHDF5: @unchecked Sendable {
     let uint8: hid_t, uint16: hid_t, uint32: hid_t, uint64: hid_t, float32: hid_t
 
     static func load() throws -> VeloxHDF5 {
-        let candidates: [String] = [
-            ProcessInfo.processInfo.environment["MAC4DSTEM_HDF5_PATH"],
-            Bundle.main.privateFrameworksURL?.appendingPathComponent("libhdf5.dylib").path,
-            Bundle.main.executableURL?.deletingLastPathComponent().appendingPathComponent("../Frameworks/libhdf5.dylib").standardized.path,
-            "libhdf5.dylib"
-        ].compactMap { $0 }
+        let candidates = VeloxHDF5Library.libraryCandidates()
         var failures: [String] = []
         var handle: UnsafeMutableRawPointer?
         for path in candidates where handle == nil {
@@ -663,22 +699,30 @@ private nonisolated struct VeloxHDF5: @unchecked Sendable {
     }
 }
 
-/// One open file. A class so the handle closes with it; every method is called with
-/// `HDF5Serial` held by the owning operation.
+/// One open file. A class so the handle closes with it. Every member that calls libhdf5 takes `HDF5Serial` itself (the lock
+/// is recursive, so a short entry point may still wrap several calls in one `run`); a long operation holds nothing between
+/// calls, and the lock is held for one call at most, `readSlab` (one block) being the longest. The handles are plain ids:
+/// the lock guards calls, not handles, so a dataset stays open between blocks.
 private nonisolated final class VeloxFile {
     let h5: VeloxHDF5
     let file: hid_t
 
     init(path: String) throws {
-        let lib = try VeloxHDF5.load()
-        let id = path.withCString { lib.h5fopen($0, veloxReadOnly, veloxDefaultProperty) }
+        let (lib, id): (VeloxHDF5, hid_t) = try HDF5Serial.run {
+            let lib = try VeloxHDF5.load()
+            return (lib, path.withCString { lib.h5fopen($0, veloxReadOnly, veloxDefaultProperty) })
+        }
         guard id >= 0 else { throw VeloxEMDError.cannotOpen(displayFileName(path)) }
         h5 = lib
         file = id
     }
-    deinit { _ = h5.h5fclose(file) }
+    deinit { HDF5Serial.run { _ = h5.h5fclose(file) } }
 
     func exists(_ path: String) -> Bool {
+        HDF5Serial.run { existsLocked(path) }
+    }
+
+    private func existsLocked(_ path: String) -> Bool {
         let id = path.withCString { h5.h5oopen(file, $0, veloxDefaultProperty) }
         guard id >= 0 else { return false }
         _ = h5.h5oclose(id)
@@ -688,6 +732,10 @@ private nonisolated final class VeloxFile {
     /// Names of the direct children of a group, sorted (h5py iterates by name, and rsciio
     /// takes "the last image" and "the first stream" in that order).
     func children(of group: String) -> [String] {
+        HDF5Serial.run { childrenLocked(of: group) }
+    }
+
+    private func childrenLocked(of group: String) -> [String] {
         let id = group.withCString { h5.h5oopen(file, $0, veloxDefaultProperty) }
         guard id >= 0 else { return [] }
         defer { _ = h5.h5oclose(id) }
@@ -708,6 +756,10 @@ private nonisolated final class VeloxFile {
     }
 
     func open(_ path: String) throws -> Dataset {
+        try HDF5Serial.run { try openLocked(path) }
+    }
+
+    private func openLocked(_ path: String) throws -> Dataset {
         let id = path.withCString { h5.h5dopen2(file, $0, veloxDefaultProperty) }
         guard id >= 0 else { throw VeloxEMDError.readFailed("opening \(path)") }
         let space = h5.h5dgetSpace(id)
@@ -723,10 +775,14 @@ private nonisolated final class VeloxFile {
                        byteSize: h5.h5tgetSize(type), isSigned: isInteger && h5.h5tgetSign(type) == veloxSignedTwosComplement)
     }
 
-    func close(_ dataset: Dataset) { _ = h5.h5dclose(dataset.id) }
+    func close(_ dataset: Dataset) { HDF5Serial.run { _ = h5.h5dclose(dataset.id) } }
 
     /// A variable-length string dataset's first element (Version, AcquisitionSettings, ...).
     func readString(_ path: String) -> String? {
+        HDF5Serial.run { readStringLocked(path) }
+    }
+
+    private func readStringLocked(_ path: String) -> String? {
         guard let dataset = try? open(path) else { return nil }
         defer { close(dataset) }
         // One pointer is all the read below has room for: a dataset of several elements
@@ -747,6 +803,10 @@ private nonisolated final class VeloxFile {
 
     /// Reads `count` elements starting at `start` (one hyperslab), rank 1 to 3, into `buffer`.
     func readSlab(_ dataset: Dataset, type: hid_t, start: [Int], count: [Int], into buffer: UnsafeMutableRawPointer) throws {
+        try HDF5Serial.run { try readSlabLocked(dataset, type: type, start: start, count: count, into: buffer) }
+    }
+
+    private func readSlabLocked(_ dataset: Dataset, type: hid_t, start: [Int], count: [Int], into buffer: UnsafeMutableRawPointer) throws {
         let space = h5.h5dgetSpace(dataset.id)
         defer { _ = h5.h5sclose(space) }
         let s = start.map { hsize_t($0) }, c = count.map { hsize_t($0) }
@@ -765,6 +825,10 @@ private nonisolated final class VeloxFile {
 
     /// One column of a `(60000, nFrames)` uint8 `Metadata` dataset: NUL-padded UTF-8 JSON.
     func readMetadataJSON(group: String, column: Int) throws -> Data {
+        try HDF5Serial.run { try readMetadataJSONLocked(group: group, column: column) }
+    }
+
+    private func readMetadataJSONLocked(group: String, column: Int) throws -> Data {
         let dataset = try open(group + "/Metadata")
         defer { close(dataset) }
         guard dataset.dims.count == 2, column >= 0, column < dataset.dims[1] else {
@@ -851,6 +915,11 @@ package nonisolated struct VeloxImageInfo: Sendable {
 
 package nonisolated struct VeloxEMDReader: Sendable {
     package let path: String
+    /// Values per block read. The default is 32 M (64 MB); a test lowers it so a small file spans several blocks.
+    package var blockValues = VeloxEMDReader.defaultBlockValues
+    /// Called after each block's read, with no HDF5 lock held, before the block is decoded. A test hook (the lock is free here:
+    /// another thread can take it between two blocks); nil in production.
+    package var betweenBlocks: (@Sendable (_ blockIndex: Int) -> Void)?
 
     package init(path: String) { self.path = path }
 
@@ -902,8 +971,18 @@ package nonisolated struct VeloxEMDReader: Sendable {
 
     /// Reads the spectrum image: the stream summed over `frames`, the scan image on the
     /// same grid, and the metadata.
-    package func readSpectrumImage(frames: VeloxFrameSelection = .recordedDefault) throws -> VeloxSpectrumImage {
-        try HDF5Serial.run {
+    ///
+    /// `cancelled` is polled at block boundaries (and between frames of the scan image); true throws `SpectroCancelled` and
+    /// nothing is kept. `progress` is the fraction of the stream passes done (one length pass over the first stream, then a
+    /// count and a scatter pass per stream; monotone, ending at 1). The HDF5 lock is taken per call inside `VeloxFile`, so
+    /// another thread waits for one block read at most.
+    package func readSpectrumImage(
+        frames: VeloxFrameSelection = .recordedDefault,
+        cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+        progress: (@Sendable (Double) -> Void)? = nil
+    ) throws -> VeloxSpectrumImage {
+        try withoutActuallyEscaping(cancelled) { (cancelled: @escaping @Sendable () -> Bool) throws -> VeloxSpectrumImage in   // the block sources live for this call only
+            try SpectroCancellation.check(cancelled)
             let file = try VeloxFile(path: path)
             guard let versionText = file.readString("/Version"), let version = Self.parseVersion(versionText),
                   version.format == "Velox" else { throw VeloxEMDError.notVelox(displayFileName(path)) }
@@ -968,7 +1047,11 @@ package nonisolated struct VeloxEMDReader: Sendable {
             let geometry = VeloxStreamGeometry(ny: grid.ny, nx: grid.nx, channels: channels)
 
             // The stream must fit the grid, BEFORE anything is allocated from it. One pass over the first stream.
-            let (_, markers) = try Self.lengthAndMarkers(file: file, stream: head)
+            let tracker = PassProgress(passes: 1 + 2 * streams.count, report: progress)
+            tracker.begin()
+            let (_, markers) = try Self.lengthAndMarkers(
+                file: file, stream: head, blockValues: blockValues, hook: betweenBlocks, cancelled: cancelled,
+                progress: { tracker.fraction($0) })
             let pixels = geometry.pixelsPerFrame
             guard pixels >= 1, pixels <= Self.maximumPixels, pixels <= markers + 1 else {   // + 1: the last pixel's marker may be absent
                 throw VeloxEMDError.gridInconsistent("\(grid.ny) x \(grid.nx) pixels per frame against \(markers) pixel ends")
@@ -1007,9 +1090,12 @@ package nonisolated struct VeloxEMDReader: Sendable {
             // Sources: one restartable block reader per stream, over its own dataset handle.
             var sources: [VeloxStreamDecoder.BlockSource] = []
             for stream in streams {
-                sources.append(Self.blockSource(file: file, dataset: stream.group + "/Data"))
+                let base = Self.blockSource(
+                    file: file, dataset: stream.group + "/Data", blockValues: blockValues, hook: betweenBlocks,
+                    cancelled: cancelled, progress: { tracker.fraction($0) })
+                sources.append { visit in tracker.begin(); try base(visit) }   // each call is the next pass
             }
-            let store = try VeloxStreamDecoder.buildEventStore(streams: sources, geometry: geometry, frames: range)
+            let store = try VeloxStreamDecoder.buildEventStore(streams: sources, geometry: geometry, frames: range, cancelled: cancelled)
 
             // Which detector each stream carries, and whether the summed segments share an energy scale.
             var infos: [VeloxStreamInfo] = []
@@ -1027,7 +1113,9 @@ package nonisolated struct VeloxEMDReader: Sendable {
             }
 
             let image = try Self.readScanImage(
-                file: file, shapes: imageShapes, grid: grid, range: range, preferredDetector: metadata.binaryResultDetector)
+                file: file, shapes: imageShapes, grid: grid, range: range, preferredDetector: metadata.binaryResultDetector,
+                cancelled: cancelled)
+            tracker.finish()
             return VeloxSpectrumImage(
                 eventStore: store, scanImage: image, metadata: metadata, version: version.version,
                 streamCount: streams.count, settingsFrames: (settingsStart, settingsEnd),
@@ -1036,9 +1124,13 @@ package nonisolated struct VeloxEMDReader: Sendable {
     }
 
     /// A stream's length and pixel-marker count, in one pass.
-    private static func lengthAndMarkers(file: VeloxFile, stream: StreamRef) throws -> (values: Int, markers: Int) {
+    private static func lengthAndMarkers(
+        file: VeloxFile, stream: StreamRef, blockValues: Int, hook: (@Sendable (Int) -> Void)?,
+        cancelled: @escaping @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?
+    ) throws -> (values: Int, markers: Int) {
         var values = 0, markers = 0
-        let source = blockSource(file: file, dataset: stream.group + "/Data")
+        let source = blockSource(
+            file: file, dataset: stream.group + "/Data", blockValues: blockValues, hook: hook, cancelled: cancelled, progress: progress)
         try source { block in
             values += block.count
             for v in block where v == VeloxStreamDecoder.pixelMarker { markers += 1 }
@@ -1051,9 +1143,31 @@ package nonisolated struct VeloxEMDReader: Sendable {
     private static let maximumPixels = 1 << 28
 
     /// 32 M values (64 MB) a block: the stream is read in chunks, never whole.
-    private static let blockValues = 32 << 20
+    package static let defaultBlockValues = 32 << 20
 
-    private static func blockSource(file: VeloxFile, dataset path: String) -> VeloxStreamDecoder.BlockSource {
+    /// Counts the passes of a `readSpectrumImage` and folds each block's within-pass fraction into one monotone fraction.
+    /// Single-threaded by construction (the passes run one after another on the calling thread).
+    private final class PassProgress: @unchecked Sendable {
+        let passes: Int
+        let report: (@Sendable (Double) -> Void)?
+        private var pass = -1
+        private var last = 0.0
+        init(passes: Int, report: (@Sendable (Double) -> Void)?) { self.passes = passes; self.report = report }
+        func begin() { pass += 1 }
+        func fraction(_ within: Double) {
+            let value = min(1, (Double(max(pass, 0)) + within) / Double(passes))
+            if value > last { last = value; report?(value) }
+        }
+        func finish() { if last < 1 { last = 1; report?(1) } }
+    }
+
+    /// One restartable reader of a stream's values, `blockValues` at a time. The HDF5 lock is held inside `readSlab` only:
+    /// `visit` (the per-value decode), `hook` and the cancel check run unlocked. `cancelled` is polled before each block;
+    /// `progress` gets the fraction of the stream's values read, ending at 1 (also when the visitor stops the read early).
+    private static func blockSource(
+        file: VeloxFile, dataset path: String, blockValues: Int, hook: (@Sendable (Int) -> Void)?,
+        cancelled: @Sendable @escaping () -> Bool, progress: (@Sendable (Double) -> Void)?
+    ) -> VeloxStreamDecoder.BlockSource {
         { visit in
             let dataset = try file.open(path)
             defer { file.close(dataset) }
@@ -1063,15 +1177,20 @@ package nonisolated struct VeloxEMDReader: Sendable {
             guard width == 1 else { throw VeloxEMDError.readFailed("the stream \(path) is not one column") }
             let buffer = UnsafeMutablePointer<UInt16>.allocate(capacity: min(total, blockValues))
             defer { buffer.deallocate() }
-            var at = 0
+            var at = 0, index = 0
             while at < total {
+                try SpectroCancellation.check(cancelled)
                 let n = min(blockValues, total - at)
                 let start = dataset.dims.count == 2 ? [at, 0] : [at]
                 let count = dataset.dims.count == 2 ? [n, 1] : [n]
                 try file.readSlab(dataset, type: file.h5.uint16, start: start, count: count, into: buffer)
-                if try !visit(UnsafeBufferPointer(start: buffer, count: n)) { return }
+                hook?(index)
+                if try !visit(UnsafeBufferPointer(start: buffer, count: n)) { progress?(1); return }
                 at += n
+                index += 1
+                progress?(Double(at) / Double(total))   // the last block's is exactly 1
             }
+            if total == 0 { progress?(1) }
         }
     }
 
@@ -1080,7 +1199,8 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// integer image; summed over the same frame range, clipped to the frames the image has.
     private static func readScanImage(
         file: VeloxFile, shapes: [(name: String, ny: Int, nx: Int, frames: Int, isInteger: Bool)],
-        grid: (ny: Int, nx: Int), range: Range<Int>, preferredDetector: String?
+        grid: (ny: Int, nx: Int), range: Range<Int>, preferredDetector: String?,
+        cancelled: @Sendable () -> Bool
     ) throws -> VeloxScanImage? {
         let onGrid = shapes.filter { $0.ny == grid.ny && $0.nx == grid.nx && $0.isInteger }
         guard !onGrid.isEmpty else { return nil }
@@ -1110,6 +1230,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
         var frame = [UInt32](repeating: 0, count: pixels)
         // One frame per read: Velox chunks each frame separately, and a whole-stack read scatters element-wise.
         for f in lower..<upper {
+            try SpectroCancellation.check(cancelled)
             try frame.withUnsafeMutableBytes {
                 try file.readSlab(dataset, type: file.h5.uint32, start: [0, 0, f], count: [grid.ny, grid.nx, 1], into: $0.baseAddress!)
             }
@@ -1158,11 +1279,14 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// Every image stack of the file: the groups under `Data/Image` that hold a rank-3 `Data` and a `Metadata`, in name order (as
     /// h5py iterates, and rsciio reads them). Empty when the file has none. A group whose `Metadata` is unreadable throws, as the
     /// file is then damaged rather than short of images. Throws `notVeloxFile` for any HDF5 file whose `Version` is not Velox.
-    package func images() throws -> [VeloxImageInfo] {
+    /// `cancelled` is polled before each image group. A short operation: the lock is held across it.
+    package func images(cancelled: @Sendable () -> Bool = SpectroCancellation.task) throws -> [VeloxImageInfo] {
         try HDF5Serial.run {
+            try SpectroCancellation.check(cancelled)
             let file = try Self.openVeloxFile(path: path)
             var out: [VeloxImageInfo] = []
             for name in file.children(of: "/Data/Image") {
+                try SpectroCancellation.check(cancelled)
                 guard let group = Self.imageGroup(file: file, id: name) else { continue }
                 let dataset = try file.open(group + "/Data")
                 defer { file.close(dataset) }
@@ -1185,8 +1309,10 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// One hyperslab `[0, 0, frame]` by `[height, width, 1]`: Velox chunks a frame at a time. Throws `unknownImage` for an id
     /// `images()` does not list, `frameRangeInvalid` for a frame outside `0..<frameCount`, and `unsupportedImageType` for a type
     /// whose `elementType` is nil.
-    package func readImageFrame(id: String, frame: Int) throws -> [Float] {
+    /// `cancelled` is polled before the open and before the one block read (a frame is a single `H5Dread`).
+    package func readImageFrame(id: String, frame: Int, cancelled: @Sendable () -> Bool = SpectroCancellation.task) throws -> [Float] {
         try HDF5Serial.run {
+            try SpectroCancellation.check(cancelled)
             let file = try Self.openVeloxFile(path: path)
             guard let group = Self.imageGroup(file: file, id: id) else { throw VeloxEMDError.unknownImage(id) }
             let dataset = try file.open(group + "/Data")
@@ -1206,6 +1332,7 @@ package nonisolated struct VeloxEMDReader: Sendable {
                 throw VeloxEMDError.readFailed("an image of \(height) x \(width) pixels is empty or larger than this reader accepts")
             }
             var out = [Float](repeating: 0, count: pixels)
+            try SpectroCancellation.check(cancelled)
             try out.withUnsafeMutableBytes {
                 try file.readSlab(dataset, type: file.h5.float32, start: [0, 0, frame], count: [height, width, 1], into: $0.baseAddress!)
             }
@@ -1216,8 +1343,13 @@ package nonisolated struct VeloxEMDReader: Sendable {
     /// Diagnostic: how many pixel markers fall in each frame window of the first stream, from its
     /// `FrameLocationTable` (versions >= 6; nil without one). Every entry equals ny*nx when the
     /// grid is right (prediction P2), and a stopped acquisition shows as a short last entry.
-    package func markersPerFrame() throws -> [Int]? {
-        try HDF5Serial.run {
+    /// `cancelled` is polled at block boundaries; `progress` is the fraction of the stream read (monotone, ends at 1).
+    package func markersPerFrame(
+        cancelled: @Sendable () -> Bool = SpectroCancellation.task, progress: (@Sendable (Double) -> Void)? = nil
+    ) throws -> [Int]? {
+        try withoutActuallyEscaping(cancelled) { (cancelled: @escaping @Sendable () -> Bool) throws -> [Int]? in
+
+            try SpectroCancellation.check(cancelled)
             let file = try VeloxFile(path: path)
             guard let head = file.children(of: "/Data/SpectrumStream").first else { throw VeloxEMDError.noSpectrumStream }
             let group = "/Data/SpectrumStream/" + head
@@ -1234,7 +1366,8 @@ package nonisolated struct VeloxEMDReader: Sendable {
             var perFrame = [Int](repeating: 0, count: n)
             var position: UInt64 = 0
             var frame = 0
-            let source = Self.blockSource(file: file, dataset: group + "/Data")
+            let source = Self.blockSource(
+                file: file, dataset: group + "/Data", blockValues: blockValues, hook: betweenBlocks, cancelled: cancelled, progress: progress)
             try source { block in
                 for v in block {
                     while frame + 1 < n && position >= starts[frame + 1] { frame += 1 }
@@ -1248,11 +1381,16 @@ package nonisolated struct VeloxEMDReader: Sendable {
     }
 
     /// Diagnostic: the first stream's length and its pixel-marker count.
-    package func streamLengthAndMarkers() throws -> (values: Int, markers: Int) {
-        try HDF5Serial.run {
+    /// `cancelled` is polled at block boundaries; `progress` is the fraction of the stream read (monotone, ends at 1).
+    package func streamLengthAndMarkers(
+        cancelled: @Sendable () -> Bool = SpectroCancellation.task, progress: (@Sendable (Double) -> Void)? = nil
+    ) throws -> (values: Int, markers: Int) {
+        try withoutActuallyEscaping(cancelled) { (cancelled: @escaping @Sendable () -> Bool) throws -> (values: Int, markers: Int) in
+            try SpectroCancellation.check(cancelled)
             let file = try VeloxFile(path: path)
             guard let head = file.children(of: "/Data/SpectrumStream").first else { throw VeloxEMDError.noSpectrumStream }
-            return try Self.lengthAndMarkers(file: file, stream: StreamRef(name: head))
+            return try Self.lengthAndMarkers(
+                file: file, stream: StreamRef(name: head), blockValues: blockValues, hook: betweenBlocks, cancelled: cancelled, progress: progress)
         }
     }
 

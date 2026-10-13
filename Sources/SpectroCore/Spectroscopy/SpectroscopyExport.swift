@@ -17,9 +17,11 @@ package nonisolated enum SpectroscopyExport {
                                   "at_percent", "sigma_at_percent", "validation", "flags", "estimator"]
 
     /// The results table, one row per fitted element, with the fit's provenance as `#` header lines.
-    package static func csv(_ q: PooledQuantification, regionName: String) -> String {
+    /// The first `#` line names the producing app: `title` is that name (E6, SpectroKit slot plan), defaulting to this app's.
+    package static func csv(_ q: PooledQuantification, regionName: String,
+                            title: String = "mac4DSTEM Spectroscopy quantification") -> String {
         var out: [String] = []
-        out.append("# mac4DSTEM Spectroscopy quantification, region: \(regionName)")
+        out.append("# \(title), region: \(regionName)")
         out.append("# validation: " + (q.hasAbundance
             ? "UNVALIDATED (at% rests on a computed or typed k with validation \"none\"; net counts and k-free ratios are fit areas)"
             : "net counts and k-free ratios only; no at% was computed"))
