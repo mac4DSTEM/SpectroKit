@@ -117,6 +117,14 @@ package nonisolated final class LoadedSpectrumImage: SpectrumImageSource {
     package var channels: Int { image.channels }
     package func sum(mask: PixelMask?) -> [UInt64] { image.sum(mask: mask) }
     package func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]] { image.windowSums(ranges) }
+    package func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                     progress: (@Sendable (Double) -> Void)? = nil) throws -> [UInt64] {
+        try image.sum(mask: mask, cancelled: cancelled, progress: progress)
+    }
+    package func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                            progress: (@Sendable (Double) -> Void)? = nil) throws -> [[UInt64]] {
+        try image.windowSums(ranges, cancelled: cancelled, progress: progress)
+    }
 }
 
 /// Where a beam energy came from. The phrase is what the provenance line says after the value.

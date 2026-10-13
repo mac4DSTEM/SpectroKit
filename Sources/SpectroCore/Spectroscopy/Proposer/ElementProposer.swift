@@ -174,8 +174,14 @@ package nonisolated struct ElementProposer: Sendable {
     ///   - settings: the fit as the room runs it. `elements` is the CURRENT set (always fitted, never changed);
     ///     range, background, escape setting and reference shapes are used as given, the method is forced to LS.
     ///   - holeCounts: optional pooled spectrum of a hole region on the same axis, for the Cu grid check.
+    ///   - cancelled: asked before every fit (ADR 064 amendment 2 §2); default Swift task cancellation. DECISION: the proposer keeps
+    ///     its own `ProposerError.cancelled` (the room and its tests already match it) rather than `SpectroCancelled`; nothing partial is returned.
+    ///   - progress: monotone in 0...1, ends at 1. The number of fits is not known in advance, so it is fits done over fits done plus the
+    ///     fits the current step still has planned, clamped never to fall.
     package func propose(counts: [Double], axis: EnergyAxis, settings: FitSettings,
-                         holeCounts: [Double]? = nil) throws -> ProposalResult {
+                         holeCounts: [Double]? = nil,
+                         cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                         progress: (@Sendable (Double) -> Void)? = nil) throws -> ProposalResult {
         guard counts.count == axis.size, holeCounts.map({ $0.count == axis.size }) ?? true else { throw ProposerError.lengthMismatch }
         var s = settings
         s.method = .leastSquares
@@ -207,8 +213,16 @@ package nonisolated struct ElementProposer: Sendable {
             }
         }
 
+        var fitsDone = 0, fitsPlanned = 1, reported = 0.0
+        func tick() {
+            guard let progress else { return }
+            let f = min(max(Double(fitsDone) / Double(max(fitsDone + fitsPlanned, 1)), reported), 0.99)
+            reported = f
+            progress(f)
+        }
         func run(_ groups: [FitLineGroup], on data: [Double]) throws -> Pass {
-            if Task.isCancelled { throw ProposerError.cancelled }
+            if cancelled() { throw ProposerError.cancelled }
+            defer { fitsDone += 1; tick() }
             let model = EDSLineModel(groups: groups, resolutionMnKaEV: s.resolutionMnKaEV, beamEnergy: s.beamEnergy,
                                      escapePeaks: s.escapePeaks, droppedLines: dropped)
             try EDSFit.validate(s.referenceShapes, axis: axis, model: model)
@@ -352,6 +366,7 @@ package nonisolated struct ElementProposer: Sendable {
         while true {
             if rounds >= maxForwardRounds { forwardCapped = true; break }
             rounds += 1
+            fitsPlanned = poolGroups.filter { !active.contains($0.id) && !banned.contains($0.id) }.count + 2
             let key = active.sorted().joined(separator: ",")
             if key != cacheKey { cache = [:]; cacheKey = key }
             var best: (id: String, significance: Double)?
@@ -422,6 +437,7 @@ package nonisolated struct ElementProposer: Sendable {
         if !settled { notes.append("The surviving set did not settle in \(maxPasses) passes: the last fit is shown.") }
         if forwardCapped { notes.append("The forward step stopped at \(maxForwardRounds) rounds: this spectrum keeps producing candidates, which points to a model misfit (continuum or line widths) rather than to that many elements.") }
         for w in fit.result.warnings where !notes.contains(w) { notes.append(w) }
+        progress?(1)
         return ProposalResult(candidates: candidates, sumPeaks: sumPeaks, refused: refused, currie: currie,
                               notes: notes, passes: passes, settled: settled,
                               reducedChiSquared: fit.result.pearsonReducedChiSquared)

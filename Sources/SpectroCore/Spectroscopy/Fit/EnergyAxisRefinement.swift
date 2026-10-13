@@ -55,8 +55,11 @@ package nonisolated enum EnergyAxisRefinement {
 
     package static func refine(
         counts: [Double], fileAxis: EnergyAxis, fileResolutionMnKaEV: Double, settings: FitSettings,
-        options: AxisRefinementSettings = AxisRefinementSettings()
+        options: AxisRefinementSettings = AxisRefinementSettings(),
+        cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+        progress: (@Sendable (Double) -> Void)? = nil
     ) throws -> AxisRefinementResult {
+        try SpectroCancellation.check(cancelled)
         guard counts.count == fileAxis.size else { throw EDSFitError.lengthMismatch }
         let channels = fileAxis.fitChannels(from: settings.fitFrom, to: settings.fitTo)
         guard !channels.isEmpty else { throw EDSFitError.noChannels }
@@ -88,12 +91,15 @@ package nonisolated enum EnergyAxisRefinement {
 
         let free = [options.refineOffset, options.refineGain, options.refineResolution]
         let steps = [5.0, 10.0, 5.0]   // initial simplex edges in the units above
-        let (best, iterations, converged) = nelderMead(start: [0, 0, 0], free: free, steps: steps,
-                                                       maxIterations: options.maxIterations,
-                                                       tolerance: options.tolerance, f: rss)
+        let (best, iterations, converged) = try nelderMead(start: [0, 0, 0], free: free, steps: steps,
+                                                           maxIterations: options.maxIterations,
+                                                           tolerance: options.tolerance, f: rss,
+                                                           cancelled: cancelled, progress: progress)
         let d = (options.refineOffset ? best[0] : 0) * 1e-3
         let g = (options.refineGain ? best[1] : 0) * 1e-4
         let r = fileResolutionMnKaEV + (options.refineResolution ? best[2] : 0)
+        try SpectroCancellation.check(cancelled)
+        progress?(1)
         return AxisRefinementResult(
             fileOffset: fileAxis.offset, fileScale: fileAxis.scale, fileResolutionMnKaEV: fileResolutionMnKaEV,
             offset: fileAxis.offset + d, scale: fileAxis.scale * (1 + g), resolutionMnKaEV: r,
@@ -105,8 +111,8 @@ package nonisolated enum EnergyAxisRefinement {
     /// `free`; the others stay at `start`.
     private static func nelderMead(
         start: [Double], free: [Bool], steps: [Double], maxIterations: Int, tolerance: Double,
-        f: ([Double]) -> Double
-    ) -> (best: [Double], iterations: Int, converged: Bool) {
+        f: ([Double]) -> Double, cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?
+    ) throws -> (best: [Double], iterations: Int, converged: Bool) {
         let idx = (0..<start.count).filter { free[$0] }
         guard !idx.isEmpty else { return (start, 0, true) }
         var simplex: [[Double]] = [start]
@@ -114,6 +120,10 @@ package nonisolated enum EnergyAxisRefinement {
         var values = simplex.map(f)
         var it = 0
         while it < maxIterations {
+            // One iteration is a handful of fits: the boundary the cancel check and the progress sit on (progress counts
+            // iterations against the cap; the loop usually converges earlier, and the caller ends at 1).
+            try SpectroCancellation.check(cancelled)
+            progress?(Double(it) / Double(max(maxIterations, 1)))
             it += 1
             let order = values.indices.sorted { values[$0] < values[$1] }
             simplex = order.map { simplex[$0] }; values = order.map { values[$0] }

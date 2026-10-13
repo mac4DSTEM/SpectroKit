@@ -39,11 +39,36 @@ package nonisolated protocol SpectrumImage: Sendable {
     /// For every channel range, the per-pixel exact sum of counts inside it
     /// (outer index = range, inner = pixel, row-major). Ranges are half-open and may overlap.
     func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]]
+
+    /// The same sums, cancellable (ADR 064 amendment 2 §2): `cancelled` is asked once per block of pixels, never per value, and
+    /// `SpectroCancelled` is thrown with nothing kept; `progress` is monotone in 0...1 and ends at 1. A conformer that does not
+    /// implement it gets the default below (one check before the plain call). The default `cancelled` of the concrete types
+    /// and of `ElementWindows` is `SpectroCancellation.task`; a protocol requirement cannot carry it, so a caller through
+    /// `any SpectrumImage` passes it.
+    func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?) throws -> [UInt64]
+    func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?) throws -> [[UInt64]]
 }
 
 extension SpectrumImage {
     package nonisolated var pixelCount: Int { ny * nx }
+
+    package func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?) throws -> [UInt64] {
+        try SpectroCancellation.check(cancelled)
+        let out = sum(mask: mask)
+        progress?(1)
+        return out
+    }
+
+    package func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?) throws -> [[UInt64]] {
+        try SpectroCancellation.check(cancelled)
+        let out = windowSums(ranges)
+        progress?(1)
+        return out
+    }
 }
+
+/// Pixels between two cancellation checks of the spectrum-image loops (a block, never a value).
+private nonisolated let spectrumBlockPixels = 4096
 
 /// The shape of a per-pixel compressed-sparse-row spectrum store. `rowOffsets` has
 /// `ny * nx + 1` entries into `channelIndex` / `counts`; channels inside a pixel ascend and
@@ -72,28 +97,53 @@ package nonisolated struct DenseSpectrumImage: SpectrumImage {
     }
 
     package func sum(mask: PixelMask?) -> [UInt64] {
+        // The closure never answers true, so the throwing core cannot throw.
+        try! sum(mask: mask, cancelled: { false }, progress: nil)
+    }
+
+    package func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                     progress: (@Sendable (Double) -> Void)? = nil) throws -> [UInt64] {
         precondition(mask == nil || mask!.count == ny * nx, "mask length must be ny*nx")
         var out = [UInt64](repeating: 0, count: channels)
-        for p in 0..<(ny * nx) where mask?[p] ?? true {
-            let base = p * channels
-            for c in 0..<channels { out[c] &+= UInt64(counts[base + c]) }
+        let n = ny * nx
+        for start in stride(from: 0, to: n, by: spectrumBlockPixels) {
+            try SpectroCancellation.check(cancelled)
+            for p in start..<min(start + spectrumBlockPixels, n) where mask?[p] ?? true {
+                let base = p * channels
+                for c in 0..<channels { out[c] &+= UInt64(counts[base + c]) }
+            }
+            progress?(Double(min(start + spectrumBlockPixels, n)) / Double(n))
         }
+        if n == 0 { progress?(1) }
         return out
     }
 
     package func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]] {
+        try! windowSums(ranges, cancelled: { false }, progress: nil)
+    }
+
+    package func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                            progress: (@Sendable (Double) -> Void)? = nil) throws -> [[UInt64]] {
         let n = ny * nx
         var out = [[UInt64]](repeating: [UInt64](repeating: 0, count: n), count: ranges.count)
+        let total = Double(max(ranges.count * n, 1))
         for (r, range) in ranges.enumerated() {
             let lo = max(range.lowerBound, 0), hi = min(range.upperBound, channels)
-            guard lo < hi else { continue }
-            for p in 0..<n {
-                var s: UInt64 = 0
-                let base = p * channels
-                for c in lo..<hi { s &+= UInt64(counts[base + c]) }
-                out[r][p] = s
+            for start in stride(from: 0, to: n, by: spectrumBlockPixels) {
+                try SpectroCancellation.check(cancelled)
+                let end = min(start + spectrumBlockPixels, n)
+                if lo < hi {
+                    for p in start..<end {
+                        var s: UInt64 = 0
+                        let base = p * channels
+                        for c in lo..<hi { s &+= UInt64(counts[base + c]) }
+                        out[r][p] = s
+                    }
+                }
+                progress?(Double(r * n + end) / total)
             }
         }
+        if ranges.isEmpty || n == 0 { progress?(1) }
         return out
     }
 }
@@ -147,29 +197,50 @@ package nonisolated struct SparseSpectrumImage: SpectrumImage {
     }
 
     package func sum(mask: PixelMask?) -> [UInt64] {
+        try! sum(mask: mask, cancelled: { false }, progress: nil)
+    }
+
+    package func sum(mask: PixelMask?, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                     progress: (@Sendable (Double) -> Void)? = nil) throws -> [UInt64] {
         precondition(mask == nil || mask!.count == ny * nx, "mask length must be ny*nx")
         var out = [UInt64](repeating: 0, count: channels)
-        for p in 0..<(ny * nx) where mask?[p] ?? true {
-            for k in rowOffsets[p]..<rowOffsets[p + 1] { out[Int(channelIndex[k])] &+= UInt64(counts[k]) }
+        let n = ny * nx
+        for start in stride(from: 0, to: n, by: spectrumBlockPixels) {
+            try SpectroCancellation.check(cancelled)
+            for p in start..<min(start + spectrumBlockPixels, n) where mask?[p] ?? true {
+                for k in rowOffsets[p]..<rowOffsets[p + 1] { out[Int(channelIndex[k])] &+= UInt64(counts[k]) }
+            }
+            progress?(Double(min(start + spectrumBlockPixels, n)) / Double(n))
         }
+        if n == 0 { progress?(1) }
         return out
     }
 
     package func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]] {
+        try! windowSums(ranges, cancelled: { false }, progress: nil)
+    }
+
+    package func windowSums(_ ranges: [Range<Int>], cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                            progress: (@Sendable (Double) -> Void)? = nil) throws -> [[UInt64]] {
         let n = ny * nx
         var out = [[UInt64]](repeating: [UInt64](repeating: 0, count: n), count: ranges.count)
         // One pass over the events: each event is tested against every window.
         // Channels ascend inside a pixel, so a pixel's scan stops at the highest upper bound.
         let los = ranges.map { $0.lowerBound }, his = ranges.map { $0.upperBound }
         let maxHi = his.max() ?? 0
-        for p in 0..<n {
-            for k in rowOffsets[p]..<rowOffsets[p + 1] {
-                let c = Int(channelIndex[k])
-                if c >= maxHi { break }
-                let v = UInt64(counts[k])
-                for r in 0..<ranges.count where c >= los[r] && c < his[r] { out[r][p] &+= v }
+        for start in stride(from: 0, to: n, by: spectrumBlockPixels) {
+            try SpectroCancellation.check(cancelled)
+            for p in start..<min(start + spectrumBlockPixels, n) {
+                for k in rowOffsets[p]..<rowOffsets[p + 1] {
+                    let c = Int(channelIndex[k])
+                    if c >= maxHi { break }
+                    let v = UInt64(counts[k])
+                    for r in 0..<ranges.count where c >= los[r] && c < his[r] { out[r][p] &+= v }
+                }
             }
+            progress?(Double(min(start + spectrumBlockPixels, n)) / Double(n))
         }
+        if n == 0 { progress?(1) }
         return out
     }
 }
@@ -177,10 +248,21 @@ package nonisolated struct SparseSpectrumImage: SpectrumImage {
 /// A dense image from a sparse one; small cubes only (tests, parity).
 extension SparseSpectrumImage {
     package func densified() -> DenseSpectrumImage {
+        try! densified(cancelled: { false }, progress: nil)
+    }
+
+    package func densified(cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                           progress: (@Sendable (Double) -> Void)? = nil) throws -> DenseSpectrumImage {
         var out = [UInt32](repeating: 0, count: ny * nx * channels)
-        for p in 0..<(ny * nx) {
-            for k in rowOffsets[p]..<rowOffsets[p + 1] { out[p * channels + Int(channelIndex[k])] = counts[k] }
+        let n = ny * nx
+        for start in stride(from: 0, to: n, by: spectrumBlockPixels) {
+            try SpectroCancellation.check(cancelled)
+            for p in start..<min(start + spectrumBlockPixels, n) {
+                for k in rowOffsets[p]..<rowOffsets[p + 1] { out[p * channels + Int(channelIndex[k])] = counts[k] }
+            }
+            progress?(Double(min(start + spectrumBlockPixels, n)) / Double(n))
         }
+        if n == 0 { progress?(1) }
         return DenseSpectrumImage(ny: ny, nx: nx, channels: channels, counts: out)
     }
 }

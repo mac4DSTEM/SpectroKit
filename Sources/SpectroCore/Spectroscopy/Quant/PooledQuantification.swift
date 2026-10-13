@@ -177,7 +177,14 @@ package nonisolated enum PooledQuantifier {
 
     // MARK: Entry
 
-    package static func run(_ input: PooledQuantificationInput, tables: QuantificationTables?) throws -> PooledQuantification {
+    /// Cancellable (ADR 064 amendment 2 §2): `cancelled` is asked at the step boundaries (before the axis refinement, inside it
+    /// once per simplex iteration, before the fit and before the rows); `SpectroCancelled` propagates, never swallowed into a
+    /// warning or a refusal, and nothing partial is returned. `progress` is monotone in 0...1 and ends at 1.
+    package static func run(_ input: PooledQuantificationInput, tables: QuantificationTables?,
+                            cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                            progress: (@Sendable (Double) -> Void)? = nil) throws -> PooledQuantification {
+        try SpectroCancellation.check(cancelled)
+        progress?(0)
         var method = input.method
         let active = method.elements.filter { $0.role != .off }.map(\.symbol)
         guard !active.isEmpty else { throw QuantificationRefusal("No element is switched on: pick elements in Elements & maps.") }
@@ -219,7 +226,10 @@ package nonisolated enum PooledQuantifier {
             refinement = input.refinement
             if refinement == nil {
                 do { refinement = try EnergyAxisRefinement.refine(counts: counts, fileAxis: input.axis,
-                                                                  fileResolutionMnKaEV: input.resolutionMnKaEV, settings: settings(axis: input.axis)) }
+                                                                  fileResolutionMnKaEV: input.resolutionMnKaEV, settings: settings(axis: input.axis),
+                                                                  cancelled: cancelled, progress: progress.map { p in { p($0 * 0.8) } })
+                }
+                catch let c as SpectroCancelled { throw c }
                 catch { warnings.append("axis refinement failed (\(error)); the file's axis is used") }
             }
             if let r = refinement {
@@ -231,6 +241,8 @@ package nonisolated enum PooledQuantifier {
         fitSettings.resolutionMnKaEV = resolution
         let fitRange = range(axis)
         let fit: EDSFitResult
+        try SpectroCancellation.check(cancelled)
+        progress?(0.85)
         do { fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings) }
         catch { throw QuantificationRefusal("The fit could not run: \(error).") }
         // The fit appends the weak-line bias note to every continuum fit; it is a statement about a weak line beside Al K-alpha
@@ -241,6 +253,8 @@ package nonisolated enum PooledQuantifier {
             warnings.append(ContinuumForm.weakLineBiasNote)
         }
 
+        try SpectroCancellation.check(cancelled)
+        progress?(0.95)
         // Plot curves: the model, and the background as the fitted continuum columns.
         let lineModel = EDSLineModel.build(elements: active, axis: axis, beamEnergy: beam, resolutionMnKaEV: resolution,
                                            escapePeaks: fitSettings.escapePeaks)
@@ -350,6 +364,8 @@ package nonisolated enum PooledQuantifier {
         case .refused(let why): footer.append("absorption: not applied \u{2014} \(why)")
         }
 
+        try SpectroCancellation.check(cancelled)
+        progress?(1)
         return PooledQuantification(
             method: method, rows: rows, referenceElement: referenceIndex.map { rows[$0].element }, fit: fit,
             fileAxis: input.axis, usedAxis: axis, axisLocked: locked, refinement: refinement,

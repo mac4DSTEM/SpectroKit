@@ -164,7 +164,15 @@ package nonisolated enum WindowIntensity {
 
     /// Net-count map per window (outer = window, inner = pixel, row-major), any `SpectrumImage`.
     package static func maps(image: some SpectrumImage, windows: [ResolvedWindow]) -> [[Double]] {
-        let sums = image.windowSums(windows.flatMap(\.ranges))
+        // The closure never answers true, so the throwing core cannot throw.
+        try! maps(image: image, windows: windows, cancelled: { false }, progress: nil)
+    }
+
+    /// The same maps, cancellable (ADR 064 amendment 2 §2): the window sums are the long step and carry `cancelled`/`progress`.
+    package static func maps(image: some SpectrumImage, windows: [ResolvedWindow],
+                             cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                             progress: (@Sendable (Double) -> Void)? = nil) throws -> [[Double]] {
+        let sums = try image.windowSums(windows.flatMap(\.ranges), cancelled: cancelled, progress: progress)
         let n = image.pixelCount
         var out: [[Double]] = []
         var next = 0

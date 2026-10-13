@@ -70,11 +70,15 @@ package nonisolated enum SpectrumImageOpener {
     }
 
     /// Opens a file of a spectrum kind. For `.other` it throws `notASpectrumImage`.
-    package static func open(path: String, kind: SpectrumFileKind) throws -> LoadedSpectrumImage {
+    /// Cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` at a step boundary with nothing kept; `progress` 0...1, ends at 1.
+    package static func open(path: String, kind: SpectrumFileKind,
+                             cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                             progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage {
+        try SpectroCancellation.check(cancelled)
         switch kind {
-        case .veloxSpectrumImage: return try openVelox(path: path)
+        case .veloxSpectrumImage: return try openVelox(path: path, cancelled: cancelled, progress: progress)
         case .gmsEDSOnly:
-            guard let image = try openGMSEDS(path: path, fourD: nil) else {
+            guard let image = try openGMSEDS(path: path, fourD: nil, cancelled: cancelled, progress: progress) else {
                 throw SpectrumImageOpenError.notASpectrumImage(displayFileName(path))
             }
             return image
@@ -84,11 +88,19 @@ package nonisolated enum SpectrumImageOpener {
 
     // MARK: Velox
 
-    package static func openVelox(path: String) throws -> LoadedSpectrumImage {
+    package static func openVelox(path: String, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                                  progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage {
         let name = displayFileName(path)
-        let v = try VeloxEMDReader(path: path).readSpectrumImage()
+        try SpectroCancellation.check(cancelled)
+        progress?(0)
+        // The read is the long step (three passes over the stream): its cancel is ours, its progress maps to 0...0.9.
+        let readProgress: (@Sendable (Double) -> Void)? = progress.map { p in { @Sendable f in p(f * 0.9) } }
+        let v = try VeloxEMDReader(path: path).readSpectrumImage(cancelled: cancelled, progress: readProgress)
+        try SpectroCancellation.check(cancelled)
+        progress?(0.9)
         let store = v.eventStore
         let image = try SparseSpectrumImage(store)
+        try SpectroCancellation.check(cancelled)
         let m = v.metadata
         // The axis the stream's own metadata states; the first analytical segment's, when that is absent.
         let segments0 = v.streams.first?.segments.first ?? m.superXDetectors.first
@@ -124,6 +136,7 @@ package nonisolated enum SpectrumImageOpener {
         meta.instrument = m.instrumentModel
         var scan: [Float]?
         if let s = v.scanImage, s.ny == store.ny, s.nx == store.nx { scan = s.sum.map { Float($0) } }
+        progress?(1)
         return LoadedSpectrumImage(image: image, metadata: meta, energyAxis: axis, scanImage: scan)
     }
 
@@ -132,11 +145,20 @@ package nonisolated enum SpectrumImageOpener {
     /// The EDS spectrum image of a GMS DM4, or nil when the file has none. With `fourD`, the image is registered to
     /// that cube BY IDENTITY when both objects carry the same Experiment ID and the EDS grid equals the cube's scan
     /// grid (`sameScanAs4DCube`); otherwise it is still attached, with the reason in `registrationNote`.
-    package static func openGMSEDS(path: String, fourD: GMSFourDIdentity?) throws -> LoadedSpectrumImage? {
+    package static func openGMSEDS(path: String, fourD: GMSFourDIdentity?,
+                                   cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                                   progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage? {
+        try SpectroCancellation.check(cancelled)
+        progress?(0)
         let objects = try DM4Experiment.list(path: path)
         guard let eds = objects.first(where: { $0.role == .eds }) else { return nil }
         let name = displayFileName(path)
+        try SpectroCancellation.check(cancelled)
+        progress?(0.1)
+        // The blob read is one call into Core/Data (pass-through only there): cancellation takes effect before and after it.
         let d = try DM4Experiment.readEDSSpectrumImage(path: path, index: eds.index)
+        try SpectroCancellation.check(cancelled)
+        progress?(0.9)
         let toKeV: Double
         switch d.energyAxis.units.trimmingCharacters(in: .whitespaces).lowercased() {
         case "kev": toKeV = 1
@@ -176,12 +198,15 @@ package nonisolated enum SpectrumImageOpener {
             meta.beamEnergyKeV = b.keV; meta.beamEnergySource = b.source
         }
         // The scan-grid HAADF of the same run, when it sits on the EDS grid.
+        try SpectroCancellation.check(cancelled)
         var scan: [Float]?
         if let s = objects.first(where: { $0.role == .scanSignal && $0.experimentID == eds.experimentID
             && $0.dimensions.filter { $0 > 1 } == [d.nx, d.ny] }),
            let img = try? DM4Experiment.readImage(path: path, index: s.index), img.width == d.nx, img.height == d.ny {
             scan = img.pixels
         }
+        try SpectroCancellation.check(cancelled)
+        progress?(1)
         return LoadedSpectrumImage(image: DenseSpectrumImage(ny: d.ny, nx: d.nx, channels: d.channels, counts: d.counts),
                                    metadata: meta, energyAxis: axis, scanImage: scan)
     }

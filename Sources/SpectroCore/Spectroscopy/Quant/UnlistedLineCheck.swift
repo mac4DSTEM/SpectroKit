@@ -163,8 +163,10 @@ package nonisolated enum UnlistedLineChecker {
     }
 
     package static func propose(counts: [Double], quantification q: PooledQuantification,
-                                proposer: ElementProposer = ElementProposer()) throws -> ProposalResult {
-        try proposer.propose(counts: counts, axis: q.usedAxis, settings: proposerSettings(q))
+                                proposer: ElementProposer = ElementProposer(),
+                                cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                                progress: (@Sendable (Double) -> Void)? = nil) throws -> ProposalResult {
+        try proposer.propose(counts: counts, axis: q.usedAxis, settings: proposerSettings(q), cancelled: cancelled, progress: progress)
     }
 
     /// "Al_Ka" -> "Al K\u{03B1}", "Lu_Ma" -> "Lu M\u{03B1}", "Cu_Lb1" -> "Cu L\u{03B2}1".
@@ -222,6 +224,17 @@ package nonisolated enum UnlistedLineChecker {
 
     /// The decision for one proposal. `input` is the reported fit's input (counts, axis, method); `q` its result.
     package static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification) -> UnlistedLineCheck {
+        // The closure never answers true, so the throwing core cannot throw.
+        try! check(proposal: proposal, input: input, quantification: q, cancelled: { false }, progress: nil)
+    }
+
+    /// The same decision, cancellable (ADR 064 amendment 2 §2): the refit is the long step; `SpectroCancelled` is thrown (never
+    /// folded into the check's `failure`) and nothing is returned. `progress` is monotone in 0...1 and ends at 1.
+    package static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification,
+                              cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                              progress: (@Sendable (Double) -> Void)? = nil) throws -> UnlistedLineCheck {
+        try SpectroCancellation.check(cancelled)
+        progress?(0)
         let dismissed = Set(q.method.elements.filter { $0.role == .off }.map(\.symbol))
         // `isProposed` = proposed and sum-peak questions alike (both at or above L_D), strongest first.
         let found = proposal.candidates.filter { $0.isProposed && !dismissed.contains($0.element) }
@@ -244,9 +257,9 @@ package nonisolated enum UnlistedLineChecker {
             }
             return cand
         }
-        guard !candidates.isEmpty else { return .init(candidates: [], moves: []) }
+        guard !candidates.isEmpty else { progress?(1); return .init(candidates: [], moves: []) }
         let elements = candidates.filter { $0.besideLine == nil }
-        guard !elements.isEmpty else { return .init(candidates: candidates, moves: []) }
+        guard !elements.isEmpty else { progress?(1); return .init(candidates: candidates, moves: []) }
 
         // The refit: the same method with the element candidates as Fit only, the same axis refinement. No tables: only nets are read.
         var refit = input
@@ -254,8 +267,9 @@ package nonisolated enum UnlistedLineChecker {
         refit.method.elements += elements.map { .init(symbol: $0.element, role: .fitOnly, isManual: false) }
         refit.refinement = q.refinement
         let after: PooledQuantification
-        do { after = try PooledQuantifier.run(refit, tables: nil) }
-        catch { return .init(candidates: candidates, moves: [], failure: (error as? LocalizedError)?.errorDescription ?? "\(error)") }
+        do { after = try PooledQuantifier.run(refit, tables: nil, cancelled: cancelled, progress: progress.map { p in { p($0 * 0.95) } }) }
+        catch let c as SpectroCancelled { throw c }
+        catch { progress?(1); return .init(candidates: candidates, moves: [], failure: (error as? LocalizedError)?.errorDescription ?? "\(error)") }
 
         var moves: [UnlistedLineCheck.Move] = []
         var largest: (move: UnlistedLineCheck.Move, ratio: Double)?
@@ -267,6 +281,7 @@ package nonisolated enum UnlistedLineChecker {
             let ratio = row.sigma > 0 ? delta / row.sigma : (delta > 0 ? .infinity : 0)
             if ratio > (largest?.ratio ?? -1) { largest = (move, ratio) }
         }
+        progress?(1)
         return .init(candidates: candidates, moves: moves, largest: largest?.move)
     }
 

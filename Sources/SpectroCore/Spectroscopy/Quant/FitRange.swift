@@ -143,13 +143,26 @@ package nonisolated enum FitRangeSensitivityCheck {
     /// The extra fit: `input` is the reported fit's input, `q` its result. Nil when `alternative` is nil. No tables: only nets
     /// are read. The refit reuses `q`'s axis refinement, as the unlisted-line check's refit does.
     package static func run(input: PooledQuantificationInput, quantification q: PooledQuantification) -> FitRangeSensitivity? {
-        guard let to = alternative(for: q) else { return nil }
+        // The closure never answers true, so the throwing core cannot throw.
+        try! run(input: input, quantification: q, cancelled: { false }, progress: nil)
+    }
+
+    /// The same extra fit, cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` is thrown (never folded into `failure`),
+    /// nothing is returned. `progress` is monotone in 0...1 and ends at 1.
+    package static func run(input: PooledQuantificationInput, quantification q: PooledQuantification,
+                            cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                            progress: (@Sendable (Double) -> Void)? = nil) throws -> FitRangeSensitivity? {
+        try SpectroCancellation.check(cancelled)
+        progress?(0)
+        guard let to = alternative(for: q) else { progress?(1); return nil }
         var refit = input
         refit.method.fitToKeV = to
         refit.refinement = q.refinement
         let after: PooledQuantification
-        do { after = try PooledQuantifier.run(refit, tables: nil) }
+        do { after = try PooledQuantifier.run(refit, tables: nil, cancelled: cancelled, progress: progress.map { p in { p($0 * 0.95) } }) }
+        catch let c as SpectroCancelled { throw c }
         catch {
+            progress?(1)
             return FitRangeSensitivity(alternativeToKeV: to, moves: [],
                                        failure: (error as? LocalizedError)?.errorDescription ?? "\(error)")
         }
@@ -158,6 +171,7 @@ package nonisolated enum FitRangeSensitivityCheck {
             guard let new = after.rows.first(where: { $0.element == row.element && $0.failure == nil }) else { continue }
             moves.append(.init(element: row.element, group: row.groupID, before: row.net, sigma: row.sigma, after: new.net))
         }
+        progress?(1)
         return FitRangeSensitivity(alternativeToKeV: to, moves: moves)
     }
 

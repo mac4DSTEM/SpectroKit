@@ -286,8 +286,16 @@ package nonisolated enum ElementWindows {
 
     /// Net-count map of every window that has one (outer = window, `nil` where there is none).
     package static func maps(image: some SpectrumImage, windows: [LineWindow]) -> [[Double]?] {
+        // The closure never answers true, so the throwing core cannot throw.
+        try! maps(image: image, windows: windows, cancelled: { false }, progress: nil)
+    }
+
+    /// The same maps, cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` with nothing returned; `progress` 0...1, ends at 1.
+    package static func maps(image: some SpectrumImage, windows: [LineWindow],
+                             cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                             progress: (@Sendable (Double) -> Void)? = nil) throws -> [[Double]?] {
         let resolved = windows.compactMap(\.window)
-        let m = WindowIntensity.maps(image: image, windows: resolved)
+        let m = try WindowIntensity.maps(image: image, windows: resolved, cancelled: cancelled, progress: progress)
         var next = 0
         return windows.map { lw in
             guard lw.window != nil else { return nil }
@@ -299,7 +307,13 @@ package nonisolated enum ElementWindows {
     /// The integrated-intensity map of every window that has one (the room's "int" mode): the exact signal-window sum per
     /// pixel, no background taken off, so it is the net map plus the background term the net map subtracts.
     package static func integratedMaps(image: some SpectrumImage, windows: [LineWindow]) -> [[Double]?] {
-        let sums = image.windowSums(windows.compactMap { $0.window?.signal })
+        try! integratedMaps(image: image, windows: windows, cancelled: { false }, progress: nil)
+    }
+
+    package static func integratedMaps(image: some SpectrumImage, windows: [LineWindow],
+                                       cancelled: @Sendable () -> Bool = SpectroCancellation.task,
+                                       progress: (@Sendable (Double) -> Void)? = nil) throws -> [[Double]?] {
+        let sums = try image.windowSums(windows.compactMap { $0.window?.signal }, cancelled: cancelled, progress: progress)
         var next = 0
         return windows.map { lw in
             guard lw.window != nil else { return nil }
