@@ -13,16 +13,24 @@ let package = Package(
         .library(name: "SpectroCore", targets: ["SpectroCore"]),
     ],
     targets: [
+        // Plain-C wrappers over the four Accelerate LAPACK routines `FitLinearAlgebra` calls. ACCELERATE_NEW_LAPACK is
+        // defined for this C target only (a `cSettings` define, which SwiftPM accepts in a versioned dependency); its public
+        // header includes no Accelerate. This replaces S2's `-Xcc -DACCELERATE_NEW_LAPACK` unsafe flag (ADR 064
+        // amendment a): no unsafe flags anywhere in this manifest.
+        .target(
+            name: "CSpectroLAPACK",
+            cSettings: [.define("ACCELERATE_NEW_LAPACK")],
+            linkerSettings: [.linkedFramework("Accelerate")]
+        ),
         .target(
             name: "SpectroCore",
+            dependencies: ["CSpectroLAPACK"],
             resources: [.copy("Resources/Spectroscopy")],
+            // No Debug `-O` (S2 carried mac4DSTEM's unsafe `-O` flag for the Debug configuration). Measured in S3:
+            // Debug at -Onone is 20-50x slower on every hot path (936 MB Velox 24.5 s vs 1.05 s, proposer 956 s vs 19.8 s),
+            // and `@_optimize(speed)` does not help at -Onone, but a versioned dependency cannot carry unsafe flags. So the
+            // optimisation is the consumer's: tools/test.sh runs this package's tests with `-c release`.
             swiftSettings: [
-                // S2 only, carried from mac4DSTEM's DSTEMCore: `FitLinearAlgebra` needs Accelerate's current LAPACK
-                // interface (`__LAPACK_int`), and the Debug build is optimised (Gate D 2026-09-30). `unsafeFlags` make
-                // SwiftPM refuse SpectroKit as a versioned dependency; S3 replaces the first with a C shim and decides
-                // the second (ADR 064 amendment a). No 0.1.0 tag while either line exists.
-                .unsafeFlags(["-Xcc", "-DACCELERATE_NEW_LAPACK"]),
-                .unsafeFlags(["-O"], .when(configuration: .debug)),
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),
                 .enableUpcomingFeature("MemberImportVisibility"),

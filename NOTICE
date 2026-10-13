@@ -1,0 +1,99 @@
+SpectroKit
+Copyright (C) 2026 Paul Lobpreis
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version (LICENSE).
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+SpectroKit was extracted from mac4DSTEM (https://github.com/mac4DSTEM/mac4DSTEM,
+commit 5ba712a0) with its history; the notices below are mac4DSTEM's, narrowed to
+what this library carries.
+
+No EDX quantification in this library is validated on real data: every at%
+self-reports validation "none".
+
+
+================================================================================
+eXSpy and HyperSpy (EDX spectroscopy)
+================================================================================
+
+The X-ray line table (Sources/SpectroCore/Spectroscopy/XRayLineData.swift: line
+energies from Chantler 2005, relative line weights from the EPQ library, both as
+eXSpy ships them), the detector line-width law, the integration and background
+window rules, the spectrum fit and Cliff-Lorimer quantification are ported from
+eXSpy, with HyperSpy's channel rounding and slicing. They are compared against
+it and carry inline DEVIATION notes where this implementation departs. Agreement
+with eXSpy is not validation.
+
+    eXSpy - https://github.com/hyperspy/exspy, commit 7185a4d1
+    Copyright (C) 2007-2026 The eXSpy developers
+    HyperSpy - https://github.com/hyperspy/hyperspy, version 2.4.0
+    Copyright (C) The HyperSpy developers
+    Both licensed under the GNU General Public License v3.0 or later
+
+The element table in Sources/SpectroCore/Spectroscopy/Quant/QuantElementData.swift
+(atomic weights and densities) comes from eXSpy's elements data (GPL-3.0-or-later).
+
+The Velox EMD reader follows rosettasciio's (https://github.com/hyperspy/rosettasciio,
+commit 049e7d70, GPL-3.0-or-later) reading of the format and is compared with it.
+
+
+================================================================================
+NIST EPQ data (EDX quantification)
+================================================================================
+
+Sources/SpectroCore/Resources/Spectroscopy/FFastMAC.csv (mass absorption
+coefficients) and LineWeights.csv (X-ray line weights) are copied verbatim from the
+NIST EPQ library, https://github.com/usnistgov/EPQ, commit 249dd3f8. The EPQ licence
+(LicenseFile.txt) reads:
+
+    This software was developed by employees of the National Institute of Standards
+    and Technology (NIST), an agency of the Federal Government. Pursuant to title 17
+    United States Code Section 105, works of NIST employees are not subject to
+    copyright protection in the United States and are considered to be in the public
+    domain. Permission to freely use, copy, modify, and distribute this software and
+    its documentation without fee is hereby granted, provided that this notice and
+    disclaimer of warranty appears in all copies.
+    THE SOFTWARE IS PROVIDED 'AS IS' WITHOUT ANY WARRANTY OF ANY KIND, EITHER
+    EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY THAT
+    THE SOFTWARE WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND FREEDOM FROM INFRINGEMENT,
+    AND ANY WARRANTY THAT THE DOCUMENTATION WILL CONFORM TO THE SOFTWARE, OR ANY
+    WARRANTY THAT THE SOFTWARE WILL BE ERROR FREE. IN NO EVENT SHALL NIST BE LIABLE FOR
+    ANY DAMAGES, INCLUDING, BUT NOT LIMITED TO, DIRECT, INDIRECT, SPECIAL OR
+    CONSEQUENTIAL DAMAGES, ARISING OUT OF, RESULTING FROM, OR IN ANY WAY CONNECTED WITH
+    THIS SOFTWARE, WHETHER OR NOT BASED UPON WARRANTY, CONTRACT, TORT, OR OTHERWISE,
+    WHETHER OR NOT INJURY WAS SUSTAINED BY PERSONS OR PROPERTY OR OTHERWISE, AND
+    WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT OF THE RESULTS OF, OR USE OF,
+    THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
+
+Also from EPQ, for computed k-factors (labelled unvalidated): SalvatXionA.csv,
+SalvatXionB.csv and xionUis.csv (the Bote-Salvat inner-shell ionisation
+cross-section coefficients and edge energies; EPQ's AbsoluteIonizationCrossSection.java
+credits D. Bote, F. Salvat, A. Jablonski and C. J. Powell, September 2008, under the
+same 17 USC 105 notice; Bote and Salvat, Phys. Rev. A 77, 042701 (2008); Bote et al.,
+At. Data Nucl. Data Tables 95, 871 (2009)), and Krause1979.csv (fluorescence yields
+from M. O. Krause, J. Phys. Chem. Ref. Data 8, 307 (1979), as tabulated in EPQ;
+third-party measured data carried with its citation, its own terms unverified - a
+recorded risk like FFAST below).
+
+FFAST: the mass absorption coefficients inside EPQ are the FFAST tabulation (NIST
+Standard Reference Database 66, Chantler et al.); their own terms were flagged as
+unclear by mac4DSTEM's v5.0 research and are carried here as a recorded risk.
+
+
+================================================================================
+HDF5 (not distributed)
+================================================================================
+
+The Velox reader calls HDF5 (https://www.hdfgroup.org/, copyright The HDF Group and
+the Board of Trustees of the University of Illinois, BSD-style license) through
+dlopen at run time. SpectroKit neither links nor ships libhdf5: the host application
+supplies it (mac4DSTEM embeds HDF5 2.1.1 with libaec/libsz in its bundle) and carries
+its notice. The license texts are kept in Licenses/ for hosts and for the library's
+own tests: Licenses/HDF5-LICENSE.txt, Licenses/libaec-LICENSE.txt.

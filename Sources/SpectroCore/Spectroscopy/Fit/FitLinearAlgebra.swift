@@ -7,11 +7,12 @@
 //        equations are ever formed (a 6th-order polynomial beside Gaussian lines is
 //        ill-conditioned enough squared).
 //
-//  The non-deprecated `__LAPACK_int` declarations are behind -DACCELERATE_NEW_LAPACK
-//  (Package.swift and the Xcode project's OTHER_SWIFT_FLAGS), as in DiffractionEmbedding.
+//  The routines are reached through `CSpectroLAPACK`, plain-C wrappers over Accelerate's
+//  non-deprecated `__LAPACK_int` interface (SpectroKit S3): the wrappers take values and
+//  return `info`, and this file imports no Accelerate, so no `-DACCELERATE_NEW_LAPACK` flag.
 //
 
-import Accelerate
+internal import CSpectroLAPACK
 import Foundation
 
 /// A dense column-major matrix of doubles.
@@ -90,19 +91,16 @@ package nonisolated enum FitLinearAlgebra {
         let ldb = max(m, n)
         var bBuf = [Double](repeating: 0, count: ldb * nrhs)
         for c in 0..<nrhs { for i in 0..<m { bBuf[c * ldb + i] = b.data[c * m + i] } }
-        var jpvt = [__LAPACK_int](repeating: 0, count: n)
-        var mm = __LAPACK_int(m), nn = __LAPACK_int(n), nr = __LAPACK_int(nrhs)
-        var lda = __LAPACK_int(m), ldbb = __LAPACK_int(ldb)
-        var rc = rcond
-        var rank = __LAPACK_int(0)
-        var info = __LAPACK_int(0)
-        var lwork = __LAPACK_int(-1)
+        var jpvt = [Int32](repeating: 0, count: n)
+        let mm = Int32(m), nn = Int32(n), nr = Int32(nrhs)
+        let lda = Int32(m), ldbb = Int32(ldb)
+        var rank = Int32(0)
         var query = [Double](repeating: 0, count: 1)
-        dgelsy_(&mm, &nn, &nr, &aBuf, &lda, &bBuf, &ldbb, &jpvt, &rc, &rank, &query, &lwork, &info)
+        var info = sk_dgelsy(mm, nn, nr, &aBuf, lda, &bBuf, ldbb, &jpvt, rcond, &rank, &query, -1)
         guard info == 0, query[0].isFinite, query[0] >= 1 else { return nil }
-        lwork = __LAPACK_int(query[0])
+        let lwork = Int32(query[0])
         var work = [Double](repeating: 0, count: Int(lwork))
-        dgelsy_(&mm, &nn, &nr, &aBuf, &lda, &bBuf, &ldbb, &jpvt, &rc, &rank, &work, &lwork, &info)
+        info = sk_dgelsy(mm, nn, nr, &aBuf, lda, &bBuf, ldbb, &jpvt, rcond, &rank, &work, lwork)
         guard info == 0 else { return nil }
         var x = [Double](repeating: 0, count: n * nrhs)
         for c in 0..<nrhs { for i in 0..<n { x[c * n + i] = bBuf[c * ldb + i] } }
@@ -117,16 +115,14 @@ package nonisolated enum FitLinearAlgebra {
         let m = a.rows, n = a.cols
         guard n > 0, m >= n else { return nil }
         var buf = a.data
-        var mm = __LAPACK_int(m), nn = __LAPACK_int(n), lda = __LAPACK_int(m)
-        var info = __LAPACK_int(0)
+        let mm = Int32(m), nn = Int32(n), lda = Int32(m)
         var tau = [Double](repeating: 0, count: n)
-        var lwork = __LAPACK_int(-1)
         var query = [Double](repeating: 0, count: 1)
-        dgeqrf_(&mm, &nn, &buf, &lda, &tau, &query, &lwork, &info)
+        var info = sk_dgeqrf(mm, nn, &buf, lda, &tau, &query, -1)
         guard info == 0 else { return nil }
-        lwork = max(__LAPACK_int(query[0]), __LAPACK_int(n))
+        var lwork = max(Int32(query[0]), Int32(n))
         var work = [Double](repeating: 0, count: Int(lwork))
-        dgeqrf_(&mm, &nn, &buf, &lda, &tau, &work, &lwork, &info)
+        info = sk_dgeqrf(mm, nn, &buf, lda, &tau, &work, lwork)
         guard info == 0 else { return nil }
         // R (upper triangle of the n x n block) and its conditioning.
         var r = [Double](repeating: 0, count: n * n)
@@ -138,17 +134,14 @@ package nonisolated enum FitLinearAlgebra {
         guard dmax > 0, dmin / dmax > 1e-10 else { return nil }
         // Q (m x n explicit) from the reflectors.
         var q = buf
-        lwork = -1
-        dorgqr_(&mm, &nn, &nn, &q, &lda, &tau, &query, &lwork, &info)
+        info = sk_dorgqr(mm, nn, nn, &q, lda, &tau, &query, -1)
         guard info == 0 else { return nil }
-        lwork = max(__LAPACK_int(query[0]), __LAPACK_int(n))
+        lwork = max(Int32(query[0]), Int32(n))
         work = [Double](repeating: 0, count: Int(lwork))
-        dorgqr_(&mm, &nn, &nn, &q, &lda, &tau, &work, &lwork, &info)
+        info = sk_dorgqr(mm, nn, nn, &q, lda, &tau, &work, lwork)
         guard info == 0 else { return nil }
         // R^-1 in place.
-        var uplo = Int8(UInt8(ascii: "U")), diag = Int8(UInt8(ascii: "N"))
-        var ldr = __LAPACK_int(n)
-        dtrtri_(&uplo, &diag, &nn, &r, &ldr, &info)
+        info = sk_dtrtri(CChar(UInt8(ascii: "U")), CChar(UInt8(ascii: "N")), nn, &r, Int32(n))
         guard info == 0 else { return nil }
         // gram^-1 = R^-1 R^-T (upper-triangular R^-1).
         var gi = [Double](repeating: 0, count: n * n)
