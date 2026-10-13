@@ -35,11 +35,13 @@ the library's own full rules replace it.
   library's prefix: `SpectroCore` (shared spectrum machinery), `SpectroEDX`, `SpectroEELS` (later).
 - **Public at the first tag** (`0.1.0`), the owner's decision of 2026-10-12. Pushing and making it public are the owner's.
 - One session per repo. `main` only, commit by explicit paths.
-- **Suite board** (`https://claude.ai/artifact/EdMG2EVb6t9ah3SmbrVykv`): at closeout, update only this repo's row, document
-  `lanes/spectrokit`, with `ArtifactData` `update` pinned to the version just read: `step` {label, status
-  done|running|next|blocked|waiting, detail}, `now`, `next`, `waitsOn`, `session` (open|idle), `head`, `unpushed`, `tests`,
-  `waiting` (the owner's to-dos), `done` (newest first, {date, text, ref}), `open`, `updatedAt` (UTC ISO), `updatedBy`.
-  A cloud routine refreshes every row from GitHub at 07:00 Berlin; it never touches `session` or `unpushed`.
+- **Suite board** (`https://claude.ai/artifact/EdMG2EVb6t9ah3SmbrVykv`, the owner's one view of mac4DSTEM, SpectroKit and
+  macTEM): at closeout update only this repo's row, `lanes/spectrokit`, with `ArtifactData` `update` pinned to the version just
+  read: `step` {label, status done|running|next|blocked|waiting, detail}, `now`, `next`, `waitsOn`, `session` (open|idle),
+  `head`, `unpushed`, `tests`, `waiting` (the owner's to-dos, {text, size}), `done` (newest first, {date, text, ref}), `open`,
+  `pickup` {prompt: the exact prompt the owner pastes to start the next session, provide: what the owner must bring or decide
+  first}, `updatedAt` (UTC ISO), `updatedBy`. A cloud routine refreshes the rows from GitHub daily at 05:00 UTC and never
+  touches `session` or `unpushed`.
 
 ## The slots
 
