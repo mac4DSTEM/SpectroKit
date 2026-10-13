@@ -1,0 +1,1566 @@
+{
+ "generator": "tools/edx-pins/quant_pins.py; exspy 7185a4d1 (2026-10-02), hyperspy 2.4.0, rosettasciio 0.14.0",
+ "minIntensity": 0.1,
+ "cases": [
+  {
+   "name": "fept_bw5_2",
+   "source": "EDS_TEM_FePt_nanoparticles, background_windows line_width=[5,2]",
+   "lines": [
+    "Fe_Ka",
+    "Pt_La"
+   ],
+   "elements": [
+    "Fe",
+    "Pt"
+   ],
+   "lineEnergiesKeV": [
+    6.4039,
+    9.4421
+   ],
+   "intensities": [
+    2754.0,
+    15090.0
+   ],
+   "takeOffDegrees": 22.0,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.450226,
+      5.075602
+     ],
+     "absorption": false,
+     "label": "doc k-factors",
+     "weightPercent": [
+      4.95617604780727,
+      95.04382395219274
+     ],
+     "atomicPercent": [
+      15.409296644670983,
+      84.59070335532903
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.450226,
+      5.075602
+     ],
+     "absorption": true,
+     "label": "CL absorption 50.0 nm",
+     "thicknessNm": 50.0,
+     "weightPercent": [
+      5.0757455103324265,
+      94.92425448966758
+     ],
+     "atomicPercent": [
+      15.739289313196853,
+      84.26071068680315
+     ],
+     "massThickness": 0.0010209594736677236,
+     "iterations": 2,
+     "fixedPointWeightPercent": [
+      5.07539428255275,
+      94.92460571744724
+     ],
+     "fixedPointMassThickness": 0.001020961794580891,
+     "fixedPointIterations": 6
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.450226,
+      5.075602
+     ],
+     "absorption": true,
+     "label": "CL absorption 200.0 nm",
+     "thicknessNm": 200.0,
+     "weightPercent": [
+      5.43548881489311,
+      94.56451118510688
+     ],
+     "atomicPercent": [
+      16.72167449099892,
+      83.27832550900108
+     ],
+     "massThickness": 0.004074329159644744,
+     "iterations": 2,
+     "fixedPointWeightPercent": [
+      5.429804142890515,
+      94.57019585710948
+     ],
+     "fixedPointMassThickness": 0.004074479416895118,
+     "fixedPointIterations": 8
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      628.1,
+      539.89
+     ],
+     "absorption": false,
+     "label": "doc dose 0.5 nA 1.5 s",
+     "beamCurrentNA": 0.5,
+     "liveTimeS": 1.5,
+     "dose": 4681131805.845572,
+     "weightPercent": [
+      17.513770628986173,
+      82.48622937101383
+     ],
+     "atomicPercent": [
+      42.585240970498226,
+      57.414759029501774
+     ],
+     "massThickness": 0.0021099016027846976,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      628.1,
+      539.89
+     ],
+     "absorption": true,
+     "label": "doc dose 0.5 nA 1.5 s",
+     "beamCurrentNA": 0.5,
+     "liveTimeS": 1.5,
+     "dose": 4681131805.845572,
+     "weightPercent": [
+      18.113123767411373,
+      81.88687623258863
+     ],
+     "atomicPercent": [
+      43.589186825996215,
+      56.41081317400379
+     ],
+     "massThickness": 0.0022113308255853927,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      18.114143294567967,
+      81.88585670543202
+     ],
+     "fixedPointMassThickness": 0.002211557138427111,
+     "fixedPointIterations": 10
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      628.1,
+      539.89
+     ],
+     "absorption": false,
+     "label": "test dose 0.05 nA 2.5 s",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      17.513770628986173,
+      82.48622937101383
+     ],
+     "atomicPercent": [
+      42.585240970498226,
+      57.414759029501774
+     ],
+     "massThickness": 0.012659409616708188,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      628.1,
+      539.89
+     ],
+     "absorption": true,
+     "label": "test dose 0.05 nA 2.5 s",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      21.596621520722632,
+      78.40337847927736
+     ],
+     "atomicPercent": [
+      49.03812146377612,
+      50.96187853622388
+     ],
+     "massThickness": 0.018127602501123097,
+     "iterations": 4,
+     "fixedPointWeightPercent": [
+      21.69733771521364,
+      78.30266228478636
+     ],
+     "fixedPointMassThickness": 0.018359141979759446,
+     "fixedPointIterations": 25
+    }
+   ]
+  },
+  {
+   "name": "fept_raw",
+   "source": "EDS_TEM_FePt_nanoparticles, default windows",
+   "lines": [
+    "Fe_Ka",
+    "Pt_La"
+   ],
+   "elements": [
+    "Fe",
+    "Pt"
+   ],
+   "lineEnergiesKeV": [
+    6.4039,
+    9.4421
+   ],
+   "intensities": [
+    3710.0,
+    15872.0
+   ],
+   "takeOffDegrees": 22.0,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.450226,
+      5.075602
+     ],
+     "absorption": false,
+     "label": "doc k-factors",
+     "weightPercent": [
+      6.2605539810148905,
+      93.73944601898509
+     ],
+     "atomicPercent": [
+      18.91718660251445,
+      81.08281339748555
+     ],
+     "massThickness": null,
+     "iterations": null
+    }
+   ]
+  },
+  {
+   "name": "synth2_AlZn",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Zn_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Zn"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    8.6389
+   ],
+   "intensities": [
+    12000.0,
+    8000.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      2.0009344042484134
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      42.84570422626992,
+      57.15429577373009
+     ],
+     "atomicPercent": [
+      64.49500433844939,
+      35.504995661550595
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      2.0009344042484134
+     ],
+     "absorption": true,
+     "label": "CL absorption 1.0 nm",
+     "thicknessNm": 1.0,
+     "weightPercent": [
+      42.87770605531089,
+      57.122293944689105
+     ],
+     "atomicPercent": [
+      64.52492087576378,
+      35.475079124236224
+     ],
+     "massThickness": 5.236229851144196e-06,
+     "iterations": 2,
+     "fixedPointWeightPercent": [
+      42.8776815688765,
+      57.122318431123496
+     ],
+     "fixedPointMassThickness": 5.236230938341884e-06,
+     "fixedPointIterations": 5
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      2.0009344042484134
+     ],
+     "absorption": true,
+     "label": "CL absorption 300.0 nm",
+     "thicknessNm": 300.0,
+     "weightPercent": [
+      50.49600594142443,
+      49.50399405857558
+     ],
+     "atomicPercent": [
+      71.19563173985794,
+      28.804368260142063
+     ],
+     "massThickness": 0.0014693932008602267,
+     "iterations": 4,
+     "fixedPointWeightPercent": [
+      50.441254420412065,
+      49.55874557958793
+     ],
+     "fixedPointMassThickness": 0.001470122491120111,
+     "fixedPointIterations": 18
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      50.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      37.5,
+      62.5
+     ],
+     "atomicPercent": [
+      59.248260642613815,
+      40.75173935738619
+     ],
+     "massThickness": 0.0008203144366079999,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      50.0
+     ],
+     "absorption": true,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      42.67721625957865,
+      57.32278374042136
+     ],
+     "atomicPercent": [
+      64.33721572715082,
+      35.66278427284918
+     ],
+     "massThickness": 0.0008973279723067529,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      42.67919214565698,
+      57.32080785434302
+     ],
+     "fixedPointMassThickness": 0.0008973627185956502,
+     "fixedPointIterations": 9
+    }
+   ]
+  },
+  {
+   "name": "synth3_AlCrNi",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Cr_Ka",
+    "Ni_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Cr",
+    "Ni"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    5.4147,
+    7.4781
+   ],
+   "intensities": [
+    9000.0,
+    4000.0,
+    15000.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      22.123893805309734,
+      14.454277286135692,
+      63.421828908554566
+     ],
+     "atomicPercent": [
+      37.63870099561956,
+      12.760432192566036,
+      49.6008668118144
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": true,
+     "label": "CL absorption 100.0 nm",
+     "thicknessNm": 100.0,
+     "weightPercent": [
+      25.2468201153153,
+      13.90233469012386,
+      60.850845194560854
+     ],
+     "atomicPercent": [
+      41.77566939375035,
+      11.937143440961512,
+      46.287187165288145
+     ],
+     "massThickness": 0.0007094884129919837,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      25.260067118160684,
+      13.899821824739146,
+      60.84011105710017
+     ],
+     "fixedPointMassThickness": 0.0007094106183443196,
+     "fixedPointIterations": 11
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": true,
+     "label": "CL absorption 400.0 nm",
+     "thicknessNm": 400.0,
+     "weightPercent": [
+      32.84134353917471,
+      12.569067992612826,
+      54.589588468212455
+     ],
+     "atomicPercent": [
+      50.94949767564464,
+      10.11854359869871,
+      38.93195872565664
+     ],
+     "massThickness": 0.002658795308391455,
+     "iterations": 5,
+     "fixedPointWeightPercent": [
+      32.87531404428843,
+      12.562614215287502,
+      54.56207174042408
+     ],
+     "fixedPointMassThickness": 0.002657997393921717,
+     "fixedPointIterations": 20
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      50.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      16.822429906542055,
+      13.084112149532709,
+      70.09345794392523
+     ],
+     "atomicPercent": [
+      30.129285462197924,
+      12.160188404773487,
+      57.710526133028594
+     ],
+     "massThickness": 0.001371463198704,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      50.0
+     ],
+     "absorption": true,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      22.591065206049176,
+      12.235412280708418,
+      65.1735225132424
+     ],
+     "atomicPercent": [
+      38.35451240740221,
+      10.779392994786294,
+      50.8660945978115
+     ],
+     "massThickness": 0.0014913607618007088,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      22.59632607575152,
+      12.234758060473828,
+      65.16891586377466
+     ],
+     "fixedPointMassThickness": 0.001491499190933987,
+     "fixedPointIterations": 10
+    }
+   ]
+  },
+  {
+   "name": "synth4_AlCrFeNi",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Cr_Ka",
+    "Fe_Ka",
+    "Ni_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Cr",
+    "Fe",
+    "Ni"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    5.4147,
+    6.4039,
+    7.4781
+   ],
+   "intensities": [
+    9000.0,
+    4000.0,
+    7000.0,
+    15000.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.35,
+      1.72
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      17.953321364452425,
+      11.729503291442251,
+      18.850987432675044,
+      51.46618791143028
+     ],
+     "atomicPercent": [
+      31.604085896675148,
+      10.714551364019982,
+      16.033005760870246,
+      41.64835697843462
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.35,
+      1.72
+     ],
+     "absorption": true,
+     "label": "CL absorption 100.0 nm",
+     "thicknessNm": 100.0,
+     "weightPercent": [
+      20.713663025588332,
+      11.328701223550762,
+      18.20492813761339,
+      49.75270761324752
+     ],
+     "atomicPercent": [
+      35.55414626266907,
+      10.09042391511937,
+      15.09748938404139,
+      39.25794043817018
+     ],
+     "massThickness": 0.0007233565404796177,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      20.721852112183274,
+      11.327411736819727,
+      18.20298288292489,
+      49.74775326807211
+     ],
+     "fixedPointMassThickness": 0.0007233099938359247,
+     "fixedPointIterations": 11
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.35,
+      1.72
+     ],
+     "absorption": true,
+     "label": "CL absorption 400.0 nm",
+     "thicknessNm": 400.0,
+     "weightPercent": [
+      27.784789673432996,
+      10.319630263076371,
+      16.559907429940356,
+      45.33567263355028
+     ],
+     "atomicPercent": [
+      44.82742692789587,
+      8.639662472740154,
+      12.908536838823098,
+      33.62437376054088
+     ],
+     "massThickness": 0.002731775900478603,
+     "iterations": 5,
+     "fixedPointWeightPercent": [
+      27.802792062536124,
+      10.316835031817146,
+      16.555656020636018,
+      45.32471688501073
+     ],
+     "fixedPointMassThickness": 0.002731366216856742,
+     "fixedPointIterations": 19
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      42.0,
+      50.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      13.196480938416421,
+      10.263929618768328,
+      21.55425219941349,
+      54.98533724340176
+     ],
+     "atomicPercent": [
+      24.341704714375663,
+      9.824319126039374,
+      19.20915368233248,
+      46.62482247725248
+     ],
+     "massThickness": 0.0017482951430207998,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      42.0,
+      50.0
+     ],
+     "absorption": true,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      19.32262629455895,
+      9.527258237546024,
+      19.978554207210752,
+      51.171561260684285
+     ],
+     "atomicPercent": [
+      33.638009927232495,
+      8.606528630515275,
+      16.803920268396304,
+      40.95154117385592
+     ],
+     "massThickness": 0.001922811569116648,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      19.332271221442035,
+      9.526311103847386,
+      19.976217276752248,
+      51.16520039795833
+     ],
+     "fixedPointMassThickness": 0.001923161865815533,
+     "fixedPointIterations": 11
+    }
+   ]
+  },
+  {
+   "name": "nearzero_first_below_floor",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Cr_Ka",
+    "Ni_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Cr",
+    "Ni"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    5.4147,
+    7.4781
+   ],
+   "intensities": [
+    0.05,
+    5000.0,
+    8000.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      0.0002368540102936753,
+      34.81753951317027,
+      65.18222363281944
+     ],
+     "atomicPercent": [
+      0.0004931167037182369,
+      37.61516660335528,
+      62.38434027994101
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": true,
+     "label": "CL absorption 100.0 nm",
+     "thicknessNm": 100.0,
+     "weightPercent": [
+      0.00030151447626053146,
+      34.776309376425516,
+      65.22338910909824
+     ],
+     "atomicPercent": [
+      0.0006277676011440124,
+      37.572505931044134,
+      62.42686630135472
+     ],
+     "massThickness": 0.0008293136132206112,
+     "iterations": 2,
+     "fixedPointWeightPercent": [
+      0.00030153466705996787,
+      34.77650486002591,
+      65.22319360530705
+     ],
+     "fixedPointMassThickness": 0.0008293132674802611,
+     "fixedPointIterations": 6
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      50.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      0.00017391274102131996,
+      30.434729678730992,
+      69.56509640852798
+     ],
+     "atomicPercent": [
+      0.000364043681881723,
+      33.05883065433984,
+      66.94080530197827
+     ],
+     "massThickness": 0.0007370025333813072,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      50.0
+     ],
+     "absorption": true,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      0.00021673627753731795,
+      30.41817533735901,
+      69.58160792636346
+     ],
+     "atomicPercent": [
+      0.00045369334498964457,
+      33.04151093886912,
+      66.95803536778588
+     ],
+     "massThickness": 0.0007429162213664818,
+     "iterations": 2,
+     "fixedPointWeightPercent": [
+      0.00021710968831015355,
+      30.418109260910203,
+      69.58167362940148
+     ],
+     "fixedPointMassThickness": 0.000742962967689256,
+     "fixedPointIterations": 6
+    }
+   ]
+  },
+  {
+   "name": "nearzero_first_above_floor",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Cr_Ka",
+    "Ni_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Cr",
+    "Ni"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    5.4147,
+    7.4781
+   ],
+   "intensities": [
+    0.11,
+    5000.0,
+    8000.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      0.0005210773416149893,
+      34.817440553365195,
+      65.18203836929321
+     ],
+     "atomicPercent": [
+      0.0010848503286863041,
+      37.61494402066881,
+      62.38397112900251
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": true,
+     "label": "CL absorption 100.0 nm",
+     "thicknessNm": 100.0,
+     "weightPercent": [
+      0.0006633287557273004,
+      34.776184159519104,
+      65.22315251172517
+     ],
+     "atomicPercent": [
+      0.0013810768767540645,
+      37.57222352198085,
+      62.42639540114239
+     ],
+     "massThickness": 0.0008293115884610547,
+     "iterations": 2,
+     "fixedPointWeightPercent": [
+      0.0006633729850384717,
+      34.77637979558983,
+      65.22295683142512
+     ],
+     "fixedPointMassThickness": 0.000829311242301906,
+     "fixedPointIterations": 6
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      50.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      0.00038260723176363506,
+      30.434666163016423,
+      69.56495122975183
+     ],
+     "atomicPercent": [
+      0.0008008926014210936,
+      33.05868623666957,
+      66.940512870729
+     ],
+     "massThickness": 0.0007370040714708757,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      50.0
+     ],
+     "absorption": true,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      0.00047681858688456173,
+      30.418096476805424,
+      69.5814267046077
+     ],
+     "atomicPercent": [
+      0.0009981199589717527,
+      33.04133131459235,
+      66.9576705654487
+     ],
+     "massThickness": 0.0007429181621061941,
+     "iterations": 2,
+     "fixedPointWeightPercent": [
+      0.00047764009189552183,
+      30.418030327810992,
+      69.58149203209712
+     ],
+     "fixedPointMassThickness": 0.0007429649141970477,
+     "fixedPointIterations": 6
+    }
+   ]
+  },
+  {
+   "name": "nearzero_middle_zero",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Cr_Ka",
+    "Ni_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Cr",
+    "Ni"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    5.4147,
+    7.4781
+   ],
+   "intensities": [
+    6000.0,
+    0.0,
+    8000.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      30.36437246963563,
+      0.0,
+      69.63562753036439
+     ],
+     "atomicPercent": [
+      48.679508247259605,
+      0.0,
+      51.3204917527404
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      1.47,
+      1.72
+     ],
+     "absorption": true,
+     "label": "CL absorption 100.0 nm",
+     "thicknessNm": 100.0,
+     "weightPercent": [
+      33.895140435649154,
+      0.0,
+      66.10485956435083
+     ],
+     "atomicPercent": [
+      52.72738507833665,
+      0.0,
+      47.27261492166335
+     ],
+     "massThickness": 0.00068037896817549,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      33.918365004941826,
+      0.0,
+      66.08163499505818
+     ],
+     "fixedPointMassThickness": 0.0006802347900493213,
+     "fixedPointIterations": 12
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      50.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      23.076923076923077,
+      0.0,
+      76.92307692307693
+     ],
+     "atomicPercent": [
+      39.48911034970415,
+      0.0,
+      60.51088965029585
+     ],
+     "massThickness": 0.0006665054797439999,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      35.0,
+      50.0
+     ],
+     "absorption": true,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      26.49948572639087,
+      0.0,
+      73.50051427360913
+     ],
+     "atomicPercent": [
+      43.954898681048256,
+      0.0,
+      56.04510131895175
+     ],
+     "massThickness": 0.0006999163592892861,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      26.500202291017327,
+      0.0,
+      73.49979770898267
+     ],
+     "fixedPointMassThickness": 0.0006999245105470266,
+     "fixedPointIterations": 8
+    }
+   ]
+  },
+  {
+   "name": "single_line_above_floor",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Zn_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Zn"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    8.6389
+   ],
+   "intensities": [
+    0.05,
+    8000.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      2.0009344042484134
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      0.0,
+      100.0
+     ],
+     "atomicPercent": [
+      0.0,
+      100.0
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      50.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      0.0002499993750015625,
+      99.999750000625
+     ],
+     "atomicPercent": [
+      0.0006057809092143615,
+      99.99939421909079
+     ],
+     "massThickness": 0.0005126978046213072,
+     "iterations": null
+    }
+   ]
+  },
+  {
+   "name": "no_line_above_floor",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Zn_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Zn"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    8.6389
+   ],
+   "intensities": [
+    0.05,
+    0.02
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.0,
+      2.0009344042484134
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      0.0,
+      0.0
+     ],
+     "atomicPercent": [
+      0.0,
+      0.0
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      50.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      50.0,
+      50.0
+     ],
+     "atomicPercent": [
+      70.78704078669386,
+      29.212959213306135
+     ],
+     "massThickness": 2.5634826143999997e-09,
+     "iterations": null
+    }
+   ]
+  },
+  {
+   "name": "criterion_split_3el",
+   "source": "synthetic",
+   "lines": [
+    "Cu_Ka",
+    "Mg_Ka",
+    "Ni_Ka"
+   ],
+   "elements": [
+    "Cu",
+    "Mg",
+    "Ni"
+   ],
+   "lineEnergiesKeV": [
+    8.0478,
+    1.2536,
+    7.4781
+   ],
+   "intensities": [
+    8778.0,
+    12544.0,
+    9366.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      0.923,
+      0.905,
+      1.179
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      26.566918477821766,
+      37.22447060897412,
+      36.20861091320411
+     ],
+     "atomicPercent": [
+      16.289387559032694,
+      59.673937656187356,
+      24.03667478477995
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      0.923,
+      0.905,
+      1.179
+     ],
+     "absorption": true,
+     "label": "CL absorption 100.0 nm",
+     "thicknessNm": 100.0,
+     "weightPercent": [
+      24.642536839875913,
+      41.75491316427487,
+      33.60254999584921
+     ],
+     "atomicPercent": [
+      14.479217663970248,
+      64.14456439807502,
+      21.376217937954742
+     ],
+     "massThickness": 0.0005917129830542275,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      24.611443864999863,
+      41.828273867520345,
+      33.5602822674798
+     ],
+     "fixedPointMassThickness": 0.0005911866136962592,
+     "fixedPointIterations": 14
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      30.0,
+      45.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      18.036677454153182,
+      38.66235167206041,
+      43.30097087378641
+     ],
+     "atomicPercent": [
+      10.865384300332575,
+      60.89328626053519,
+      28.24132943913223
+     ],
+     "massThickness": 0.00124758290136312,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      30.0,
+      45.0
+     ],
+     "absorption": true,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      15.023824967176452,
+      48.862946931756234,
+      36.1132281010673
+     ],
+     "atomicPercent": [
+      8.260471189401963,
+      70.24194915261414,
+      21.497579657983913
+     ],
+     "massThickness": 0.0015059892930583431,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      15.01941633343454,
+      48.87770297371347,
+      36.102880692852
+     ],
+     "fixedPointMassThickness": 0.0015064750387035807,
+     "fixedPointIterations": 11
+    }
+   ]
+  },
+  {
+   "name": "criterion_split_4el",
+   "source": "synthetic",
+   "lines": [
+    "Al_Ka",
+    "Fe_Ka",
+    "Ni_Ka",
+    "Zn_Ka"
+   ],
+   "elements": [
+    "Al",
+    "Fe",
+    "Ni",
+    "Zn"
+   ],
+   "lineEnergiesKeV": [
+    1.4865,
+    6.4039,
+    7.4781,
+    8.6389
+   ],
+   "intensities": [
+    29303.0,
+    6073.0,
+    1337.0,
+    1295.0
+   ],
+   "takeOffDegrees": 34.99999999999999,
+   "runs": [
+    {
+     "method": "CL",
+     "factors": [
+      1.812,
+      2.046,
+      1.868,
+      2.063
+     ],
+     "absorption": false,
+     "label": "",
+     "weightPercent": [
+      75.11092529589308,
+      17.57687823690813,
+      3.5329794623808706,
+      3.7792170048179057
+     ],
+     "atomicPercent": [
+      86.54632450660313,
+      9.785199329516043,
+      1.8713890014121408,
+      1.797087162468667
+     ],
+     "massThickness": null,
+     "iterations": null
+    },
+    {
+     "method": "CL",
+     "factors": [
+      1.812,
+      2.046,
+      1.868,
+      2.063
+     ],
+     "absorption": true,
+     "label": "CL absorption 600.0 nm",
+     "thicknessNm": 600.0,
+     "weightPercent": [
+      78.4165829620449,
+      15.240297398067588,
+      3.072866345688153,
+      3.2702532941993536
+     ],
+     "atomicPercent": [
+      88.56413754491714,
+      8.316217550746797,
+      1.5954055487766983,
+      1.5242393555593612
+     ],
+     "massThickness": 0.002294697465827273,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      78.48636107521986,
+      15.190043617918574,
+      3.0635082867087435,
+      3.260087020152816
+     ],
+     "fixedPointMassThickness": 0.0022925179889548624,
+     "fixedPointIterations": 15
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      42.0,
+      50.0,
+      60.0
+     ],
+     "absorption": false,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      59.457671689277205,
+      25.877265957576324,
+      6.7821474805108375,
+      7.882914872635633
+     ],
+     "atomicPercent": [
+      75.90543571972835,
+      15.961209000619997,
+      3.9802435902994886,
+      4.153111689352159
+     ],
+     "massThickness": 0.0012633816447156672,
+     "iterations": null
+    },
+    {
+     "method": "zeta",
+     "factors": [
+      20.0,
+      42.0,
+      50.0,
+      60.0
+     ],
+     "absorption": true,
+     "label": "",
+     "beamCurrentNA": 0.05,
+     "liveTimeS": 2.5,
+     "dose": 780188634.3075954,
+     "weightPercent": [
+      63.699173381539055,
+      23.13906062492914,
+      6.097123084018281,
+      7.064642909513527
+     ],
+     "atomicPercent": [
+      79.0339965686418,
+      13.871016463709726,
+      3.4776234262674457,
+      3.6173635413810388
+     ],
+     "massThickness": 0.0014279407053180491,
+     "iterations": 3,
+     "fixedPointWeightPercent": [
+      63.70626869476623,
+      23.13465621312549,
+      6.095920069870309,
+      7.063155022237956
+     ],
+     "fixedPointMassThickness": 0.0014282874286035622,
+     "fixedPointIterations": 10
+    }
+   ]
+  }
+ ]
+}
