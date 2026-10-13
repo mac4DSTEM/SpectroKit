@@ -1,5 +1,5 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// v5.0 WP1: the Velox EMD spectrum-image reader. None of these needs References data: the
 /// decode is tested on synthetic streams, the metadata parser on a JSON literal, and the file

@@ -1,5 +1,5 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// v5.0 WP2 lane C: the spectral basics ported from eXSpy 7185a4d1 / HyperSpy 2.4.0.
 /// Every expected number in `Fixtures/eds-pins-exspy-7185a4d1.json` was produced by RUNNING eXSpy
@@ -17,7 +17,7 @@ final class SpectroscopyCoreTests: XCTestCase {
         let counts: [UInt64]
     }
 
-    private static let pins: [String: Any] = {
+    nonisolated(unsafe) private static let pins: [String: Any] = {   // written once, read only
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .appendingPathComponent("Fixtures/eds-pins-exspy-7185a4d1.json")
         // JSONDecoder, not JSONSerialization: the latter parses 17-digit doubles up to 1 ulp off

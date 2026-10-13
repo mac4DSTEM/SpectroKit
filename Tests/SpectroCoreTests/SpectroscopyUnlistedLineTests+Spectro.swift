@@ -1,7 +1,7 @@
 // SpectroKit S1 test partition (ADR 064 section 3.3): the methods of SpectroscopyUnlistedLineTests that move with the EDX core;
 // the rest stay in SpectroscopyUnlistedLineTests.swift. Helpers are duplicated, not shared, across the split.
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// WP3b F1 (docs/archive/v5/wp3b-fit-robustness-preregistration-2026-10-06.md, P4 and P5): after a Quantify fit the
 /// proposer names every unlisted line at or above L_D (sum-peak questions included), and at% is withheld only when fitting

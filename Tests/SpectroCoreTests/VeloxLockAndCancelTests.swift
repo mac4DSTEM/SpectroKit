@@ -1,5 +1,5 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// SpectroKit S0 (ADR 064, amendment (2)): the HDF5 lock is taken per call inside `VeloxFile`, so a long Velox read holds
 /// it for one block at most; the long calls take `cancelled:` / `progress:`; the library lookup is injectable. All on

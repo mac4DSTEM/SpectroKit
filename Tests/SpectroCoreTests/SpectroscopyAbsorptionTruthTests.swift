@@ -1,5 +1,5 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// v5.0 lane A4: the absorption correction against the simulator's TRUTH geometry (open item "The absorption test checks
 /// plumbing only"). Pool: 1e4 identical recipe-A matrix pixels of `tools/demo-edx/forward.py` (Al 98.8 / Mg 0.6 / Si 0.6 at%,
@@ -29,8 +29,8 @@ import DSTEMCore
 /// 402 + 3 x 33 = 501 counts as an envelope; it is MEASURED for Mg only and ASSUMED to bound Si here).
 final class SpectroscopyAbsorptionTruthTests: XCTestCase {
 
-    static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        .appendingPathComponent("mac4DSTEM/Resources/Spectroscopy")
+    static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Sources/SpectroCore/Resources/Spectroscopy")
     static let tables = try! QuantificationTables(directory: resources)
 
     private struct Pool: Decodable {

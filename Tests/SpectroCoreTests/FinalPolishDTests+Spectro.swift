@@ -1,7 +1,7 @@
 // SpectroKit S1 test partition (ADR 064 section 3.3): the methods of FinalPolishDTests that move with the EDX core;
 // the rest stay in FinalPolishDTests.swift. Helpers are duplicated, not shared, across the split.
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// Slot 4⅞ lane D (owner card Q1 = a, 2026-10-04): a DM4 whose disk has been
 /// disconnected refuses with `DM4Error.volumeGone` instead of dying with a

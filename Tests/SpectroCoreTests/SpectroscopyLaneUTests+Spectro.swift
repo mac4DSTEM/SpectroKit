@@ -1,15 +1,15 @@
 // SpectroKit S1 test partition (ADR 064 section 3.3): the methods of SpectroscopyLaneUTests that move with the EDX core;
 // the rest stay in SpectroscopyLaneUTests.swift. Helpers are duplicated, not shared, across the split.
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// v5.0 lane U: the first drive's wiring, text and presentation findings (docs/archive/v5/room-drive-2026-10-06.md, 3-13).
 /// Each test names the mutation that must turn it red.
-@MainActor
 /// The app labels a voltage supplied by the same run's 4D cube this way (Core/Data/GMSFourDRegistration.swift, which stays in
 /// mac4DSTEM); the library sees only `.supplied(label:)`, so these moving tests name the value, not the app's constant.
 private let suppliedCube = BeamEnergySource.supplied(label: "the 4D cube, same run")
 
+@MainActor
 final class SpectroscopyLaneUSpectro: XCTestCase {
 
     private typealias Q = SpectroscopyQuantifySpectro

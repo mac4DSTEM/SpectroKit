@@ -1,5 +1,5 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// v5.0 WP3 lane T: the counting-statistics layer (Garwood, Currie, named sigma
 /// terms, live-time normalisation, coverage). Reference values for the gamma and

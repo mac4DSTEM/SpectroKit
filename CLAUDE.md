@@ -1,7 +1,7 @@
 # CLAUDE.md — start here
 
 SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS now, EELS later), imported by tagged
-version by mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. **Extraction in progress (S2).** This file is a pointer until
+version by mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. **Extracted (S2 done); S3 next.** This file is a pointer until
 the library's own full rules replace it.
 
 ## Read first
@@ -38,12 +38,17 @@ the library's own full rules replace it.
 
 ## The slots
 
-- **S2 (this repo, now)**: `git filter-repo` extraction from `5ba712a0`, merge into `main`. `Package.swift`: one
+- **S2 (this repo, done)**: `git filter-repo` extraction from `5ba712a0`, merge into `main`. `Package.swift`: one
   `SpectroCore` target for now, Swift 6 language mode, nonisolated default; the old `-DACCELERATE_NEW_LAPACK`
   `unsafeFlags` still present, only until S3. `Bundle.module` for the six CSVs; `#filePath` fixture paths. `swift test`
   passes exactly the 258 names. The golden baseline (mac4DSTEM's `SpectroGoldenTests`, recorded at `71929a01`) matches
   byte for byte for the scenarios the library can reach.
-- **S3 (this repo)**: LAPACK C shim, no `unsafeFlags`; the Debug `-O` decision; a throwaway remote consumer resolves;
+  **Done 2026-10-13**: `tools/test.sh` (= `swift test` with mac4DSTEM's vendored libhdf5/libsz/libaec, taken by
+  `git show` at `5ba712a0` into `.build/hdf5`; the library has no libhdf5 of its own, the host supplies it): 258 / 0
+  failed / 0 skipped, names equal to the partition's list; `SpectroGoldenTests` 6 of mac4DSTEM's 7 scenarios
+  byte-identical (`demo-spectrum-fixture` is the app's demo source and stays there), red on a one-character baseline
+  mutation. Zero warnings in Swift 6. Open for S3: where the library's own tests and CI get libhdf5.
+- **S3 (this repo, next)**: LAPACK C shim, no `unsafeFlags`; the Debug `-O` decision; a throwaway remote consumer resolves;
   ζ stays `package` (not public in 0.1.0); tag `0.1.0` locally.
 - **S4 (mac4DSTEM)**: the switch to the tag.
 - **Then**: the per-stage exSpy gates (counts, energy axis, background, peak ID, Cliff–Lorimer, ζ, absorption), which

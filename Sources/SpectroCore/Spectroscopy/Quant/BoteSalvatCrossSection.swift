@@ -66,7 +66,8 @@ package nonisolated struct BoteSalvatCrossSection: IonisationCrossSection {
         self.init(tableA: try read("SalvatXionA.csv"), tableB: try read("SalvatXionB.csv"), edges: try read("xionUis.csv"))
     }
 
-    package static func bundled(in bundle: Bundle = .main) -> BoteSalvatCrossSection? {
+    package static func bundled(in bundle: Bundle? = nil) -> BoteSalvatCrossSection? {
+        let bundle = bundle ?? .module   // SpectroKit's own copy (Resources/Spectroscopy); an app may pass its own bundle
         guard let url = bundle.url(forResource: "xionUis", withExtension: "csv", subdirectory: "Spectroscopy")
             ?? bundle.url(forResource: "xionUis", withExtension: "csv") else { return nil }
         return try? BoteSalvatCrossSection(directory: url.deletingLastPathComponent())

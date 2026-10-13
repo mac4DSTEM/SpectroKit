@@ -1,5 +1,5 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// A Velox file's metadata row count comes out of the file; a corrupt or hostile one must be refused before it is allocated.
 /// The 8.9 kB file (raw-deflate base64, like the other Velox fixtures) holds a Version dataset and one SpectrumStream whose

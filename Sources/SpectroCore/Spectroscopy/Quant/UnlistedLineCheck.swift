@@ -267,7 +267,7 @@ public nonisolated enum UnlistedLineChecker {
         refit.method.elements += elements.map { .init(symbol: $0.element, role: .fitOnly, isManual: false) }
         refit.refinement = q.refinement
         let after: PooledQuantification
-        do { after = try PooledQuantifier.run(refit, tables: nil, cancelled: cancelled, progress: progress.map { p in { p($0 * 0.95) } }) }
+        do { after = try PooledQuantifier.run(refit, tables: nil, cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(f * 0.95) } }) }
         catch let c as SpectroCancelled { throw c }
         catch { progress?(1); return .init(candidates: candidates, moves: [], failure: (error as? LocalizedError)?.errorDescription ?? "\(error)") }
 

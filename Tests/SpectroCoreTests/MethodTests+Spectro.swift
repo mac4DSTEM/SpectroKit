@@ -7,7 +7,7 @@
 //  catches; each was broken once.
 //
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 @MainActor
 final class QuantificationMethodSpectro: XCTestCase {

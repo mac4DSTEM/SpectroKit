@@ -6,7 +6,7 @@
 //  Every test names the mutation it catches.
 //
 
-import DSTEMCore
+import SpectroCore
 import XCTest
 
 @MainActor

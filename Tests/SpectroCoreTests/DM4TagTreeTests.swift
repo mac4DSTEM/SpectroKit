@@ -1,5 +1,5 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// `DM4Experiment.tagTree(data:)` reads a BARE DM tag stream: the DM4 stream DigitalMicrograph stores in private TIFF
 /// tag 65027, whose root group is the image's ImageTags (no ImageList). Fixture `dm-tag65027-saved-with-DM.dm4` is that

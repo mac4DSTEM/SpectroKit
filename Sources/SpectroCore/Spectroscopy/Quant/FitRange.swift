@@ -159,7 +159,7 @@ public nonisolated enum FitRangeSensitivityCheck {
         refit.method.fitToKeV = to
         refit.refinement = q.refinement
         let after: PooledQuantification
-        do { after = try PooledQuantifier.run(refit, tables: nil, cancelled: cancelled, progress: progress.map { p in { p($0 * 0.95) } }) }
+        do { after = try PooledQuantifier.run(refit, tables: nil, cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(f * 0.95) } }) }
         catch let c as SpectroCancelled { throw c }
         catch {
             progress?(1)

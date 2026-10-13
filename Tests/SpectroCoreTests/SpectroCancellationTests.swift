@@ -1,5 +1,5 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// SpectroKit S0 (ADR 064 amendment 2 §2): the long spectroscopy calls take `cancelled` (default `SpectroCancellation.task`) and an
 /// optional `progress`. Per family: cancel at the first step and cancel INSIDE the call both throw `SpectroCancelled` and return
@@ -259,7 +259,7 @@ final class SpectroCancellationTests: XCTestCase {
 
     // MARK: E7
 
-    /// E7: the tables' bundle is injectable; the default is `.main`. Mutation: the parameter ignored (`.main` always) - red on the
+    /// E7: the tables' bundle is injectable; the default is SpectroKit's own (`Bundle.module`). Mutation: the parameter ignored - red on the
     /// bundle that holds the files.
     func testBundledTablesTakeTheBundleTheyAreGiven() throws {
         let empty = FileManager.default.temporaryDirectory.appendingPathComponent("spk-empty-\(UUID().uuidString).bundle")
@@ -272,6 +272,6 @@ final class SpectroCancellationTests: XCTestCase {
         try FileManager.default.createDirectory(at: full, withIntermediateDirectories: true)
         try FileManager.default.copyItem(at: SpectroscopyQuantifySpectro.resources, to: full.appendingPathComponent("Spectroscopy"))
         XCTAssertNotNil(QuantificationTables.bundled(in: try XCTUnwrap(Bundle(url: full))))
-        XCTAssertEqual(QuantificationTables.bundled() == nil, QuantificationTables.bundled(in: .main) == nil)
+        XCTAssertNotNil(QuantificationTables.bundled(), "the default is the library's own copy (Bundle.module), not the host app's")
     }
 }

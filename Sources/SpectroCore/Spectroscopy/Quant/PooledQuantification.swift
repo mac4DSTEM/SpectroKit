@@ -63,7 +63,8 @@ public nonisolated struct QuantificationTables: Sendable {
     }
 
     /// The files shipped in the app bundle (Resources/Spectroscopy), nil when any is missing.
-    public static func bundled(in bundle: Bundle = .main) -> QuantificationTables? {
+    public static func bundled(in bundle: Bundle? = nil) -> QuantificationTables? {
+        let bundle = bundle ?? .module   // SpectroKit's own copy (Resources/Spectroscopy); an app may pass its own bundle
         guard let url = bundle.url(forResource: "LineWeights", withExtension: "csv", subdirectory: "Spectroscopy")
             ?? bundle.url(forResource: "LineWeights", withExtension: "csv") else { return nil }
         return try? QuantificationTables(directory: url.deletingLastPathComponent())
@@ -227,7 +228,7 @@ public nonisolated enum PooledQuantifier {
             if refinement == nil {
                 do { refinement = try EnergyAxisRefinement.refine(counts: counts, fileAxis: input.axis,
                                                                   fileResolutionMnKaEV: input.resolutionMnKaEV, settings: settings(axis: input.axis),
-                                                                  cancelled: cancelled, progress: progress.map { p in { p($0 * 0.8) } })
+                                                                  cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(f * 0.8) } })
                 }
                 catch let c as SpectroCancelled { throw c }
                 catch { warnings.append("axis refinement failed (\(error)); the file's axis is used") }

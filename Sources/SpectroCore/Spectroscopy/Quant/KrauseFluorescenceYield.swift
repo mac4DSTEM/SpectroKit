@@ -39,7 +39,8 @@ package nonisolated struct KrauseFluorescenceYield: FluorescenceYield {
 
     package init(contentsOf url: URL) throws { self.init(csv: try String(contentsOf: url, encoding: .utf8)) }
 
-    package static func bundled(in bundle: Bundle = .main) -> KrauseFluorescenceYield? {
+    package static func bundled(in bundle: Bundle? = nil) -> KrauseFluorescenceYield? {
+        let bundle = bundle ?? .module   // SpectroKit's own copy (Resources/Spectroscopy); an app may pass its own bundle
         guard let url = bundle.url(forResource: "Krause1979", withExtension: "csv", subdirectory: "Spectroscopy")
             ?? bundle.url(forResource: "Krause1979", withExtension: "csv") else { return nil }
         return try? KrauseFluorescenceYield(contentsOf: url)

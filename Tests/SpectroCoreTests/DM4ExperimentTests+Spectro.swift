@@ -1,7 +1,7 @@
 // SpectroKit S1 test partition (ADR 064 section 3.3): the methods of DM4ExperimentTests that move with the EDX core;
 // the rest stay in DM4ExperimentTests.swift. Helpers are duplicated, not shared, across the split.
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// v5.0 WP1 lane B: `DM4Experiment` lists every image object of a GMS `.dm4`
 /// ("one experiment") and reads a 2D one back. The files are synthetic, built

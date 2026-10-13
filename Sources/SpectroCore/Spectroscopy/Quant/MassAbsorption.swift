@@ -57,7 +57,8 @@ package nonisolated struct MassAbsorptionTable: Sendable {
     }
 
     /// The copy shipped in the app bundle (Resources/Spectroscopy/FFastMAC.csv).
-    package static func bundled(in bundle: Bundle = .main) -> MassAbsorptionTable? {
+    package static func bundled(in bundle: Bundle? = nil) -> MassAbsorptionTable? {
+        let bundle = bundle ?? .module   // SpectroKit's own copy (Resources/Spectroscopy); an app may pass its own bundle
         guard let url = bundle.url(forResource: "FFastMAC", withExtension: "csv", subdirectory: "Spectroscopy")
             ?? bundle.url(forResource: "FFastMAC", withExtension: "csv") else { return nil }
         return try? MassAbsorptionTable(contentsOf: url)

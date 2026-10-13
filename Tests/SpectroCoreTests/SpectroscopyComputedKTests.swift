@@ -1,13 +1,13 @@
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 /// WP3 lane K round 2: computed k from NIST EPQ data (Bote-Salvat 2008 sigma, Krause 1979 omega,
 /// generic SDD epsilon). NO JVM was available, so EVERY expected number below is from an
 /// independent Python re-implementation of the EPQ formulas (laneK/bs_ref.py, same CSVs, EPQ's
 /// own CODATA 2002 constants) -- a re-implementation, not EPQ itself.
 final class SpectroscopyComputedKTests: XCTestCase {
-    private static let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        .appendingPathComponent("mac4DSTEM/Resources/Spectroscopy")
+    private static let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Sources/SpectroCore/Resources/Spectroscopy")
     private static let bs = try! BoteSalvatCrossSection(directory: dir)
     private static let krause = try! KrauseFluorescenceYield(contentsOf: dir.appendingPathComponent("Krause1979.csv"))
     private static let mac = try! MassAbsorptionTable(contentsOf: dir.appendingPathComponent("FFastMAC.csv"))

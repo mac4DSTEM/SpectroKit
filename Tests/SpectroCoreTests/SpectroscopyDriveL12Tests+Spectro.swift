@@ -9,7 +9,7 @@
 //  net / L_D >= 10 is released).
 //
 import XCTest
-import DSTEMCore
+import SpectroCore
 
 @MainActor
 final class SpectroscopyDriveL12Spectro: XCTestCase {

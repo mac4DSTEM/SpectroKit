@@ -13,12 +13,16 @@
 //    TEST_RUNNER_SPECTRO_GOLDEN_DIR=<dir> xcodebuild test ... -only-testing:mac4DSTEMTests/SpectroGoldenTests CODE_SIGNING_ALLOWED=NO
 //  then copy <dir>/*.txt to mac4DSTEMTests/Fixtures/spectro-golden/. Without the variable `testOutputsAreByteIdenticalToTheBaseline` compares.
 //
+//  SpectroKit S2: the same file, run against the extracted library and compared with mac4DSTEM's committed baseline
+//  (Tests/SpectroCoreTests/Fixtures/spectro-golden, copied at 5ba712a0, unchanged). Six of its seven scenarios: the seventh,
+//  `demo-spectrum-fixture`, opens the app's `DemoSpectrumImageSource` (4D demo data), which stays in mac4DSTEM and is compared
+//  there. `Q` is a copy of the statics of `SpectroscopyQuantifySpectro` (another test target). Record with
+//  `SPECTRO_GOLDEN_DIR=<dir> swift test --filter SpectroGoldenTests.testRecordBaseline`.
+//
 
 import XCTest
 import Foundation
-@testable import DSTEMCore
-import DSTEMSession
-@testable import mac4DSTEM
+import SpectroCore
 
 // MARK: - The dump
 
@@ -127,9 +131,36 @@ enum GoldenDump {
 
 // MARK: - Scenarios
 
+/// The statics of `SpectroscopyQuantifySpectro` (= mac4DSTEM's `SpectroscopyQuantifyTests`) that the scenarios use, verbatim
+/// apart from the paths.
+@MainActor
+enum GoldenQ {
+    static let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("SpectroCoreTests/Fixtures")
+    static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Sources/SpectroCore/Resources/Spectroscopy")
+    static let tables = try! QuantificationTables(directory: resources)
+
+    static func image() throws -> LoadedSpectrumImage {
+        try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: fixtures.appendingPathComponent("demo-edx-tiny.dm4").path))
+    }
+
+    static func method(elements: [(String, QuantificationMethod.ElementRole)] = [("Al", .quantify), ("Mg", .quantify), ("Si", .quantify), ("Cu", .quantify), ("O", .fitOnly), ("Ga", .fitOnly)]) -> QuantificationMethod {
+        var m = QuantificationMethod()
+        m.elements = elements.map { QuantificationMethod.ElementState(symbol: $0.0, role: $0.1, isManual: false) }
+        m.beamEnergyKeV = 200          // the GMS EDS object does not state it
+        return m
+    }
+
+    static func input(_ method: QuantificationMethod, image: LoadedSpectrumImage) -> PooledQuantificationInput {
+        PooledQuantificationInput(counts: image.sum(mask: nil), axis: image.energyAxis, method: method, metadata: image.metadata,
+                                  regionName: "Whole map", pixelCount: image.metadata.pixelCount)
+    }
+}
+
 @MainActor
 enum SpectroGolden {
-    typealias Q = SpectroscopyQuantifyTests
+    typealias Q = GoldenQ
 
     static let fixtures = Q.fixtures
 
@@ -272,14 +303,7 @@ enum SpectroGolden {
             try quantify("region-locked-axis", region, tables: nil, into: &out, unlisted: false)
         }
 
-        try add("demo-spectrum-fixture") { out in
-            let image = DemoSpectrumImageSource.make()
-            imageSummary("demo", image, into: &out)
-            windows("demo", image, ["Al", "Mg", "Si"], into: &out)
-            var m = Q.method(elements: [("Al", .quantify), ("Mg", .quantify), ("Si", .quantify)])
-            m.beamEnergyKeV = 200
-            try quantify("whole", Q.input(m, image: image), tables: Q.tables, into: &out)
-        }
+        // "demo-spectrum-fixture" (the app's DemoSpectrumImageSource) stays in mac4DSTEM.
 
         // eds-realistic-l-sim: 80 keV axis, the range-sensitivity statement applies.
         try add("eds-realistic-l-sim") { out in
@@ -361,7 +385,7 @@ enum SpectroGolden {
     }
 
     static var baselineDirectory: URL {
-        URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/spectro-golden")
+        GoldenQ.fixtures.appendingPathComponent("spectro-golden")
     }
 }
 
@@ -383,7 +407,7 @@ final class SpectroGoldenTests: XCTestCase {
     func testOutputsAreByteIdenticalToTheBaseline() async throws {
         try XCTSkipIf(recordDir != nil, "recording run")
         let scenarios = try await SpectroGolden.scenarios()
-        XCTAssertEqual(scenarios.count, 7)
+        XCTAssertEqual(scenarios.count, 6)   // mac4DSTEM's 7 minus demo-spectrum-fixture
         for s in scenarios {
             let url = SpectroGolden.baselineDirectory.appendingPathComponent(s.name + ".txt")
             let recorded = try String(contentsOf: url, encoding: .utf8)
