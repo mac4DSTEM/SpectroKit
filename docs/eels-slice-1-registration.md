@@ -136,3 +136,40 @@ inputs are not in it. mac4DSTEM must carry the λ source and its own uncertainty
 Agreement with exSpy and recovery of planted τ do not make the thickness right on a real specimen. `validation: "none"`
 until a sample of known thickness is measured (for example a wedge or a FIB lamella measured another way); that check is
 registered later, with the owner.
+
+## 9. Amendments
+
+### 2026-10-14, before any Swift code: what the truth and pin generators found
+
+Found by `tools/eels-thickness/pins.py` running exSpy at the pin on the planted images
+(`tools/eels-thickness/README.md`, "Findings"). No number in sections 3 to 6 changes; gate 3 and the reach of gate 1 do.
+
+1. **Gate 3 holds for fixed thresholds only.** exSpy's estimated threshold is not stable on noisy data: `tol` is one
+   number for the image, set by its noisiest pixel, so on the noisy planted image the thresholds run from 1.30 to 8.65
+   eV (1.20 to 1.35 eV noiseless). Measured with exSpy at the pin: |t/λ_noisy − t/λ_noiseless| reaches 6.2 σ_counting at
+   τ = 1.3 and 7.4 at τ = 2.0; over 200 noise realisations (NumPy seeds 1 to 200) the standard deviation of t/λ is 1.0
+   to 3.2 times σ_counting, and the threshold is NaN in 2 of 200 at τ = 1.0, 1.6 and 2.0. With the fixed thresholds 2.5,
+   4.5 and 6.0 eV both clauses hold (at most 2.0 σ per pixel; standard deviations within 8.3 % of σ_counting). Gate 3
+   now reads: its two clauses for the three fixed thresholds; for the estimated threshold, the port reproduces exSpy's
+   noisy-image pins (gate 1 as amended below) and the test reports, without a bound, its own 200-realisation spread and
+   NaN count. The result's documentation says that `sigmaCounting` leaves out the threshold's variability, which with
+   the estimated rule on noisy data was 1.0 to 3.2 times larger, and that noisy data want a fixed threshold.
+2. **Gate 1 at tie pixels.** On integer counts the Savitzky–Golay derivative takes values k · 5/3, so on the noisy image
+   seven pixels (0, 2, 3, 5, 6, 8, 9) have channels whose |derivative| equals `tol` exactly: which of them is "first" is
+   decided by floating-point rounding. Gate 1's "same channel" applies to every pixel whose stability margin in
+   `pins.json` exceeds 1e-9 relative; at a tie pixel the port passes if its channel is one whose pinned |derivative| is
+   within 1e-9 relative of the pinned `tol`, and its I_0, I_t and t/λ equal the sums at its own channel.
+3. **Readings the generator had to make.** "The first term below 1e-14 of the total" is the n-th term's summed in-range
+   intensity against the running total (n_max 7 to 13; the Poisson weight left out is 9e-16 to 2.9e-8, recorded); the
+   zero-loss Gaussian is normalised to unit sum (I_0 = N e^−τ exactly); the zero-loss route is pinned on exSpy's line
+   scan only (the planted images have no separate zero-loss spectrum); exSpy's test data are GPL-3.0-or-later, copyright
+   the eXSpy developers.
+4. **Additions, none changing a registered number:** `biasByChannel`, the method's own bias for every channel of the
+   default search range (220 to 419), so gate 2 also checks the estimated threshold against the exact bias at the
+   channel the port finds; pins for `window_length = 0` (the `numpy.gradient` route); absolute thickness with λ only;
+   and step-by-step recipes for the Savitzky–Golay interior (bit-exact with SciPy on this machine, recorded, not
+   asserted) and for `numpy.gradient` (asserted). The two channels at each end of the cropped range come from a
+   polynomial fit, matched to about 1e-12.
+5. **Confirmed predictions.** exSpy's line scan, axis binned: 0.004116631 (estimated threshold, 4.5 eV for pixels 0-10
+   and 4.0 eV for 11-16), 0.004401503 (4.5 eV), 0.003760360 (zero-loss route), as registered. The noiseless planted
+   image's estimated thresholds are 1.20 to 1.35 eV with |t/λ − τ| at most 4.6e-4.
