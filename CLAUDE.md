@@ -1,9 +1,10 @@
 # CLAUDE.md — start here
 
 SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS now, EELS later), imported by tagged
-version by mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. **0.1.0 tagged and public; S4 (mac4DSTEM on 0.1.0) done; 0.2.0
-(macTEM's three asks) committed on `main`, ready for the owner's review, tag and push.** This file is a pointer until the
-library's own full rules replace it.
+version by mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. **0.1.0 tagged and public; 0.2.0 (macTEM's three asks) is
+`edb6ba8`, ready for the owner's tag (push that commit, not `main`'s tip). `main` goes on toward 0.3.0: three modules,
+`SpectroCore` / `SpectroEDX` / `SpectroEELS`, and EELS slice 1 (t/λ).** This file is a pointer until the library's own
+full rules replace it.
 
 ## Read first
 
@@ -29,7 +30,12 @@ library's own full rules replace it.
   unvalidated (`validation:"none"`); nothing is called validated. Validation on real data is re-registered after v5.0,
   against the SpectroKit tag.
 - **A reference for every number**: exSpy `7185a4d1`, HyperSpy 2.4.0, NIST EPQ `249dd3f8`, rsciio `049e7d70`
-  (mac4DSTEM's pins), fetched into the gitignored `References/`. The `exspy-main` there is unpinned and is never a
+  (mac4DSTEM's pins), fetched into the gitignored `References/` (exSpy as `References/exspy-7185a4d1`, one commit, with
+  `References/exspy-venv`: HyperSpy 2.4.0, RosettaSciIO 0.14.0, Python 3.14.7; the owner's approval, 2026-10-14; exSpy is
+  not installed there, so build its signal classes directly, as `tools/eels-thickness/pins.py` does).
+- **The owner's data** lives in the suite's `data/` folder, read as `$MACEM_DATA` (default `../data`): never copied or
+  committed here; numbers measured on it are cited with their log; a manifest line in `data/README.md` per file used;
+  using it as a gate or truth is a registration change first (suite CLAUDE.md, 2026-10-14). The `exspy-main` there is unpinned and is never a
   reference. Agreement with exSpy is not truth: an at% is called validated only after it recovers a planted composition
   and a sample of known composition. Until then it self-reports `validation:"none"`.
 - **Names** (the suite's standard): apps are `mac` + technique, libraries are domain + `Kit`, modules carry the
@@ -134,3 +140,26 @@ library's own full rules replace it.
 - **Then**: the per-stage exSpy gates (counts, energy axis, background, peak ID, Cliff–Lorimer, ζ, absorption), which
   are also the diagnosis of why Auto ID misses Mg in 37 of 38 Al-Mg-Si files. Backlog item: `VeloxEMDReader` reads a
   plain Velox `Data/Image` dataset (macTEM ADR 004 D1).
+- **After 0.2.0 (`main`, toward 0.3.0; 2026-10-14, the owner's order in the suite `ROADMAP.md`)**. What each consumer
+  changes on its bump: `docs/consumers-0.3.0.md`.
+  - **The split** (tier 3, byte-identical output): `SpectroCore` keeps the readers, the spectrum image and its opening,
+    `EnergyAxis`, `MapSmoothing`, the statistics and the least-squares solvers (19 files); `SpectroEDX` (product and
+    target, on `SpectroCore` only) takes the 35 X-ray files and the six tables (`SpectroKit_SpectroEDX.bundle`). No public
+    declaration added, removed or re-signed (symbol graphs equal but for the module), four memberwise inits written out
+    as `package` for the tests; the 258 names, the golden and instructions retired (±0.1 %) unchanged; one reviewer, pass.
+    Shared things left in `SpectroEDX` for later: `PixelRect` / `PixelPoint` / `SpectrumRegionShape` (an EELS region mean
+    will want them in Core) and `EnergyAxis.fitChannels`; Core's `EnergyAxis` is documented in keV but unit-free.
+  - **EELS slice 1** (tier 1): `docs/eels-slice-1-registration.md` (registered before code, two dated amendments: the noise
+    gate holds for fixed thresholds only, exSpy's estimated threshold being unstable on noisy data; the tie rule).
+    `SpectroEELS`: `EELSThickness.logRatio` over a `LowLossSpectrumImage`, exSpy's log-ratio route ported exactly
+    (SciPy's Savitzky-Golay in interp mode, NumPy's gradient and pairwise sum, HyperSpy's rounding, Iakoubovskii's λ and
+    the angular correction), σ_counting with its limits, `validation: "none"`. Truth and pins: `tools/eels-thickness`
+    (planted Poisson plural scattering with the method's own bias; exSpy's simulated line scan), fixtures in
+    `Tests/SpectroEELSTests/Fixtures`. 55 tests; 79 of 83 mutants red, 4 equivalent. Open: 3 of 7 noisy tie pixels take
+    another tie channel than exSpy (SpectroCore's `dgelsy` against SciPy's `dgelsd`, 1.3e-15; a `dgelsd` route is an
+    option); the owner's EELS scans (`$MACEM_DATA/eels`) are diagnostics, never a gate.
+  - **EELS slice 1b** (tier 2): `DM4Experiment.readEELSSpectrumImage` (public) and `DM4EELSSpectrumImage`, every count
+    equal to RosettaSciIO's reading of its public `EELS_SI.dm4` and of a planted non-square file; 16 tests, 14 sampled
+    mutants red. `tools/consumer-check` does not cover it yet.
+  - **Still owed before 0.3.0 is ready for the tag**: one tier-2 refuter on the EELS reader and one Gate B refuter on
+    SpectroEELS, side by side on the frozen commit (the split's tier-3 review is done); then the owner's tag.
