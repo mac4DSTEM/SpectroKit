@@ -42,6 +42,15 @@ The element table in Sources/SpectroCore/Spectroscopy/Quant/QuantElementData.swi
 The Velox EMD reader follows rosettasciio's (https://github.com/hyperspy/rosettasciio,
 commit 049e7d70, GPL-3.0-or-later) reading of the format and is compared with it.
 
+The DM4 EELS spectrum-image reader (DM4Experiment.readEELSSpectrumImage) takes E0, the convergence and the
+collection semi-angle from the tags rosettasciio's digitalmicrograph reader maps (rsciio/digitalmicrograph/_api.py,
+commit 049e7d70) and is compared with rosettasciio's reading of the same files (tools/eels-reader/truth.py).
+Tests/SpectroKitTests/Fixtures/rsciio-EELS_SI.dm4 is rosettasciio's public test file
+rsciio/tests/data/digitalmicrograph/3D/EELS_SI.dm4 (sha256 f9b8203f384cc355437594b649d4ea3a12cddeb231ebb65508a841a379fa171a,
+commit 049e7d70), copied byte for byte as a test fixture under rosettasciio's GPL-3.0-or-later; who recorded its
+data is not stated by rosettasciio. The two .truth.json files beside it are rosettasciio's readings of
+rsciio-EELS_SI.dm4 and of eels-planted.dm4 (written by tools/eels-reader/make_planted.py, no third-party data).
+
 
 ================================================================================
 NIST EPQ data (EDX quantification)

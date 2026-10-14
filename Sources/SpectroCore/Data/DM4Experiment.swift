@@ -17,6 +17,8 @@
 //  PUBLIC since SpectroKit 0.2.0 (macTEM's ask of 2026-10-13, its ADR 019): `readImage`, `tagTree`, `DM4Image`,
 //  `DM4Axis` and the six `DM4ImageObject` fields macTEM reads, so macTEM reads DM through SpectroCore and keeps no
 //  copy. Access only: no line of the walk or the decode changed.
+//  An EELS spectrum image is decoded by `readEELSSpectrumImage` (SpectroKit EELS slice 1b, public): the same walk, the
+//  same role rule, the same channel-block read as the EDS one, and E0 / alpha / beta from the tags RosettaSciIO maps.
 //  An EDS spectrum image is decoded by `readEDSSpectrumImage` (v5.0 WP2 R2): the
 //  only object it reads whole, in channel blocks, never the 4D blob. No real GMS
 //  4D+EDS file existed when this was written; the layout is the simulator's guess
@@ -167,6 +169,39 @@ package nonisolated struct DM4EDSSpectrumImage: Sendable, Equatable {
     package let energyAxis: DM4Axis
 }
 
+/// A decoded EELS spectrum image (a 3D object of role `.eels`: x, y, energy loss), read by
+/// `DM4Experiment.readEELSSpectrumImage`. The counts are AS STORED in the file, converted to Float32: no dark-reference,
+/// gain, offset or `Calibrations.Brightness` (electrons per count) is applied, and RosettaSciIO applies none either.
+/// E0 and the two angles are read from `ImageTags` (from `ImageTags.source.Tags at creation` on a stack-builder file, where
+/// RosettaSciIO looks): see `DM4Experiment.readEELSSpectrumImage`.
+public nonisolated struct DM4EELSSpectrumImage: Sendable, Equatable {
+    /// The listed object this was decoded from (its `index`, `name`, `role`, `imageTagNumbers`, ...).
+    public let object: DM4ImageObject
+    /// `ImageData.Dimensions` entry 1 (the fastest in the file): pixels along x.
+    public let nx: Int
+    /// `ImageData.Dimensions` entry 2: pixels along y.
+    public let ny: Int
+    /// `ImageData.Dimensions` entry 3 (the slowest in the file): energy channels per pixel.
+    public let channels: Int
+    /// Row-major `(y, x, channel)`: the spectrum of pixel `(x, y)` is `counts[(y * nx + x) * channels ..< (y * nx + x + 1) * channels]`.
+    /// The file stores `[channel][y][x]` (x fastest, energy slowest); this is that cube transposed so one pixel's spectrum
+    /// is contiguous. Values as stored, converted to Float32 (an integer above 2^24 or a Float64 is rounded to the nearest Float).
+    public let counts: [Float]
+    /// `ImageData.Calibrations.Dimension.3` (`Origin`, `Scale`, `Units`), units "eV": channel `c` is at `(c - origin) * scale` eV.
+    /// RosettaSciIO's `offset` is `-origin * scale`.
+    public let energyAxis: DM4Axis
+    /// `ImageTags.Microscope Info.Voltage` (volts in GMS) / 1000, as RosettaSciIO maps it to `beam_energy`
+    /// (`_api.py:921-924`, `lambda x: x / 1e3`); nil when the tag is absent. As stored: a 0 V tag is 0 keV. RosettaSciIO files
+    /// it under `SEM` instead of `TEM` when the illumination mode says SEM; this reads the tag either way.
+    public let beamEnergyKeV: Double?
+    /// `ImageTags.EELS.Experimental Conditions.Convergence semi-angle (mrad)` as stored (RosettaSciIO `_api.py:1045-1048`,
+    /// `Acquisition_instrument.TEM.convergence_angle`); nil when absent.
+    public let convergenceSemiAngleMrad: Double?
+    /// `ImageTags.EELS.Experimental Conditions.Collection semi-angle (mrad)` as stored (RosettaSciIO `_api.py:1040-1044`,
+    /// `Acquisition_instrument.TEM.Detector.EELS.collection_angle`); nil when absent.
+    public let collectionSemiAngleMrad: Double?
+}
+
 public nonisolated enum DM4Experiment {
 
     // MARK: Entry points
@@ -232,6 +267,28 @@ public nonisolated enum DM4Experiment {
             throw DM4Error.cannotOpen("This DM file has no image object \(index).")
         }
         return try decodeEDS(object, source: source)
+    }
+
+    /// Decodes the EELS spectrum image `index` (one-based, `DM4ImageObject.index`) of the file at `path`: a 3D object of role
+    /// `.eels` whose dimensions are `[x, y, energy]` (fastest first) and whose third axis is calibrated in "eV". Reads only
+    /// that object's own bytes, in blocks of 32 channels. Throws `DM4Error.cannotOpen` with the reason for everything it
+    /// refuses (no such object, not role `.eels`, not 3D, `Data Order Swapped` set, no energy calibration, energy axis not in
+    /// eV, larger than a quarter of physical memory as Float32), `.unsupportedDataType(code)` for a pixel type other than
+    /// int8/16/32, uint8/16/32, float32/64, and `.truncated` when the file ends before the object's data does.
+    public static func readEELSSpectrumImage(path: String, index: Int) throws -> DM4EELSSpectrumImage {
+        try readEELSSpectrumImage(source: try Source.file(path), index: index)
+    }
+
+    /// As `readEELSSpectrumImage(path:index:)`, from the bytes of a `.dm4` already in memory.
+    public static func readEELSSpectrumImage(data: Data, index: Int) throws -> DM4EELSSpectrumImage {
+        try readEELSSpectrumImage(source: Source.data(data), index: index)
+    }
+
+    private static func readEELSSpectrumImage(source: Source, index: Int) throws -> DM4EELSSpectrumImage {
+        guard let object = try Walk(source: source).objects.first(where: { $0.index == index }) else {
+            throw DM4Error.cannotOpen("This DM file has no image object \(index).")
+        }
+        return try decodeEELS(object, source: source)
     }
 
     /// The distinct Experiment IDs, in first-seen order.
@@ -446,6 +503,99 @@ public nonisolated enum DM4Experiment {
             }
         }
         return bad
+    }
+
+    /// The same cap as the EDS cube (a quarter of physical memory, as 4-byte values): Float32 counts are 4 bytes each.
+    private static var maxEELSElements: Int { maxEDSElements }
+
+    /// The EELS SI blob, memory order `[nx, ny, channels]` with x fastest and ENERGY SLOWEST (the order of `Dimensions` in the
+    /// file, fastest first; RosettaSciIO reads it as an array of shape `(channels, ny, nx)` and names the axes Energy loss,
+    /// y, x: `_api.py:457-460`, `:674`), transposed into `(ny, nx, channels)` so one pixel's spectrum is contiguous. The
+    /// energy dimension is the THIRD, as the EDS reader takes it, and must be calibrated in "eV" (RosettaSciIO names an axis
+    /// "Energy loss" only by that unit, `_api.py:504-506`): another unit is refused rather than guessed.
+    /// Read in blocks of 32 channels: the file is never held whole. Unlike the EDS reader nothing is refused for its VALUES:
+    /// a negative, fractional or non-finite count is returned as stored (a dark-subtracted or averaged SI is a legitimate
+    /// EELS file; any rule on values is the consumer's). `Data Order Swapped` = 1 is refused, as for EDS.
+    /// E0, convergence and collection semi-angle: see `DM4EELSSpectrumImage`. A stack made with the DigitalMicrograph stack
+    /// builder keeps its tags under `ImageTags.source.Tags at creation`, and RosettaSciIO reads them there only
+    /// (`_api.py:888-891`); this does the same when that group holds any number or string.
+    /// DIFFERENCE from RosettaSciIO: it maps convergence and collection angle only when `Meta Data.Signal` is "EELS"
+    /// (`_api.py:1025`); this reads them whenever the tag is present, because the group `EELS.Experimental Conditions` exists
+    /// only on EELS acquisitions and the object is already known to be `.eels`.
+    private static func decodeEELS(_ object: DM4ImageObject, source: Source) throws -> DM4EELSSpectrumImage {
+        let name = "\(object.name) (object \(object.index))"
+        guard object.role == .eels else {
+            throw DM4Error.cannotOpen("\(name) is not an EELS spectrum image (its role is \(object.role.rawValue)).")
+        }
+        guard object.dimensions.count == 3, object.dimensions.allSatisfy({ $0 > 0 }) else {
+            throw DM4Error.cannotOpen("\(name) has dimensions \(object.dimensions); an EELS spectrum image is [x, y, energy].")
+        }
+        if object.dataOrderSwapped == true {
+            throw DM4Error.cannotOpen("\(name) sets 'Data Order Swapped', whose meaning for a spectrum image is not known here; its layout is not guessed.")
+        }
+        guard let axis = object.axes[2] else {
+            throw DM4Error.cannotOpen("\(name) carries no energy calibration.")
+        }
+        guard axis.units == "eV" else {
+            throw DM4Error.cannotOpen("\(name) has its third axis in '\(axis.units)', not eV; only [x, y, energy loss in eV] is read.")
+        }
+        guard let size = pixelSize(object.dataType) else { throw DM4Error.unsupportedDataType(object.dataType) }
+        let nx = object.dimensions[0], ny = object.dimensions[1], nch = object.dimensions[2]
+        let (np, o1) = nx.multipliedReportingOverflow(by: ny)
+        let (total, o2) = np.multipliedReportingOverflow(by: nch)
+        let (planeBytes, o3) = np.multipliedReportingOverflow(by: size)
+        let (bytes, o4) = total.multipliedReportingOverflow(by: size)
+        let (end, o5) = object.dataOffset.addingReportingOverflow(bytes)
+        guard !(o1 || o2 || o3 || o4 || o5), object.dataOffset >= 0, end <= source.size,
+              object.dataByteCount == bytes || object.dataByteCount == 0 else { throw DM4Error.truncated }
+        guard total <= maxEELSElements else {
+            throw DM4Error.cannotOpen("\(name) has \(total) values; refusing to read more than \(maxEELSElements) (a quarter of this Mac's memory, as 32-bit values).")
+        }
+        var out = [Float](repeating: 0, count: total)
+        let block = 32
+        var c0 = 0
+        while c0 < nch {
+            let b = min(block, nch - c0)
+            let raw = try source.fetch(object.dataOffset + c0 * planeBytes, b * planeBytes)
+            try raw.withUnsafeBytes { p in
+                switch object.dataType {
+                case 2:  scatterEELS(p, Float.self, b, np, nch, c0, &out) { $0 }
+                case 12: scatterEELS(p, Double.self, b, np, nch, c0, &out) { Float($0) }
+                case 1:  scatterEELS(p, Int16.self, b, np, nch, c0, &out) { Float($0) }
+                case 10: scatterEELS(p, UInt16.self, b, np, nch, c0, &out) { Float($0) }
+                case 7:  scatterEELS(p, Int32.self, b, np, nch, c0, &out) { Float($0) }
+                case 11: scatterEELS(p, UInt32.self, b, np, nch, c0, &out) { Float($0) }
+                case 6:  scatterEELS(p, UInt8.self, b, np, nch, c0, &out) { Float($0) }
+                case 9:  scatterEELS(p, Int8.self, b, np, nch, c0, &out) { Float($0) }
+                default: throw DM4Error.unsupportedDataType(object.dataType)
+                }
+            }
+            c0 += b
+        }
+        let stackGroup = "source.Tags at creation."
+        let fromStack = object.imageTagNumbers.keys.contains { $0.hasPrefix(stackGroup) }
+            || object.imageTagStrings.keys.contains { $0.hasPrefix(stackGroup) }
+        let base = fromStack ? stackGroup : ""
+        let conditions = base + "EELS.Experimental Conditions."
+        return DM4EELSSpectrumImage(
+            object: object, nx: nx, ny: ny, channels: nch, counts: out, energyAxis: axis,
+            beamEnergyKeV: object.imageTagNumbers[base + "Microscope Info.Voltage"].map { $0 / 1e3 },
+            convergenceSemiAngleMrad: object.imageTagNumbers[conditions + "Convergence semi-angle (mrad)"],
+            collectionSemiAngleMrad: object.imageTagNumbers[conditions + "Collection semi-angle (mrad)"])
+    }
+
+    /// One block of `b` channel planes (`np` values each) into the pixel-major cube.
+    private static func scatterEELS<T>(
+        _ p: UnsafeRawBufferPointer, _ type: T.Type, _ b: Int, _ np: Int, _ nch: Int, _ c0: Int,
+        _ out: inout [Float], _ convert: (T) -> Float
+    ) {
+        let stride = MemoryLayout<T>.stride
+        for pixel in 0..<np {
+            let base = pixel * nch + c0
+            for j in 0..<b {
+                out[base + j] = convert(p.loadUnaligned(fromByteOffset: (j * np + pixel) * stride, as: T.self))
+            }
+        }
     }
 
     /// Pixel types `DM4Reader` decodes; nil for anything else (notably 23, RGBA).
