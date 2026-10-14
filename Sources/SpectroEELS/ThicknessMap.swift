@@ -52,7 +52,10 @@ public nonisolated struct ThicknessPixel: Sendable, Equatable {
     /// clipped: I_t <= I_0 is reported as t/λ <= 0. nil with `unavailable` where the method cannot answer.
     public let tOverLambda: Double?
     /// The counting-statistics standard deviation of t/λ, sqrt(1/I_0 - 1/I_t), when the stored counts are Poisson counts and
-    /// I_0 is a part of I_t (registration section 6). It does NOT include the threshold's variability (with the estimated rule
+    /// I_0 is a part of I_t (registration section 6). It is a FIRST-ORDER (delta-method) value, not exact: a Monte Carlo by the Gate B
+    /// refuter gave actual/formula standard deviation of 1.0009 at I_0 = 1000 (I_t/I_0 near 300), 1.009 at I_0 = 100 (20), 1.055
+    /// at I_0 = 20 (5) and 1.129 at I_0 = 10 (3): the formula is about 13 % low at I_0 near 10 counts and good above I_0 near 100.
+    /// I_0 = I_t gives 0. It does NOT include the threshold's variability (with the estimated rule
     /// on noisy data the standard deviation of t/λ was 1.0 to 3.2 times larger), the λ model, or the angular correction's inputs.
     public let sigmaCounting: Double?
     /// The zero-loss intensity: the sum of channels `[0, thresholdChannel)`, or the sum of the zero-loss spectrum. nil where no threshold.

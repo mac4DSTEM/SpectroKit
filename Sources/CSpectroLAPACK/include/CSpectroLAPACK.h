@@ -26,4 +26,9 @@ int sk_dorgqr(int m, int n, int k, double *a, int lda, const double *tau, double
 /// `dtrtri_`: inverse of a triangular matrix in place. `uplo` is 'U' or 'L', `diag` 'N' or 'U'.
 int sk_dtrtri(char uplo, char diag, int n, double *a, int lda);
 
+/// `dgelsd_`: minimum-norm least squares by the SVD (divide and conquer). SciPy's `scipy.linalg.lstsq` default driver.
+/// `s` receives the singular values (min(m, n) of them); `iwork` is the integer workspace (`liwork` from LAPACK's formula).
+int sk_dgelsd(int m, int n, int nrhs, double *a, int lda, double *b, int ldb, double *s, double rcond, int *rank,
+              double *work, int lwork, int *iwork);
+
 #endif

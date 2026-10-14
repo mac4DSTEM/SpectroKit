@@ -1,0 +1,1 @@
+{"name": "R22", "rows": 2, "cols": 4, "offset": -3.006906822834657, "scale": 0.5, "size": 98, "zlpSize": null, "zlpShortSize": null, "routes": [{"kind": "estimated"}, {"kind": "estimated", "windowLength": 0}, {"kind": "estimated", "windowLength": 7}, {"kind": "estimated", "windowLength": 9, "polynomialOrder": 2}, {"kind": "fixed", "value": 3.0}]}

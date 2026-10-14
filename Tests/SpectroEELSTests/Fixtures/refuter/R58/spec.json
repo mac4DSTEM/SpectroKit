@@ -1,0 +1,1 @@
+{"name": "R58", "rows": 3, "cols": 2, "offset": -5.396927016983561, "scale": 0.5, "size": 116, "zlpSize": null, "zlpShortSize": null, "routes": [{"kind": "estimated"}, {"kind": "estimated", "windowLength": 0}, {"kind": "estimated", "windowLength": 7}, {"kind": "estimated", "windowLength": 9, "polynomialOrder": 2}, {"kind": "fixed", "value": 3.0}]}

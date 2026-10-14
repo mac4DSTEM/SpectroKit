@@ -1,0 +1,1 @@
+{"name": "B3_flat_and_ramp", "rows": 1, "cols": 2, "offset": -5.0, "scale": 0.05, "size": 600, "zlpSize": null, "zlpShortSize": null, "routes": [{"kind": "estimated"}, {"kind": "estimated", "windowLength": 0}, {"kind": "fixed", "value": 2.0}]}

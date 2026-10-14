@@ -37,32 +37,36 @@ package nonisolated enum ElasticThreshold {
 
     /// The per-row derivative kernel of step 2.
     package nonisolated enum Kernel: Sendable {
-        case savitzkyGolay(SavitzkyGolayFirstDerivative)
+        case savitzkyGolay(SavitzkyGolayFirstDerivative, SavitzkyGolayEdgeTable)
         case gradient(NumpyGradient)
 
-        package func apply(_ f: UnsafeBufferPointer<Double>, into out: UnsafeMutableBufferPointer<Double>) {
+        /// Pixel `p`'s derivative (the Savitzky-Golay edges come from the image-wide table).
+        package func apply(_ f: UnsafeBufferPointer<Double>, into out: UnsafeMutableBufferPointer<Double>, pixel p: Int) {
             switch self {
-            case .savitzkyGolay(let sg): sg.apply(f, into: out)
+            case .savitzkyGolay(let sg, let table): sg.apply(f, into: out, pixel: p, table: table)
             case .gradient(let g): g.apply(f, into: out)
             }
         }
     }
 
+    /// `row(p)` is pixel `p`'s cropped spectrum; the pixels are `nx` wide (row-major `y * nx + x`).
     package static func kernel(windowLength: Int, polynomialOrder: Int, scale: Double, croppedAxis: [Double],
+                               nx: Int, ny: Int, row: (Int) -> UnsafeBufferPointer<Double>,
                                coefficientsOverride: [Double]? = nil) throws -> Kernel {
         if windowLength != 0 {
             guard windowLength <= croppedAxis.count else {
                 throw EELSThicknessError.invalidSavitzkyGolay(
                     "window_length \(windowLength) exceeds the \(croppedAxis.count) channels of the search range (mode=\"interp\")")
             }
-            return .savitzkyGolay(try SavitzkyGolayFirstDerivative(
-                windowLength: windowLength, polynomialOrder: polynomialOrder, delta: scale, coefficientsOverride: coefficientsOverride))
+            let sg = try SavitzkyGolayFirstDerivative(
+                windowLength: windowLength, polynomialOrder: polynomialOrder, delta: scale, coefficientsOverride: coefficientsOverride)
+            return .savitzkyGolay(sg, try sg.edgeTable(nx: nx, ny: ny, row: row))
         }
         return .gradient(NumpyGradient(axis: croppedAxis))
     }
 
     package static func estimate(
-        counts: UnsafeBufferPointer<Double>, pixelCount: Int, channels nch: Int, axis: EELSAxis,
+        counts: UnsafeBufferPointer<Double>, pixelCount: Int, navigationWidth nx: Int, channels nch: Int, axis: EELSAxis,
         window: Double, start: Double, windowLength: Int, polynomialOrder: Int, tolerance userTolerance: Double?,
         coefficientsOverride: [Double]? = nil,
         cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?
@@ -82,8 +86,11 @@ package nonisolated enum ElasticThreshold {
             croppedAxis[i] = croppedOffset + step
         }
         // 2. the derivative kernel
+        precondition(nx > 0 && pixelCount % nx == 0)
         let kernel = try kernel(windowLength: windowLength, polynomialOrder: polynomialOrder, scale: axis.scale,
-                                croppedAxis: croppedAxis, coefficientsOverride: coefficientsOverride)
+                                croppedAxis: croppedAxis, nx: nx, ny: pixelCount / nx,
+                                row: { p in UnsafeBufferPointer(start: counts.baseAddress! + p * nch + i1, count: length) },
+                                coefficientsOverride: coefficientsOverride)
 
         var derivative = [Double](repeating: 0, count: length)
         var minAbs = [Double](repeating: 0, count: pixelCount)
@@ -93,7 +100,7 @@ package nonisolated enum ElasticThreshold {
             for p in 0..<pixelCount {
                 if p % block == 0 { try SpectroCancellation.check(cancelled); progress?(0.5 * Double(p) / Double(pixelCount)) }
                 let row = UnsafeBufferPointer(start: counts.baseAddress! + p * nch + i1, count: length)
-                kernel.apply(row, into: d)
+                kernel.apply(row, into: d, pixel: p)
                 var m = abs(d[0])
                 for i in 1..<length { m = min(m, abs(d[i])) }
                 minAbs[p] = m
@@ -110,7 +117,7 @@ package nonisolated enum ElasticThreshold {
             for p in 0..<pixelCount {
                 if p % block == 0 { try SpectroCancellation.check(cancelled); progress?(0.5 + 0.5 * Double(p) / Double(pixelCount)) }
                 let row = UnsafeBufferPointer(start: counts.baseAddress! + p * nch + i1, count: length)
-                kernel.apply(row, into: d)
+                kernel.apply(row, into: d, pixel: p)
                 var first = 0
                 for i in 0..<length where abs(d[i]) <= tol { first = i; break }
                 inflexion[p] = first

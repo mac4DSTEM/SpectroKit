@@ -17,9 +17,18 @@ import Foundation
 ///   that variability out (see `ThicknessMap`). Noisy data want `.fixed`.
 ///   `windowLength == 0` uses `numpy.gradient` instead of Savitzky–Golay (exSpy's `window_length=0`).
 ///   A pixel whose first inflexion is the search range's first channel (or that has none) has no threshold (exSpy: NaN).
+///   **The derivative is SciPy's bit for bit** (`savgol_filter(..., deriv=1, mode="interp")` as HyperSpy calls it on the whole
+///   image: LAPACK `dgelsd` coefficients, `_fit_edge` polynomial fits, SciPy's accumulation order), so the threshold channel is
+///   exSpy's, also where a channel's |derivative| equals `tol` to rounding. The edge fits are one least-squares call over the
+///   image's spectra, as in SciPy, whose bits depend on how many spectra there are: a pixel's derivative, and so (very rarely,
+///   at such a tie) its threshold, can differ in the last bits between a small image and the same pixel in a larger one, in exSpy
+///   as here. **Narrower than exSpy:** the port refuses an even `windowLength`, one below 3, a `polynomialOrder` below 1 (SciPy
+///   returns zeros) and one of `windowLength` or more; exSpy accepts some of these.
 /// - `.fixed(eV)`: one threshold for every pixel (exSpy `threshold=<float>`). Rounded to a channel by HyperSpy's
-///   `value2index` (a value up to half a channel off is the same channel).
+///   `value2index` (a value up to half a channel off is the same channel). **`.fixed(3)` is 3.0 eV**; exSpy treats a Python
+///   `int` threshold as a channel index, which this type cannot express.
 /// - `.perPixel`: one threshold in eV per pixel, row-major `y * nx + x` (exSpy `threshold=<signal>`); NaN marks a pixel with none.
+///   A threshold outside the energy axis gives that pixel no t/λ (a nil pixel with a reason); exSpy raises for the whole map.
 public nonisolated enum ThresholdRule: Sendable, Equatable {
     case estimated(window: Double = 10.0, start: Double = 1.0, windowLength: Int = 5, polynomialOrder: Int = 3,
                    tolerance: Double? = nil)

@@ -1,0 +1,1 @@
+{"name": "B1_negative_counts", "rows": 3, "cols": 3, "offset": -10.0, "scale": 0.05, "size": 1500, "zlpSize": null, "zlpShortSize": null, "routes": [{"kind": "estimated"}, {"kind": "estimated", "windowLength": 0}, {"kind": "fixed", "value": 3.0}]}

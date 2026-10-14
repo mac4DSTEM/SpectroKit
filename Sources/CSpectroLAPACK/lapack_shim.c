@@ -39,3 +39,10 @@ int sk_dtrtri(char uplo, char diag, int n, double *a, int lda) {
     dtrtri_(&uplo, &diag, &n, a, &lda, &info);
     return info;
 }
+
+int sk_dgelsd(int m, int n, int nrhs, double *a, int lda, double *b, int ldb, double *s, double rcond, int *rank,
+              double *work, int lwork, int *iwork) {
+    int info = 0;
+    dgelsd_(&m, &n, &nrhs, a, &lda, b, &ldb, s, &rcond, rank, work, &lwork, iwork, &info);
+    return info;
+}

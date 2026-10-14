@@ -7,18 +7,11 @@
 //
 //  Agreement required (section 4): the same threshold channel for every pixel; I_0 and I_t relative <= 1e-12; t/lambda absolute
 //  <= 1e-12; lambda and the correction relative <= 1e-13. A difference is a failure of the port, never a tolerance to widen.
-//  Amendment 2 (tie pixels): where a pixel has channels whose |derivative| equals `tol` to rounding, the first channel is
-//  decided by rounding. The pins list those pixels (`stability.sensitivePixels`; the noisy image's 0, 2, 3, 5, 6, 8, 9). At such
-//  a pixel the port passes if its channel is one whose |derivative| is within 1e-9 relative of the pinned `tol`, and its I_0, I_t
-//  and t/lambda equal the sums at its own channel.
-//  READING (reported): the amendment's words cover the tie channels but not exSpy's own channel when rounding rejected the tie
-//  channel and exSpy took the next one, whose |derivative| is far below `tol` (the pins' pixel 0: |d| = 0 at the pinned
-//  channel, the tie channel before it rejected by 1.5e-14). The rule tested is the one the amendment's reason implies: the port's
-//  channel is a first hit under SOME rounding, i.e. its |d| is at most tol(1 + 1e-9) and no earlier channel has |d| below
-//  tol(1 - 1e-9). exSpy's own channel always satisfies it; so does every tie channel that precedes it.
-//  pins.json does not hold the derivative of every channel, so the test evaluates it EXACTLY from the integer counts: the
-//  5-point cubic stencil (f[c-2] - 8 f[c-1] + 8 f[c+1] - f[c+2]) / (12 delta) for the interior, which is the Savitzky-Golay
-//  coefficient set before SciPy's rounding noise (the two edge channels at each end use the port's own fit: they are not ties).
+//  Amendment 2 (tie pixels) is CLOSED: the Savitzky-Golay derivative is now bit-identical to SciPy's (dgelsd coefficients, the
+//  edge fits as one image-wide least-squares call, SciPy's accumulation order; SavitzkyGolayBitParityTests), so the noisy image's
+//  seven tie pixels (`stability.sensitivePixels`: 0, 2, 3, 5, 6, 8, 9; channels whose |derivative| equals `tol` to rounding)
+//  take exSpy's own channel, and every pixel is held to the same equality as the others. Before the fix 3 of the 7 took another
+//  tie channel, and the test accepted any channel that was a first hit under some rounding.
 //
 
 import Foundation
@@ -37,38 +30,15 @@ final class ThicknessPinsTests: XCTestCase {
         let axis = try EELSAxis(offset: image.energyOffsetEV, scale: image.energyScaleEV, size: image.channels)
         return try image.counts.withUnsafeBufferPointer { buf in
             try ElasticThreshold.estimate(
-                counts: buf, pixelCount: image.pixelCount, channels: image.channels, axis: axis, window: 10, start: 1,
+                counts: buf, pixelCount: image.pixelCount, navigationWidth: image.nx, channels: image.channels, axis: axis, window: 10, start: 1,
                 windowLength: gradient ? 0 : 5, polynomialOrder: 3, tolerance: nil, coefficientsOverride: override,
                 cancelled: { false }, progress: nil)
         }
     }
 
-    /// Neumaier compensated sum: independent of the port's pairwise sum, correct to the last bit for these magnitudes.
-    private func exactSum(_ values: ArraySlice<Double>) -> Double {
-        var sum = 0.0, c = 0.0
-        for v in values {
-            let t = sum + v
-            c += abs(sum) >= abs(v) ? (sum - t) + v : (v - t) + sum
-            sum = t
-        }
-        return sum + c
-    }
-
-    /// The derivative of the cropped row with the interior replaced by the exact stencil (integer counts), edges from the port.
-    private func checkedDerivative(pixel p: Int, image: LowLossSpectrumImage, route: PinEstimated, scale: Double) throws -> [Double] {
-        let nch = image.channels
-        let first = route.subRange.firstChannel, length = route.subRange.channels
-        let f = Array(image.counts[(p * nch + first)..<(p * nch + first + length)])
-        let sg = try SavitzkyGolayFirstDerivative(windowLength: 5, polynomialOrder: 3, delta: scale)
-        var d = [Double](repeating: 0, count: length)
-        f.withUnsafeBufferPointer { fp in d.withUnsafeMutableBufferPointer { dp in sg.apply(fp, into: dp) } }
-        for j in 2..<(length - 2) { d[j] = (f[j - 2] - 8 * f[j - 1] + 8 * f[j + 1] - f[j + 2]) / (12 * scale) }
-        return d
-    }
-
     // MARK: the estimated threshold (SG)
 
-    /// The search range, tol, the per-pixel minimum, and the threshold of every pixel that is not a tie pixel; all through the
+    /// The search range, tol, the per-pixel minimum, and the threshold of every pixel (tie pixels included); all through the
     /// public map as well. Records the worst deviation of each quantity.
     func testEstimatedThresholdPins() throws {
         let worstTol = Worst(), worstMin = Worst(), worstI0 = Worst(), worstIt = Worst(), worstT = Worst(), worstEnergy = Worst()
@@ -84,33 +54,14 @@ final class ThicknessPinsTests: XCTestCase {
             let map = try EELSThickness.logRatio(image, threshold: .estimated())
             XCTAssertEqual(map.estimatedTolerance, found.tolerance)
             let nch = image.channels
-            var ties = 0, sameAsExSpy = 0
+            var ties = 0
             for p in 0..<pin.rows * pin.cols {
                 // a minimum near zero is rounding noise (SciPy 1e-14, here another 1e-14): compare absolutely, at the pins' own epsilon
                 worstMin.record(abs(found.minAbsDerivative[p] - route.minAbsDerivative[p]), "\(name) pixel \(p)")
-                XCTAssertLessThanOrEqual(abs(found.minAbsDerivative[p] - route.minAbsDerivative[p]), route.stability.epsilonAbs, "\(name) pixel \(p) min |d|")
+                XCTAssertEqual(found.minAbsDerivative[p].bitPattern, route.minAbsDerivative[p].bitPattern, "\(name) pixel \(p) min |d| (bit-identical derivative)")
                 let px = map.pixels[p]
-                let tie = route.stability.sensitivePixels.contains(p)
-                if tie {
-                    ties += 1
-                    // amendment 2 (as read above): a first hit under some rounding; sums at the port's own channel.
-                    guard let ch = px.thresholdChannel else { XCTFail("\(name) pixel \(p): no threshold at a tie pixel"); continue }
-                    let j = ch - route.subRange.firstChannel
-                    let d = try checkedDerivative(pixel: p, image: image, route: route, scale: pin.energyAxis.scale)
-                    XCTAssertLessThanOrEqual(abs(d[j]), route.tol * (1 + 1e-9), "\(name) pixel \(p): channel \(ch) has |d| = \(abs(d[j])), tol \(route.tol)")
-                    for earlier in 0..<j {
-                        XCTAssertGreaterThanOrEqual(abs(d[earlier]), route.tol * (1 - 1e-9),
-                                                    "\(name) pixel \(p): channel \(route.subRange.firstChannel + earlier) is definitely below tol and before \(ch)")
-                    }
-                    if px.thresholdChannel == route.thresholdChannel[p] { sameAsExSpy += 1 }
-                    let f = Array(image.counts[(p * nch)..<((p + 1) * nch)])
-                    let i0 = exactSum(f[0..<ch]), it = exactSum(f[0..<nch])
-                    XCTAssertLessThanOrEqual(relativeDifference(px.i0.orFail(), i0), 1e-12, "\(name) pixel \(p) I0 at own channel")
-                    XCTAssertLessThanOrEqual(relativeDifference(px.iTotal, it), 1e-12, "\(name) pixel \(p) It")
-                    XCTAssertLessThanOrEqual(abs(px.tOverLambda.orFail() - log(it / i0)), 1e-12, "\(name) pixel \(p) t/lambda at own channel")
-                    continue
-                }
-                // not a tie: the same channel and the same sums as exSpy
+                if route.stability.sensitivePixels.contains(p) { ties += 1 }
+                // every pixel, tie pixels included: the same channel and the same sums as exSpy
                 XCTAssertEqual(found.inflexionIndex[p], route.inflexionIndex[p], "\(name) pixel \(p) inflexion index")
                 XCTAssertEqual(px.thresholdChannel, route.thresholdChannel[p], "\(name) pixel \(p) channel")
                 if let e = route.thresholdEV[p] {
@@ -126,14 +77,13 @@ final class ThicknessPinsTests: XCTestCase {
                     XCTAssertEqual(px.unavailable, .noInflexionFound, "\(name) pixel \(p)")
                 }
             }
-            print("EELS-REPORT estimated(SG) \(name): \(pin.rows * pin.cols) pixels, \(ties) tie pixels (amendment 2; \(sameAsExSpy) with exSpy's own channel), tol \(found.tolerance) vs pinned \(route.tol)")
+            print("EELS-REPORT estimated(SG) \(name): \(pin.rows * pin.cols) pixels, \(ties) tie pixels, all with exSpy's own channel, tol \(found.tolerance) vs pinned \(route.tol)")
         }
-        print("EELS-REPORT estimated(SG) worst deviations over the non-tie pixels: tol rel \(worstTol.value) (\(worstTol.where_)); minAbsDerivative abs \(worstMin.value) (\(worstMin.where_)); threshold energy abs \(worstEnergy.value); I0 rel \(worstI0.value); It rel \(worstIt.value); t/lambda abs \(worstT.value)")
+        print("EELS-REPORT estimated(SG) worst deviations over all pixels: tol rel \(worstTol.value) (\(worstTol.where_)); minAbsDerivative abs \(worstMin.value) (\(worstMin.where_)); threshold energy abs \(worstEnergy.value); I0 rel \(worstI0.value); It rel \(worstIt.value); t/lambda abs \(worstT.value)")
     }
 
-    /// The whole pipeline, run on SciPy's own five coefficients, reproduces EVERY pinned channel, including the tie pixels of the
-    /// noisy image, and tol and the per-pixel minima (to rounding where the minimum is at an edge of the range): the difference
-    /// above is therefore the coefficient noise of dgelsy against dgelsd and nothing else.
+    /// The whole pipeline, run on SciPy's own five coefficients, reproduces EVERY pinned channel, tol and the per-pixel minima. (Since
+    /// the port's own coefficients are bit-identical to SciPy's this is the same run as above; it stays as the override's check.)
     func testEstimatedThresholdPinsAreExactWithSciPysCoefficients() throws {
         for name in caseNames {
             let pin = EELSFixtures.pinCase(name)
@@ -258,9 +208,7 @@ final class ThicknessPinsTests: XCTestCase {
                     } else {
                         map = try EELSThickness.logRatio(image, threshold: rule!, meanFreePath: source)
                     }
-                    let tie = Set(pin.estimated.stability.sensitivePixels)
                     for p in 0..<pin.rows * pin.cols {
-                        if route.route == "estimated" && tie.contains(p) { continue }      // channel decided by rounding (amendment 2)
                         guard let expected = route[keyPath: key][p] else { continue }
                         let got = map.pixels[p].thicknessNM.orFail()
                         // bound: t/lambda to 1e-12 absolute, times the factor lambda * correction; plus 1e-13 relative for lambda and correction

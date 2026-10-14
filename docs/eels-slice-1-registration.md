@@ -187,3 +187,24 @@ only cause is the least-squares routine behind the Savitzky–Golay coefficients
 `dgelsd`, coefficients equal to 1.3e-15 of the largest. A `dgelsd` route in SpectroCore (tried in a scratch copy, not
 committed) gives SciPy's coefficients bit for bit and exSpy's channel at all seven; it is left as an option, since a tie
 is decided by rounding either way and the gate accepts any first hit.
+
+### 2026-10-14, after Gate B: the Savitzky–Golay derivative is bit-identical to SciPy's (tier 1 fix)
+
+A Gate B refuter found that the estimated-threshold route picked another channel than exSpy on new images (negative counts,
+flat and ramp spectra, random Poisson images). Causes, all in the port's derivative, none a tolerance: (1) the coefficients
+came from `dgelsy`, SciPy's `lstsq` uses `dgelsd` (1.3e-15, which flips ties); (2) the edge channels used a precomputed weight
+matrix instead of `_fit_edge`'s polyfit -> polyder -> polyval; (3) the interior accumulation was pinned for a window of 5 only.
+What replaced them, found by search against SciPy 1.18.1 and verified bit for bit (tests compare bit patterns):
+- coefficients and every edge fit by `dgelsd` (`SVDLeastSquaresProblem`, SpectroCore; `dgelsy` and SpectroEDX untouched);
+- **the edge fits of ALL the image's spectra are one least-squares call**, because HyperSpy filters the whole data array at once
+  (`_map_all`) and `dgelsd`'s bits depend on the number of right-hand sides (below about 512 of them, and on the window), not
+  on the column's place (SciPy's order for 3-D data is x * ny + y; a mutant using the pixel order gave the same bits). A pixel solved alone differs from the same pixel in its image
+  in 1.8 % of rows (measured). With 512 or more spectra the bits no longer depend on the count (300000 spectra, blocks of 512 to
+  100000: 0 rows differ), so images above 131072 pixels are solved in blocks of 65536. Consequence stated openly: a pixel's
+  estimated threshold can depend on the size of the image around it at the 1e-13 level, as it does in exSpy;
+- the interior's three accumulation paths of `correlate1d` (general / anti-symmetric / symmetric, chosen by the weights with
+  DBL_EPSILON), and that from a half-length of 10 the compiled loop does not fuse its first (h / 8) * 8 terms.
+Evidence (`SavitzkyGolayBitParityTests`, generator `tools/eels-thickness/make_sg_parity.py`): 96 coefficient sets and, in the
+large run (52 images, 1706 image x setting runs, windows 5 to 49, polyorder 1 to 4, delta 0.05 / 0.25 / 1, up to 140000 spectra),
+32,520,060 derivative values, 0 mismatches. Gate 1's amendment 2 (tie pixels) is closed: all 7 noisy tie pixels take exSpy's own
+channel and the test holds every pixel to equality. The refuter's images are regression tests (`RefuterRegressionTests`).
