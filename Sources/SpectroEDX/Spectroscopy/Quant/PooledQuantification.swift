@@ -40,6 +40,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 /// Why the whole Quantify run produced no fit. Carries the sentence shown to the user.
 package nonisolated struct QuantificationRefusal: LocalizedError, Equatable {

@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// eXSpy quantification pins (oracle 1), pre-registered in docs/archive/v5/edx-quant-pins-preregistration-2026-10-07.md.
 /// Every expected number in `Fixtures/eds-quant-pins-exspy-7185a4d1.json` is what eXSpy 7185a4d1 + hyperspy 2.4.0 returned
@@ -54,7 +55,7 @@ final class EDSQuantPinsTests: XCTestCase {
         return try! JSONDecoder().decode(Pins.self, from: data)
     }()
     private static let table: MassAbsorptionTable = {
-        let url = fixturesDir.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources/SpectroCore/Resources/Spectroscopy/FFastMAC.csv")
+        let url = fixturesDir.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy/FFastMAC.csv")
         return try! MassAbsorptionTable(contentsOf: url)
     }()
 

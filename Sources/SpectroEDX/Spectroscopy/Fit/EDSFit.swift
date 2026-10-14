@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 package nonisolated enum FitMethod: Sendable, Equatable {
     /// The named default: unweighted least squares, non-negative areas.

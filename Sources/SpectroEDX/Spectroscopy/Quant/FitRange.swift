@@ -20,6 +20,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 /// The fitted range as run: 0.2 keV to `toKeV`, and where `toKeV` came from.
 public nonisolated struct FitRangeChoice: Sendable, Equatable {

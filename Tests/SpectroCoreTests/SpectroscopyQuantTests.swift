@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// WP3 lane K: k-factors, Cliff-Lorimer / zeta / cross-section quantification and
 /// absorption. Every expected number below was produced by running eXSpy 7185a4d1
@@ -12,7 +13,7 @@ final class SpectroscopyQuantTests: XCTestCase {
 
     private static let resources: URL = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        .appendingPathComponent("Sources/SpectroCore/Resources/Spectroscopy")
+        .appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy")
 
     private static let table: MassAbsorptionTable = {
         try! MassAbsorptionTable(contentsOf: resources.appendingPathComponent("FFastMAC.csv"))

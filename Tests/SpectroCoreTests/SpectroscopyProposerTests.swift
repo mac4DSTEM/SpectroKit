@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// v5.0 WP3 lane P: the element proposer rebuilt on the model fit. The cases are Fable's round-2 failures
 /// (`reviewT2/glm.py`: Kramers x window-absorption continuum, a Ga L-alpha tail, an unlisted O K-alpha, an Al K step),
@@ -284,7 +285,7 @@ final class SpectroscopyProposerTests: XCTestCase {
         XCTAssertTrue(r.proposed.contains { $0.element == "Mg" }, "Mg is proposed (so the proposer had every reason to add it)")
         XCTAssertEqual(settings.elements, ["Al", "Si"])
         let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Sources/SpectroCore/Spectroscopy/Proposer")
+            .appendingPathComponent("Sources/SpectroEDX/Spectroscopy/Proposer")
         let files = try FileManager.default.contentsOfDirectory(atPath: dir.path).filter { $0.hasSuffix(".swift") }
         XCTAssertEqual(Set(files), ["ElementProposer.swift", "FitNullVariance.swift", "LineConflicts.swift", "ProposalRules.swift"])   // ProposalRules (WP4, lane L12) is a post-selection on a result, never an edit of an element list: the scan below covers it too
         for f in files {

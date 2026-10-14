@@ -8,6 +8,7 @@
 //
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 @MainActor
 final class QuantificationMethodSpectro: XCTestCase {

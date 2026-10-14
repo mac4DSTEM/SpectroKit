@@ -13,6 +13,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 /// K, L or M family of an X-ray line (the first letter of its name).
 public nonisolated enum XRayFamily: String, Sendable, Equatable {

@@ -13,6 +13,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 /// A line the windows are built around: its energy and the detector's line width there, keV.
 package nonisolated struct SpectralLine: Equatable, Sendable {
@@ -87,9 +88,22 @@ public nonisolated struct ResolvedWindow: Equatable, Sendable {
         public let right: Range<Int>
         /// `(i5 - i4) / ((i1 - i0) + (i3 - i2))` on the rounded indices (`_eds.py:679`).
         public let scale: Double
+        /// The memberwise initialiser, written out so that it is `package`: the tests (a different module from here since the
+        /// SpectroCore / SpectroEDX split) build these values directly; the implicit one is internal.
+        package init(left: Range<Int>, right: Range<Int>, scale: Double) {
+            self.left = left
+            self.right = right
+            self.scale = scale
+        }
     }
     public let signal: Range<Int>
     public let background: Background?
+
+    /// The memberwise initialiser, written out so that it is `package` (see `Background.init`).
+    package init(signal: Range<Int>, background: Background?) {
+        self.signal = signal
+        self.background = background
+    }
 
     /// The channel ranges to sum, in the order `netCounts(fromSums:)` reads them: signal, then
     /// (left, right) when there is a background.
@@ -207,6 +221,17 @@ public nonisolated struct WindowConflict: Equatable, Sendable {
     package let overlap: ClosedRange<Double>
     /// True when the overlap reaches the other line's integration window (E +- width FWHM / 2), not only its flank.
     package let reachesIntegrationWindow: Bool
+
+    /// The memberwise initialiser, written out so that it is `package` (see `ResolvedWindow.Background.init`).
+    package init(line: String, side: Side, other: String, otherEnergy: Double, overlap: ClosedRange<Double>,
+                 reachesIntegrationWindow: Bool) {
+        self.line = line
+        self.side = side
+        self.other = other
+        self.otherEnergy = otherEnergy
+        self.overlap = overlap
+        self.reachesIntegrationWindow = reachesIntegrationWindow
+    }
 }
 
 nonisolated extension WindowIntensity {

@@ -10,6 +10,7 @@
 //
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 @MainActor
 final class SpectroscopyDriveL12Spectro: XCTestCase {

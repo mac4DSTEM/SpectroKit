@@ -1,9 +1,14 @@
 // swift-tools-version: 6.2
 // SpectroKit — the macEM suite's spectroscopy library (a Swift port of exSpy), extracted from mac4DSTEM 5ba712a0.
 //
-// One target for now, `SpectroCore`; the SpectroEDX split comes later. Swift 6 language mode, nonisolated by default
-// (no `.defaultIsolation`), as macTEM's TEMCore. The six EPQ / FFAST / Krause tables are `Bundle.module` resources
-// (`QuantificationTables.bundled()`); test fixtures are read by `#filePath` and are not resources.
+// Two library targets (macTEM ADR 003: "Modules: SpectroCore (the shared part), SpectroEDX (first), SpectroEELS (later)"):
+// `SpectroCore` is what EDS and EELS share (the spectrum image, the energy axis, the least-squares and Poisson fits, the
+// counting statistics, the Velox and DM4 file readers); `SpectroEDX` is the X-ray part (lines, the continuum and EDS fit
+// models, the element proposer, the quantification method, Cliff-Lorimer, absorption, the k-factor sources) and depends on
+// SpectroCore. SpectroCore never depends on SpectroEDX; a future SpectroEELS will depend on SpectroCore only. Swift 6
+// language mode, nonisolated by default (no `.defaultIsolation`), as macTEM's TEMCore. The six EPQ / FFAST / Krause tables
+// are SpectroEDX's `Bundle.module` resources (`QuantificationTables.bundled()`, bundle `SpectroKit_SpectroEDX`); test
+// fixtures are read by `#filePath` and are not resources. What one module needs from the other is `package`, never `public`.
 import PackageDescription
 
 let package = Package(
@@ -12,6 +17,7 @@ let package = Package(
     products: [
         .library(name: "SpectroCore", targets: ["SpectroCore"]),
         .library(name: "SpectroEELS", targets: ["SpectroEELS"]),
+        .library(name: "SpectroEDX", targets: ["SpectroEDX"]),
     ],
     targets: [
         // Plain-C wrappers over the four Accelerate LAPACK routines `FitLinearAlgebra` calls. ACCELERATE_NEW_LAPACK is
@@ -26,7 +32,6 @@ let package = Package(
         .target(
             name: "SpectroCore",
             dependencies: ["CSpectroLAPACK"],
-            resources: [.copy("Resources/Spectroscopy")],
             // No Debug `-O` (S2 carried mac4DSTEM's unsafe `-O` flag for the Debug configuration). Measured in S3:
             // Debug at -Onone is 20-50x slower on every hot path (936 MB Velox 24.5 s vs 1.05 s, proposer 956 s vs 19.8 s),
             // and `@_optimize(speed)` does not help at -Onone, but a versioned dependency cannot carry unsafe flags. So the
@@ -48,10 +53,23 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
-        // The 258 tests that moved from mac4DSTEM, by name (its docs/archive/v5/spectrokit-test-partition-2026-10-13.md).
+        // The X-ray half: SpectroCore plus the EDX-specific machinery. Calls only SpectroCore (not the C target) and carries the
+        // six quantification tables as resources.
+        .target(
+            name: "SpectroEDX",
+            dependencies: ["SpectroCore"],
+            resources: [.copy("Resources/Spectroscopy")],
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+                .enableUpcomingFeature("MemberImportVisibility"),
+            ]
+        ),
+        // The 258 tests that moved from mac4DSTEM, by name (its docs/archive/v5/spectrokit-test-partition-2026-10-13.md). They
+        // stay in one target across the split (the names are the contract), so it depends on both modules.
         .testTarget(
             name: "SpectroCoreTests",
-            dependencies: ["SpectroCore"],
+            dependencies: ["SpectroCore", "SpectroEDX"],
             exclude: ["Fixtures"],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
@@ -99,7 +117,7 @@ let package = Package(
         // Its own target so the moved-name count stays exactly 258.
         .testTarget(
             name: "SpectroGoldenTests",
-            dependencies: ["SpectroCore"],
+            dependencies: ["SpectroCore", "SpectroEDX"],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),

@@ -32,6 +32,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 public nonisolated struct UnlistedLineCheck: Sendable, Equatable {
     package struct Candidate: Sendable, Equatable {

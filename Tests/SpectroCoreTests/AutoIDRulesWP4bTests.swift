@@ -8,6 +8,7 @@
 
 import SpectroCore
 import XCTest
+import SpectroEDX
 
 @MainActor
 final class AutoIDRulesWP4bTests: XCTestCase {

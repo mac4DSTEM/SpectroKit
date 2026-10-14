@@ -2,6 +2,7 @@
 // the rest stay in SpectroscopyQuantifyTests.swift. Helpers are duplicated, not shared, across the split.
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// v5.0 R3: the Quantify verb on the simulated tiny GMS fixture (`demo-edx-tiny.dm4` + truth): the pooled fit, its
 /// sigma as named terms, at% only with a k source, absorption refused where the geometry is unknown.
@@ -10,7 +11,7 @@ final class SpectroscopyQuantifySpectro: XCTestCase {
 
     static let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
     static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        .appendingPathComponent("Sources/SpectroCore/Resources/Spectroscopy")
+        .appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy")
     static let tables = try! QuantificationTables(directory: resources)
 
     static func image() throws -> LoadedSpectrumImage {

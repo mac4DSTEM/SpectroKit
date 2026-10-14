@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// Auto ID failed on six of the owner's Velox entries with `ProposerError.rankDeficient`: `ElementProposer.sumColumns` added
 /// one pile-up column per parent pair, and two pairs whose energies coincide in the line table (Dy+Ti and Cs+Ho at 11.0061 keV)

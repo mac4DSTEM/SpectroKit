@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// v5.0 WP3 lane F: the EDX spectrum fit (line model, NNLS least squares, Poisson IRLS, continuum,
 /// axis refinement, reference shapes). Pins come from RUNNING eXSpy 7185a4d1 / hyperspy 2.4.0
@@ -49,7 +50,7 @@ final class SpectroscopyFitTests: XCTestCase {
     }
 
     private static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        .appendingPathComponent("Sources/SpectroCore/Resources/Spectroscopy")
+        .appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy")
     /// EPQ's default SDD efficiency (main's lane-K model) on the shipped FFAST table: the continuum's detector model.
     private static let sdd = SDDEfficiency(table: try! MassAbsorptionTable(contentsOf: resources.appendingPathComponent("FFastMAC.csv")))
 

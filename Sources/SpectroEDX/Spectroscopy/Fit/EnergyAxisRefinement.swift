@@ -19,6 +19,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 package nonisolated struct AxisRefinementSettings: Sendable, Equatable {
     package var refineOffset = true

@@ -34,6 +34,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 public nonisolated struct ElementCandidate: Equatable, Sendable {
     public let element: String

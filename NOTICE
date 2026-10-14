@@ -22,7 +22,7 @@ self-reports validation "none".
 eXSpy and HyperSpy (EDX spectroscopy)
 ================================================================================
 
-The X-ray line table (Sources/SpectroCore/Spectroscopy/XRayLineData.swift: line
+The X-ray line table (Sources/SpectroEDX/Spectroscopy/XRayLineData.swift: line
 energies from Chantler 2005, relative line weights from the EPQ library, both as
 eXSpy ships them), the detector line-width law, the integration and background
 window rules, the spectrum fit and Cliff-Lorimer quantification are ported from
@@ -36,7 +36,7 @@ with eXSpy is not validation.
     Copyright (C) The HyperSpy developers
     Both licensed under the GNU General Public License v3.0 or later
 
-The element table in Sources/SpectroCore/Spectroscopy/Quant/QuantElementData.swift
+The element table in Sources/SpectroEDX/Spectroscopy/Quant/QuantElementData.swift
 (atomic weights and densities) comes from eXSpy's elements data (GPL-3.0-or-later).
 
 The Velox EMD reader follows rosettasciio's (https://github.com/hyperspy/rosettasciio,
@@ -76,7 +76,7 @@ Tests/SpectroEELSTests/Fixtures/exspy-linescan-*.f64 are eXSpy's simulated test 
 NIST EPQ data (EDX quantification)
 ================================================================================
 
-Sources/SpectroCore/Resources/Spectroscopy/FFastMAC.csv (mass absorption
+Sources/SpectroEDX/Resources/Spectroscopy/FFastMAC.csv (mass absorption
 coefficients) and LineWeights.csv (X-ray line weights) are copied verbatim from the
 NIST EPQ library, https://github.com/usnistgov/EPQ, commit 249dd3f8. The EPQ licence
 (LicenseFile.txt) reads:

@@ -19,6 +19,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 package nonisolated struct AmplitudeVariances: Sendable {
     /// Per model group; nil for a group without support in the fitted range.

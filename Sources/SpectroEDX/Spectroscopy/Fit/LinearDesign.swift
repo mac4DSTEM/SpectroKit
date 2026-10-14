@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 public nonisolated enum FitBackground: Sendable, Equatable {
     /// Default: the empirical continuum with the Al K step, fitted jointly with the lines.

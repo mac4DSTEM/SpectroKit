@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// SpectroKit S0 (ADR 064 amendment 2 §2): the long spectroscopy calls take `cancelled` (default `SpectroCancellation.task`) and an
 /// optional `progress`. Per family: cancel at the first step and cancel INSIDE the call both throw `SpectroCancelled` and return

@@ -2,6 +2,7 @@
 // the rest stay in SpectroscopyFitRangeTests.swift. Helpers are duplicated, not shared, across the split.
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// WP3c, "the default fit range, not the continuum" (docs/archive/v5/wp3c-fit-range-preregistration-2026-10-06.md, P1-P6).
 /// The default upper fit limit is min(axis end, beam, 20 keV), decided on the file's axis; a typed limit is Expert

@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// Auto ID failed with `ProposerError.rankDeficient` on a pile-up pair whose energy equals a ONE-COMPONENT column of a candidate:
 /// V K-alpha escape 3.2125 keV = Tb M-alpha + Ir M-alpha, on a spectral axis ending at 5.115 keV. There V's group is V K-alpha

@@ -24,6 +24,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 package nonisolated struct FitLine: Sendable, Equatable {
     package let id: String        // "Fe_Ka"

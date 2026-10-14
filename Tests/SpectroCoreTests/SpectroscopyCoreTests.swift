@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// v5.0 WP2 lane C: the spectral basics ported from eXSpy 7185a4d1 / HyperSpy 2.4.0.
 /// Every expected number in `Fixtures/eds-pins-exspy-7185a4d1.json` was produced by RUNNING eXSpy

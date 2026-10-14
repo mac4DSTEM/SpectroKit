@@ -11,6 +11,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 // MARK: - Regions
 
@@ -108,6 +109,18 @@ public nonisolated struct LineWindow: Equatable, Sendable {
     /// Why there is no window: no line on the axis, a window edge outside it, an empty background window.
     public let failure: String?
     public let conflicts: [WindowConflict]
+
+    /// The memberwise initialiser, written out so that it is `package` (see `ResolvedWindow.Background.init`).
+    package init(element: String, id: String, energy: Double, fwhm: Double, window: ResolvedWindow?, failure: String?,
+                 conflicts: [WindowConflict]) {
+        self.element = element
+        self.id = id
+        self.energy = energy
+        self.fwhm = fwhm
+        self.window = window
+        self.failure = failure
+        self.conflicts = conflicts
+    }
 }
 
 /// The net counts of one line in one spectrum, with the sums they came from.

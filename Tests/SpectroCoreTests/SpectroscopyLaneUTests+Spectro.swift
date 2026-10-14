@@ -2,6 +2,7 @@
 // the rest stay in SpectroscopyLaneUTests.swift. Helpers are duplicated, not shared, across the split.
 import XCTest
 import SpectroCore
+import SpectroEDX
 
 /// v5.0 lane U: the first drive's wiring, text and presentation findings (docs/archive/v5/room-drive-2026-10-06.md, 3-13).
 /// Each test names the mutation that must turn it red.

@@ -29,6 +29,7 @@
 import XCTest
 import Foundation
 import SpectroCore
+import SpectroEDX
 
 // MARK: - The dump
 
@@ -144,7 +145,7 @@ enum GoldenQ {
     static let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         .appendingPathComponent("SpectroCoreTests/Fixtures")
     static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        .appendingPathComponent("Sources/SpectroCore/Resources/Spectroscopy")
+        .appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy")
     static let tables = try! QuantificationTables(directory: resources)
 
     static func image() throws -> LoadedSpectrumImage {
