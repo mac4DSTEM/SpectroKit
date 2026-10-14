@@ -1,0 +1,36 @@
+{
+  "schema": "spectrokit.eels.raw-f64/1",
+  "file": "exspy-linescan-ll.f64",
+  "shape": [1, 17, 1024],
+  "dtype": "float64",
+  "byteOrder": "little",
+  "order": "C: rows, cols, channels (one row; the 17 spectra of the line scan are the columns)",
+  "energyAxis": {
+    "offset": -100.0,
+    "scale": 0.5,
+    "size": 1024,
+    "units": "eV",
+    "binned": true
+  },
+  "microscope": {
+    "beamEnergyKeV": 200.0,
+    "convergenceAngleMrad": 10.0,
+    "collectionAngleMrad": 20.0,
+    "source": "Acquisition_instrument.TEM metadata of the exSpy file"
+  },
+  "bytes": 139264,
+  "sha256": "d71a81c393bbb29b6c9b87d42bda9e2ca1cb09c0afcd0e001840d824c6bf897a",
+  "truthTOverLambda": {
+    "expression": "numpy.arange(0.3, 2, 0.1) (as exSpy's tests write it)",
+    "values": [0.3, 0.4, 0.5, 0.6000000000000001, 0.7000000000000002, 0.8000000000000002, 0.9000000000000001, 1.0000000000000002, 1.1000000000000003, 1.2000000000000002, 1.3000000000000003, 1.4000000000000004, 1.5000000000000004, 1.6000000000000005, 1.7000000000000004, 1.8000000000000005, 1.9000000000000006]
+  },
+  "provenance": {
+    "sourceFile": "exspy/tests/signals/data/EELS_LL_linescan_simulated_thickness_variation.hspy",
+    "sourceBytes": 134536,
+    "sourceSha256": "6056f51456846ab074a116b0cd7fd237026a974d9678641779fb361e4e113482",
+    "sourceTitle": "Simulated EELS low-loss thickness 0.3-1.9 $t/\\lambda$",
+    "exspyCommit": "7185a4d13d7d5c550b7bb8d1e9bd62af9cc4203e",
+    "licence": "exSpy test data, GPL-3.0-or-later (exSpy's LICENSE is the GPL v3; its source headers grant version 3 or any later version). Copyright 2007-2026 The eXSpy developers. Copied unchanged (only re-encoded as raw float64) as a test fixture of SpectroKit (GPL-3.0), with attribution; the .hspy carries no header of its own.",
+    "reencoding": "HyperSpy 2.4.0 hs.load(...).data (float64, C order, no change of values)"
+  }
+}
