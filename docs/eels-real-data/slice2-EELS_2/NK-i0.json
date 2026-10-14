@@ -1,0 +1,42 @@
+{
+  "atomsPerNM2" : {
+    "median" : -261.4080996435963,
+    "negative" : 54705,
+    "p1" : -3465.2593458821316,
+    "p99" : 589.51672070344557
+  },
+  "backgroundWindowEV" : [
+    351,
+    396
+  ],
+  "beamEnergyKeV" : 200,
+  "collectionMrad" : 25.647114810414074,
+  "convergenceMrad" : 10.5,
+  "coreLossToLowLossDose" : 200.00000000000091,
+  "crossSectionBarn" : 2033.9882014766201,
+  "edge" : "N K",
+  "edgeWindowEV" : [
+    401,
+    451
+  ],
+  "effectiveCollectionMrad" : 24.542643627321155,
+  "lowLossRoute" : "I_0 from the thickness map (Egerton eq. 4.65)",
+  "method" : "power law (two-area, HyperSpy 2.4.0) + ratio method (Egerton eq. 4.65\/4.66), cross section exSpy 7185a4d1 dft GOS (Segger, Guzzinati and Kohl 1.5.0)",
+  "nil" : 0,
+  "nilReasons" : {
+
+  },
+  "nx" : 432,
+  "ny" : 172,
+  "pixels" : 74304,
+  "powerLawR" : {
+    "median" : 3.1246096190555597,
+    "p1" : 2.3314691864508839,
+    "p99" : 3.6971268263441219
+  },
+  "relativeSigmaMedian" : 0.12389679354604848,
+  "route" : "i0",
+  "seconds" : 0.076838292006868869,
+  "sigmaCountingMedian" : 43.888199988008097,
+  "validation" : "none"
+}

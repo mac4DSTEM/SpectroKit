@@ -1,0 +1,146 @@
+{
+  "gate": "R2",
+  "pass": true,
+  "rules": {
+    "estimated": {
+      "channelMismatches": 0,
+      "diagnostics": {
+        "channels": 2020,
+        "energyOffsetEV": -150,
+        "energyScaleEV": 0.75,
+        "estimatedTolerance": 1282.8776661706481,
+        "method": "log-ratio, exSpy 7185a4d1",
+        "nil": 1,
+        "nilReasons": {
+          "noInflexionFound": 1
+        },
+        "nx": 300,
+        "ny": 300,
+        "pixels": 90000,
+        "readSeconds": 0.3296366249851417,
+        "rule": "estimated",
+        "seconds": 0.25666233300580643,
+        "sigmaCountingMedian": 0.00048514975308171704,
+        "tOverLambda": {
+          "above3": 0,
+          "below0": 0,
+          "median": 1.0023011655475167,
+          "p1": 0.6121326751849077,
+          "p99": 1.2811663896130383
+        },
+        "thresholdEV": {
+          "median": 6.75,
+          "p1": 6,
+          "p99": 8.25
+        },
+        "validation": "none",
+        "zlpCentreEV": {
+          "fractionBeyondOneChannel": 1.1111111111111112e-05,
+          "median": 0,
+          "needsZeroLossAlignment": false,
+          "p1": 0,
+          "p99": 0
+        }
+      },
+      "firstMismatches": [],
+      "nilMismatches": 0,
+      "pass": true,
+      "pixels": 90000,
+      "worstAbsoluteTOverLambda": 0.0,
+      "worstRelativeI0": 0.0,
+      "worstRelativeIt": 0.0
+    },
+    "fixed3": {
+      "channelMismatches": 0,
+      "diagnostics": {
+        "channels": 2020,
+        "energyOffsetEV": -150,
+        "energyScaleEV": 0.75,
+        "estimatedTolerance": null,
+        "method": "log-ratio, exSpy 7185a4d1",
+        "nil": 0,
+        "nilReasons": {},
+        "nx": 300,
+        "ny": 300,
+        "pixels": 90000,
+        "readSeconds": 0.3296366249851417,
+        "rule": "fixed3",
+        "seconds": 0.1917429169989191,
+        "sigmaCountingMedian": 0.0005138868946890351,
+        "tOverLambda": {
+          "above3": 1,
+          "below0": 0,
+          "median": 1.0766508052832127,
+          "p1": 0.678405056889886,
+          "p99": 1.361300628039172
+        },
+        "thresholdEV": {
+          "median": 3,
+          "p1": 3,
+          "p99": 3
+        },
+        "validation": "none",
+        "zlpCentreEV": {
+          "fractionBeyondOneChannel": 1.1111111111111112e-05,
+          "median": 0,
+          "needsZeroLossAlignment": false,
+          "p1": 0,
+          "p99": 0
+        }
+      },
+      "firstMismatches": [],
+      "nilMismatches": 0,
+      "pass": true,
+      "pixels": 90000,
+      "worstAbsoluteTOverLambda": 0.0,
+      "worstRelativeI0": 0.0,
+      "worstRelativeIt": 0.0
+    },
+    "fixed5": {
+      "channelMismatches": 0,
+      "diagnostics": {
+        "channels": 2020,
+        "energyOffsetEV": -150,
+        "energyScaleEV": 0.75,
+        "estimatedTolerance": null,
+        "method": "log-ratio, exSpy 7185a4d1",
+        "nil": 0,
+        "nilReasons": {},
+        "nx": 300,
+        "ny": 300,
+        "pixels": 90000,
+        "readSeconds": 0.3296366249851417,
+        "rule": "fixed5",
+        "seconds": 0.19121158300549723,
+        "sigmaCountingMedian": 0.0004910481744637417,
+        "tOverLambda": {
+          "above3": 1,
+          "below0": 0,
+          "median": 1.0177081782708108,
+          "p1": 0.6268039827731152,
+          "p99": 1.2957000930321598
+        },
+        "thresholdEV": {
+          "median": 5,
+          "p1": 5,
+          "p99": 5
+        },
+        "validation": "none",
+        "zlpCentreEV": {
+          "fractionBeyondOneChannel": 1.1111111111111112e-05,
+          "median": 0,
+          "needsZeroLossAlignment": false,
+          "p1": 0,
+          "p99": 0
+        }
+      },
+      "firstMismatches": [],
+      "nilMismatches": 0,
+      "pass": true,
+      "pixels": 90000,
+      "worstAbsoluteTOverLambda": 0.0,
+      "worstRelativeI0": 0.0,
+      "worstRelativeIt": 0.0
+    }
+  }
+}

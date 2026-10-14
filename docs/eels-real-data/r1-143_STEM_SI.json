@@ -1,0 +1,77 @@
+{
+  "file": "143_STEM SI.dm4",
+  "fileSha256": "f2f6babdf057cfdd08d75933dbc8b7ab26fb1652d91461a93008926971dc7e2b",
+  "gate": "R1",
+  "objects": [
+    {
+      "index": 1,
+      "name": "Image Of 143_STEM SI",
+      "readEELS": "refused: cannotOpen(\"Image Of 143_STEM SI (object 1) is not an EELS spectrum image (its role is thumbnail).\")",
+      "role": "thumbnail",
+      "rsciioSignalType": null
+    },
+    {
+      "index": 2,
+      "name": "ADF Image (SI Survey)",
+      "readEELS": "refused: cannotOpen(\"ADF Image (SI Survey) (object 2) is not an EELS spectrum image (its role is survey).\")",
+      "role": "survey",
+      "rsciioSignalType": ""
+    },
+    {
+      "index": 3,
+      "name": "ADF Image",
+      "readEELS": "refused: cannotOpen(\"ADF Image (object 3) is not an EELS spectrum image (its role is scanSignal).\")",
+      "role": "scanSignal",
+      "rsciioSignalType": ""
+    },
+    {
+      "beamEnergyKeV": 200,
+      "collectionMrad": 25.647114810414074,
+      "convergenceMrad": 10.5,
+      "countsEqual": true,
+      "countsSha256": "12d642c82d6b9b0af0fe6ae7e470fd28f5c82880bcb1e7d69a82a45252fb1fee",
+      "energyAxisEqual": true,
+      "energyOffsetEV": -150.0,
+      "energyScaleEV": 0.75,
+      "index": 4,
+      "name": "EELS LL SI",
+      "readSeconds": 0.598163791000843,
+      "role": "eels",
+      "rsciio": {
+        "beam_energy_keV": 200.0,
+        "collection_angle_mrad": 25.647114810414074,
+        "convergence_angle_mrad": 10.5
+      },
+      "shape": [
+        172,
+        432,
+        2020
+      ]
+    },
+    {
+      "beamEnergyKeV": 200,
+      "collectionMrad": 25.647114810414074,
+      "convergenceMrad": 10.5,
+      "countsEqual": true,
+      "countsSha256": "00b072a42ac78bb1665cea3284ae3d360510f36511faa38373e1f9a88e93ef43",
+      "energyAxisEqual": true,
+      "energyOffsetEV": 150.0,
+      "energyScaleEV": 0.75,
+      "index": 5,
+      "name": "EELS HL SI",
+      "readSeconds": 0.561494458001107,
+      "role": "eels",
+      "rsciio": {
+        "beam_energy_keV": 200.0,
+        "collection_angle_mrad": 25.647114810414074,
+        "convergence_angle_mrad": 10.5
+      },
+      "shape": [
+        172,
+        432,
+        2020
+      ]
+    }
+  ],
+  "pass": true
+}
