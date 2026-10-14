@@ -1,0 +1,35 @@
+{
+  "schema": "spectrokit.eels.raw-f64/1",
+  "file": "edge-sigma-CK.f64",
+  "shape": [2040],
+  "dtype": "float64",
+  "byteOrder": "little",
+  "order": "C",
+  "what": "exSpy EELSCLEdge('C_K', GOS='dft').function(E): partial cross section in barn/eV per channel energy",
+  "energyAxis": {
+    "offset": 150.0,
+    "scale": 0.25,
+    "size": 2040,
+    "units": "eV",
+    "binned": true
+  },
+  "microscope": {
+    "beamEnergyKeV": 200.0,
+    "convergenceAngleMrad": 10.0,
+    "collectionAngleMrad": 20.0,
+    "energyScaleEV": 0.25,
+    "effectiveAngleMrad": 18.6880616530907
+  },
+  "bytes": 16320,
+  "sha256": "84bedb3e6daf1316579627e4ba2dca5fadddf9d9e35746851861973c6b738175",
+  "provenance": {
+    "generator": "tools/eels-edge/pins.py --sigma-only",
+    "exspyCommit": "7185a4d13d7d5c550b7bb8d1e9bd62af9cc4203e",
+    "hyperspy": "2.4.0",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "gosMd5": "7fee8891c147a4f769668403b54c529b",
+    "gosDoi": "10.5281/zenodo.7645765",
+    "gosLicence": "CC-BY-4.0"
+  }
+}

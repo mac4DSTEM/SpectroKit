@@ -191,4 +191,37 @@ with the owner.
 
 ## 10. Amendments
 
-(none yet)
+### 2026-10-14, before any Swift run on planted data: what the generators found
+
+Found by `tools/eels-edge/make_planted.py` and `pins.py` (README, "Findings"), before the port was run on any planted image or
+pin. The port's source existed, uncompiled against the fixtures.
+
+1. **Gate 3's prediction is false on the registered set.** At Δ = 50 eV with the default window the method's own bias is
+   −0.43, −3.55 and −0.49 atoms/nm² for the three backgrounds, independent of n_true: relative to n_true = 2 … 50 it is
+   −177 % to −0.86 %, and "≤ 2 %" holds at 2 of 15 pixels; "below 1 %" fails. Cause: the planted densities are below a
+   monolayer, so the edge is 7.7 to 192 counts on 1717 to 15038 background counts, and the two-area estimate's own error
+   (about 0.1 %: r = 3.0019 recovered for r = 3, the midpoint x3 being arithmetic) is a few counts. Recorded as falsified.
+   Added, with the same axes, backgrounds, I_0 = 1e7 and low-loss: a second set **R** with n_true in {200, 500, 1000,
+   2000, 5000} atoms/nm² (a carbon film of about 2 to 50 nm; graphite holds about 113 atoms/nm³), noise seed 20261016,
+   fixtures `edge-*-R-*`, truth `edge-planted-truth-R.json`, pins under `plantedR`. Gate 3 now reads: the exact-bias
+   clause on both sets; the 2 % clause on set R (the generator's prediction: −1.774 % to −0.0086 % at Δ 50 with the
+   default window; −1.951 % at worst over all three windows and Δ 30 to 150). Gate 5's 15 % clause on set R for n_true ≥
+   500 (σ_n/n is 20 to 60 % at n_true = 200, by design); its per-pixel 4 σ clause on both sets.
+2. **Gate 4's predictions** (the I_low(Δ) route's own bias, every pixel alike): −7.6, −17.6 and −30.7 % at Δ 50 for τ 0.3,
+   0.7 and 1.3 (−1.6, −3.7, −7.1 % at Δ 150); the I_0 route (θ 4.5 eV): +22, +61 and +134 %. The ratio method at Δ 50 is
+   a poor route at τ ≥ 0.3; the numbers are the method's, and the gate stays the exact-bias one.
+3. **Readings the generators had to make:** channel k is the bin [E_k, E_k + scale) (the reading HyperSpy's two-area
+   formula makes); counts per channel = I_low · n · σ_ch · 1e−10 (section 5's formula leaves the 1e−10 out); the plural-
+   scattering low-loss is normalised to a total of 1e7 and rebinned exactly from 0.05 to 0.25 eV (0 eV at a coarse channel's
+   centre); σ_k = `np.sum(function[i0:i1] * scale)` (the port sums the same products); a fresh `EELSCLEdge` per setting
+   (exSpy re-integrates only when the effective angle changes).
+4. **Precision the port must reproduce (no bound changes):** exSpy holds the GOS arrays in float32 and, under NumPy 2.5's
+   promotion rules, computes the q limits, the GOS interpolated at q_max, the prefactor and the extrapolation's E^−r in
+   float32; widening them to float64 moves `qint` by up to 1.9e−7. And Python's and NumPy's scalar `**` call libm, whose
+   `pow(x, 2)` is not always x·x on this platform, while Swift's optimiser turns `pow(x, 2)` into x·x. The port does both
+   as exSpy does (`EdgeCrossSection`, `Libm`).
+5. **Second oracle and Dirac, measured on the whole grids:** pyEELSMODEL against exSpy −2.50 % to +1.07 % (1.0 and 0.25
+   eV): gate 2 holds by 0.5 %. Dirac over dft for C K: 0.972 to 0.982 (diagnostic).
+6. **Section 1's failure list, made precise:** a pre-edge window sum ≤ 0 or a non-finite A or r gives a nil pixel (where
+   HyperSpy's `nan_to_num` gives 0, or a zero sum fails the whole image); "equal sums" is withdrawn from the list (r = 0
+   is a flat background, which HyperSpy fits and so does the port).
