@@ -405,6 +405,9 @@ public nonisolated struct VeloxDetectorInfo: Equatable, Sendable {
     /// they are reported and never interpreted or used.
     public let realTimeColumn0: Double?
     public let liveTimeColumn0: Double?
+    /// `ExposureTime` as stored (s). Set on a camera's entry (`ImagingDetector`); the scanning and analytical entries of
+    /// RosettaSciIO 049e7d70's public files carry none.
+    public let exposureTimeSeconds: Double?
 
     public var azimuthDegrees: Double? { azimuthRadians.map { $0 * 180 / .pi } }
     public var elevationDegrees: Double? { elevationRadians.map { $0 * 180 / .pi } }
@@ -460,6 +463,28 @@ public nonisolated struct VeloxMetadata: Sendable {
     public let instrumentModel: String?
     public let acquisitionStartUnixTime: Double?
     public let scanTransformation: VeloxScanTransformation?
+    // The six below (SpectroKit 0.2.0: five from macTEM's ask of 2026-10-13, `stemMagnification` the owner's of
+    // 2026-10-14) are as stored: no unit conversion, no decoding, nil when absent or not a number. macTEM's Velox-TIFF
+    // reader reads the same names from the same tree in XML.
+    /// `Optics.NominalMagnification`. Absent from every STEM image of RosettaSciIO 049e7d70's public files.
+    public let nominalMagnification: Double?
+    /// `CustomProperties.StemMagnification.value`: what RosettaSciIO 049e7d70 maps as the magnification
+    /// (`_emd_velox.py` `_get_mapping`, `float`). Not a STEM marker: in its public files the camera images carry it too
+    /// ("0" on three of the four, "115000" on the fourth) and the EELS spectrometer's entries carry none. For a camera
+    /// image the magnification is `nominalMagnification`.
+    public let stemMagnification: Double?
+    /// `Optics.CameraLength`, metres as stored (RosettaSciIO 049e7d70 `_emd_velox.py` maps it ×1e3 to mm, in every mode).
+    public let cameraLengthMeters: Double?
+    /// `Optics.OperatingMode` as stored. In an `.emd` it is a code ("1", "2" in the public files), not the name a Velox
+    /// TIFF's XML holds ("TEM"); no published reader maps the codes, so none is decoded here.
+    public let operatingMode: String?
+    /// `Optics.ProjectorMode` as stored: a code in an `.emd` as well ("1", "2").
+    public let projectorMode: String?
+    /// `ExposureTime` (s) of the first `Detectors` entry, in file order, whose `DetectorName` equals
+    /// `BinaryResult.Detector`: RosettaSciIO 049e7d70's `_get_detector_metadata_dict` (`_emd_velox.py:51-56`), equality,
+    /// not the `contains` of the energy axis. nil when that entry has none, when no entry matches, or when
+    /// `BinaryResult.Detector` is absent or empty.
+    public let exposureTimeSeconds: Double?
 
     public var superXDetectors: [VeloxDetectorInfo] { detectors.filter { $0.isAnalytical } }
     public var alphaDegrees: Double? { stageAlphaRadians.map { $0 * 180 / .pi } }
@@ -496,7 +521,8 @@ public nonisolated struct VeloxMetadata: Sendable {
                     azimuthRadians: jsonDouble(d["AzimuthAngle"]), elevationRadians: jsonDouble(d["ElevationAngle"]),
                     solidAngleSteradians: jsonDouble(d["CollectionAngle"]),
                     dispersionEV: jsonDouble(d["Dispersion"]), offsetEnergyEV: jsonDouble(d["OffsetEnergy"]),
-                    realTimeColumn0: jsonDouble(d["RealTime"]), liveTimeColumn0: jsonDouble(d["LiveTime"])))
+                    realTimeColumn0: jsonDouble(d["RealTime"]), liveTimeColumn0: jsonDouble(d["LiveTime"]),
+                    exposureTimeSeconds: jsonDouble(d["ExposureTime"])))
             }
             detectors.sort { $0.index < $1.index }
         }
@@ -550,14 +576,21 @@ public nonisolated struct VeloxMetadata: Sendable {
             transformation = VeloxScanTransformation(a11: a11, a12: a12, a13: a13, a21: a21, a22: a22, a23: a23)
         }
 
+        let optics = dict(root, "Optics")
+        // An empty BinaryResult.Detector names no detector (an entry without DetectorName is listed with name "").
+        var exposure: Double?
+        if let detectorName, !detectorName.isEmpty {
+            exposure = detectors.first { $0.name == detectorName }?.exposureTimeSeconds
+        }
+
         return VeloxMetadata(
             detectors: detectors, binaryResultDetector: detectorName, binaryResultDetectorIndex: jsonInt(binary?["DetectorIndex"]), energyAxis: energy,
             scanSizeWidth: jsonInt(size?["width"]), scanSizeHeight: jsonInt(size?["height"]),
             scanArea: areaTuple.map { (left: $0.0, top: $0.1, right: $0.2, bottom: $0.3) },
             scanRotationRadians: jsonDouble(scan?["ScanRotation"]),
             dwellTimeSeconds: jsonDouble(scan?["DwellTime"]), frameTimeSeconds: jsonDouble(scan?["FrameTime"]),
-            accelerationVoltageVolts: jsonDouble(dict(root, "Optics")?["AccelerationVoltage"]),
-            screenCurrentAmperes: jsonDouble(dict(root, "Optics")?["ScreenCurrent"]),
+            accelerationVoltageVolts: jsonDouble(optics?["AccelerationVoltage"]),
+            screenCurrentAmperes: jsonDouble(optics?["ScreenCurrent"]),
             stageAlphaRadians: jsonDouble(stage?["AlphaTilt"]), stageBetaRadians: jsonDouble(stage?["BetaTilt"]),
             stagePositionMeters: positionTuple.map { (x: $0.0, y: $0.1, z: $0.2) },
             holderType: stage?["HolderType"] as? String,
@@ -566,7 +599,12 @@ public nonisolated struct VeloxMetadata: Sendable {
             offset: offsetTuple.map { (x: $0.0, y: $0.1) },
             instrumentModel: dict(root, "Instrument")?["InstrumentModel"] as? String,
             acquisitionStartUnixTime: jsonDouble(dict(dict(root, "Acquisition"), "AcquisitionStartDatetime")?["DateTime"]),
-            scanTransformation: transformation)
+            scanTransformation: transformation,
+            nominalMagnification: jsonDouble(optics?["NominalMagnification"]),
+            stemMagnification: jsonDouble(dict(custom, "StemMagnification")?["value"]),
+            cameraLengthMeters: jsonDouble(optics?["CameraLength"]),
+            operatingMode: optics?["OperatingMode"] as? String, projectorMode: optics?["ProjectorMode"] as? String,
+            exposureTimeSeconds: exposure)
     }
 }
 

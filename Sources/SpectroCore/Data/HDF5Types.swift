@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 
 /// HDF5 C ABI scalar aliases shared by the dynamic reader and writer.
 public typealias hid_t = Int64
@@ -48,11 +49,45 @@ public nonisolated enum HDF5Serial {
     /// other thread able to enter. The lock is recursive, so an exit on a
     /// thread that holds it goes straight through; nothing that holds it waits
     /// on the main thread. Cost: a quit waits for at most one locked operation.
+    ///
+    /// BOUNDED (SpectroKit 0.2.0; macTEM ADR 021, its ask of 2026-10-14). A thread stuck INSIDE HDF5 holds the lock
+    /// forever (a damaged global heap makes `H5Aread` spin in `H5HG__cache_heap_deserialize`; the heap has no checksum),
+    /// and the unbounded wait made Quit wait for Force Quit. The handler now waits `exitBarrierBound` for the lock
+    /// (`lock(before:)`). Past it, it writes one line to stderr and calls `_exit(70)` (EX_SOFTWARE; the status `exit`
+    /// was given is not visible to an atexit handler): no handler registered before this one runs, HDF5's
+    /// `H5_term_library` included, and stdio buffers are not flushed. That is the lesser harm: the stuck thread never
+    /// releases, and a file it was writing is left as its last completed call left it, which the unbounded wait never
+    /// improved on either.
     public static func installExitBarrier() {
         lock.lock(); defer { lock.unlock() }
         guard !exitBarrierInstalled else { return }
-        exitBarrierInstalled = atexit { HDF5Serial.acquire() } == 0
+        exitBarrierInstalled = atexit { HDF5Serial.exitBarrier() } == 0
     }
     /// Owned by `HDF5Serial`; read and written only under `lock`.
     nonisolated(unsafe) private static var exitBarrierInstalled = false
+
+    /// How long a quit waits for the HDF5 operation in flight: 10 s. Every locked operation is one call or one block
+    /// (a Velox slab of at most 32 Mi values; the whole 1745 MB Velox read took 3.8 s in Release, S3), so a wait this
+    /// long is a thread that is not coming back; and it is shorter than a user reaches for Force Quit.
+    public static var exitBarrierBound: TimeInterval {
+        Double(exitBarrierBoundMilliseconds.load(ordering: .acquiring)) / 1000
+    }
+    /// The bound for this process. For the barrier's own tests (`SpectroHDF5ExitProbe`); a host does not set it.
+    package static func setExitBarrierBound(_ seconds: TimeInterval) {
+        exitBarrierBoundMilliseconds.store(Int((seconds * 1000).rounded()), ordering: .releasing)
+    }
+    /// Atomic, not under `lock`: the handler reads it while another thread may hold `lock` for good.
+    private static let exitBarrierBoundMilliseconds = Atomic<Int>(10_000)
+
+    /// The atexit handler: take the lock and never give it back, or leave without HDF5's shutdown once the bound passes.
+    /// Past the bound it calls only `write` and `_exit` (no allocation, no lock): the stuck thread may hold anything.
+    private static func exitBarrier() {
+        if lock.lock(before: Date(timeIntervalSinceNow: exitBarrierBound)) { return }
+        let line: StaticString = """
+            SpectroKit: HDF5Serial's quit barrier passed its bound with the HDF5 lock still held; \
+            _exit(70) without HDF5's shutdown\n
+            """
+        _ = write(STDERR_FILENO, line.utf8Start, line.utf8CodeUnitCount)
+        _exit(70)
+    }
 }

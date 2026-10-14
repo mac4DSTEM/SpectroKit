@@ -47,6 +47,30 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
+        // SpectroKit's own tests, written after the extraction (0.2.0 on): the six new Velox metadata fields (macTEM's five
+        // and StemMagnification) and the bounded quit barrier. Their own target, as the golden's, so SpectroCoreTests stays
+        // the 258 moved names.
+        .testTarget(
+            name: "SpectroKitTests",
+            dependencies: ["SpectroCore", "SpectroHDF5ExitProbe"],
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+                .enableUpcomingFeature("MemberImportVisibility"),
+            ]
+        ),
+        // A child process for the quit-barrier tests: `exit` runs the atexit handlers, which a test cannot watch from
+        // inside its own process. Not a product; SpectroKitTests depends on it only so `swift test` builds it.
+        .executableTarget(
+            name: "SpectroHDF5ExitProbe",
+            dependencies: ["SpectroCore"],
+            path: "Tests/SpectroHDF5ExitProbe",
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+                .enableUpcomingFeature("MemberImportVisibility"),
+            ]
+        ),
         // G-golden: mac4DSTEM's byte-for-byte baseline (recorded at its 71929a01) for the scenarios the library reaches.
         // Its own target so the moved-name count stays exactly 258.
         .testTarget(

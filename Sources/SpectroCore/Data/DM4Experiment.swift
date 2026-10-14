@@ -14,6 +14,9 @@
 //  requested 2D image reads its own bytes.
 //
 //  Tag paths: docs/archive/v5/edx-research-2026-10-05/reports/gms.md §2.
+//  PUBLIC since SpectroKit 0.2.0 (macTEM's ask of 2026-10-13, its ADR 019): `readImage`, `tagTree`, `DM4Image`,
+//  `DM4Axis` and the six `DM4ImageObject` fields macTEM reads, so macTEM reads DM through SpectroCore and keeps no
+//  copy. Access only: no line of the walk or the decode changed.
 //  An EDS spectrum image is decoded by `readEDSSpectrumImage` (v5.0 WP2 R2): the
 //  only object it reads whole, in channel blocks, never the 4D blob. No real GMS
 //  4D+EDS file existed when this was written; the layout is the simulator's guess
@@ -54,10 +57,10 @@ package nonisolated enum DM4RoleSource: String, Sendable, Equatable {
 }
 
 /// One calibrated axis: the value at pixel `i` is `(i - origin) * scale` (gms.md §2d).
-package nonisolated struct DM4Axis: Sendable, Equatable {
-    package let origin: Double
-    package let scale: Double
-    package let units: String
+public nonisolated struct DM4Axis: Sendable, Equatable {
+    public let origin: Double
+    public let scale: Double
+    public let units: String
     package init(origin: Double, scale: Double, units: String) {
         self.origin = origin; self.scale = scale; self.units = units
     }
@@ -90,7 +93,7 @@ package nonisolated struct DM4EDSDetectorTags: Sendable, Equatable {
 public nonisolated struct DM4ImageObject: Sendable, Equatable {
     /// One-based position in `ImageList` (the `N` of `ImageList.N`).
     public let index: Int
-    package let name: String
+    public let name: String
     public let role: DM4ImageRole
     package let roleSource: DM4RoleSource
     /// The first `Meta Data.Experiment keywords.N.Label` in the known set, nil if none.
@@ -100,9 +103,9 @@ public nonisolated struct DM4ImageObject: Sendable, Equatable {
     /// Gatan `ImageData.DataType` code.
     package let dataType: Int
     /// `ImageData.Dimensions` in file order, FASTEST FIRST (DM order: x, y, then slower).
-    package let dimensions: [Int]
+    public let dimensions: [Int]
     /// One per dimension, same order; nil where the file wrote no calibration.
-    package let axes: [DM4Axis?]
+    public let axes: [DM4Axis?]
     /// `SI.Acquisition.Survey Image.Spectrum Image Rect` (top, left, bottom, right in SURVEY pixels).
     /// Written on the SI objects registered to the survey (scan-grid image, EELS/EDS/Diffraction SI),
     /// not on the survey itself.
@@ -118,16 +121,16 @@ public nonisolated struct DM4ImageObject: Sendable, Equatable {
     /// `ImageTags.Meta Data.Data Order Swapped` (1 on the owner's 4D cubes, meaning unknown for an SI), nil when absent.
     package let dataOrderSwapped: Bool?
     /// `ImageTags.Meta Data.Format` verbatim ("Spectrum image", "Image", "Diffraction image" as GMS writes it); not used for `role()`.
-    package let metaDataFormat: String?
+    public let metaDataFormat: String?
     /// `ImageTags.Meta Data.Signal` verbatim ("X-ray", "EELS", ...); `role()` reads its own copy, this is for consumers.
     package let metaDataSignal: String?
     /// Every scalar number under this object's `ImageTags`, prefix removed (`Microscope Info.Voltage`, `EDS.Live time`).
     /// Numeric arrays and structs are not in it. Added 2026-10-12 for consumers that show an object's metadata.
-    package let imageTagNumbers: [String: Double]
+    public let imageTagNumbers: [String: Double]
     /// Every string under this object's `ImageTags`, prefix removed (`DataBar.Acquisition Date`): the type-18 strings
     /// and the short UTF-16 arrays (units, dates). Each is cut at the walk's kept length (4 KiB, `keptStringBytes`),
     /// so a longer UTF-16 string is absent and a longer type-18 string is cut. Added 2026-10-12.
-    package let imageTagStrings: [String: String]
+    public let imageTagStrings: [String: String]
     /// Where the pixel blob starts in the file and how many bytes the tag declares.
     package let dataOffset: Int
     package let dataByteCount: Int
@@ -143,14 +146,14 @@ public nonisolated struct DM4ImageObject: Sendable, Equatable {
 }
 
 /// A decoded 2D image object.
-package nonisolated struct DM4Image: Sendable, Equatable {
-    package let object: DM4ImageObject
-    package let width: Int
-    package let height: Int
+public nonisolated struct DM4Image: Sendable, Equatable {
+    public let object: DM4ImageObject
+    public let width: Int
+    public let height: Int
     /// Row-major, `width` fastest, converted to Float32.
-    package let pixels: [Float]
-    package let xAxis: DM4Axis?
-    package let yAxis: DM4Axis?
+    public let pixels: [Float]
+    public let xAxis: DM4Axis?
+    public let yAxis: DM4Axis?
 }
 
 /// A decoded EDS spectrum image: counts in `(ny, nx, channels)` row-major (the layout `DenseSpectrumImage` takes),
@@ -175,7 +178,7 @@ public nonisolated enum DM4Experiment {
 
     /// Reads image object `index` (one-based, `DM4ImageObject.index`) as Float32.
     /// Reads only that object's own bytes.
-    package static func readImage(path: String, index: Int) throws -> DM4Image {
+    public static func readImage(path: String, index: Int) throws -> DM4Image {
         try readImage(source: try Source.file(path), index: index)
     }
 
@@ -190,12 +193,12 @@ public nonisolated enum DM4Experiment {
     /// KEYS are relative to the stream's root, with NO prefix and no leading dot: `Microscope Info.Voltage`,
     /// `DataBar.Acquisition Date`; an unnamed group is its one-based position (`Items.1.Label`).
     /// Bounds-checked as `list(data:)`: a cut or malformed stream throws `DM4Error.truncated` (or `.cannotOpen`).
-    package static func tagTree(data: Data) throws -> (numbers: [String: Double], strings: [String: String]) {
+    public static func tagTree(data: Data) throws -> (numbers: [String: Double], strings: [String: String]) {
         let walk = try Walk(source: Source.data(data))
         return (walk.numbers, walk.strings)
     }
 
-    package static func readImage(data: Data, index: Int) throws -> DM4Image {
+    public static func readImage(data: Data, index: Int) throws -> DM4Image {
         try readImage(source: Source.data(data), index: index)
     }
 

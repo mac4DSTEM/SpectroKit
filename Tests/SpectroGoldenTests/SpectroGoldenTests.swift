@@ -19,6 +19,12 @@
 //  there. `Q` is a copy of the statics of `SpectroscopyQuantifySpectro` (another test target). Record with
 //  `SPECTRO_GOLDEN_DIR=<dir> swift test --filter SpectroGoldenTests.testRecordBaseline`.
 //
+//  SpectroKit 0.2.0: `velox-tiny.txt` re-recorded on purpose for the six new Velox metadata fields (macTEM's five and
+//  `stemMagnification`) and the per-detector `exposureTimeSeconds` the metadata's exposure is read from. The new file is the
+//  old one plus 13 lines (that field on 5 detectors and 2 stream segments, and the metadata's six new fields; all nil on
+//  this fixture) and nothing removed or changed (`diff` old new: 0 lines `<`). Every other file is still mac4DSTEM's
+//  71929a01 baseline, unchanged.
+//
 
 import XCTest
 import Foundation
