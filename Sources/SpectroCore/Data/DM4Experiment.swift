@@ -58,7 +58,8 @@ package nonisolated enum DM4RoleSource: String, Sendable, Equatable {
     case none
 }
 
-/// One calibrated axis: the value at pixel `i` is `(i - origin) * scale` (gms.md §2d).
+/// One calibrated axis: the value at pixel `i` is `(i - origin) * scale` (DM's `ImageData.Calibrations`, as RosettaSciIO
+/// reads it).
 public nonisolated struct DM4Axis: Sendable, Equatable {
     public let origin: Double
     public let scale: Double
