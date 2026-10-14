@@ -1,7 +1,7 @@
 # tools/eels-thickness: truth and pins for EELS slice 1 (the t/λ thickness map)
 
 Written before any Swift code, as `docs/eels-slice-1-registration.md` sections 4 and 5 fix them. Two generators, one
-fixture directory, `Tests/SpectroEELSTests/Fixtures/` (the `SpectroEELS` target does not exist yet; these are files only).
+fixture directory, `Tests/SpectroEELSTests/Fixtures/` (written before the `SpectroEELS` target existed; `SpectroEELSTests` reads it).
 
 **Agreement with exSpy is not truth.** `pins.json` is what exSpy 7185a4d1 answers; a port that equals it is a port, not a
 measurement. The truth is `planted-truth.json`, made by `make_planted.py` from NumPy alone, with no exSpy, HyperSpy or SciPy

@@ -11,6 +11,7 @@ let package = Package(
     platforms: [.macOS("27.0")],
     products: [
         .library(name: "SpectroCore", targets: ["SpectroCore"]),
+        .library(name: "SpectroEELS", targets: ["SpectroEELS"]),
     ],
     targets: [
         // Plain-C wrappers over the four Accelerate LAPACK routines `FitLinearAlgebra` calls. ACCELERATE_NEW_LAPACK is
@@ -36,6 +37,17 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
+        // EELS slice 1 (docs/eels-slice-1-registration.md): the t/λ thickness map, a port of exSpy 7185a4d1's log-ratio
+        // method. Depends on SpectroCore only (EnergyAxis's HyperSpy rounding, FitLinearAlgebra's least squares).
+        .target(
+            name: "SpectroEELS",
+            dependencies: ["SpectroCore"],
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+                .enableUpcomingFeature("MemberImportVisibility"),
+            ]
+        ),
         // The 258 tests that moved from mac4DSTEM, by name (its docs/archive/v5/spectrokit-test-partition-2026-10-13.md).
         .testTarget(
             name: "SpectroCoreTests",
@@ -53,6 +65,17 @@ let package = Package(
         .testTarget(
             name: "SpectroKitTests",
             dependencies: ["SpectroCore", "SpectroHDF5ExitProbe"],
+            exclude: ["Fixtures"],
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+                .enableUpcomingFeature("MemberImportVisibility"),
+            ]
+        ),
+        // EELS slice 1's tests: pins against exSpy, truth against planted spectra (Fixtures/, tools/eels-thickness/).
+        .testTarget(
+            name: "SpectroEELSTests",
+            dependencies: ["SpectroEELS", "SpectroCore"],
             exclude: ["Fixtures"],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),

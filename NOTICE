@@ -53,6 +53,26 @@ rsciio-EELS_SI.dm4 and of eels-planted.dm4 (written by tools/eels-reader/make_pl
 
 
 ================================================================================
+SciPy, NumPy, HyperSpy and eXSpy (EELS thickness, SpectroEELS)
+================================================================================
+
+SpectroEELS ports eXSpy's log-ratio thickness (commit 7185a4d1: the elastic-scattering threshold and intensity,
+estimate_thickness, Iakoubovskii's inelastic mean free path and its angular correction), HyperSpy 2.4.0's axis
+rounding and slicing (GPL-3.0-or-later, both credited above), SciPy 1.18.1's Savitzky-Golay derivative
+(scipy/signal/_savitzky_golay.py and _polyutils.py) and NumPy 2.5.4's gradient and pairwise summation, so that its
+results equal eXSpy's. They are compared against it (tools/eels-thickness); agreement with eXSpy is not validation.
+Tests/SpectroEELSTests/Fixtures/exspy-linescan-*.f64 are eXSpy's simulated test data
+(exspy/tests/signals/data/EELS_*_linescan_simulated_thickness_variation.hspy), GPL-3.0-or-later.
+
+    SciPy - https://scipy.org, version 1.18.1
+    Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.
+    BSD 3-Clause License: Licenses/SciPy-LICENSE.txt
+    NumPy - https://numpy.org, version 2.5.4
+    Copyright (c) 2005-2025, NumPy Developers.
+    BSD 3-Clause License: Licenses/NumPy-LICENSE.txt
+
+
+================================================================================
 NIST EPQ data (EDX quantification)
 ================================================================================
 
