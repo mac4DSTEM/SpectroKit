@@ -14,9 +14,19 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
   every threshold is exSpy's channel). Gate at `9febf05` (+ a one-line test warning fix): vendored 2.1.1 and Homebrew 2.2.0
   libhdf5, 258 / 0 (same names), golden green, SpectroKitTests 55 / 0, SpectroEELSTests 60 / 0, consumer-check 318 checks
   and 86 / 86 controls, 0 warnings cold. What each consumer changes: `docs/consumers-0.3.0.md`.
-- After 0.3.0 on `main`: EELS slice 2 (C K by the ratio method, `docs/eels-slice-2-registration.md`), the real-data check of
-  the owner's scans (`docs/eels-real-data/`), the EDX stage gates (`docs/edx-stage-gates-registration.md`), CI
-  (`.github/workflows/ci.yml`, enabling it is the owner's).
+- After 0.3.0 on `main` (green at `799bf81`: 258 / golden / SpectroKitTests 55 / SpectroEELSTests 76 / SpectroEDXTests 32,
+  0 warnings; consumer-check 371 checks, 143 / 143 controls):
+  - EELS slice 2, the C K areal density by the ratio method (`EELSEdgeQuantification.ratioMethod`): pins within 7e−16 of
+    exSpy, planted truth, its Gate B refuter's fixes in (`d5e5d2d`, `19e046a`). Public API additive; GOS tables are
+    `Bundle.module` resources of SpectroEELS (bundle `SpectroKit_SpectroEELS`), CC-BY-4.0 in NOTICE.
+  - The real-data check of the owner's scans passed (R1 reader, R2 t/λ, bit for bit); slice 2's C K map against GMS's:
+    Pearson 0.985 (`docs/eels-real-data/`).
+  - EDX stage gates (`SpectroEDXTests`): counts, axis, windows and peak ID pass; findings registered, not fixed (the owner's
+    Q1–Q5 in `docs/edx-stage-gates-registration.md` section 12): `VeloxEMDReader` sorts detectors by index (rsciio takes
+    file order), `EnergyAxisRefinement`'s offset/gain trade-off, and the Mg diagnosis (Gate D: a centre-sampled line
+    shape against channel-integrated data costs ×8 in L_D at 1e7 counts; refine axis and resolution before proposing
+    recovers Mg on planted shifts; the full pool's pruning loses Mg in some cells). D6 waits on the owner's files.
+  - CI workflow (enabling it is the owner's) and a test that reaches dgelsy's rank threshold.
 - Registrations: `docs/eels-slice-1-registration.md`, `docs/eels-slice-2-registration.md`,
   `docs/eels-real-data-check-registration.md`, `docs/edx-stage-gates-registration.md`.
 
