@@ -53,6 +53,7 @@ let package = Package(
         .testTarget(
             name: "SpectroKitTests",
             dependencies: ["SpectroCore", "SpectroHDF5ExitProbe"],
+            exclude: ["Fixtures"],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),
