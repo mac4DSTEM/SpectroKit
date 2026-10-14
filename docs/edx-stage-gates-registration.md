@@ -338,4 +338,24 @@ Not yet run: any Swift code, `tools/edx-stages/pins.py`, `make_planted.py`, the 
 
 ## 13. Amendments
 
-(none yet)
+### 2026-10-14, before any Swift test: what the generators found (`tools/edx-stages/README.md`, "Findings")
+
+1. **P1 ties.** exSpy's `get_xray_lines_near_energy` returns lines at exactly the same |ΔE| in an order that changes between
+   processes (it iterates a hash-ordered dict): "the same list, in the same order" cannot be a contract. The pins store
+   the canonical order (|ΔE|, then name); P1 compares the list with tied runs as sets (45 tied adjacent pairs in 360 cases).
+2. **E3's prediction is false when the gain is off.** exSpy's offset recovery on planted shifts: mean error +0.03 eV and
+   at most 0.71 eV (N_Al 1e6, 288 fits), +0.02 / 0.62 eV (1e7, 96 fits); by gain −3e−4 / 0 / +3e−4 the mean is +0.46 /
+   +0.03 / −0.41 eV. "Within ±0.2 eV at N_Al ≥ 1e6" holds only at the planted gain 0 and N 1e7. exSpy's calibration is a
+   second estimate, not a pin (section 3), so no gate moves; the prediction is recorded as false. Its `"scale"` mode
+   returns 0.0199577 for every planted gain (it does not recover gain here), and `"resolution"` raised in 2 of 384 fits.
+3. **Readings the generators made:** set M uses exSpy's line table (energies and weights, asserted equal to exSpy's), as
+   criterion 3 needs, the booklet lines being in sets U, B and the calibration set; the Fano width uses 8 ln 2 (it gives the
+   registered 79.0 / 82.3 / 85.8 eV); the in-family continuum is the realistic shape projected on the model's Bernstein
+   cone (NNLS equal to SciPy's to 2e−16); the reduced grid and realisation counts were chosen to keep the fixtures under
+   15 MB (README); sets W1 to W6 and B were added. Counts are stored as noise-free means plus int16 residuals.
+4. **Confirmed:** the NumPy decode of RosettaSciIO's 4-detector file equals its published constants (916174, 867647,
+   913682, 865236; 3562739); the window method's Mg bias at zero Mg (−117 to −134 per 1e5 Al counts, as section 7.2); the
+   surrogate's misfit table within 0.02 of section 7.3 (the 2 % tail row 0.77 against 0.81).
+5. **To test (not run):** on a planted file whose detector keys are in the file order Detector-0, Detector-10, Detector-2,
+   RosettaSciIO takes Detector-10's axis (file order) and `VeloxEMDReader` may take Detector-2's (it sorts by index). G-E
+   decides; a difference is a finding about the reader, fixed only by its own registered change.
