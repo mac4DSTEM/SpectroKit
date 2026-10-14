@@ -14,7 +14,8 @@ Layout (DM4, little-endian data, big-endian headers): header = version 4, root l
 entries, 8 bytes each) and the value; a group's content is `sorted(1) open(1) ntags(8)` and its tags. Strings are uint16
 arrays (as GMS writes them). Objects in `ImageList` are unlabelled groups, so `ImageList.N` is the one-based position.
 
-Objects 2-9 are one type each, 10 the stack-builder tags, 11 one row, 12-17 the refusals, 18 a cube whose pixel block is
+Objects 2-9 are one type each, 10 the stack-builder tags, 11 one row, 12-17 the refusals, 18 an object that is EELS by
+`Meta Data.Signal` alone, 19 a keV energy axis (refused), 20 stack-builder tags that are only a string, 21 a cube whose pixel block is
 the last thing in the file (so a copy cut inside the block still walks, and only the read notices).
 Voxel rule (the Swift test repeats it as literals): for the 3 x 2 x 5 objects, with x in 0..2, y in 0..1, c in 0..4,
     b = 37 c + 11 y + 3 x                (0 .. 165, every voxel different)
@@ -109,7 +110,7 @@ def calibration(origin, scale, units):
 
 
 def image(name, dm_type, dims, *, label="EELS", cal=None, tags=(), swapped=None, payload=None, brightness=True,
-          stack_tags=None, data_last=False):
+          stack_tags=None, data_last=False, signal=None):
     """One ImageList entry. `dims` fastest first; `cal` a list of (origin, scale, units) per dimension.
     `data_last`: the pixel block is the LAST tag of the entry (ImageTags and Name come first, `Data` last in ImageData),
     so that when it is the last entry of the file a copy cut inside the block still walks (the reader's walk seeks past
@@ -133,7 +134,7 @@ def image(name, dm_type, dims, *, label="EELS", cal=None, tags=(), swapped=None,
     image_data = image_data + [block] if data_last else [block] + image_data
     meta = [
         string("Format", "Spectrum image" if len(dims) == 3 else "Image"),
-        string("Signal", "EELS" if label == "EELS" else ""),
+        string("Signal", signal if signal is not None else ("EELS" if label == "EELS" else "")),
         group("Experiment keywords", [
             group("", [string("Label", "Spectrum Imaging"), string("Experiment ID", "planted")]),
             group("", [string("Label", label)]),
@@ -199,17 +200,53 @@ def objects():
         image("EELS unsupported type", 14, CUBE, cal=EAXIS),
         # 16: a mislabelled-by-role object: an EDS spectrum image is not an EELS one
         image("EDS spectrum image", 2, CUBE, label="EDS", cal=[(1.5, 2.5, "nm"), (0.0, 3.5, "nm"), (0.0, 0.01, "keV")]),
-        # 18: the last entry of the file with its pixel block last of all: a copy cut inside the block still walks
+        # 18: `Meta Data.Signal` = "EELS" and nothing else says EELS: the Label keyword is unknown and the name has no "eels".
+        #     RosettaSciIO calls an object EELS from that tag alone (signal_type), so the reader must too (role .eels, by signalTag)
+        image("Spectrum cube by signal tag", 2, CUBE, label="Planted unlabelled", signal="EELS", cal=EAXIS,
+              tags=[microscope(100000.0), conditions(9.0, 11.0)]),
+        # 19: an EELS object whose third axis is in keV (the reader reads eV only, as documented, and refuses)
+        image("EELS energy in keV", 2, CUBE, cal=[(1.5, 2.5, "nm"), (0.0, 3.5, "nm"), (-0.04, 0.00025, "keV")]),
+        # 20: the stack builder's `source.Tags at creation` group exists but holds only a STRING tag: RosettaSciIO then reads the
+        #     tags from that group (it finds no voltage and no angles), so the top-level 60 kV / 1 / 2 mrad are a decoy again
+        image("EELS stack builder, strings only", 2, CUBE, cal=EAXIS, tags=[microscope(60000.0), conditions(1.0, 2.0)],
+              stack_tags=[string("Note", "stacked")]),
+        # 21: the last entry of the file with its pixel block last of all: a copy cut inside the block still walks
         image("EELS last block", 2, CUBE, cal=EAXIS, tags=[microscope(100000.0), conditions(5.0, 6.0)], data_last=True),
     ]
 
 
-def build():
-    entries = objects()
+# Data tags whose declared length is not the cube's: RosettaSciIO RAISES on each (so each is its own one-object file, and
+# truth.py records the raise instead of a reading). The reader must throw `truncated`, never decode bytes after the tag.
+# `Data` declares 0, 29 and 31 elements for dims [3, 2, 5] (30 voxels); the tags that follow the Data tag in the file
+# (ImageTags, Name) are the bytes a reader that trusted a zero length would decode as pixels.
+REFUSED = {
+    "eels-refused-zero.dm4": ("EELS zero-length Data tag", b""),
+    "eels-refused-short.dm4": ("EELS short Data tag", cube_bytes(2, NX, NY, NCH)[:-4]),
+    "eels-refused-long.dm4": ("EELS long Data tag", cube_bytes(2, NX, NY, NCH) + bytes(4)),
+}
+# A cube with a zero dimension ([3, 0, 5], an empty Data tag that agrees with it): the reader refuses it (cannotOpen), whatever
+# RosettaSciIO does with it (truth.py records its reading or its raise).
+ZERO_DIM = "eels-refused-zerodim.dm4"
+
+
+def wrap(entries):
     image_list = group("ImageList", entries)
     body = bytes([0, 0]) + struct.pack(">Q", 1) + image_list + struct.pack(">Q", 0)
     header = struct.pack(">I", 4) + struct.pack(">Q", len(body)) + struct.pack(">I", 1)
     return header + body
+
+
+def build_zero_dim():
+    return wrap([image("EELS zero dimension", 2, [NX, 0, NCH], cal=EAXIS, tags=[microscope(100000.0)], payload=b"")])
+
+
+def build_refused(name):
+    title, payload = REFUSED[name]
+    return wrap([image(title, 2, CUBE, cal=EAXIS, tags=[microscope(100000.0)], payload=payload)])
+
+
+def build():
+    return wrap(objects())
 
 
 def main():
@@ -220,6 +257,13 @@ def main():
     path = Path(args.out) / OUT_NAME
     path.write_bytes(data)
     print(f"{path.name}: {len(data)} bytes, sha256 {hashlib.sha256(data).hexdigest()}")
+    for name in REFUSED:
+        data = build_refused(name)
+        (Path(args.out) / name).write_bytes(data)
+        print(f"{name}: {len(data)} bytes, sha256 {hashlib.sha256(data).hexdigest()}")
+    data = build_zero_dim()
+    (Path(args.out) / ZERO_DIM).write_bytes(data)
+    print(f"{ZERO_DIM}: {len(data)} bytes, sha256 {hashlib.sha256(data).hexdigest()}")
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@
 //      the sha256 of the counts as float32 little-endian in SpectroKit's (y, x, channel) order, sample values, E0 / alpha /
 //      beta as rsciio's mapping gives them. The axis numbers and the three tag values are also typed here as literals.
 //      This file is SQUARE (nx = ny), so it cannot show an nx/ny swap; the planted file does.
-//   2. eels-planted.dm4 (tools/eels-reader/make_planted.py, standard library only): 18 objects, non-square 3 x 2 x 5 cubes
+//   2. eels-planted.dm4 (tools/eels-reader/make_planted.py, standard library only): 21 objects, non-square 3 x 2 x 5 cubes
 //      of every type the reader converts, absent tags, the stack-builder tag group, one row, and each refusal. Its voxel
 //      rule is repeated below as code (`b`, `RULE`); eels-planted.truth.json is rsciio's reading of the same bytes (so
 //      the planted layout is also confirmed by an independent reader).
@@ -223,15 +223,15 @@ final class DM4EELSSpectrumImageTests: XCTestCase {
 
     // MARK: The planted file
 
-    /// Object 18's pixel block is the last thing in the file (8 bytes of root trailer follow it), so a copy cut INSIDE the
+    /// Object 21's pixel block is the last thing in the file (8 bytes of root trailer follow it), so a copy cut INSIDE the
     /// block still walks: the listing is whole and every other object still reads (a read takes only its own bytes), and
-    /// only the read of object 18 can notice. It throws `truncated`, by path and from memory; cut after the block it reads.
+    /// only the read of object 21 can notice. It throws `truncated`, by path and from memory; cut after the block it reads.
     func testCutInsideTheLastBlockWalksButItsReadThrows() throws {
-        let t = try Truth("eels-planted.truth.json").object(18)
+        let t = try Truth("eels-planted.truth.json").object(21)
         let whole = try Data(contentsOf: URL(fileURLWithPath: Self.plantedPath))
         XCTAssertEqual(t.dataBytes, 3 * 2 * 5 * 4)
         XCTAssertEqual(whole.count, t.dataOffset + t.dataBytes + 8, "the block is followed only by the 8-byte root trailer")
-        let uncut = try DM4Experiment.readEELSSpectrumImage(data: whole, index: 18)
+        let uncut = try DM4Experiment.readEELSSpectrumImage(data: whole, index: 21)
         XCTAssertEqual(uncut.counts.count, 30)
         let object2 = try read(Self.plantedPath, 2)
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("eels-last-block-\(UUID().uuidString)")
@@ -239,17 +239,17 @@ final class DM4EELSSpectrumImageTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: directory) }
         // The block whole but the trailer gone: still reads, equal to the uncut read (so a throw below is the block's).
         let noTrailer = whole.prefix(t.dataOffset + t.dataBytes)
-        XCTAssertEqual(try DM4Experiment.readEELSSpectrumImage(data: Data(noTrailer), index: 18), uncut)
+        XCTAssertEqual(try DM4Experiment.readEELSSpectrumImage(data: Data(noTrailer), index: 21), uncut)
         for cut in [t.dataOffset, t.dataOffset + t.dataBytes / 2, t.dataOffset + t.dataBytes - 1] {
             let piece = Data(whole.prefix(cut))
-            XCTAssertEqual(try DM4Experiment.list(data: piece).count, 18, "cut at \(cut) still lists every object")
+            XCTAssertEqual(try DM4Experiment.list(data: piece).count, 21, "cut at \(cut) still lists every object")
             XCTAssertEqual(try DM4Experiment.readEELSSpectrumImage(data: piece, index: 2), object2, "object 2 does not need the cut bytes")
-            XCTAssertThrowsError(try DM4Experiment.readEELSSpectrumImage(data: piece, index: 18), "data, cut at \(cut)") {
+            XCTAssertThrowsError(try DM4Experiment.readEELSSpectrumImage(data: piece, index: 21), "data, cut at \(cut)") {
                 guard case DM4Error.truncated = $0 else { return XCTFail("cut at \(cut) threw \($0), not truncated") }
             }
             let file = directory.appendingPathComponent("cut-\(cut).dm4")
             try piece.write(to: file)
-            XCTAssertThrowsError(try self.read(file.path, 18), "path, cut at \(cut)") {
+            XCTAssertThrowsError(try self.read(file.path, 21), "path, cut at \(cut)") {
                 guard case DM4Error.truncated = $0 else { return XCTFail("cut at \(cut) threw \($0), not truncated") }
             }
         }
@@ -276,14 +276,101 @@ final class DM4EELSSpectrumImageTests: XCTestCase {
         Rule(index: 9, name: "EELS float64", value: { Float(Double($0) / 7 + 1e-9) }),
     ]
 
-    /// The listing: 18 objects, the survey, the EELS ones (also the refused ones, whose role is still .eels), one EDS,
-    /// and a last EELS one whose pixel block ends the file.
+    /// The listing: 21 objects, the survey, the EELS ones (also the refused ones, whose role is still .eels), one EDS,
+    /// one EELS by `Meta Data.Signal` alone (18), a keV one (19), a stack-builder one with a string-only group (20), and a last EELS one whose pixel block ends the file.
     func testPlantedListing() throws {
         let objects = try DM4Experiment.list(path: Self.plantedPath)
-        XCTAssertEqual(objects.map(\.index), Array(1...18))
-        XCTAssertEqual(objects.map(\.role), [.survey] + Array(repeating: .eels, count: 15) + [.eds, .eels])
+        XCTAssertEqual(objects.map(\.index), Array(1...21))
+        XCTAssertEqual(objects.map(\.role), [.survey] + Array(repeating: .eels, count: 15) + [.eds, .eels, .eels, .eels, .eels])
         let truth = try Truth("eels-planted.truth.json")
-        XCTAssertEqual(objects.map(\.name), try (1...18).map { try truth.object($0).name })
+        XCTAssertEqual(objects.map(\.name), try (1...21).map { try truth.object($0).name })
+    }
+
+    /// RosettaSciIO calls an object EELS from `Meta Data.Signal` == "EELS" alone (`signal_type`). Object 18 has no known
+    /// Label keyword and a name without "eels": it is an EELS object by that tag only, and reads as rsciio reads it.
+    func testSignalTagAloneMakesAnEELSObject() throws {
+        let objects = try DM4Experiment.list(path: Self.plantedPath)
+        let o = objects[17]
+        XCTAssertEqual(o.name, "Spectrum cube by signal tag")
+        XCTAssertFalse(o.name.lowercased().contains("eels"), "the name does not say EELS")
+        XCTAssertEqual(o.imageTagStrings["Meta Data.Signal"], "EELS")
+        XCTAssertEqual(o.role, .eels, "by the Signal tag alone, as rsciio's signal_type")
+        let t = try Truth("eels-planted.truth.json").object(18)
+        XCTAssertEqual(t.name, o.name)
+        let r = try read(Self.plantedPath, 18)
+        XCTAssertEqual([r.nx, r.ny, r.channels], [3, 2, 5])
+        XCTAssertEqual(sha256(r.counts), t.countsSha256, "vs rsciio")
+        XCTAssertEqual(r.counts[(1 * 3 + 2) * 5 + 3], 22.0)           // b = 128, float32 rule
+        XCTAssertEqual(r.beamEnergyKeV, 100)
+        XCTAssertEqual(r.convergenceSemiAngleMrad, 9)
+        XCTAssertEqual(r.collectionSemiAngleMrad, 11)
+        XCTAssertEqual([r.beamEnergyKeV, r.convergenceSemiAngleMrad, r.collectionSemiAngleMrad],
+                       [t.beamEnergyKev, t.convergenceAngleMrad, t.collectionAngleMrad])
+        try assertAxes(r, t)
+        // The EDS object (label EDS, Signal empty) is still not EELS.
+        XCTAssertEqual(objects[16].role, .eds)
+    }
+
+    /// The third axis in keV is refused with the unit named, as documented (eV only), even though rsciio reads the file.
+    func testEnergyAxisInKeVIsRefused() throws {
+        let message = try cannotOpenMessage(Self.plantedPath, 19)
+        XCTAssertTrue(message.contains("EELS energy in keV") && message.contains("'keV'") && message.contains("eV"), message)
+        let t = try Truth("eels-planted.truth.json").object(19)
+        XCTAssertEqual(t.rsciioAxes.first?.units, "keV", "rsciio reads the same axis, in keV")
+    }
+
+    /// A `source.Tags at creation` group that holds only a STRING tag still decides where the tags are read: RosettaSciIO looks
+    /// in that group whenever `source` exists, finds no voltage and no angles, and returns none; the top-level 60 kV / 1 / 2 mrad
+    /// (the decoy) must not be read. (A reader that looks for numbers only in the group would fall back on the decoy.)
+    func testStackBuilderGroupWithOnlyAStringHidesTheTopLevelTags() throws {
+        let r = try read(Self.plantedPath, 20)
+        XCTAssertEqual(r.object.voltage, 60_000, "the decoy is on the object as stored")
+        XCTAssertEqual(r.object.imageTagNumbers["Microscope Info.Voltage"], 60_000)
+        XCTAssertEqual(r.object.imageTagStrings["source.Tags at creation.Note"], "stacked")
+        XCTAssertNil(r.beamEnergyKeV)
+        XCTAssertNil(r.convergenceSemiAngleMrad)
+        XCTAssertNil(r.collectionSemiAngleMrad)
+        let t = try Truth("eels-planted.truth.json").object(20)
+        XCTAssertEqual(t.name, "EELS stack builder, strings only")
+        XCTAssertNil(t.beamEnergyKev, "rsciio finds no voltage there")
+        XCTAssertNil(t.convergenceAngleMrad)
+        XCTAssertNil(t.collectionAngleMrad)
+        XCTAssertEqual(sha256(r.counts), t.countsSha256)
+    }
+
+    /// A cube with a zero dimension ([3, 0, 5]) is refused (`cannotOpen`, the dimensions named), by path and from memory, even
+    /// though its empty Data tag agrees with it. RosettaSciIO reads it as an empty (5, 0, 3) array; an empty cube is not an image.
+    func testZeroDimensionIsRefused() throws {
+        let path = Self.fixtures.appendingPathComponent("eels-refused-zerodim.dm4").path
+        let message = try cannotOpenMessage(path, 1)
+        XCTAssertTrue(message.contains("[3, 0, 5]") && message.contains("[x, y, energy]"), message)
+        struct Shapes: Decodable { let rsciioRaises: Bool; let rsciioShapes: [[Int]] }
+        let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let truth = try decoder.decode(Shapes.self, from: Data(contentsOf: Self.fixtures.appendingPathComponent("eels-refused-zerodim.truth.json")))
+        XCTAssertFalse(truth.rsciioRaises)
+        XCTAssertEqual(truth.rsciioShapes, [[5, 0, 3]], "rsciio's empty array, recorded")
+    }
+
+    /// A Data tag whose length is not the cube's (0, 29 or 31 elements for dims [3, 2, 5]) throws `truncated`, by path and
+    /// from memory: never a cube decoded from the bytes after the tag. RosettaSciIO raises on each of these files.
+    func testDataTagOfTheWrongLengthThrowsTruncated() throws {
+        for name in ["zero", "short", "long"] {
+            let path = Self.fixtures.appendingPathComponent("eels-refused-\(name).dm4").path
+            let bytes = try Data(contentsOf: URL(fileURLWithPath: path))
+            let listed = try DM4Experiment.list(data: bytes)
+            XCTAssertEqual(listed.count, 1, name)
+            XCTAssertEqual(listed[0].dimensions, [3, 2, 5], name)
+            struct Refusal: Decodable { let rsciioRaises: Bool; let rsciioException: String }
+            let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let truth = try decoder.decode(Refusal.self, from: Data(contentsOf: Self.fixtures.appendingPathComponent("eels-refused-\(name).truth.json")))
+            XCTAssertTrue(truth.rsciioRaises, "rsciio raises on the \(name) file")
+            XCTAssertEqual(truth.rsciioException, "ValueError")
+            for read in [{ try self.read(path, 1) }, { try DM4Experiment.readEELSSpectrumImage(data: bytes, index: 1) }] {
+                XCTAssertThrowsError(try read(), name) {
+                    guard case DM4Error.truncated = $0 else { return XCTFail("\(name) threw \($0), not truncated") }
+                }
+            }
+        }
     }
 
     /// The cube is 3 wide and 2 high with 5 channels: nx and ny are not interchangeable here, and a voxel is where the
@@ -379,7 +466,7 @@ final class DM4EELSSpectrumImageTests: XCTestCase {
     /// Path and data entry points agree on every readable planted object.
     func testPlantedPathAndDataAgree() throws {
         let bytes = try Data(contentsOf: URL(fileURLWithPath: Self.plantedPath))
-        for index in Array(2...11) + [18] {
+        for index in Array(2...11) + [18, 20, 21] {
             XCTAssertEqual(try read(Self.plantedPath, index), try DM4Experiment.readEELSSpectrumImage(data: bytes, index: index), "object \(index)")
         }
     }

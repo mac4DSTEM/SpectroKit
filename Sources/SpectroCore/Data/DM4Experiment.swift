@@ -393,7 +393,7 @@ public nonisolated enum DM4Experiment {
         let (bytes, o2) = count.multipliedReportingOverflow(by: size)
         let (end, o3) = object.dataOffset.addingReportingOverflow(bytes)
         guard !(o1 || o2 || o3), object.dataOffset >= 0, end <= source.size,
-              object.dataByteCount == bytes || object.dataByteCount == 0 else {
+              object.dataByteCount == bytes else {
             throw DM4Error.truncated
         }
         guard bytes <= maxImageBytes else {
@@ -457,7 +457,7 @@ public nonisolated enum DM4Experiment {
         let (bytes, o4) = total.multipliedReportingOverflow(by: size)
         let (end, o5) = object.dataOffset.addingReportingOverflow(bytes)
         guard !(o1 || o2 || o3 || o4 || o5), object.dataOffset >= 0, end <= source.size,
-              object.dataByteCount == bytes || object.dataByteCount == 0 else { throw DM4Error.truncated }
+              object.dataByteCount == bytes else { throw DM4Error.truncated }
         guard total <= maxEDSElements else {
             throw DM4Error.cannotOpen("\(name) has \(total) values; refusing to read more than \(maxEDSElements) (a quarter of this Mac's memory, as 32-bit counts).")
         }
@@ -547,7 +547,7 @@ public nonisolated enum DM4Experiment {
         let (bytes, o4) = total.multipliedReportingOverflow(by: size)
         let (end, o5) = object.dataOffset.addingReportingOverflow(bytes)
         guard !(o1 || o2 || o3 || o4 || o5), object.dataOffset >= 0, end <= source.size,
-              object.dataByteCount == bytes || object.dataByteCount == 0 else { throw DM4Error.truncated }
+              object.dataByteCount == bytes else { throw DM4Error.truncated }
         guard total <= maxEELSElements else {
             throw DM4Error.cannotOpen("\(name) has \(total) values; refusing to read more than \(maxEELSElements) (a quarter of this Mac's memory, as 32-bit values).")
         }
@@ -846,7 +846,7 @@ public nonisolated enum DM4Experiment {
 
         /// Order of authority: the root thumbnail list; a known Experiment-keywords Label; then, as
         /// FALLBACKS that a reader must not mistake for labels: data type 23 (RGBA preview),
-        /// `Meta Data.Signal` = "X-ray", and the object's NAME. The name is used whenever no
+        /// `Meta Data.Signal` = "X-ray" or "EELS" (RosettaSciIO's two markers), and the object's NAME. The name is used whenever no
         /// known label decided the role (label absent OR unrecognised). GMS names are free text
         /// ("ADF Image (SI Survey)", "Diffraction SI", "EELS LL SI"), so a name is only a guess;
         /// `roleSource` records which rule fired.
@@ -863,6 +863,7 @@ public nonisolated enum DM4Experiment {
             }
             if dataType == 23 { return (.thumbnail, .rgbaFallback) }
             if signal == "X-ray" { return (.eds, .signalTag) }       // RosettaSciIO's EDS marker
+            if signal == "EELS" { return (.eels, .signalTag) }       // RosettaSciIO's EELS marker (signal_type)
             let n = name.lowercased()
             if n.contains("survey") { return (.survey, .nameHeuristic) }
             if n.contains("diffraction") { return (.diffraction, .nameHeuristic) }

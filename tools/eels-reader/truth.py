@@ -6,6 +6,9 @@
     Tests/SpectroKitTests/Fixtures/rsciio-EELS_SI.truth.json   <- rsciio-EELS_SI.dm4 (RosettaSciIO 049e7d70's public
                                                                   digitalmicrograph/3D/EELS_SI.dm4, sha256 checked)
     Tests/SpectroKitTests/Fixtures/eels-planted.truth.json     <- eels-planted.dm4 (tools/eels-reader/make_planted.py)
+    Tests/SpectroKitTests/Fixtures/eels-refused-{zero,short,long}.truth.json  <- the three one-object files whose Data tag
+                                                                  length is wrong: rsciio raises; the exception is recorded
+    Tests/SpectroKitTests/Fixtures/eels-refused-zerodim.truth.json  <- a [3, 0, 5] cube: rsciio's reading (or raise) as it is
 
 The reference is RosettaSciIO 049e7d70's `rsciio.digitalmicrograph.file_reader`, from the PINNED checkout
 (`<references>/rosettasciio`, put first on sys.path; the script stops if `rsciio.__file__` is not inside it: the venv
@@ -46,6 +49,9 @@ FIXTURES = "Tests/SpectroKitTests/Fixtures"
 REAL = "rsciio-EELS_SI.dm4"
 REAL_SHA256 = "f9b8203f384cc355437594b649d4ea3a12cddeb231ebb65508a841a379fa171a"   # rsciio/tests/registry.txt
 PLANTED = "eels-planted.dm4"
+# make_planted.py's one-object files whose Data tag declares 0, 29 and 31 elements for a 3 x 2 x 5 cube: rsciio RAISES on each
+REFUSED = ("eels-refused-zero.dm4", "eels-refused-short.dm4", "eels-refused-long.dm4")
+ZERO_DIM = "eels-refused-zerodim.dm4"      # [3, 0, 5] with an empty Data tag: the reader refuses it; rsciio's behaviour is recorded as it is
 RSCIIO_COMMIT = "049e7d7070e84779b499adaf3295beee9facb004"
 
 TARGETS = {
@@ -138,6 +144,21 @@ def one_file(path, references, np, file_reader, DigitalMicrographReader):
     return {"file": path.name, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw), "objects": objects}
 
 
+def refused_file(path, file_reader):
+    """rsciio's reading of a file it must refuse: the exception type and message (no signal is returned)."""
+    raw = path.read_bytes()
+    try:
+        file_reader(str(path))
+    except Exception as e:      # whatever rsciio raises is the record
+        return {"file": path.name, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw),
+                "rsciio_raises": True, "rsciio_exception": type(e).__name__, "rsciio_message": str(e)}
+    if path.name != ZERO_DIM:
+        sys.exit(f"{path.name}: rsciio read it; the file was meant to be refused")
+    sig = file_reader(str(path))
+    return {"file": path.name, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw), "rsciio_raises": False,
+            "rsciio_shapes": [list(s["data"].shape) for s in sig]}
+
+
 def build(fixtures, references):
     file_reader, DigitalMicrographReader, pinned = load_rsciio(references)
     import numpy as np
@@ -154,6 +175,10 @@ def build(fixtures, references):
     for name in (REAL, PLANTED):
         t = dict(head)
         t.update(one_file(fixtures / name, references, np, file_reader, DigitalMicrographReader))
+        out[name.replace(".dm4", ".truth.json")] = json.dumps(t, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    for name in REFUSED + (ZERO_DIM,):
+        t = dict(head)
+        t.update(refused_file(fixtures / name, file_reader))
         out[name.replace(".dm4", ".truth.json")] = json.dumps(t, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
     return out
 
