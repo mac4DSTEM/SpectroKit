@@ -12,6 +12,11 @@
 #   2. mac4DSTEM's vendored copy (HDF5 2.1.1 + libsz + libaec, the exact binaries the app ships), read-only by `git show`
 #      at the extraction commit into .build/hdf5, when ../mac4DSTEM is checked out beside this repo;
 #   3. Homebrew's hdf5 (`brew install hdf5`; same soname 320), for CI and machines without mac4DSTEM.
+#
+# Stamp: a full run (no arguments) that passes, on a tree whose tracked Sources/, Tests/, Package.swift and Package.resolved are
+# clean, writes .build/last-green (HEAD sha, UTC time, libhdf5 path). Any argument or a dirty tree writes nothing and says why on
+# stderr. The stamp is local (.build/ is ignored); tools/last-green.sh prints it and whether HEAD still equals it.
+# Never run `swift build --build-tests -c release` (fails on this toolchain); this script is the gate.
 set -euo pipefail
 cd "${0:A:h}/.."
 if [[ -z ${MAC4DSTEM_HDF5_PATH:-} ]]; then
@@ -30,3 +35,13 @@ if [[ -z ${MAC4DSTEM_HDF5_PATH:-} ]]; then
 fi
 print -u2 "tools/test.sh: libhdf5 = $MAC4DSTEM_HDF5_PATH"
 swift test -c release "$@"
+if (( $# > 0 )); then
+  print -u2 "tools/test.sh: green, but arguments were given (not a full run): no stamp"
+elif [[ -n $(git status --porcelain --untracked-files=no -- Sources Tests Package.swift Package.resolved) ]]; then
+  print -u2 "tools/test.sh: green, but Sources/Tests/Package files are not clean: no stamp"
+else
+  print -r -- "commit $(git rev-parse HEAD)
+time $(date -u +%Y-%m-%dT%H:%M:%SZ)
+libhdf5 $MAC4DSTEM_HDF5_PATH" > .build/last-green
+  print -u2 "tools/test.sh: stamped .build/last-green at $(git rev-parse --short HEAD)"
+fi
