@@ -8,11 +8,17 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
 ## State (2026-10-14)
 
 - 0.1.0 tagged and public. 0.2.0 (macTEM's three asks) is tagged at `edb6ba8`.
-- `main` goes toward 0.3.0: the split into the three modules, EELS slice 1 (`EELSThickness.logRatio`) and 1b
-  (`DM4Experiment.readEELSSpectrumImage`). What each consumer changes on its bump: `docs/consumers-0.3.0.md`.
-- 0.3.0 still owes: one tier-2 refuter on the EELS reader and one Gate B refuter on SpectroEELS, side by side on the frozen
-  commit; then the owner's tag. The owner's EELS scans (`$MACEM_DATA/eels`) are diagnostics, never a gate.
-- Registrations: `docs/eels-slice-1-registration.md`, `docs/eels-real-data-check-registration.md`.
+- **0.3.0 is ready for the owner's tag** (2026-10-14 overnight): the split into the three modules, EELS slice 1
+  (`EELSThickness.logRatio`) and 1b (`DM4Experiment.readEELSSpectrumImage`), and the fixes both refuters required (reader:
+  exact Data-tag length, `Signal == "EELS"` role; SpectroEELS: the Savitzky–Golay derivative bit-identical to SciPy, so
+  every threshold is exSpy's channel). Gate at `9febf05` (+ a one-line test warning fix): vendored 2.1.1 and Homebrew 2.2.0
+  libhdf5, 258 / 0 (same names), golden green, SpectroKitTests 55 / 0, SpectroEELSTests 60 / 0, consumer-check 318 checks
+  and 86 / 86 controls, 0 warnings cold. What each consumer changes: `docs/consumers-0.3.0.md`.
+- After 0.3.0 on `main`: EELS slice 2 (C K by the ratio method, `docs/eels-slice-2-registration.md`), the real-data check of
+  the owner's scans (`docs/eels-real-data/`), the EDX stage gates (`docs/edx-stage-gates-registration.md`), CI
+  (`.github/workflows/ci.yml`, enabling it is the owner's).
+- Registrations: `docs/eels-slice-1-registration.md`, `docs/eels-slice-2-registration.md`,
+  `docs/eels-real-data-check-registration.md`, `docs/edx-stage-gates-registration.md`.
 
 ## Read first
 

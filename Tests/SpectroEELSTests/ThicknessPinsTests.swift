@@ -53,7 +53,6 @@ final class ThicknessPinsTests: XCTestCase {
             XCTAssertLessThanOrEqual(relativeDifference(found.tolerance, route.tol), 1e-11, "\(name) tol")
             let map = try EELSThickness.logRatio(image, threshold: .estimated())
             XCTAssertEqual(map.estimatedTolerance, found.tolerance)
-            let nch = image.channels
             var ties = 0
             for p in 0..<pin.rows * pin.cols {
                 // a minimum near zero is rounding noise (SciPy 1e-14, here another 1e-14): compare absolutely, at the pins' own epsilon

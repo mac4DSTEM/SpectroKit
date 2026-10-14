@@ -15,6 +15,20 @@ exist):
    (`docs/eels-slice-1-registration.md`). Optional; nothing changes for an app that does not import it.
 3. **`DM4Experiment.readEELSSpectrumImage`** in `SpectroCore` (public, additive): a DM4 EELS spectrum image with E0 and
    the convergence and collection semi-angles.
+4. **After review (2026-10-14 overnight), two behaviour changes a consumer can see:**
+   - **A DM4 Data tag must declare exactly the image's bytes.** A tag declaring 0 bytes used to be accepted and decoded the
+     bytes after the tag; `readImage`, the EDS spectrum-image reader and `readEELSSpectrumImage` now throw `.truncated`
+     (RosettaSciIO raises on such a file too). No real file was found that needs the old path; the 258 tests and the
+     golden are unchanged.
+   - **An object whose `Meta Data.Signal` is "EELS" is an EELS object** (as in RosettaSciIO), even without an EELS label or
+     name. `DM4ImageObject.role` can now say `.eels` for objects it used to call unknown; nothing EDS-related changes.
+   - SpectroEELS's estimated threshold is now bit-identical to SciPy's Savitzky–Golay derivative (exSpy's), so every pixel
+     takes exSpy's channel, ties included; the edge fits are solved over the whole image as HyperSpy does, so a pixel's
+     estimated threshold can depend, at the 1e-13 level, on the size of the image around it (as in exSpy).
+   - New in `SpectroCore` (package, not public): a `dgelsd` least squares beside `dgelsy` (unchanged).
+
+`tools/consumer-check` now uses the EELS reader and the whole SpectroEELS public API from a separate package (318 checks,
+86 negative controls), so a public symbol turned `package` fails it.
 
 ## mac4DSTEM
 
