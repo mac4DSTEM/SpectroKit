@@ -173,3 +173,17 @@ Found by `tools/eels-thickness/pins.py` running exSpy at the pin on the planted 
 5. **Confirmed predictions.** exSpy's line scan, axis binned: 0.004116631 (estimated threshold, 4.5 eV for pixels 0-10
    and 4.0 eV for 11-16), 0.004401503 (4.5 eV), 0.003760360 (zero-loss route), as registered. The noiseless planted
    image's estimated thresholds are 1.20 to 1.35 eV with |t/λ − τ| at most 4.6e-4.
+
+### 2026-10-14, after the port (34115cf): gate 1's tie rule worded as tested
+
+Found by the port. The first amendment's tie rule ("a channel whose pinned |derivative| is within 1e-9 relative of the
+pinned `tol`") does not accept exSpy's own channel at a tie pixel where rounding rejected the tie channel and exSpy went
+on to a later channel far below `tol` (noisy pixel 0: |derivative| = 0 at exSpy's channel 228). The rule the amendment
+meant, and the one the port's test applies: at a tie pixel the port's channel c passes when |d_c| ≤ tol (1 + 1e-9) and
+no earlier channel of the search range has |d| < tol (1 − 1e-9), i.e. c is the first hit under some rounding of `tol`;
+its I_0, I_t and t/λ equal the sums at c. exSpy's own channel always passes it. Of the seven noisy tie pixels, four take
+exSpy's channel and three another tie channel (pixels 3, 5, 6: |Δ t/λ| 1.1e-4 to 5.6e-4, at most 0.75 σ_counting). The
+only cause is the least-squares routine behind the Savitzky–Golay coefficients: SpectroCore's `dgelsy` against SciPy's
+`dgelsd`, coefficients equal to 1.3e-15 of the largest. A `dgelsd` route in SpectroCore (tried in a scratch copy, not
+committed) gives SciPy's coefficients bit for bit and exSpy's channel at all seven; it is left as an option, since a tie
+is decided by rounding either way and the gate accepts any first hit.
