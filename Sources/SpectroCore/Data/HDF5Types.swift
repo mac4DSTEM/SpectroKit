@@ -59,8 +59,16 @@ public nonisolated enum HDF5Serial {
     /// (`lock(before:)`). Past it, it writes one line to stderr and calls `_exit(70)` (EX_SOFTWARE; the status `exit`
     /// was given is not visible to an atexit handler): no handler registered before this one runs, HDF5's
     /// `H5_term_library` included, and stdio buffers are not flushed. That is the lesser harm: the stuck thread never
-    /// releases, and a file it was writing is left as its last completed call left it, which the unbounded wait never
-    /// improved on either.
+    /// releases. A file a stuck thread was writing is not closed (HDF5's cached metadata is not flushed); the unbounded
+    /// wait never improved on that, Quit waited for Force Quit. A healthy operation longer than the bound is cut too,
+    /// where 0.1.0 would have finished it. A write that publishes by temporary file and rename keeps its destination
+    /// unchanged but leaves the unfinished temporary file, since `_exit` runs no cleanup.
+    ///
+    /// Call it right after the first successful `H5open`, never earlier: called earlier, the barrier is registered
+    /// before HDF5's handler, so it runs after `H5_term_library` and the teardown runs unguarded (Gate B measured
+    /// SIGSEGV with a thread inside `H5Aread`). Two threads calling `exit()` at once bypass the barrier in progress:
+    /// libc runs the remaining handlers on the second `exit` (also true of 0.1.0). `fork` without `exec` is
+    /// unsupported.
     public static func installExitBarrier() {
         lock.lock(); defer { lock.unlock() }
         guard !exitBarrierInstalled else { return }
@@ -81,7 +89,12 @@ public nonisolated enum HDF5Serial {
     }
     /// The bound for this process. For the barrier's own tests (`SpectroHDF5ExitProbe`); a host does not set it.
     package static func setExitBarrierBound(_ seconds: TimeInterval) {
-        exitBarrierBoundMilliseconds.store(Int((seconds * 1000).rounded()), ordering: .releasing)
+        let milliseconds = (seconds * 1000).rounded()
+        // False for NaN, infinity, a negative value, or milliseconds that do not fit an Int (`Int(...)` would trap).
+        precondition(
+            milliseconds >= 0 && milliseconds < 0x1p62,
+            "HDF5Serial.setExitBarrierBound: \(seconds) s is not a finite, non-negative number of seconds that fits")
+        exitBarrierBoundMilliseconds.store(Int(milliseconds), ordering: .releasing)
     }
     /// Atomic, not under `lock`: the handler reads it while another thread may hold `lock` for good.
     private static let exitBarrierBoundMilliseconds = Atomic<Int>(10_000)

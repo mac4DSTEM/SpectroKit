@@ -6,7 +6,18 @@
 //
 //  The probe registers a stand-in for HDF5's `H5_term_library` BEFORE it installs the barrier, as HDF5 registers its
 //  own inside the first `H5open`, before the loaders install the barrier. atexit is last in, first out: the barrier
-//  runs first, the stand-in ("teardown-ran") after it, and `_exit(70)` must skip it.
+//  runs first, the stand-in ("teardown-ran") after it, and `_exit(70)` must skip it. The barrier's promise is that the
+//  HDF5 lock is still HELD when the teardown starts, so the stand-in has a second thread try `HDF5Serial.run {}` for
+//  0.3 s and writes "teardown-ran lock-held" if it did not get in, "teardown-ran lock-free" if it did. Every test that
+//  expects the teardown expects "lock-held": a stand-in that only said it ran would pass a barrier that took the lock
+//  and gave it back.
+//
+//  The sixth test has no stand-in, because it asks what the five cannot: whether the REAL loader installs the barrier
+//  after HDF5's own handler. The probe's `velox-order` mode opens velox-tiny.emd through the public
+//  `SpectrumImageOpener.open` and installs nothing itself; it asks the libhdf5 the loader loaded for `H5atclose`,
+//  HDF5's hook that calls back as the real `H5_term_library` starts, and the callback reports whether the lock is
+//  held. The mode also checks the lock is free just before `exit`, so a "lock-held" cannot come from a hold the open
+//  leaked. `MAC4DSTEM_HDF5_PATH` (tools/test.sh sets it) reaches the child through the inherited environment.
 //
 //  Every probe runs under a hard deadline: a barrier that waits for ever (the 0.1.0 shape) goes red with "did not exit
 //  within N s" after the child is killed, and never hangs the suite.
@@ -18,26 +29,39 @@
 //  bound has 5 s of room for it. Checked: a `usleep(300_000)` at the top of the pipe handlers fails a measurement that
 //  starts when the handler sees the marker (0.199 s < 0.45 s) and leaves this one green.
 //
-//  Mutations (each applied to HDF5Types.swift in a scratch clone, this suite run, the file restored; red tests named):
+//  Mutations (each applied alone in a scratch clone, this suite run, the file restored; red tests named; edits are to
+//  HDF5Types.swift unless the line says otherwise; "velox" is the sixth test):
 //    handler `lock.lock(); return` (0.1.0: unbounded)       -> stuck: "did not exit within 10.5 s", child killed
 //    `_exit(70)` -> `return`                                -> stuck: status 0, teardown ran
 //    `_exit(70)` -> `_exit(0)`                              -> stuck: status 0
 //    `Date(timeIntervalSinceNow: exitBarrierBound)` -> `Date()`
 //                                                           -> held-briefly: status 70, no "released";
-//                                                              stuck: left after 0.0008 s, not 0.45 s or more
-//    handler body just `return` (no barrier)                -> held-briefly: no "released", teardown first;
-//                                                              stuck: status 0, left after 0.002 s
-//    `installExitBarrier` registers nothing (`atexit` -> `true`)
-//                                                           -> same two tests as the line above
+//                                                              stuck: left after 0.0007 s, not 0.45 s or more
+//    handler body just `return` (no barrier)                -> held-briefly: no "released"; stuck: status 0, teardown
+//                                                              ran, left after 0.31 s; free, default bound and velox:
+//                                                              "lock-free"
+//    `installExitBarrier` registers nothing (`exitBarrierInstalled = true`)
+//                                                           -> the same five tests as the line above
 //    wait of `exitBarrierBound + 8`                         -> stuck: 8.5 s, not under 5.5 s
 //    `Atomic<Int>(10_000)` -> `Atomic<Int>(5_000)`          -> default bound: "5.0", not "10.0"
-//    `if lock.lock(before:)` -> `if !lock.lock(before:)`    -> all five: free, held-by-caller, held-briefly and
-//                                                              default bound exit with 70 and the barrier line;
+//    `if lock.lock(before:)` -> `if !lock.lock(before:)`    -> all six: free, held-by-caller, held-briefly, default
+//                                                              bound and velox exit with 70 and the barrier line;
 //                                                              stuck leaves with status 0, teardown ran
-//    `NSRecursiveLock()` -> `NSLock()`                      -> held-by-caller: status 70 after waiting the 2 s bound
+//    `NSRecursiveLock()` -> `NSLock()`                      -> held-by-caller: status 70 after waiting the 2 s bound;
+//                                                              velox: "did not exit within 30.0 s", child killed
 //    `write(STDERR_FILENO` -> `write(STDOUT_FILENO`         -> stuck: stderr empty, the line in stdout
-//    `setExitBarrierBound` stores `Int(seconds)`            -> held-briefly: status 70; stuck: left after 0.0007 s
-//  The free-lock test is red only under the inverted condition; each of the other four under two or more of these.
+//    `setExitBarrierBound` stores `Int(seconds)`            -> held-briefly: status 70; stuck: left after 0.0006 s
+//    `{ return }` -> `{ lock.unlock(); return }` after the lock is taken (the barrier gives the lock back)
+//                                                           -> free, held-briefly, default bound and velox:
+//                                                              "lock-free"; held-by-caller stays green, its own
+//                                                              thread holds the lock
+//    VeloxEMDReader.swift: `installExitBarrier()` before `open()` instead of after a successful one
+//                                                           -> velox: "h5-teardown lock-free"
+//    VeloxEMDReader.swift: `HDF5Serial.acquire()` after the install (a hold leaked by the open)
+//                                                           -> velox: "lock-held-before-exit"
+//    probe: the `H5atclose` call replaced by `0` (no callback)
+//                                                           -> velox: no "h5-teardown" line
+//  Each of the six tests is red under two or more of these.
 //
 
 import XCTest
@@ -48,7 +72,7 @@ final class HDF5ExitBarrierTests: XCTestCase {
     private static let barrierLine =
         "SpectroKit: HDF5Serial's quit barrier passed its bound with the HDF5 lock still held; "
         + "_exit(70) without HDF5's shutdown\n"
-    private static let teardown = "teardown-ran\n"
+    private static let teardown = "teardown-ran lock-held\n"
     private static let calling = "calling-exit\n"
 
     // MARK: The child process
@@ -116,13 +140,16 @@ final class HDF5ExitBarrierTests: XCTestCase {
         return url
     }
 
-    /// Runs the probe in `mode`, reading both pipes to EOF concurrently (no pipe-buffer deadlock). If the child is
-    /// still there after `deadline` seconds it is terminated (then killed), the test fails with "did not exit
-    /// within", and `timedOut` is set so the caller stops asserting on a half-run.
-    private func runProbe(_ mode: String, bound: Double? = nil, deadline: TimeInterval) throws -> Outcome {
+    /// Runs the probe in `mode`, reading both pipes to EOF concurrently (no pipe-buffer deadlock). The child inherits
+    /// this process's environment, `MAC4DSTEM_HDF5_PATH` among it. If the child is still there after `deadline`
+    /// seconds it is terminated (then killed), the test fails with "did not exit within", and `timedOut` is set so
+    /// the caller stops asserting on a half-run.
+    private func runProbe(
+        _ mode: String, bound: Double? = nil, arguments: [String] = [], deadline: TimeInterval
+    ) throws -> Outcome {
         let process = Process()
         process.executableURL = try probeURL()
-        process.arguments = [mode] + (bound.map { [String($0)] } ?? [])
+        process.arguments = [mode] + (bound.map { [String($0)] } ?? []) + arguments
         process.standardInput = FileHandle.nullDevice
         let stdout = Pipe(), stderr = Pipe()
         process.standardOutput = stdout
@@ -242,6 +269,31 @@ final class HDF5ExitBarrierTests: XCTestCase {
         // 0.05 s: the barrier's Date is on the wall clock, the stamps are on the uptime clock.
         XCTAssertGreaterThanOrEqual(seconds, bound - 0.05, "the barrier waited the bound (\(bound) s) before giving up")
         XCTAssertLessThan(seconds, bound + 5, "and did not wait much longer than the bound")
+    }
+
+    // MARK: The real loader
+
+    /// The small Velox spectrum image of SpectroCoreTests' fixtures, by this file's path.
+    private static let veloxTiny = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("SpectroCoreTests/Fixtures/velox-tiny.emd")
+
+    /// What the other five scenarios cannot show: that the REAL loader puts the barrier behind HDF5's own handler. The
+    /// probe opens velox-tiny.emd through the public API and installs nothing itself; HDF5 calls a callback of the
+    /// probe's as its `H5_term_library` starts, and the lock must be held then. A loader that installed the barrier
+    /// before `H5open` would register it before HDF5's handler, so it would run after the teardown: "lock-free".
+    func testTheVeloxLoaderInstallsTheBarrierAfterHDF5sOwnTeardownHandler() throws {
+        guard ProcessInfo.processInfo.environment["MAC4DSTEM_HDF5_PATH"] != nil else {
+            return XCTFail("MAC4DSTEM_HDF5_PATH is not set: run through tools/test.sh, which sets it for the probe too")
+        }
+        let run = try runProbe("velox-order", arguments: [Self.veloxTiny.path], deadline: 30)
+        guard !run.timedOut else { return }
+        XCTAssertEqual(run.reason, .exit)
+        XCTAssertEqual(run.status, 0, "stdout \(run.stdout.debugDescription), stderr \(run.stderr.debugDescription)")
+        XCTAssertEqual(
+            run.markers, "opened\nlock-free-before-exit\n" + Self.calling + "h5-teardown lock-held\n",
+            "the file opened, the lock was free before exit, and HDF5's teardown found it held")
+        assertNoBarrierLine(run, "velox-order")
     }
 
     /// Without `setExitBarrierBound` the bound a host gets is 10 s.
