@@ -19,6 +19,10 @@ package nonisolated struct PowerLawWindow: Sendable, Equatable {
 
     /// `value_range_to_indices(x1, x2)` and the parity rule (`power_law.py:127-135`).
     package init(axis: EELSAxis, from lo: Double, to hi: Double) throws {
+        // Departure from HyperSpy (registered after review): a window not inside the axis is refused, not clamped.
+        guard lo >= axis.lowValue, hi <= axis.highValue else {
+            throw EELSEdgeError.backgroundWindowOutsideAxis(fromEV: lo, toEV: hi, axisFromEV: axis.lowValue, axisToEV: axis.highValue)
+        }
         var (i1, i2) = try axis.valueRangeToIndices(lo, hi)
         if (i2 + i1) % 2 != 0 { i2 -= 1 }
         if i2 == i1 { i2 += 2 }

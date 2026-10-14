@@ -239,3 +239,27 @@ equivalent (no channel at E ≤ 0 on a core-loss axis), and taking the q_min int
 float32 is equivalent on these tables (the difference of two nearby float32 values is exact). Planned but equivalent here:
 dropping the occupancy ratio (1.0 for every K shell). Added beyond the plan and red: libm's `powf(e, 2)` written as e·e,
 and the prefactor in float64.
+
+### 2026-10-14, after the Gate B refuter on `d4f7b7e`: two departures from HyperSpy, and the tests it asked for
+
+The refuter (one, Sonnet, did not write the port) found no numerical error: on 150 new inputs off the registered grid
+(E0 20 to 1000 keV, α up to 100 mrad and α > β, β up to 1000 mrad, scales 0.13 to 0.75 eV, unaligned offsets, ELNES-like
+bumps, N K and O K on a preceding tail, noise) the cross section within 7.8e−16 of exSpy, σ_k 3.5e−16, r, A, I_k, I_b and
+I_low bit-identical, n 4.2e−16; every window index equal to HyperSpy's value slicing, the I_low(Δ) end on 12 odd low-loss
+axes too; its own Monte Carlo of σ_n 0.999 to 1.006 of the port's. It judged amendment 1 justified (the exact-bias clause
+kept on both sets) and noted that the 2 % clause, sized after the bias was seen, has little power: the exact-bias clause
+is the gate that catches a port error. Required, and done:
+
+1. **σ_k = 0 is refused** (`EELSEdgeError.crossSectionZero`), as section 1 listed it; the port returned n = ±∞ with no
+   reason for an edge window wholly below the onset.
+2. **A pre-edge window not inside the core-loss axis is refused** (`EELSEdgeError.backgroundWindowOutsideAxis`). HyperSpy's
+   `value_range_to_indices` clamps it, and a window below the axis becomes a fit over the whole spectrum, across the edge:
+   the refuter's spectrum holding carbon gave n = −28 atoms/nm² silently. A departure from HyperSpy, registered here; on
+   every registered window and planted image nothing changes (they lie inside the axis).
+3. Tests for its three surviving mutants: σ_n with a dose ratio ≠ 1 (the Poisson term is the counted low-loss, 1/raw, so
+   σ_n halves exactly with n at dose 2), a caller's onset moving the edge window, a negative I_low; and for 1 and 2.
+4. Also: Δ below the low-loss axis now throws `EELSEdgeError.invalidIntegrationWidth` (it leaked slice 1's error type);
+   the I_low(Δ) route's documentation states its bias at Δ 50 eV; σ_n's documentation states it is first order (the
+   refuter's Monte Carlo at σ_n / n > 5 found the mean of n 17 to 74 % off); N K and O K maps carry a `caveat` ("background
+   under a preceding edge's tail"). tools/consumer-check is to cover the slice-2 public API and the GOS resource bundle
+   before the next tag.

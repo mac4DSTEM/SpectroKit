@@ -24,6 +24,8 @@ final class EdgeEdgeCaseTests: XCTestCase {
         for (a, b) in zip(one.pixels, two.pixels) {
             XCTAssertEqual(b.lowLossIntensity.orFail(), 2 * a.lowLossIntensity.orFail())
             XCTAssertEqual(b.atomsPerNM2.orFail(), a.atomsPerNM2.orFail() / 2)
+            // The Poisson term of I_low is the counted low-loss (1/raw), not the dose-scaled I_low: σ_n halves exactly with n.
+            XCTAssertEqual(b.sigmaCounting.orFail(), a.sigmaCounting.orFail() / 2)
         }
     }
 
@@ -39,6 +41,20 @@ final class EdgeEdgeCaseTests: XCTestCase {
         XCTAssertEqual(map.backgroundWindowEV, 234...279)
         XCTAssertEqual(map.effectiveCollectionMrad, EdgeFixtures.pins.d("planted").x("effectiveAngleMrad"))
         XCTAssertTrue(map.lowLossRoute.contains("4.66"))
+        XCTAssertNil(map.caveat)
+        let o = try EELSEdgeQuantification.ratioMethod(coreLoss: core, edge: .oxygenK, microscope: EdgeFixtures.plantedMicroscope,
+                                                       lowLoss: .integratedToWidth(low))
+        XCTAssertTrue(o.caveat?.contains("preceding edge's tail") == true)
+    }
+
+    /// A caller's own onset moves the edge window and not the cross section's table onset (review, mutant M2).
+    func testCallersOnsetMovesTheEdgeWindow() throws {
+        let (core, low) = try plantedR()
+        let m = try EELSEdgeQuantification.ratioMethod(coreLoss: core, microscope: EdgeFixtures.plantedMicroscope,
+                                                       lowLoss: .integratedToWidth(low), edgeOnsetEV: 290)
+        XCTAssertEqual(m.edgeWindowEV, 290 ..< 340)
+        XCTAssertEqual(m.edgeChannels, 560 ..< 760)
+        XCTAssertEqual(m.backgroundWindowEV, 240...285)
     }
 
     func testRefusals() throws {
@@ -57,7 +73,7 @@ final class EdgeEdgeCaseTests: XCTestCase {
             lowLoss: .integratedToWidth(low))) { XCTAssertEqual($0 as? EELSEdgeError, .invalidMicroscope) }
         // An edge window wholly above the axis (it ends at 650 eV) throws.
         XCTAssertThrowsError(try EELSEdgeQuantification.ratioMethod(coreLoss: core, microscope: m, lowLoss: .integratedToWidth(low),
-                                                                    edgeOnsetEV: 700)) {
+                                                                    backgroundWindowEV: 234...279, edgeOnsetEV: 700)) {
             guard case .edgeWindowOutsideAxis = $0 as? EELSEdgeError else { return XCTFail("\($0)") }
         }
         let lowShape = try LowLossSpectrumImage(nx: 1, ny: 1, channels: low.channels, counts: Array(low.counts[0 ..< low.channels]),
@@ -70,6 +86,22 @@ final class EdgeEdgeCaseTests: XCTestCase {
             XCTAssertEqual($0 as? EELSEdgeError, .nonFiniteCounts(pixel: 1))
         }
         XCTAssertEqual(CoreLossEdge.bundled.map(\.element), ["C", "N", "O"])
+        // An edge window wholly below the onset: σ_k = 0, refused (review R1), not n = ±inf.
+        XCTAssertThrowsError(try EELSEdgeQuantification.ratioMethod(coreLoss: core, microscope: m, lowLoss: .integratedToWidth(low),
+                                                                    backgroundWindowEV: 160...200, edgeOnsetEV: 210)) {
+            XCTAssertEqual($0 as? EELSEdgeError, .crossSectionZero(edgeWindowFromEV: 210, toEV: 260))
+        }
+        // A background window not inside the axis: refused (review R2), where HyperSpy clamps it, below the axis to the whole
+        // spectrum, a fit across the edge.
+        let above = try CoreLossSpectrumImage(nx: 5, ny: 3, channels: 1000, counts: (0 ..< 15).flatMap { p in core.counts[(p * 2000 + 560) ..< (p * 2000 + 1560)] },
+                                              energyOffsetEV: 290, energyScaleEV: 0.25)
+        XCTAssertThrowsError(try EELSEdgeQuantification.ratioMethod(coreLoss: above, microscope: m, lowLoss: .integratedToWidth(low))) {
+            XCTAssertEqual($0 as? EELSEdgeError, .backgroundWindowOutsideAxis(fromEV: 234, toEV: 279, axisFromEV: 290, axisToEV: 539.75))
+        }
+        XCTAssertThrowsError(try EELSEdgeQuantification.ratioMethod(coreLoss: core, microscope: m, lowLoss: .integratedToWidth(low),
+                                                                    backgroundWindowEV: 140...279)) {
+            guard case .backgroundWindowOutsideAxis = $0 as? EELSEdgeError else { return XCTFail("\($0)") }
+        }
     }
 
     func testPixelsTheMethodCannotAnswer() throws {
@@ -80,6 +112,8 @@ final class EdgeEdgeCaseTests: XCTestCase {
         // Pixel 1: its low-loss is all zero -> I_low = 0.
         var lowCounts = low.counts
         for c in 0 ..< low.channels { lowCounts[low.channels + c] = 0 }
+        // Pixel 3: a negative low-loss (review mutant M3: `raw > 0`, not `raw != 0`).
+        for c in 0 ..< low.channels { lowCounts[3 * low.channels + c] = -1 }
         let core2 = try CoreLossSpectrumImage(nx: 5, ny: 3, channels: core.channels, counts: counts,
                                               energyOffsetEV: core.energyOffsetEV, energyScaleEV: core.energyScaleEV)
         let low2 = try LowLossSpectrumImage(nx: 5, ny: 3, channels: low.channels, counts: lowCounts,
@@ -91,6 +125,7 @@ final class EdgeEdgeCaseTests: XCTestCase {
         XCTAssertNil(map.pixels[1].atomsPerNM2)
         XCTAssertEqual(map.pixels[1].unavailable, .lowLossNotPositive)
         XCTAssertNotNil(map.pixels[1].powerLawR)
+        XCTAssertEqual(map.pixels[3].unavailable, .lowLossNotPositive)
         XCTAssertNotNil(map.pixels[2].atomsPerNM2)
         XCTAssertNil(map.pixels[2].unavailable)
         // The I_0 route: a thickness map pixel without I_0 gives a nil with its reason.

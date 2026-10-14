@@ -60,7 +60,9 @@ public nonisolated struct EELSMicroscope: Sendable, Equatable {
 /// Where I_low, the low-loss intensity of the ratio, comes from.
 public nonisolated enum LowLossIntensity: Sendable {
     /// I_low(Δ): the low-loss counts from its first channel to the channel of energy Δ (end exclusive), Egerton eq. 4.66,
-    /// the correction for plural scattering. The default route.
+    /// the correction for plural scattering. The default route. Its own bias is still large at Δ = 50 eV in thicker areas
+    /// (registration amendment 1: −7.6, −17.6 and −30.7 % at t/λ 0.3, 0.7 and 1.3; −1.6 to −7.1 % at Δ = 150 eV): use a wide
+    /// Δ where the data allow.
     case integratedToWidth(LowLossSpectrumImage)
     /// I_0 of slice 1's thickness map (the zero-loss sum), Egerton eq. 4.65, for single scattering only.
     case zeroLoss(ThicknessMap)
@@ -80,7 +82,9 @@ public nonisolated struct ArealDensityPixel: Sendable, Equatable {
     /// Atoms per nm²; nil with `unavailable` set.
     public let atomsPerNM2: Double?
     /// Counting-statistics standard deviation of `atomsPerNM2` (registration section 6; not the model, cross-section,
-    /// angle, dose-ratio or onset errors).
+    /// angle, dose-ratio or onset errors). First order: trustworthy while it is small against n; where σ_n / n is large
+    /// (above about 0.3) the estimate of n itself is no longer near-Gaussian (a review's Monte Carlo at σ_n / n > 5 found
+    /// the mean off by 17 to 74 %).
     public let sigmaCounting: Double?
     /// Background-subtracted edge counts I_k over the edge window (may be negative).
     public let edgeCounts: Double?
@@ -115,6 +119,9 @@ public nonisolated struct ArealDensityMap: Sendable {
     public let method: String
     /// Always "none": agreement with exSpy and planted truth are not validation (registration section 9).
     public let validation: String
+    /// What the registration says a reader must know about this edge (N K and O K: their background sits on a preceding
+    /// edge's extended tail, which a power law fitted below the edge misjudges); nil for C K.
+    public let caveat: String?
 }
 
 /// Inputs the method cannot start from (a pixel it cannot answer is a nil with a reason, not a throw).
@@ -127,6 +134,11 @@ public nonisolated enum EELSEdgeError: Error, Equatable, Sendable {
     case invalidMicroscope
     case backgroundWindowTooNarrow(fromEV: Double, toEV: Double)
     case backgroundWindowNotPositive(fromEV: Double)
+    /// The requested pre-edge window is not inside the core-loss axis. HyperSpy would clamp it (to the whole spectrum when it
+    /// lies below the axis): a departure registered after review, since that fit crosses the edge and gives a wrong n silently.
+    case backgroundWindowOutsideAxis(fromEV: Double, toEV: Double, axisFromEV: Double, axisToEV: Double)
+    /// The partial cross section over the edge window is 0 (the window lies below the edge's onset): n would be infinite.
+    case crossSectionZero(edgeWindowFromEV: Double, toEV: Double)
     case edgeWindowOutsideAxis(fromEV: Double, toEV: Double)
     case lowLossShapeMismatch(expected: Int, got: Int)
     case invalidIntegrationWidth(Double)
@@ -189,6 +201,7 @@ public nonisolated enum EELSEdgeQuantification {
 
         let xs = try crossSection(edge: edge, microscope: microscope)
         let sigma = NumpySum.sum(xs.differential(energies).map { $0 * scale })   // np.sum(function[i0:i1] * scale)
+        guard sigma > 0 else { throw EELSEdgeError.crossSectionZero(edgeWindowFromEV: onset, toEV: edgeEnd) }
 
         // I_low per pixel (before the dose ratio) and its route's name.
         let lowLossRaw: [Double?]
@@ -197,7 +210,10 @@ public nonisolated enum EELSEdgeQuantification {
         case .integratedToWidth(let ll):
             guard ll.pixelCount == np else { throw EELSEdgeError.lowLossShapeMismatch(expected: np, got: ll.pixelCount) }
             let llAxis = try EELSAxis(offset: ll.energyOffsetEV, scale: ll.energyScaleEV, size: ll.channels)
-            let stop = try llAxis.zeroLossStop(forFixedThreshold: integrationWidthEV)
+            let stop: Int
+            do { stop = try llAxis.zeroLossStop(forFixedThreshold: integrationWidthEV) } catch {
+                throw EELSEdgeError.invalidIntegrationWidth(integrationWidthEV)       // Δ below the low-loss axis start
+            }
             lowLossRaw = ll.counts.withUnsafeBufferPointer { b in
                 (0 ..< np).map { p in NumpySum.pairwise(b.baseAddress! + p * ll.channels, count: stop) }
             }
@@ -222,7 +238,8 @@ public nonisolated enum EELSEdgeQuantification {
             nx: coreLoss.nx, ny: coreLoss.ny, pixels: pixels, edge: edge, microscope: microscope,
             effectiveCollectionMrad: xs.effectiveAngleMrad, crossSectionBarn: sigma,
             backgroundWindowEV: window.x1...window.x2, edgeWindowEV: onset ..< edgeEnd, edgeChannels: channels,
-            lowLossRoute: route, coreLossToLowLossDose: coreLossToLowLossDose, method: methodName, validation: "none")
+            lowLossRoute: route, coreLossToLowLossDose: coreLossToLowLossDose, method: methodName, validation: "none",
+            caveat: edge == .carbonK ? nil : "background under a preceding edge's tail: the power law fitted below \(edge) is not trusted (registration section 1)")
     }
 
     private static func crossSection(edge: CoreLossEdge, microscope m: EELSMicroscope) throws -> EdgeCrossSection {
