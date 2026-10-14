@@ -69,9 +69,13 @@ public nonisolated enum HDF5Serial {
     /// Owned by `HDF5Serial`; read and written only under `lock`.
     nonisolated(unsafe) private static var exitBarrierInstalled = false
 
-    /// How long a quit waits for the HDF5 operation in flight: 10 s. Every locked operation is one call or one block
-    /// (a Velox slab of at most 32 Mi values; the whole 1745 MB Velox read took 3.8 s in Release, S3), so a wait this
-    /// long is a thread that is not coming back; and it is shorter than a user reaches for Force Quit.
+    /// How long a quit waits for the HDF5 operation in flight: 10 s, shorter than a user reaches for Force Quit. Inside
+    /// SpectroKit every locked operation is one call or one block (a Velox slab of at most 32 Mi values; the whole
+    /// 1745 MB Velox read took 3.8 s in Release, S3). A host's locked operations are its own and can be longer:
+    /// mac4DSTEM holds the lock for a whole sidecar rebuild, or a tile read of up to physicalMemory/24 bytes, which a
+    /// slow volume can stretch past 10 s. So the bound limits the quit; it does not promise that no operation outlasts
+    /// it. A host write that publishes by temporary file and rename leaves its destination unchanged when the quit cuts
+    /// it.
     public static var exitBarrierBound: TimeInterval {
         Double(exitBarrierBoundMilliseconds.load(ordering: .acquiring)) / 1000
     }
