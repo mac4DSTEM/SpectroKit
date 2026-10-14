@@ -46,3 +46,9 @@ int sk_dgelsd(int m, int n, int nrhs, double *a, int lda, double *b, int ldb, do
     dgelsd_(&m, &n, &nrhs, a, &lda, b, &ldb, s, &rcond, rank, work, &lwork, iwork, &info);
     return info;
 }
+
+int sk_dgbsv(int n, int kl, int ku, int nrhs, double *ab, int ldab, int *ipiv, double *b, int ldb) {
+    int info = 0;
+    dgbsv_(&n, &kl, &ku, &nrhs, ab, &ldab, ipiv, b, &ldb, &info);
+    return info;
+}

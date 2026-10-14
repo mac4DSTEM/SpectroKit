@@ -43,10 +43,13 @@ let package = Package(
             ]
         ),
         // EELS slice 1 (docs/eels-slice-1-registration.md): the t/λ thickness map, a port of exSpy 7185a4d1's log-ratio
-        // method. Depends on SpectroCore only (EnergyAxis's HyperSpy rounding, FitLinearAlgebra's least squares).
+        // method. Depends on SpectroCore only (EnergyAxis's HyperSpy rounding, FitLinearAlgebra's least squares). Slice 2
+        // (docs/eels-slice-2-registration.md): the C K edge by the ratio method; the dft GOS of the C, N and O K shells
+        // (CC-BY-4.0, NOTICE) are its `Bundle.module` resources (bundle `SpectroKit_SpectroEELS`).
         .target(
             name: "SpectroEELS",
             dependencies: ["SpectroCore"],
+            resources: [.copy("Resources/GOS")],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),

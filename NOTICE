@@ -73,6 +73,31 @@ Tests/SpectroEELSTests/Fixtures/exspy-linescan-*.f64 are eXSpy's simulated test 
 
 
 ================================================================================
+Generalised oscillator strengths (EELS core-loss cross sections, SpectroEELS)
+================================================================================
+
+Sources/SpectroEELS/Resources/GOS/dft-{C,N,O}-K1.json hold the K-shell tables of
+the GOSH database of Segger, Guzzinati and Kohl, version 1.5.0, as eXSpy fetches
+it (Segger_Guzzinati_Kohl_1.5.0.gosh, md5 7fee8891c147a4f769668403b54c529b),
+extracted unchanged (every stored float32 value read back bit for bit) by
+tools/eels-edge/extract_gos.py into JSON:
+
+    L. Segger, G. Guzzinati, H. Kohl, "A set of Generalised Oscillator Strengths
+    for the simulation of EELS spectra", version 1.5.0, Zenodo,
+    https://doi.org/10.5281/zenodo.7645765
+    Licensed under the Creative Commons Attribution 4.0 International licence
+    (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/
+    Changes: three groups of the HDF5 file re-written as JSON; no value changed.
+
+The cross section computed from them (Sources/SpectroEELS/EdgeCrossSection.swift)
+ports eXSpy's EELSCLEdge and GOS integration (commit 7185a4d1, GPL-3.0-or-later),
+SciPy 1.18.1's Simpson rule and interpolating spline (BSD 3-Clause, above), and
+the effective collection angle eXSpy translates from Egerton. It is compared with
+eXSpy and with pyEELSMODEL (https://github.com/joverbee/pyEELSMODEL, commit
+eed9f0721d5b, GPL-3.0) in tools/eels-edge; no Hartree-Slater (Gatan) table is used.
+
+
+================================================================================
 NIST EPQ data (EDX quantification)
 ================================================================================
 

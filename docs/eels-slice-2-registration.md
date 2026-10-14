@@ -225,3 +225,17 @@ pin. The port's source existed, uncompiled against the fixtures.
 6. **Section 1's failure list, made precise:** a pre-edge window sum ≤ 0 or a non-finite A or r gives a nil pixel (where
    HyperSpy's `nan_to_num` gives 0, or a zero sum fails the whole image); "equal sums" is withdrawn from the list (r = 0
    is a flat background, which HyperSpy fits and so does the port).
+
+### 2026-10-14, after the port: the gates as run, and the mutants
+
+Gates 1 to 5 met as amended: the cross section within 7.0e−16 of exSpy on the whole grid (effective angle and spline
+coefficients exact or within 1e−15), the background fit, the window sums and n on every planted image bit-identical to
+HyperSpy's (0.0), n within 3.4e−16; pyEELSMODEL within 2.56 %; planted truth within 1.7e−12 n_true of the predicted bias,
+set R within 1.77 % at Δ 50; noisy pixels within 2.79 σ_n and σ_n equal to the generator's to 1.5e−13; over 200
+realisations sd / σ_n between 0.89 and 1.06 for every set-R pixel. Gate 6, the registered mutants: 16 of 20 red. Of the
+four that stayed green, the parity rule never fires on the registered windows (it does on the window 234 to 279.25 eV,
+now a test, and its mutant goes red), rounding i3 up is equivalent once the parity rule holds, the left cutoff is
+equivalent (no channel at E ≤ 0 on a core-loss axis), and taking the q_min interpolation's g2 − g1 in float64 instead of
+float32 is equivalent on these tables (the difference of two nearby float32 values is exact). Planned but equivalent here:
+dropping the occupancy ratio (1.0 for every K shell). Added beyond the plan and red: libm's `powf(e, 2)` written as e·e,
+and the prefactor in float64.

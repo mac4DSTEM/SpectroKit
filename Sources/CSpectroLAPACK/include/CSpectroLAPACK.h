@@ -1,7 +1,8 @@
 //
 //  CSpectroLAPACK.h
-//  Plain-C wrappers over the four Accelerate LAPACK routines SpectroCore's `FitLinearAlgebra` calls (SpectroKit S3,
-//  mac4DSTEM ADR 064 amendment a). This header includes no Accelerate: Swift sees only `int` and `double *`, so the
+//  Plain-C wrappers over the Accelerate LAPACK routines SpectroCore calls: the four of `FitLinearAlgebra` (SpectroKit S3,
+//  mac4DSTEM ADR 064 amendment a), `dgelsd_` (SciPy's least squares, for the Savitzky-Golay port) and `dgbsv_` (SciPy's
+//  interpolating spline, EELS slice 2). This header includes no Accelerate: Swift sees only `int` and `double *`, so the
 //  library needs neither `import Accelerate` nor the `-DACCELERATE_NEW_LAPACK` unsafe flag. The define lives in
 //  lapack_shim.c, the only file that sees Accelerate's LAPACK declarations.
 //
@@ -30,5 +31,9 @@ int sk_dtrtri(char uplo, char diag, int n, double *a, int lda);
 /// `s` receives the singular values (min(m, n) of them); `iwork` is the integer workspace (`liwork` from LAPACK's formula).
 int sk_dgelsd(int m, int n, int nrhs, double *a, int lda, double *b, int ldb, double *s, double rcond, int *rank,
               double *work, int lwork, int *iwork);
+
+/// `dgbsv_`: solves a general banded system by LU with partial pivoting. `ab` in LAPACK band storage with `2 kl + ku + 1`
+/// rows (the extra `kl` for fill-in), column-major; `b` is overwritten with the solution.
+int sk_dgbsv(int n, int kl, int ku, int nrhs, double *ab, int ldab, int *ipiv, double *b, int ldb);
 
 #endif
