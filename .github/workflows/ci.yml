@@ -1,0 +1,44 @@
+# SpectroKit CI: the gate (tools/test.sh = `swift test -c release`) and the consumer check, on Homebrew's libhdf5.
+#
+# Written 2026-10-14; enabling it (Actions on the repository) is the owner's. The package needs macOS 27 and a Swift 6.2
+# toolchain (Package.swift: `.macOS("27.0")`, tools 6.2): the runner image must carry an Xcode with the macOS 27 SDK.
+# `macos-latest` is used, with the newest Xcode selected; if the image lags, pin `runs-on` to the first image that has it.
+# Without ../mac4DSTEM beside the checkout, tools/test.sh takes Homebrew's hdf5 (soname 320), as it does on any machine
+# without mac4DSTEM (S3 checked Homebrew 2.2.0: the 258 names and the golden byte-identical).
+# Never `swift build --build-tests -c release` (fails on this toolchain's Swift Build backend); tools/test.sh is the gate.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select the newest Xcode
+        run: |
+          xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          sudo xcode-select -s "$xcode"
+          swift --version
+      - name: Homebrew libhdf5
+        run: |
+          brew install hdf5
+          echo "MAC4DSTEM_HDF5_PATH=$(brew --prefix hdf5)/lib/libhdf5.dylib" >> "$GITHUB_ENV"
+      - name: Hook proof (no sleep or poll loops)
+        run: tools/hooks/test-no-sleep-poll.sh
+      - name: Gate (tools/test.sh, release)
+        run: tools/test.sh 2>&1 | tee test.log
+      - name: No warnings
+        run: |
+          if grep -q "warning:" test.log; then grep "warning:" test.log | head -20; exit 1; fi
+      - name: Consumer check with its negative controls
+        run: tools/consumer-check/run.sh --controls
