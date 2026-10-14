@@ -19,7 +19,13 @@ package boundary, so the target compiles only while each of these symbols is `pu
   image, `readImage(path:)` equals `readImage(data:)`); `dm-tag65027-saved-with-DM.dm4` (`tagTree` equals ncempy's tree; the
   stream cut at every 7th byte before its trailer, and at the last one, throws, 1512 cuts as `DM4TagTreeTests` samples);
   `velox-tiny.emd` (the six fields and every detector's exposure are nil on this file); `velox-metadata-planted.emd` (all
-  12 images: the six fields and each detector's own exposure equal the planted truth, through `images()`).
+  12 images: the six fields and each detector's own exposure equal the planted truth, through `images()`). Some checks are
+  consistency between two public paths, not independent values: `list(data:)` equals `list(path:)`, `readImage(path:)`
+  equals `readImage(data:)`, `DM4Image.object` is the listed object, width and height match `dimensions`, the axes match
+  the object's, `Meta Data.Format` and the voltage tag match the object's fields, and `tagTree` under the object's prefix
+  equals its `imageTagNumbers`. They show the surface is reachable and coherent; the truth-file and ncempy checks carry
+  the values. The planted Velox truth is what `make_fixture.py` planted; independence from the reader is
+  `tools/velox-metadata-parity`'s job.
 - **The Velox rules, on metadata JSON through the public `VeloxMetadata.parse(jsonData:)`** (the rules are the doc comments
   on `VeloxMetadata` and RosettaSciIO 049e7d70's `_emd_velox.py`): every number is read as stored (a string, as Velox
   writes it, or a JSON number; `"1.3e+006"`; `"0"` is 0); `cameraLengthMeters` is metres with no conversion; the modes are
