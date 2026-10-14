@@ -146,3 +146,18 @@ full rules replace it.
   sample of known composition. Until then it self-reports `validation:"none"`.
 - **The owner's data** lives in the suite's `data/` folder, read as `$MACEM_DATA` (default `../data`): never copied or
   committed here; numbers measured on it are cited with their log; a manifest line in `data/README.md` per file used;
+
+## Overnight session of 2026-10-14 (after the cut)
+
+Process: the no-sleep/poll hook, the last-green stamp, this file. 0.3.0 finished: both refuters ran side by side on
+`1eed697` (reader: a zero-length Data tag decoded bytes after the tag, no `Signal == "EELS"` role, `package` tests could not
+prove public access; SpectroEELS: on new images the estimated threshold took another channel than exSpy's, two cases beyond
+the amended tie rule). Fixes: the reader's exact Data-tag length in all three readers and the Signal rule; the
+Savitzky–Golay derivative bit-identical to SciPy (dgelsd coefficients, image-wide edge fits, `correlate1d`'s three
+accumulation paths; exSpy's edge fits depend on how many spectra share the solve); consumer-check over the EELS reader and
+SpectroEELS. Gate at `9febf05`, ready for the tag at `6ab9ec2`. Then EELS slice 2 (registered `3da16f4`, truth and pins
+`5ace01f` with amendment 1 after the generators falsified gate 3's prediction on sub-monolayer densities, port `d4f7b7e`;
+two findings on the way: NumPy 2.5 keeps exSpy's GOS arithmetic in float32, and libm's pow(x, 2) is not x·x while Swift
+folds it), its refuter's fixes (`d5e5d2d`) and a crash the consumer check found (`19e046a`); the real-data check (R1, R2
+bit for bit; C K against GMS's map, Pearson 0.985); the EDX stage gates (registered `23fa2af`, generators `67ae402`, tests
+and Gate D `799bf81`); CI and the rank-threshold test (`505ea0d`); the proposer about 7x faster (`92f8dfc`).

@@ -14,7 +14,7 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
   every threshold is exSpy's channel). Gate at `9febf05` (+ a one-line test warning fix): vendored 2.1.1 and Homebrew 2.2.0
   libhdf5, 258 / 0 (same names), golden green, SpectroKitTests 55 / 0, SpectroEELSTests 60 / 0, consumer-check 318 checks
   and 86 / 86 controls, 0 warnings cold. What each consumer changes: `docs/consumers-0.3.0.md`.
-- After 0.3.0 on `main` (green at `799bf81`: 258 / golden / SpectroKitTests 55 / SpectroEELSTests 76 / SpectroEDXTests 32,
+- After 0.3.0 on `main` (green at `92f8dfc`: 258 / golden / SpectroKitTests 55 / SpectroEELSTests 76 / SpectroEDXTests 32,
   0 warnings; consumer-check 371 checks, 143 / 143 controls):
   - EELS slice 2, the C K areal density by the ratio method (`EELSEdgeQuantification.ratioMethod`): pins within 7e−16 of
     exSpy, planted truth, its Gate B refuter's fixes in (`d5e5d2d`, `19e046a`). Public API additive; GOS tables are
@@ -27,6 +27,8 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
     shape against channel-integrated data costs ×8 in L_D at 1e7 counts; refine axis and resolution before proposing
     recovers Mg on planted shifts; the full pool's pruning loses Mg in some cells). D6 waits on the owner's files.
   - CI workflow (enabling it is the owner's) and a test that reaches dgelsy's rank threshold.
+  - The element proposer about 7x faster, output bit for bit unchanged (`92f8dfc`: its single-candidate fits run
+    concurrently, results in pool order).
 - Registrations: `docs/eels-slice-1-registration.md`, `docs/eels-slice-2-registration.md`,
   `docs/eels-real-data-check-registration.md`, `docs/edx-stage-gates-registration.md`.
 
