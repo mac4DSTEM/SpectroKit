@@ -1,7 +1,7 @@
 #!/bin/zsh
 # SpectroKit consumer check: build tools/consumer-check (a separate package that depends on SpectroKit by path) in DEBUG and
 # run it against the committed fixtures. Debug is what a consumer's Debug build does with a dependency that may carry no
-# unsafe flags (SpectroKit's manifest has none). Exit 0 only if the build is warning-free, every check passed, no test-only
+# unsafe flags (SpectroKit's manifest has none). Exit 0 only if the build is warning-free, SpectroKit_SpectroEELS.bundle (the GOS tables) sits next to the binary, every check passed, no test-only
 # target was built, and the process exited normally with the quit barrier installed.
 #
 #   run.sh [--controls]
@@ -75,6 +75,16 @@ fi
 built=$({ find .build/out/Intermediates.noindex -mindepth 3 -maxdepth 3 -type d -name '*.build' 2>/dev/null   # Swift Build
           find .build/debug -maxdepth 1 -type d -name '*.build' 2>/dev/null; } | sed 's|.*/||; s|\.build$||; s|-[a-z]$||' | sort -u | tr '\n' ' ')
 print "consumer-check: targets built: ${built}"
+
+# SpectroEELS's GOS tables are its Bundle.module resources: the bundle must sit next to the consumer binary, with the three
+# tables (C, N, O K) inside; without it the cross section cannot load and Bundle.module traps at run time.
+gosbundle=$bin/SpectroKit_SpectroEELS.bundle
+[[ -d $gosbundle ]] || die "SpectroKit_SpectroEELS.bundle was not produced next to the consumer binary ($bin)"
+for el in C N O; do
+  [[ -n $(find $gosbundle -type f -name "dft-${el}-K1.json" -size +1k 2>/dev/null | head -1) ]] \
+    || die "SpectroKit_SpectroEELS.bundle has no GOS table dft-${el}-K1.json"
+done
+print "consumer-check: SpectroKit_SpectroEELS.bundle next to the binary, with the C, N and O K GOS tables"
 
 # 3. Run. Exit status: the checks' (0 / 1), then the process's own end through `exit` (barrier handler: not 70).
 out=.build/consumer-check-run.log

@@ -45,6 +45,8 @@ LOWLOSS = EELS + "LowLossSpectrumImage.swift"
 THICKNESS = EELS + "EELSThickness.swift"
 THICKNESSMAP = EELS + "ThicknessMap.swift"
 MFP = EELS + "MeanFreePath.swift"
+EDGE = EELS + "EdgeQuantification.swift"
+GOS = EELS + "GOSTable.swift"
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
@@ -63,10 +65,18 @@ def decl(symbol, rel, old, word):
     return dict(kind="decl", symbol=symbol, rel=rel, old=old, word=word)
 
 
-def used(symbol, rel, old, pattern):
+def used(symbol, rel, old, pattern, file=None):
     """A control on a declaration whose refusal has no stable name in the diagnostic (an initialiser, a case-less label): the
-    consumer's build must fail with an error, in one of the consumer's own source files, matching `pattern`."""
-    return dict(kind="used", symbol=symbol, rel=rel, old=old, pattern=pattern)
+    consumer's build must fail with an error, in one of the consumer's own source files (when `file` is given, in that file),
+    matching `pattern`."""
+    return dict(kind="used", symbol=symbol, rel=rel, old=old, pattern=pattern, file=file)
+
+
+def library(symbol, rel, old, pattern, file):
+    """A control the library itself refuses before any consumer compiles: the declaration is used by a public default argument
+    (`carbonK`) or witnesses a public protocol requirement (`description`), so the edit cannot be made at all. Caught by an error
+    in `file` (the edited library file) matching `pattern`."""
+    return dict(kind="library", symbol=symbol, rel=rel, old=old, pattern=pattern, file=file)
 
 
 def overload(symbol, rel, old, have, expected, word):
@@ -212,6 +222,69 @@ CONTROLS = [
            module="SpectroEELS"),
     decl("EELSThicknessError", EELS + "EELSThicknessError.swift",
          "public nonisolated enum EELSThicknessError: Error, Equatable, Sendable {", "EELSThicknessError"),
+    # SpectroEELS (EELS slice 2): the areal density by the ratio method
+    decl('EELSEdgeQuantification', EDGE, 'public nonisolated enum EELSEdgeQuantification {', 'EELSEdgeQuantification'),
+    access('EELSEdgeQuantification.methodName', EDGE, 'public static let methodName =', 'EELSEdgeQuantification', 'methodName', module="SpectroEELS"),
+    access('EELSEdgeQuantification.defaultBackgroundWindow', EDGE, 'public static func defaultBackgroundWindow(onsetEV: Double)', 'EELSEdgeQuantification', 'defaultBackgroundWindow', 'defaultBackgroundWindow(onsetEV:)', module="SpectroEELS"),
+    access('EELSEdgeQuantification.differentialCrossSection', EDGE, 'public static func differentialCrossSection(edge: CoreLossEdge', 'EELSEdgeQuantification', 'differentialCrossSection', 'differentialCrossSection(edge:microscope:energiesEV:)', module="SpectroEELS"),
+    access('EELSEdgeQuantification.ratioMethod', EDGE, 'public static func ratioMethod(', 'EELSEdgeQuantification', 'ratioMethod', 'ratioMethod(coreLoss:edge:microscope:lowLoss:backgroundWindowEV:edgeOnsetEV:integrationWidthEV:coreLossToLowLossDose:cancelled:)', module="SpectroEELS"),
+    decl('CoreLossSpectrumImage', EDGE, 'public nonisolated struct CoreLossSpectrumImage: Sendable {', 'CoreLossSpectrumImage'),
+    access('CoreLossSpectrumImage.nx', EDGE, 'public let nx: Int\n    public let ny: Int\n    public let channels: Int\n    public let counts: [Double]', 'CoreLossSpectrumImage', 'nx', module="SpectroEELS"),
+    access('CoreLossSpectrumImage.ny', EDGE, 'public let ny: Int\n    public let channels: Int', 'CoreLossSpectrumImage', 'ny', module="SpectroEELS"),
+    access('CoreLossSpectrumImage.channels', EDGE, 'public let channels: Int\n    public let counts: [Double]', 'CoreLossSpectrumImage', 'channels', module="SpectroEELS"),
+    access('CoreLossSpectrumImage.counts', EDGE, 'public let counts: [Double]\n    public let energyOffsetEV', 'CoreLossSpectrumImage', 'counts', module="SpectroEELS"),
+    access('CoreLossSpectrumImage.energyOffsetEV', EDGE, 'public let energyOffsetEV: Double\n    public let energyScaleEV', 'CoreLossSpectrumImage', 'energyOffsetEV', module="SpectroEELS"),
+    access('CoreLossSpectrumImage.energyScaleEV', EDGE, 'public let energyScaleEV: Double\n\n    public init', 'CoreLossSpectrumImage', 'energyScaleEV', module="SpectroEELS"),
+    access('CoreLossSpectrumImage.pixelCount', EDGE, 'public var pixelCount: Int', 'CoreLossSpectrumImage', 'pixelCount', module="SpectroEELS"),
+    used("CoreLossSpectrumImage.init(counts: [Double])", EDGE,
+         "public init(nx: Int, ny: Int, channels: Int, counts: [Double], energyOffsetEV", r"\[Double\]|init\(", "EdgeQuantificationChecks.swift"),
+    used("CoreLossSpectrumImage.init(counts: [Float])", EDGE,
+         "public init(nx: Int, ny: Int, channels: Int, counts: [Float], energyOffsetEV", r"Float", "EdgeQuantificationChecks.swift"),
+    decl('EELSMicroscope', EDGE, 'public nonisolated struct EELSMicroscope: Sendable, Equatable {', 'EELSMicroscope'),
+    access('EELSMicroscope.beamEnergyKeV', EDGE, 'public let beamEnergyKeV: Double', 'EELSMicroscope', 'beamEnergyKeV', module="SpectroEELS"),
+    access('EELSMicroscope.convergenceMrad', EDGE, 'public let convergenceMrad: Double', 'EELSMicroscope', 'convergenceMrad', module="SpectroEELS"),
+    access('EELSMicroscope.collectionMrad', EDGE, 'public let collectionMrad: Double', 'EELSMicroscope', 'collectionMrad', module="SpectroEELS"),
+    used("EELSMicroscope.init", EDGE, "public init(beamEnergyKeV: Double, convergenceMrad: Double, collectionMrad: Double)",
+         r"inaccessible|cannot be constructed|no exact matches", "EdgeQuantificationChecks.swift"),
+    decl('LowLossIntensity', EDGE, 'public nonisolated enum LowLossIntensity: Sendable {', 'LowLossIntensity'),
+    decl('EdgeUnavailable', EDGE, 'public nonisolated enum EdgeUnavailable: String,', 'EdgeUnavailable'),
+    decl('ArealDensityPixel', EDGE, 'public nonisolated struct ArealDensityPixel: Sendable, Equatable {', 'ArealDensityPixel'),
+    access('ArealDensityPixel.atomsPerNM2', EDGE, 'public let atomsPerNM2: Double?', 'ArealDensityPixel', 'atomsPerNM2', module="SpectroEELS"),
+    access('ArealDensityPixel.sigmaCounting', EDGE, 'public let sigmaCounting: Double?', 'ArealDensityPixel', 'sigmaCounting', module="SpectroEELS"),
+    access('ArealDensityPixel.edgeCounts', EDGE, 'public let edgeCounts: Double?', 'ArealDensityPixel', 'edgeCounts', module="SpectroEELS"),
+    access('ArealDensityPixel.backgroundCounts', EDGE, 'public let backgroundCounts: Double?', 'ArealDensityPixel', 'backgroundCounts', module="SpectroEELS"),
+    access('ArealDensityPixel.powerLawR', EDGE, 'public let powerLawR: Double?', 'ArealDensityPixel', 'powerLawR', module="SpectroEELS"),
+    access('ArealDensityPixel.powerLawA', EDGE, 'public let powerLawA: Double?', 'ArealDensityPixel', 'powerLawA', module="SpectroEELS"),
+    access('ArealDensityPixel.lowLossIntensity', EDGE, 'public let lowLossIntensity: Double?', 'ArealDensityPixel', 'lowLossIntensity', module="SpectroEELS"),
+    access('ArealDensityPixel.unavailable', EDGE, 'public let unavailable: EdgeUnavailable?', 'ArealDensityPixel', 'unavailable', module="SpectroEELS"),
+    decl('ArealDensityMap', EDGE, 'public nonisolated struct ArealDensityMap: Sendable {', 'ArealDensityMap'),
+    access('ArealDensityMap.nx', EDGE, 'public let nx: Int\n    public let ny: Int\n    public let pixels: [ArealDensityPixel]', 'ArealDensityMap', 'nx', module="SpectroEELS"),
+    access('ArealDensityMap.ny', EDGE, 'public let ny: Int\n    public let pixels: [ArealDensityPixel]', 'ArealDensityMap', 'ny', module="SpectroEELS"),
+    access('ArealDensityMap.pixels', EDGE, 'public let pixels: [ArealDensityPixel]', 'ArealDensityMap', 'pixels', module="SpectroEELS"),
+    access('ArealDensityMap.edge', EDGE, 'public let edge: CoreLossEdge', 'ArealDensityMap', 'edge', module="SpectroEELS"),
+    access('ArealDensityMap.microscope', EDGE, 'public let microscope: EELSMicroscope', 'ArealDensityMap', 'microscope', module="SpectroEELS"),
+    access('ArealDensityMap.effectiveCollectionMrad', EDGE, 'public let effectiveCollectionMrad: Double', 'ArealDensityMap', 'effectiveCollectionMrad', module="SpectroEELS"),
+    access('ArealDensityMap.crossSectionBarn', EDGE, 'public let crossSectionBarn: Double', 'ArealDensityMap', 'crossSectionBarn', module="SpectroEELS"),
+    access('ArealDensityMap.backgroundWindowEV', EDGE, 'public let backgroundWindowEV: ClosedRange<Double>', 'ArealDensityMap', 'backgroundWindowEV', module="SpectroEELS"),
+    access('ArealDensityMap.edgeWindowEV', EDGE, 'public let edgeWindowEV: Range<Double>', 'ArealDensityMap', 'edgeWindowEV', module="SpectroEELS"),
+    access('ArealDensityMap.edgeChannels', EDGE, 'public let edgeChannels: Range<Int>', 'ArealDensityMap', 'edgeChannels', module="SpectroEELS"),
+    access('ArealDensityMap.lowLossRoute', EDGE, 'public let lowLossRoute: String', 'ArealDensityMap', 'lowLossRoute', module="SpectroEELS"),
+    access('ArealDensityMap.coreLossToLowLossDose', EDGE, 'public let coreLossToLowLossDose: Double', 'ArealDensityMap', 'coreLossToLowLossDose', module="SpectroEELS"),
+    access('ArealDensityMap.method', EDGE, 'public let method: String', 'ArealDensityMap', 'method', module="SpectroEELS"),
+    access('ArealDensityMap.validation', EDGE, 'public let validation: String', 'ArealDensityMap', 'validation', module="SpectroEELS"),
+    access('ArealDensityMap.caveat', EDGE, 'public let caveat: String?', 'ArealDensityMap', 'caveat', module="SpectroEELS"),
+    decl('EELSEdgeError', EDGE, 'public nonisolated enum EELSEdgeError: Error, Equatable, Sendable {', 'EELSEdgeError'),
+    decl('CoreLossEdge', GOS, 'public nonisolated struct CoreLossEdge: Sendable, Equatable, CustomStringConvertible {', 'CoreLossEdge'),
+    access('CoreLossEdge.element', GOS, 'public let element: String', 'CoreLossEdge', 'element', module="SpectroEELS"),
+    access('CoreLossEdge.subshell', GOS, 'public let subshell: String', 'CoreLossEdge', 'subshell', module="SpectroEELS"),
+    access('CoreLossEdge.onsetEV', GOS, 'public let onsetEV: Double', 'CoreLossEdge', 'onsetEV', module="SpectroEELS"),
+    library("CoreLossEdge.carbonK", GOS, "public static let carbonK",
+            "static property 'carbonK' is package and cannot be referenced from a default argument value", "EdgeQuantification.swift"),
+    access('CoreLossEdge.nitrogenK', GOS, 'public static let nitrogenK', 'CoreLossEdge', 'nitrogenK', module="SpectroEELS"),
+    access('CoreLossEdge.oxygenK', GOS, 'public static let oxygenK', 'CoreLossEdge', 'oxygenK', module="SpectroEELS"),
+    access('CoreLossEdge.bundled', GOS, 'public static let bundled', 'CoreLossEdge', 'bundled', module="SpectroEELS"),
+    library("CoreLossEdge.description", GOS, "public var description: String",
+            "property 'description' must be declared public because it matches a requirement in public protocol 'CustomStringConvertible'", "GOSTable.swift"),
     # The bounded quit barrier (macTEM's ask 3)
     access("HDF5Serial.exitBarrierBound", HDF5, "public static var exitBarrierBound: TimeInterval {", "HDF5Serial",
            "exitBarrierBound"),
@@ -282,8 +355,15 @@ def judge(control, status, text):
                 if re.search(rf"\b{re.escape(word)}\b", frame):
                     return True, f"library: {line.strip()[:120]}  [frame names {word}]", None
         return False, None, f"neither the consumer refused `{word}` nor a public signature of the library naming it fails"
+    if control["kind"] == "library":
+        for m in re.finditer(r"^(\S+\.swift):\d+:\d+: error: (.*)$", text, re.M):
+            if m.group(1).endswith("/" + control["file"]) and re.search(control["pattern"], m.group(2)):
+                return True, f"library: {short(m.group(0))[:160]}", None
+        return False, None, f"no library error in {control['file']} matching /{control['pattern']}/"
     if control["kind"] == "used":
         for m in re.finditer(r"^(\S+/tools/consumer-check/Sources/\S+\.swift:\d+:\d+): error: (.*)$", text, re.M):
+            if control.get("file") and not m.group(1).split(":")[0].endswith("/" + control["file"]):
+                continue
             if re.search(control["pattern"], m.group(2)):
                 return True, short(m.group(0))[:200], None
         return False, None, f"no error in the consumer's sources matching /{control['pattern']}/"

@@ -28,5 +28,6 @@ report.section("Velox fields") { try veloxChecks(&$0, fixtures) }
 report.section("Velox planted file") { try veloxPlantedChecks(&$0, plantedFixtures) }
 report.section("DM4 EELS spectrum image") { try eelsReaderChecks(&$0, plantedFixtures) }
 report.section("SpectroEELS thickness map") { try spectroEELSChecks(&$0, eelsFixtures) }
+report.section("SpectroEELS areal density (slice 2)") { try edgeQuantificationChecks(&$0, eelsFixtures) }
 report.section("HDF5 barrier") { try barrierChecks(&$0) }
 exit(report.finish())

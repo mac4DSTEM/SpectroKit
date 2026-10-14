@@ -2,7 +2,7 @@
 
 A separate SwiftPM package that depends on SpectroKit **by path** (`.package(path: "../..")`) and uses, from outside the
 package, every symbol macTEM reads across the package boundary for SpectroKit 0.2.0, and the public surface added since:
-the DM4 EELS spectrum-image reader (`SpectroCore`) and the whole `SpectroEELS` product (the t/λ thickness map).
+the DM4 EELS spectrum-image reader (`SpectroCore`) and the whole `SpectroEELS` product (the t/λ thickness map and the areal density by the ratio method, with its GOS resource bundle).
 `package` access does not cross a package boundary, so the target compiles only while each of these symbols is `public`.
 (The tests in `Tests/` are in-package and CAN use `package` symbols; this package is what enforces "public API only".)
 
@@ -13,6 +13,7 @@ the DM4 EELS spectrum-image reader (`SpectroCore`) and the whole `SpectroEELS` p
 | 3. the bounded quit barrier (macTEM ADR 021) | `HDF5Serial.exitBarrierBound` (read-only, 10 s) | `BarrierChecks`, and the process's own `exit` |
 | 4. the DM4 EELS spectrum-image reader (EELS slice 1b) | `DM4Experiment.readEELSSpectrumImage(path:index:)`, `(data:index:)`; `DM4EELSSpectrumImage` (the struct, its `Equatable`) `.object .nx .ny .channels .counts .energyAxis .beamEnergyKeV .convergenceSemiAngleMrad .collectionSemiAngleMrad`; the `DM4Error` cases it throws | `EELSReaderChecks` |
 | 5. SpectroEELS (EELS slice 1) | `EELSThickness.logRatio`, `.methodName`; `LowLossSpectrumImage` (both initialisers, six fields, `pixelCount`, `energy(ofChannel:)`); `ThresholdRule`; `MeanFreePathSource`; `InelasticMeanFreePath.iakoubovskii`, `.angularCorrection`; `ThicknessMap` (eleven members and the subscript); `ThicknessPixel` (ten fields); `ZeroLossSource`; `ThicknessUnavailable`; `SigmaUnavailable`; `EELSThicknessError` | `SpectroEELSChecks` |
+| 6. SpectroEELS (EELS slice 2, the areal density) | `EELSEdgeQuantification.ratioMethod` (every parameter; both `LowLossIntensity` routes), `.differentialCrossSection`, `.methodName`, `.defaultBackgroundWindow`; `CoreLossSpectrumImage` (both initialisers, six fields, `pixelCount`); `EELSMicroscope` (init, three fields); `LowLossIntensity`; `CoreLossEdge` (`.element .subshell .onsetEV`, `.carbonK .nitrogenK .oxygenK`, `.bundled`, `description`, `Equatable`); `ArealDensityMap` (fifteen fields); `ArealDensityPixel` (eight fields); `EdgeUnavailable` (four cases); `EELSEdgeError` | `EdgeQuantificationChecks`; the resource bundle also by `run.sh` |
 
 ## What it proves
 
@@ -58,6 +59,21 @@ the DM4 EELS spectrum-image reader (`SpectroCore`) and the whole `SpectroEELS` p
 - **The barrier does not fire when nothing is stuck.** The process ends through `exit` with the barrier installed (the Velox
   open installs it); `run.sh` requires exit status 0 and no "quit barrier passed its bound" line.
 
+- **SpectroEELS areal density (6).** (a) The cross section: `differentialCrossSection` equals exSpy 7185a4d1's `EELSCLEdge.function` on
+  `edge-pins.json`'s grid (C, N, O K; every fourth case, all three scales for those, relative 1e-10; the effective angle 1e-14), and
+  `ratioMethod`'s `crossSectionBarn` / `edgeChannels` equal the grid's sigma_k and window for N and O as well as C (a flat image on the
+  grid's axis). (b) The planted images (`edge-planted` set and set R: 16 images, noiseless and noisy, three background windows, four
+  widths, 15 pixels) against the pins, exSpy/HyperSpy's answers and not truth: `atomsPerNM2` 1e-10 relative, `edgeCounts`,
+  `backgroundCounts`, `powerLawR`, `powerLawA` 1e-12, `sigmaCounting` 1e-9, `lowLossIntensity` exactly; and the I_0 route
+  (`.zeroLoss(ThicknessMap)`, three fixed thresholds). (c) Set R's single-scattering image in detail: the map's own statements
+  (edge, windows, channels, dose, method, `validation` "none", caveats for N K and O K), the dose ratio, `edgeOnsetEV`, a custom
+  window and width, a different microscope, a Float-count image, cancellation. (d) Every `EdgeUnavailable` reason produced by an input
+  that causes it (an empty window half, a zero and a negative low loss, window sums of 9e301 and 9e-299 whose r and A overflow, a
+  thickness map with no I_0) and every `EELSEdgeError` case that can be reached publicly, with its payload.
+- **The GOS resource bundle.** The tables are SpectroEELS's `Bundle.module` resources. The Debug consumer computing a cross section
+  for C, N and O K is the proof they load; `run.sh` also fails unless `SpectroKit_SpectroEELS.bundle` sits next to the consumer binary
+  with `dft-C-K1.json`, `dft-N-K1.json` and `dft-O-K1.json` inside.
+
 ## Negative controls (`run.sh --controls`)
 
 For each of the 28 symbols 0.2.0 made public (ask 1's 20: three `DM4Experiment` methods, `DM4Image` and its six members,
@@ -78,17 +94,25 @@ control is caught by one of three diagnostics:
 - **decl** (the SpectroEELS types): the type itself becomes `package`; caught by `cannot find '<Type>' in scope` in the consumer,
   or, when a public signature of the library names the type, by `cannot be declared public because ... uses a package type` with
   the type in the code frame under it;
-- **used** (the two `LowLossSpectrumImage` initialisers): the access error has no stable name, so the consumer's build must fail
+- **library** (`CoreLossEdge.carbonK`, `CoreLossEdge.description`): the library refuses the edit itself, since `carbonK` is `ratioMethod`'s public default argument and `description` witnesses `CustomStringConvertible`; caught by that error in the edited file;
+- **used** (the two `LowLossSpectrumImage` initialisers, the two `CoreLossSpectrumImage` ones with the error required in `EdgeQuantificationChecks.swift`, and `EELSMicroscope.init`): the access error has no stable name, so the consumer's build must fail
   with an error in the consumer's own sources that names the type the other initialiser takes (`cannot convert value of type
   '[Double]' to expected argument type '[Float]'`, and the reverse);
 - **type** (`DM4Image`, `DM4Axis`, `DM4EELSSpectrumImage`, the structs): the library itself no longer compiles, since public members are typed with a
   `package` struct (`property cannot be declared public because its type uses a package type`, at a line naming the struct).
   Reverting a struct cannot reach the consumer, so each struct's fields are controlled on their own as well.
 
-It prints `consumer-check: negative controls: N of N caught` (86 of 86: the 28 of 0.2.0 and 58 new) and exits non-zero unless all are caught. The build logs of the
+It prints `consumer-check: negative controls: N of N caught` (143 of 143: the 28 of 0.2.0, 58 of the reader and slice 1, and 57 of slice 2) and exits non-zero unless all are caught. The build logs of the
 last run are in `<root>/.build/consumer-check/mutants/logs/`.
 
 ## What it cannot prove
+
+- `EELSEdgeError.noBundledCrossSection` and `.crossSectionFailed`: no public way reaches them. `CoreLossEdge`'s initialiser is internal,
+  so a consumer holds only C K, N K and O K, all bundled; and every microscope the checks tried that the validation lets through either
+  gave a cross section or `crossSectionZero`. (The declarations are still controlled with the type `EELSEdgeError`.)
+- That a microscope outside the physical range is refused: beam energies of about 2 keV and below, or a convergence semi-angle of 1e6
+  mrad, pass `invalidMicroscope` and then trap inside the library (`Index out of range`). Found while looking for
+  `crossSectionFailed`; not asserted here, since it cannot be a check (the process would die).
 
 - That the 10 s bound works: no thread is stuck in HDF5 here. That is `SpectroKitTests` with the `SpectroHDF5ExitProbe` child
   process (`tools/test.sh`).
