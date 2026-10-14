@@ -6,16 +6,18 @@
 #
 #   run.sh [--table] [--controls] [extra.emd ...]
 #
-#   (no flag)    lock check, unzip, reference.py (h5py + the pinned `_get_detector_metadata_dict`), build swift/ (a
-#                package that depends on SpectroKit BY PATH, public API only), dump, compare.py. Exit 0 only when
-#                everything agrees.
+#   (no flag)    lock check, unzip, reference.py (h5py + the pinned `_get_detector_metadata_dict`, and the six
+#                doc-comment claims), build swift/ (a package that depends on SpectroKit BY PATH, public API only),
+#                dump, compare.py. Exit 0 only when everything agrees and all six claims hold. The one documented
+#                deviation (first `Detectors` entry as stored vs by index) is tolerated on the planted fixture only.
 #   --table      also print the per-entry table (it is always written to .build/velox-metadata-parity/table.md).
 #   --controls   then the negative controls: an edited COPY of the package per mutant, the Swift reader rebuilt against
 #                it, and compare.py must FAIL on the case named for that mutant, or the harness is blind to it.
 #   extra.emd    more files to read both ways. Tests/SpectroKitTests/Fixtures/velox-metadata-planted.emd is added
 #                when it exists.
 #
-# Pass: "velox-metadata-parity: all passed — ..." (and, with --controls, "negative controls: N of N caught"), exit 0.
+# Pass: "velox-metadata-parity: all passed — ... 6 of 6 doc-comment claims hold" (and, with --controls, "negative
+# controls: N of N caught"), exit 0.
 # Environment: SPECTROKIT_REFERENCES (default <root>/References: rosettasciio, python-venv), MAC4DSTEM_HDF5_PATH
 # (libhdf5; default <root>/.build/hdf5, which tools/test.sh fills, else Homebrew's).
 set -euo pipefail

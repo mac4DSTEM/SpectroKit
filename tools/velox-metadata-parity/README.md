@@ -32,8 +32,8 @@ sees only public API: a field that is not `public` does not compile there.
 
 ## Doc-comment claims
 
-`reference.py` also checks what the doc comments of `VeloxEMDReader.swift` say about the public files and the pinned
-source, and `compare.py` fails on any counterexample. In these claims a camera image is an entry whose
+`reference.py` also checks six claims that the doc comments of `VeloxEMDReader.swift` make about the public files and
+the pinned source, and `compare.py` fails on any counterexample. In these claims a camera image is an entry whose
 `BinaryResult.Detector` has `DetectorType` `ImagingDetector` (BM-Ceta); a STEM image is any other entry (24
 `ScanningDetector`, 14 `AnalyticalDetector`); an EELS spectrometer entry is an entry whose `BinaryResult.Detector` is
 the detector of the file's `Data/EelsSpectrumImage` datasets (Zebra, in the one public file that has them).
@@ -49,6 +49,10 @@ the detector of the file's `Data/EelsSpectrumImage` datasets (Zebra, in the one 
 5. In the pinned `_get_mapping`, `CustomProperties.StemMagnification.value` maps to `magnification` with `float` and
    `Optics.CameraLength` to `camera_length` with `float(x) * 1e3` (both in the function's own dict literal, nothing
    removes them), and no file under `rsciio/emd/` mentions `NominalMagnification`, `OperatingMode` or `ProjectorMode`.
+6. Every `Detectors` section (every `Metadata` column of all 42 entries) stores its `Detector-<n>` keys in ascending
+   index order, and no two entries of one section share a `DetectorName`. With both, the first entry as stored (what
+   RosettaSciIO takes) and the first by index (what the reader takes) are one entry, so the exposure rule cannot part
+   from RosettaSciIO's on a public file.
 
 Planted and extra files are left out of the claims: they are built to break them.
 
@@ -84,11 +88,13 @@ Everything is written under `.build/velox-metadata-parity/`: `work/reference.jso
 ## The one documented deviation
 
 RosettaSciIO takes the first `Detectors` entry in the order the JSON object was stored. Foundation's dictionaries have
-no order, so the reader takes `Detector-<n>` in index order. The two agree whenever the keys are stored in index order,
-which every public file does. They part when an entry stores them out of order (the planted fixture has one that does,
-on purpose). `compare.py` then prints `  deviation  ...` with both values and does not fail, but only when the entry's
-keys are out of index order and the reader's value is the index-order one; any other difference is a FAIL. The count
-appears in the pass line.
+no order, so the reader takes `Detector-<n>` in index order. The two agree whenever the keys are stored in index order
+or no two entries share a name, which claim 6 shows for every public file. They part when an entry stores the keys out
+of order and repeats a name: the planted fixture has one that does (`case-f`), on purpose. `compare.py` then prints
+`  deviation  ...` with both values and does not fail, but only for a file labelled `planted/...`, only when the
+entry's keys are out of index order, and only when the reader's value is the index-order one. Anywhere else, a public
+file or an extra file given on the command line, the same difference is a FAIL (and a public file that stored its
+keys out of order would also fail claim 6). The count appears in the pass line.
 
 ## Negative controls
 
@@ -126,9 +132,10 @@ The first two are caught only by the planted fixture; without it they count as n
   distinct strings stored in any `Metadata` column (a throwaway scan, not part of `run.sh`; no public file stores a JSON
   number there). `run.sh` itself compares the six fields on column 0. They differ on a throwaway file with odd values
   (not committed; run through this harness as an extra file): `" 5"` and `"1_0"` are 5.0 and 10.0 in Python and nil in
-  Swift; `"0x10"` is nil in Python and 16.0 in Swift; a JSON `true` is null here (`reference.py` does not take a bool
-  for a number) and 1.0 in Swift (`NSNumber`). `"nan"`, `"Infinity"`, `"1.3e+006"`, a JSON number, and a
-  `StemMagnification` that is not an object, has no `value`, or sits in a `CustomProperties` that is a string, agree.
+  Swift; `"0x10"` is nil in Python and 16.0 in Swift. `"nan"`, `"Infinity"` (any case, signed: both give a non-finite
+  value, not nil), `"1.3e+006"`, a JSON number, a JSON `true` or `false` (1.0 / 0.0 in both: `float(True)` and
+  `NSNumber`), and a `StemMagnification` that is not an object, has no `value`, or sits in a `CustomProperties` that
+  is a string, agree.
 - **An empty `BinaryResult.Detector`** gives null in the reference, by the reader's own rule (RosettaSciIO would look
   for an entry named `""`); no public file has one.
 - The harness is not a test of the library: `swift test` is. It reads real files from outside the repository.

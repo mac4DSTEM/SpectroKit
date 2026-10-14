@@ -405,8 +405,9 @@ public nonisolated struct VeloxDetectorInfo: Equatable, Sendable {
     /// they are reported and never interpreted or used.
     public let realTimeColumn0: Double?
     public let liveTimeColumn0: Double?
-    /// `ExposureTime` as stored (s). Set on a camera's entry (`ImagingDetector`); the scanning and analytical entries of
-    /// RosettaSciIO 049e7d70's public files carry none.
+    /// `ExposureTime` as stored (s). In RosettaSciIO 049e7d70's public files only camera (`ImagingDetector`) entries
+    /// carry it, and not all of them (97 of 153 `Detectors` entries, counted over every Metadata column); the scanning
+    /// and analytical entries carry none.
     public let exposureTimeSeconds: Double?
 
     public var azimuthDegrees: Double? { azimuthRadians.map { $0 * 180 / .pi } }
@@ -467,15 +468,20 @@ public nonisolated struct VeloxMetadata: Sendable {
     // 2026-10-14) are as stored: no unit conversion, no decoding, nil when absent or not a number. macTEM's Velox-TIFF
     // reader reads the same names from the same tree in XML. "Not a number": a string is parsed by Swift's `Double(_:)`
     // (no surrounding spaces, no `_`; "0x10" is 16), where RosettaSciIO uses Python's `float`; the two agree on every
-    // string of RosettaSciIO 049e7d70's public Velox files (tools/velox-metadata-parity). A JSON number is taken as is
-    // (a JSON `true`/`false` as 1/0; Velox stores numbers as strings).
+    // string of RosettaSciIO 049e7d70's public Velox files (tools/velox-metadata-parity). A string that spells NaN or
+    // infinity ("nan", "inf", "Infinity", in any case, signed) parses to a non-finite value in Swift and in Python
+    // alike and is returned as that value, not as nil: a reader that needs a finite number checks `isFinite`. A JSON
+    // number is taken as is (a JSON `true`/`false` as 1/0, as Python's `float(True)` is 1.0; Velox stores numbers as
+    // strings). `exposureTimeSeconds` is macTEM's ask (the entry named by `BinaryResult.Detector`) applied with
+    // RosettaSciIO's name matching; it is not RosettaSciIO's `DetectorMetadata` (see the field).
     /// `Optics.NominalMagnification`. Absent from every STEM image of RosettaSciIO 049e7d70's public files.
     public let nominalMagnification: Double?
     /// `CustomProperties.StemMagnification.value`: what RosettaSciIO 049e7d70 maps as the magnification
     /// (`_emd_velox.py` `_get_mapping`, `float`). Not a STEM marker: in its public files the camera images carry it too
     /// ("0" on three of the four, "115000" on the fourth) and the EELS spectrometer's entries carry none. For a camera
     /// image the magnification is `nominalMagnification`. The entry's `type` is not consulted, as RosettaSciIO's
-    /// `float` does not consult it: the three "0" are typed "bool" and read 0.
+    /// `float` does not consult it: the three "0" are typed "bool" and read 0. That 0 is Velox's unset bool, not a
+    /// magnification: this field returns it as stored, and a reader should treat a value <= 0 as absent.
     public let stemMagnification: Double?
     /// `Optics.CameraLength`, metres as stored (RosettaSciIO 049e7d70 `_emd_velox.py` maps it ×1e3 to mm, in every mode).
     public let cameraLengthMeters: Double?
@@ -485,11 +491,17 @@ public nonisolated struct VeloxMetadata: Sendable {
     /// `Optics.ProjectorMode` as stored: a code in an `.emd` as well ("1", "2").
     public let projectorMode: String?
     /// `ExposureTime` (s) of the first `Detectors` entry, in `Detector-<n>` index order, whose `DetectorName` equals
-    /// `BinaryResult.Detector`: RosettaSciIO 049e7d70's `_get_detector_metadata_dict` (`_emd_velox.py:51-57`),
-    /// equality, not the `contains` of the energy axis. RosettaSciIO takes the first entry in the order the file stores
-    /// the keys, which is index order in every public file; a file that stores them out of order would differ. nil when
-    /// that entry has none, when no entry matches, or when `BinaryResult.Detector` is absent or empty (an entry without
-    /// `DetectorName` is listed with the name "" and never matches).
+    /// `BinaryResult.Detector`. The rule is macTEM's ask, applied with the matching of RosettaSciIO 049e7d70's
+    /// `_get_detector_metadata_dict` (`_emd_velox.py:51-57`): `==`, not the energy axis's `contains`, and the first
+    /// entry. RosettaSciIO takes the first as the file stores the keys; this reader cannot see that order and takes
+    /// index order. The order matters only when two entries share a `DetectorName`, and none of the 42 image entries of
+    /// RosettaSciIO's public files has two (they also store the keys in index order).
+    /// This is not RosettaSciIO's `DetectorMetadata`: RosettaSciIO feeds `_get_detector_metadata_dict` another name,
+    /// from `Operations` or from `Detectors["Detector-<DetectorIndex>"].DetectorName` (`_emd_velox.py:326-330`,
+    /// `447-449`, `464-535`). `BinaryResult.DetectorIndex` is not consulted here: the public '1854 Camera Ceta.emd'
+    /// stores index 0, "BF", and its camera, BM-Ceta, is `Detector-8`. nil when that entry has none, when no entry
+    /// matches, or when `BinaryResult.Detector` is absent or empty (an entry without `DetectorName` is listed with the
+    /// name "" and never matches).
     public let exposureTimeSeconds: Double?
 
     public var superXDetectors: [VeloxDetectorInfo] { detectors.filter { $0.isAnalytical } }

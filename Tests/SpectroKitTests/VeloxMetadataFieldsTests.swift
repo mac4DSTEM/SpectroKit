@@ -31,6 +31,13 @@
 //    M20 detector sort removed; M21 detector sort by index as text; M22 projectorMode reading OperatingMode; M23
 //    `jsonDouble` ignoring JSON numbers; M24 `jsonDouble` reading 0 as nil; M25 stem read only when its "type" is
 //    "double"; M26 stem falling back to a string CustomProperties; M27 nominalMagnification `?? 0`.
+//  Gate B's findings (79295e8), each applied alone to VeloxEMDReader.swift:
+//    M28 exposure by `BinaryResult.DetectorIndex` when present, else by name; M29 exposure falling back to the
+//    DetectorIndex entry when no entry has the name; M30 the same when the named entry has no ExposureTime; M31
+//    `jsonDouble` reading a JSON bool as nil; M32 the DetectorIndex fallback only when the named entry has no
+//    ExposureTime; M33 the DetectorIndex entry's exposure preferred when it has one; M34 nil when the DetectorIndex
+//    entry has no ExposureTime, else by name; M35 the DetectorIndex entry's exposure preferred when the named entry
+//    has one too.
 //
 
 import Foundation
@@ -115,6 +122,53 @@ final class VeloxMetadataFieldsTests: XCTestCase {
         XCTAssertNil(wrongCase.exposureTimeSeconds, "== is case-sensitive, as rsciio's")
     }
 
+    /// The exposure is looked up by NAME, never by `BinaryResult.DetectorIndex`. RosettaSciIO 049e7d70's public
+    /// '1854 Camera Ceta.emd' has this shape: BinaryResult {"Detector": "BM-Ceta", "DetectorIndex": "0"}, Detector-0 is
+    /// "BF" without an ExposureTime, and the camera is Detector-8 (ExposureTime "1").
+    func testExposureIsByNameWhenTheDetectorIndexPointsAtAnEntryWithoutOne() throws {
+        let m = try parse(#"""
+        {"BinaryResult": {"Detector": "BM-Ceta", "DetectorIndex": "0"},
+         "Detectors": {"Detector-0": {"DetectorName": "BF", "DetectorType": "ScanningDetector"},
+                       "Detector-8": {"DetectorName": "BM-Ceta", "DetectorType": "ImagingDetector",
+                                      "ExposureTime": "1"}}}
+        """#)
+        XCTAssertEqual(m.binaryResultDetectorIndex, 0, "the index is there, and it names BF")
+        XCTAssertEqual(m.detectors.map(\.index), [0, 8])
+        XCTAssertEqual(m.exposureTimeSeconds, 1, "the entry named BM-Ceta, not nil from Detector-0")
+        XCTAssertEqual(m.detectors.map(\.exposureTimeSeconds), [nil, 1])
+    }
+
+    /// The same, where the indexed entry has an ExposureTime of its own: the named entry's value still wins.
+    func testExposureIsByNameWhenTheDetectorIndexPointsAtAnEntryWithAnotherExposure() throws {
+        let m = try parse(#"""
+        {"BinaryResult": {"Detector": "BM-Ceta", "DetectorIndex": "0"},
+         "Detectors": {"Detector-0": {"DetectorName": "BF", "DetectorType": "ImagingDetector", "ExposureTime": "7"},
+                       "Detector-8": {"DetectorName": "BM-Ceta", "DetectorType": "ImagingDetector",
+                                      "ExposureTime": "1"}}}
+        """#)
+        XCTAssertEqual(m.binaryResultDetectorIndex, 0)
+        XCTAssertEqual(m.exposureTimeSeconds, 1, "not 7, the value of the entry the index names")
+        XCTAssertEqual(m.detectors.map(\.exposureTimeSeconds), [7, 1])
+    }
+
+    /// `BinaryResult.DetectorIndex` is no fallback either: with no entry named BM-Ceta, or a named one without an
+    /// ExposureTime, the exposure is nil though the indexed entry has one.
+    func testTheDetectorIndexIsNoFallbackForTheExposure() throws {
+        let noEntryNamed = try parse(#"""
+        {"BinaryResult": {"Detector": "BM-Ceta", "DetectorIndex": "0"},
+         "Detectors": {"Detector-0": {"DetectorName": "BF", "ExposureTime": "7"}}}
+        """#)
+        XCTAssertEqual(noEntryNamed.binaryResultDetectorIndex, 0)
+        XCTAssertNil(noEntryNamed.exposureTimeSeconds, "no entry is named BM-Ceta; not 7 from Detector-0")
+
+        let namedWithoutExposure = try parse(#"""
+        {"BinaryResult": {"Detector": "BM-Ceta", "DetectorIndex": "0"},
+         "Detectors": {"Detector-0": {"DetectorName": "BF", "ExposureTime": "7"},
+                       "Detector-8": {"DetectorName": "BM-Ceta"}}}
+        """#)
+        XCTAssertNil(namedWithoutExposure.exposureTimeSeconds, "BM-Ceta has none; not 7 from Detector-0")
+    }
+
     /// A STEM image: CameraLength and both modes, no Optics.NominalMagnification. CustomProperties.StemMagnification is
     /// its magnification and is NOT copied into nominalMagnification. The binary detector's entry (HAADF) has no
     /// ExposureTime, while another detector (BM-Ceta) has one: the exposure is nil.
@@ -155,6 +209,24 @@ final class VeloxMetadataFieldsTests: XCTestCase {
 
         let stem = try parse(#"{"CustomProperties": {"StemMagnification": {"type": "double", "value": 62500.5}}}"#)
         XCTAssertEqual(stem.stemMagnification, 62500.5, "the value as a JSON number")
+    }
+
+    /// A JSON `true`/`false` is 1/0 in every numeric field, as Python's `float(True)` is 1.0 (RosettaSciIO's reading of
+    /// a value stored as a bool); the string "true" is not a number.
+    func testAJSONBoolIsOneOrZeroAsPythonsFloatReadsIt() throws {
+        let m = try parse(#"""
+        {"Optics": {"NominalMagnification": true, "CameraLength": false},
+         "CustomProperties": {"StemMagnification": {"type": "bool", "value": false}},
+         "BinaryResult": {"Detector": "BM-Ceta"},
+         "Detectors": {"Detector-0": {"DetectorName": "BM-Ceta", "ExposureTime": true}}}
+        """#)
+        XCTAssertEqual(m.nominalMagnification, 1)
+        XCTAssertEqual(m.cameraLengthMeters, 0)
+        XCTAssertEqual(m.stemMagnification, 0)
+        XCTAssertEqual(m.exposureTimeSeconds, 1)
+
+        let text = try parse(#"{"Optics": {"CameraLength": "true"}}"#)
+        XCTAssertNil(text.cameraLengthMeters, "the string \"true\" is not a number")
     }
 
     /// Not a number is nil ("", "abc", "n/a"); a JSON null is absent; a mode that is a string is kept as stored,

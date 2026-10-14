@@ -33,9 +33,9 @@ Nothing here reads a fixture's truth file: the planted file and every extra file
 
 Before anything is read: registry.txt is the pinned file, every zip and loose .emd matches its registry entry (the
 registry names the four zips, not their members), and every unzipped member is byte-identical to the member of the
-verified archive. The file also checks the doc-comment claims of VeloxEMDReader.swift against the public files and the
-pinned source (see `claims` in the output; planted and extra files are left out of that check). A disagreement exits 1
-here, loudly: that is a reference check failing, never a pass.
+verified archive. The file also checks the six doc-comment claims of VeloxEMDReader.swift against the public files and
+the pinned source (see `claims` in the output; planted and extra files are left out of that check). A disagreement
+exits 1 here, loudly: that is a reference check failing, never a pass.
 """
 import ast
 import hashlib
@@ -92,10 +92,11 @@ def encode(x):
 
 
 def num(v):
-    """Python float() of a stored string or number; None when absent or unparseable (a JSON bool is not a number)."""
-    if isinstance(v, bool) or v is None:
+    """Python float() of a stored string or number; None when absent or unparseable. A JSON bool is a number here, as
+    to both readers: `float(True)` is 1.0 (RosettaSciIO) and the reader takes the `NSNumber` 1/0."""
+    if v is None:
         return None
-    if isinstance(v, (int, float)):
+    if isinstance(v, (int, float)):       # bool is an int
         try:
             return float(v)
         except OverflowError:
@@ -260,8 +261,8 @@ def read_entry(group, rsciio_detector):
         exposure = num(chosen.get("ExposureTime")) if isinstance(chosen, dict) else None
     # The reader cannot see the order a JSON object was stored in (Foundation's dictionaries have none), so it takes
     # `Detector-<n>` in index order. rsciio takes the stored order. They are the same whenever the keys are stored in
-    # index order, which every public file does; this is the only place the two can part (see "deviation" in
-    # compare.py).
+    # index order, which every public file does (claim 6); this is the only place the two can part, and compare.py
+    # tolerates the part only on the planted fixture (see "deviation" there).
     stored = [i for i, _ in detectors_of(om)]
     in_index_order = None
     if name:
@@ -575,6 +576,45 @@ def stem_claim(files):
     return c
 
 
+def order_claim(entries):
+    """Claim 6: in every `Detectors` section, the `Detector-<n>` keys are stored in ascending index order and no two
+    entries share a DetectorName (every Metadata column of every entry). With both, the first entry as stored and the
+    first by index are one entry, so RosettaSciIO's choice and the reader's cannot part."""
+    c = new_claim("the Detectors keys of every image entry are stored in ascending Detector-<n> index order, and no "
+                  "two entries of one image share a DetectorName",
+                  "every `Detectors` section of every Metadata column of every entry; an entry without a string "
+                  "DetectorName has no name to share")
+    images = set()
+    sections = columns_seen = widest = 0
+    for tag, _, columns in entries:
+        images.add(tag)
+        for index, column in enumerate(columns):
+            found = detectors_of(column)
+            if not found:
+                continue
+            c["checked"] += 1
+            sections += 1
+            widest = max(widest, len(found))
+            stored = [i for i, _ in found]
+            if stored != sorted(stored):
+                c["counterexamples"].append(f"{tag} col {index}: the Detector-<n> keys are stored in the order "
+                                            f"{stored}, not ascending")
+            if len(set(stored)) != len(stored):
+                c["counterexamples"].append(f"{tag} col {index}: two keys carry one index {sorted(stored)}")
+            names = {}
+            for i, d in found:
+                if isinstance(d.get("DetectorName"), str):
+                    names.setdefault(d["DetectorName"], []).append(i)
+            for name, indices in sorted(names.items()):
+                if len(indices) > 1:
+                    c["counterexamples"].append(f"{tag} col {index}: DetectorName {name!r} is on the entries with "
+                                                f"indices {indices}")
+        columns_seen += len(columns)
+    c["detail"].append(f"{len(images)} image entries ({columns_seen} Metadata columns), {sections} Detectors sections "
+                       f"of up to {widest} entries each: keys ascending and names distinct in all {sections}")
+    return c
+
+
 def claims(files, root):
     """The doc-comment claims of VeloxEMDReader.swift, against every public Velox file read and the pinned source.
 
@@ -585,7 +625,7 @@ def claims(files, root):
     entries = [(f"{label} | {eid[:6]}", entry, info["columns"][eid])
                for label, info in files.items() if info["velox"] for eid, entry in info["entries"].items()]
     return {"claim1": nominal_claim(entries), "claim2": exposure_claim(entries), "claim3": modes_claim(entries),
-            "claim4": stem_claim(files), "claim5": source_claim(root)}
+            "claim4": stem_claim(files), "claim5": source_claim(root), "claim6": order_claim(entries)}
 
 
 # ------------------------------------------------------------------------------------------------------- main

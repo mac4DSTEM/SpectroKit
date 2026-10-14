@@ -8,12 +8,14 @@ Per file: Velox in the reference <=> the reader lists entries; not Velox <=> the
 Per Velox file: the entry-id sets are equal. Per entry, exactly: `binaryResultDetector`, `operatingMode`,
 `projectorMode` (string equal, null <=> nil); `nominalMagnification`, `stemMagnification`, `cameraLengthMeters`,
 `exposureTimeSeconds` (the Double's IEEE-754 bit pattern equal to the reference's, null <=> nil); and every
-`Detector-<n>` record (the index sets equal; name, type and exposure bits equal). Then every doc-comment claim in the
-reference must hold with no counterexample.
+`Detector-<n>` record (the index sets equal; name, type and exposure bits equal). Then each of the six doc-comment
+claims in the reference must hold with no counterexample (claim 6: the public files store the `Detectors` keys in index
+order and repeat no DetectorName, so the deviation below cannot arise in them).
 
-One documented deviation is tolerated, and printed as `  deviation  ...`: `exposureTimeSeconds` where the entry stores
-its `Detectors` keys out of `Detector-<n>` index order and the reader's value is the index-order one (RosettaSciIO takes
-the first entry as stored; the reader cannot see the stored order). Any other difference is a FAIL.
+One documented deviation is tolerated, and printed as `  deviation  ...`, on the planted fixture only (labels starting
+`planted/`): `exposureTimeSeconds` where the entry stores its `Detectors` keys out of `Detector-<n>` index order and the
+reader's value is the index-order one (RosettaSciIO takes the first entry as stored; the reader cannot see the stored
+order). Any other difference is a FAIL, and so is the same difference in a public file or an extra file (`extra/...`).
 
 A failure is one line `  FAIL  <file> | <entry id, 6 characters> | <field>: expected <x>, got <y>`. Exit 0 prints
 `velox-metadata-parity: all passed - ...`, exit 1 prints the failure count; run.sh --controls matches on the FAIL lines.
@@ -22,6 +24,7 @@ import json
 import struct
 import sys
 
+PLANTED_LABEL = "planted/"      # reference.py's label for Tests/SpectroKitTests/Fixtures/velox-metadata-planted.emd
 STRING_FIELDS = ("binaryResultDetector", "operatingMode", "projectorMode")
 NUMBER_FIELDS = ("nominalMagnification", "stemMagnification", "cameraLengthMeters", "exposureTimeSeconds")
 
@@ -96,11 +99,13 @@ def main():
             want, have, tag = info["entries"][eid], got["entries"][eid], eid[:6]
             for field in STRING_FIELDS + NUMBER_FIELDS:
                 order = want["exposureInIndexOrder"]
-                if (field == "exposureTimeSeconds" and not same(want[field], have.get(field))
+                if (label.startswith(PLANTED_LABEL) and field == "exposureTimeSeconds"
+                        and not same(want[field], have.get(field))
                         and order["storedOutOfIndexOrder"] and same(order["value"], have.get(field))):
                     # RosettaSciIO takes the first entry as STORED, the reader the first by Detector-<n> index; they
                     # part only when the keys are stored out of index order, and then the reader's value is the
-                    # index-order one.
+                    # index-order one. Only the planted fixture is built to part them: in a public or an extra file
+                    # the same difference is a FAIL.
                     checks += 1
                     deviations.append(f"  deviation  {label} | {tag} | {field}: RosettaSciIO takes the first entry as "
                                       f"stored ({shown(want[field])}), the reader the first by Detector-<n> index "
