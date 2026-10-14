@@ -17,7 +17,10 @@ let package = Package(
         .package(path: "../.."),
     ],
     targets: [
-        .executableTarget(name: "consumer-check", dependencies: [.product(name: "SpectroCore", package: spectroKit)]),
+        .executableTarget(name: "consumer-check", dependencies: [
+            .product(name: "SpectroCore", package: spectroKit),
+            .product(name: "SpectroEELS", package: spectroKit),
+        ]),
     ],
     swiftLanguageModes: [.v6]
 )

@@ -89,7 +89,7 @@ if grep -q "quit barrier passed its bound" $out; then die "the quit barrier fire
 summary=$(grep "^consumer-check summary:" $out)
 checks=${${summary#consumer-check summary: }%% checks*}
 head=$(git -C $root --no-optional-locks rev-parse --short HEAD 2>/dev/null || print unknown)
-print "consumer-check: all passed — $checks checks through SpectroCore's public API only, Debug build, no warnings," \
+print "consumer-check: all passed — $checks checks through SpectroCore's and SpectroEELS's public API only, Debug build, no warnings," \
       "no test-only target built, exit 0 with the quit barrier installed (SpectroKit $head, libhdf5 ${MAC4DSTEM_HDF5_PATH:t})"
 (( controls )) || exit 0
 

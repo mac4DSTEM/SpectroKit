@@ -1,16 +1,35 @@
 # consumer-check
 
 A separate SwiftPM package that depends on SpectroKit **by path** (`.package(path: "../..")`) and uses, from outside the
-package, every symbol macTEM reads across the package boundary for SpectroKit 0.2.0. `package` access does not cross a
-package boundary, so the target compiles only while each of these symbols is `public`.
+package, every symbol macTEM reads across the package boundary for SpectroKit 0.2.0, and the public surface added since:
+the DM4 EELS spectrum-image reader (`SpectroCore`) and the whole `SpectroEELS` product (the t/λ thickness map).
+`package` access does not cross a package boundary, so the target compiles only while each of these symbols is `public`.
+(The tests in `Tests/` are in-package and CAN use `package` symbols; this package is what enforces "public API only".)
 
 | macTEM's ask | symbols | where checked |
 |---|---|---|
 | 1. the DM4 API public (macTEM ADR 019) | `DM4Experiment.readImage(path:index:)`, `readImage(data:index:)`, `tagTree(data:)`; `DM4Image` (the struct) `.object .width .height .pixels .xAxis .yAxis`; `DM4Axis` (the struct) `.origin .scale .units`; `DM4ImageObject` `.name .dimensions .axes .metaDataFormat .imageTagNumbers .imageTagStrings` (these six, with `DM4Image`, `DM4Axis`, `readImage` and `tagTree`, are what 0.2.0 changed from `package`). Also read, public since 0.1.0: `DM4Experiment.list(path:)`, `list(data:)`; `DM4ImageObject` `.index .role .voltage`; the six `DM4Error` cases | `DM4DemoChecks`, `DM4ErrorChecks`, `TagTreeChecks` |
 | 2. the Velox metadata fields (five from macTEM's ask of 2026-10-13, `stemMagnification` the owner's of 2026-10-14) | `VeloxMetadata` `.nominalMagnification .stemMagnification .cameraLengthMeters .operatingMode .projectorMode .exposureTimeSeconds`; `VeloxDetectorInfo.exposureTimeSeconds`; with `VeloxMetadata.parse(jsonData:)`, `VeloxEMDReader(path:).images()`, `VeloxImageInfo.metadata` | `VeloxChecks` |
 | 3. the bounded quit barrier (macTEM ADR 021) | `HDF5Serial.exitBarrierBound` (read-only, 10 s) | `BarrierChecks`, and the process's own `exit` |
+| 4. the DM4 EELS spectrum-image reader (EELS slice 1b) | `DM4Experiment.readEELSSpectrumImage(path:index:)`, `(data:index:)`; `DM4EELSSpectrumImage` (the struct, its `Equatable`) `.object .nx .ny .channels .counts .energyAxis .beamEnergyKeV .convergenceSemiAngleMrad .collectionSemiAngleMrad`; the `DM4Error` cases it throws | `EELSReaderChecks` |
+| 5. SpectroEELS (EELS slice 1) | `EELSThickness.logRatio`, `.methodName`; `LowLossSpectrumImage` (both initialisers, six fields, `pixelCount`, `energy(ofChannel:)`); `ThresholdRule`; `MeanFreePathSource`; `InelasticMeanFreePath.iakoubovskii`, `.angularCorrection`; `ThicknessMap` (eleven members and the subscript); `ThicknessPixel` (ten fields); `ZeroLossSource`; `ThicknessUnavailable`; `SigmaUnavailable`; `EELSThicknessError` | `SpectroEELSChecks` |
 
 ## What it proves
+
+- **EELS reader (4), against RosettaSciIO.** `rsciio-EELS_SI.dm4` (object 2) and the planted objects 2, 3, 4, 6, 10, 11, 18 (EELS by
+  `Meta Data.Signal` alone), 20 (a stack-builder group that holds only a string) and 21 (its pixel block ends the file) of
+  `eels-planted.dm4`: `nx ny channels`, the SHA-256 of the counts and the sample voxels, the energy axis, E0 and the two angles
+  equal the `.truth.json` of `tools/eels-reader/truth.py`; the path and data entry points are equal; a different object is not
+  equal. Refusals through the public errors: the keV axis (19), a 2D object, an uncalibrated one, the survey, the EDS object, an
+  index the file lacks (`cannotOpen`), the bool type (`unsupportedDataType(14)`), a `[3, 0, 5]` cube, and the three files
+  whose Data tag declares 0, 29 or 31 elements for a 30-voxel cube (`truncated`; the truth files record that RosettaSciIO raises).
+- **SpectroEELS (5).** (a) A one-pixel image whose answer is arithmetic: a 1 eV fixed threshold on counts `1 2 4 8 4 2 1 1` from
+  -2 eV gives I_0 = 7, I_t = 23, t/λ = ln(23/7), σ = sqrt(1/7 - 1/23). (b) exSpy's line scan (`Tests/SpectroEELSTests/Fixtures`,
+  17 spectra x 1024 channels) against `pins.json`, exSpy 7185a4d1's answers (not truth; its tolerances are the pins'): the
+  fixed 2.5 eV rule (t/λ, I_0, I_t, the threshold channel), the three absolute-thickness routes (λ given; density; both), the
+  zero-loss-spectrum route and the estimated rule (tolerance, channels, t/λ), and Iakoubovskii's λ and the angular correction.
+  (c) Every `ThicknessUnavailable` and `SigmaUnavailable` reason produced by an image that causes it, and every
+  `EELSThicknessError` case produced by an input that causes it (with its payload where it has one).
 
 - **Public.** The target compiles only while each symbol above is `public`. `run.sh --controls` shows it for every one: see
   Negative controls.
@@ -42,7 +61,9 @@ package boundary, so the target compiles only while each of these symbols is `pu
 ## Negative controls (`run.sh --controls`)
 
 For each of the 28 symbols 0.2.0 made public (ask 1's 20: three `DM4Experiment` methods, `DM4Image` and its six members,
-`DM4Axis` and its three, six `DM4ImageObject` fields; the seven Velox ones; and `HDF5Serial.exitBarrierBound`),
+`DM4Axis` and its three, six `DM4ImageObject` fields; the seven Velox ones; and `HDF5Serial.exitBarrierBound`), and for each of
+the new ones (the two readers, `DM4EELSSpectrumImage` and its nine members; every public type, field, method and initialiser of
+`SpectroEELS` listed above; enum cases are covered by their type's control, a case cannot be made `package` alone),
 `controls.py` reverts that one declaration from `public` to `package` in an rsync'd **copy**
 of the repository (`<root>/.build/consumer-check/mutants/`, the working tree is never edited; the edit must apply exactly
 once, else the control fails loudly), builds the consumer against the copy, and requires the build to fail with the
@@ -54,11 +75,17 @@ control is caught by one of three diagnostics:
   and `VeloxDetectorInfo`'s `exposureTimeSeconds` apart);
 - **overload** (`readImage(path:index:)`, `readImage(data:index:)`): the compiler falls back on the public sibling and says
   `incorrect argument label in call (have 'path:index:', expected 'data:index:')` at a call of `readImage`;
-- **type** (`DM4Image`, `DM4Axis`, the structs): the library itself no longer compiles, since public members are typed with a
+- **decl** (the SpectroEELS types): the type itself becomes `package`; caught by `cannot find '<Type>' in scope` in the consumer,
+  or, when a public signature of the library names the type, by `cannot be declared public because ... uses a package type` with
+  the type in the code frame under it;
+- **used** (the two `LowLossSpectrumImage` initialisers): the access error has no stable name, so the consumer's build must fail
+  with an error in the consumer's own sources that names the type the other initialiser takes (`cannot convert value of type
+  '[Double]' to expected argument type '[Float]'`, and the reverse);
+- **type** (`DM4Image`, `DM4Axis`, `DM4EELSSpectrumImage`, the structs): the library itself no longer compiles, since public members are typed with a
   `package` struct (`property cannot be declared public because its type uses a package type`, at a line naming the struct).
   Reverting a struct cannot reach the consumer, so each struct's fields are controlled on their own as well.
 
-It prints `consumer-check: negative controls: N of N caught` and exits non-zero unless all are caught. The build logs of the
+It prints `consumer-check: negative controls: N of N caught` (86 of 86: the 28 of 0.2.0 and 58 new) and exits non-zero unless all are caught. The build logs of the
 last run are in `<root>/.build/consumer-check/mutants/logs/`.
 
 ## What it cannot prove
