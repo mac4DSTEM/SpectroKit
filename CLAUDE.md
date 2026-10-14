@@ -32,23 +32,19 @@ full rules replace it.
 - **A reference for every number**: exSpy `7185a4d1`, HyperSpy 2.4.0, NIST EPQ `249dd3f8`, rsciio `049e7d70`
   (mac4DSTEM's pins), fetched into the gitignored `References/` (exSpy as `References/exspy-7185a4d1`, one commit, with
   `References/exspy-venv`: HyperSpy 2.4.0, RosettaSciIO 0.14.0, Python 3.14.7; the owner's approval, 2026-10-14; exSpy is
-  not installed there, so build its signal classes directly, as `tools/eels-thickness/pins.py` does).
+  not installed there, so build its signal classes directly, as `tools/eels-thickness/pins.py` does). An unpinned copy
+  is never a reference (the old `exspy-main` and `hyperspy-RELEASE_next_minor` snapshots went to the Trash, 2026-10-14).
+  Agreement with exSpy is not truth: an at% is called validated only after it recovers a planted composition and a
+  sample of known composition. Until then it self-reports `validation:"none"`.
 - **The owner's data** lives in the suite's `data/` folder, read as `$MACEM_DATA` (default `../data`): never copied or
   committed here; numbers measured on it are cited with their log; a manifest line in `data/README.md` per file used;
-  using it as a gate or truth is a registration change first (suite CLAUDE.md, 2026-10-14). The `exspy-main` there is unpinned and is never a
-  reference. Agreement with exSpy is not truth: an at% is called validated only after it recovers a planted composition
-  and a sample of known composition. Until then it self-reports `validation:"none"`.
+  using it as a gate or truth is a registration change first (suite CLAUDE.md, 2026-10-14).
 - **Names** (the suite's standard): apps are `mac` + technique, libraries are domain + `Kit`, modules carry the
   library's prefix: `SpectroCore` (shared spectrum machinery), `SpectroEDX`, `SpectroEELS` (later).
 - **Public at the first tag** (`0.1.0`), the owner's decision of 2026-10-12. Pushing and making it public are the owner's.
 - One session per repo. `main` only, commit by explicit paths.
-- **Suite board** (`https://claude.ai/artifact/MqDKd2ZefhkM4v8bdaiyX3`, the owner's one view of mac4DSTEM, SpectroKit and
-  macTEM): at closeout update only this repo's row, `lanes/spectrokit`, with `ArtifactData` `update` pinned to the version just
-  read: `step` {label, status done|running|next|blocked|waiting, detail}, `now`, `next`, `waitsOn`, `session` (open|idle),
-  `head`, `unpushed`, `tests`, `waiting` (the owner's to-dos, {text, size}), `done` (newest first, {date, text, ref}), `open`,
-  `pickup` {prompt: the exact prompt the owner pastes to start the next session, provide: what the owner must bring or decide
-  first}, `updatedAt` (UTC ISO), `updatedBy`. A cloud routine refreshes the rows from GitHub daily at 05:00 UTC and never
-  touches `session` or `unpushed`.
+- **Suite board**: this repo's row is `lanes/spectrokit`; how a session opens it, closes it and writes the next pickup
+  prompt is `../CLAUDE.md`, "The suite board is the workflow".
 
 ## The slots
 
