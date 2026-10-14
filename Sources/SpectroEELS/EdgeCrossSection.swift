@@ -118,6 +118,9 @@ package nonisolated struct EdgeCrossSection: Sendable {
     private static func qaxisAndGOS(table: GOSTable, energyIndex i: Int, qmin: Double, qmax: Double)
         -> (q: [Double], gos: [Double])? {
         let qt = table.q, row = table.gos[i], m = qt.count
+        // A NaN limit (E0 so low, or an angle so large, that the momentum transfer has no real value at this energy) is
+        // where exSpy's arithmetic produces NaN and its slicing fails; the port refuses (review of the consumer check).
+        guard qmin.isFinite, qmax.isFinite, qmin <= qmax else { return nil }
         var qaxis: [Double]
         var g32: [Float]
         if qmax > Double(qt[m - 1]) {
@@ -126,7 +129,7 @@ package nonisolated struct EdgeCrossSection: Sendable {
             g32 = row + [gq]
         } else {
             let index = qt.firstIndex { Double($0) >= qmax } ?? m             // searchsorted, side 'left'
-            guard index >= 1 else { return nil }
+            guard index >= 1, index < m else { return nil }
             let gq = interpolate32(q1: qt[index - 1], g1: row[index - 1], q2: qt[index], g2: row[index], at: qmax)
             qaxis = qt[..<index].map { Double($0) } + [qmax]
             g32 = Array(row[..<index]) + [gq]

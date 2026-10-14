@@ -107,12 +107,11 @@ last run are in `<root>/.build/consumer-check/mutants/logs/`.
 
 ## What it cannot prove
 
-- `EELSEdgeError.noBundledCrossSection` and `.crossSectionFailed`: no public way reaches them. `CoreLossEdge`'s initialiser is internal,
-  so a consumer holds only C K, N K and O K, all bundled; and every microscope the checks tried that the validation lets through either
-  gave a cross section or `crossSectionZero`. (The declarations are still controlled with the type `EELSEdgeError`.)
-- That a microscope outside the physical range is refused: beam energies of about 2 keV and below, or a convergence semi-angle of 1e6
-  mrad, pass `invalidMicroscope` and then trap inside the library (`Index out of range`). Found while looking for
-  `crossSectionFailed`; not asserted here, since it cannot be a check (the process would die).
+- `EELSEdgeError.noBundledCrossSection`: no public way reaches it. `CoreLossEdge`'s initialiser is internal, so a consumer holds only
+  C K, N K and O K, all bundled. (The declaration is still controlled with the type `EELSEdgeError`.)
+- `.crossSectionFailed`: reached by a microscope outside the cross section's domain (E0 of about 2 keV and below, a convergence
+  semi-angle of 1e6 mrad). Found here as a trap inside the library (`Index out of range`); fixed in SpectroEELS (a NaN q limit
+  is refused) and tested there (`EdgeEdgeCaseTests.testCrossSectionOutsideItsDomainThrows`), not repeated here.
 
 - That the 10 s bound works: no thread is stuck in HDF5 here. That is `SpectroKitTests` with the `SpectroHDF5ExitProbe` child
   process (`tools/test.sh`).

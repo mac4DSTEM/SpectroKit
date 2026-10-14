@@ -104,6 +104,20 @@ final class EdgeEdgeCaseTests: XCTestCase {
         }
     }
 
+    /// A microscope whose momentum-transfer limits have no real value over the table (E0 of a few keV, absurd angles): a
+    /// thrown `crossSectionFailed`, not a trap (found by the consumer check: index out of range at E0 <= 2 keV).
+    func testCrossSectionOutsideItsDomainThrows() throws {
+        for m in [EELSMicroscope(beamEnergyKeV: 2, convergenceMrad: 10, collectionMrad: 20),
+                  EELSMicroscope(beamEnergyKeV: 0.1, convergenceMrad: 0, collectionMrad: 20),
+                  EELSMicroscope(beamEnergyKeV: 200, convergenceMrad: 1e9, collectionMrad: 20)] {
+            XCTAssertThrowsError(try EELSEdgeQuantification.differentialCrossSection(edge: .carbonK, microscope: m, energiesEV: [300])) {
+                XCTAssertEqual($0 as? EELSEdgeError, .crossSectionFailed, "\(m)")
+            }
+        }
+        XCTAssertNoThrow(try EELSEdgeQuantification.differentialCrossSection(
+            edge: .carbonK, microscope: EELSMicroscope(beamEnergyKeV: 3, convergenceMrad: 10, collectionMrad: 20), energiesEV: [300]))
+    }
+
     func testPixelsTheMethodCannotAnswer() throws {
         let (core, low) = try plantedR()
         var counts = core.counts
