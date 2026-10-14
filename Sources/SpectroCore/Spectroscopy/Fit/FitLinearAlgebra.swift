@@ -68,11 +68,30 @@ package nonisolated struct ColumnMatrix: Sendable, Equatable {
 
     package func transposeTimes(_ v: [Double]) -> [Double] {
         precondition(v.count == rows)
-        return (0..<cols).map { j in
-            var s = 0.0
-            for i in 0..<rows { s += data[j * rows + i] * v[i] }
-            return s
-        }
+        var out = [Double](repeating: 0, count: cols)
+        let m = rows
+        data.withUnsafeBufferPointer { d in v.withUnsafeBufferPointer { v in
+            // Four columns at a time: each column's sum is still accumulated in row order from 0 (the same additions in the same order,
+            // so the same bits), but four independent chains hide the addition latency.
+            var j = 0
+            while j + 4 <= cols {
+                let c0 = j * m, c1 = c0 + m, c2 = c1 + m, c3 = c2 + m
+                var s0 = 0.0, s1 = 0.0, s2 = 0.0, s3 = 0.0
+                for i in 0..<m {
+                    let vi = v[i]
+                    s0 += d[c0 + i] * vi; s1 += d[c1 + i] * vi; s2 += d[c2 + i] * vi; s3 += d[c3 + i] * vi
+                }
+                out[j] = s0; out[j + 1] = s1; out[j + 2] = s2; out[j + 3] = s3
+                j += 4
+            }
+            while j < cols {
+                var s = 0.0
+                for i in 0..<m { s += d[j * m + i] * v[i] }
+                out[j] = s
+                j += 1
+            }
+        } }
+        return out
     }
 }
 
@@ -150,13 +169,21 @@ package nonisolated enum FitLinearAlgebra {
             for t in max(i, j)..<n { s += r[t * n + i] * r[t * n + j] }
             gi[j * n + i] = s
         } }
-        // K = R^-1 Q^T  (n x m).
+        // K = R^-1 Q^T  (n x m). Row a_ of K is accumulated over the rows of Q^T in the order t = a_..<n from 0, element by element
+        // (the same additions in the same order as one dot product per element), with the long index innermost.
         var k = [Double](repeating: 0, count: n * m)
-        for i in 0..<m { for a_ in 0..<n {
-            var s = 0.0
-            for t in a_..<n { s += r[t * n + a_] * q[t * m + i] }
-            k[i * n + a_] = s
-        } }
+        var acc = [Double](repeating: 0, count: m)
+        for a_ in 0..<n {
+            for i in 0..<m { acc[i] = 0 }
+            for t in a_..<n {
+                let c = r[t * n + a_]
+                q.withUnsafeBufferPointer { qb in acc.withUnsafeMutableBufferPointer { ab in
+                    let base = t * m
+                    for i in 0..<m { ab[i] += c * qb[base + i] }
+                } }
+            }
+            for i in 0..<m { k[i * n + a_] = acc[i] }
+        }
         return (ColumnMatrix(rows: n, cols: n, data: gi), ColumnMatrix(rows: n, cols: m, data: k))
     }
 }

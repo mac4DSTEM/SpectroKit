@@ -170,6 +170,34 @@ public nonisolated struct ElementProposer: Sendable {
         var variances: AmplitudeVariances
     }
 
+    private struct ResultBox: @unchecked Sendable { var buffer: UnsafeMutableBufferPointer<Result<Pass, Error>?> }
+
+    /// One joint fit of `groups` against `data`: no cancellation check, no progress, no shared state (safe to run concurrently).
+    private static func fitPass(groups: [FitLineGroup], data: [Double], settings s: FitSettings, axis: EnergyAxis,
+                                channels: Range<Int>, dropped: [String]) throws -> Pass {
+        let model = EDSLineModel(groups: groups, resolutionMnKaEV: s.resolutionMnKaEV, beamEnergy: s.beamEnergy,
+                                 escapePeaks: s.escapePeaks, droppedLines: dropped)
+        try EDSFit.validate(s.referenceShapes, axis: axis, model: model)
+        let design = LinearDesign.build(model: model, axis: axis, channels: channels, background: s.background,
+                                        shapes: s.referenceShapes, counts: data)
+        let result = EDSFit.fit(design: design, model: model, counts: data, settings: s, computeCovariance: false)
+        guard let v = FitNullVariance.compute(design: design, result: result) else { throw ProposerError.rankDeficient }
+        return Pass(model: model, result: result, variances: v)
+    }
+
+    /// `fitPass` for every job, concurrently; the results are in job order.
+    private static func fitPasses(jobs: [[FitLineGroup]], data: [Double], settings s: FitSettings, axis: EnergyAxis,
+                                  channels: Range<Int>, dropped: [String]) -> [Result<Pass, Error>] {
+        var out = [Result<Pass, Error>?](repeating: nil, count: jobs.count)
+        out.withUnsafeMutableBufferPointer { buf in
+            let box = ResultBox(buffer: buf)
+            DispatchQueue.concurrentPerform(iterations: jobs.count) { i in
+                box.buffer[i] = Result { try fitPass(groups: jobs[i], data: data, settings: s, axis: axis, channels: channels, dropped: dropped) }
+            }
+        }
+        return out.map { $0! }
+    }
+
     /// - Parameters:
     ///   - counts: the pooled spectrum, one value per channel of `axis`.
     ///   - settings: the fit as the room runs it. `elements` is the CURRENT set (always fitted, never changed);
@@ -224,14 +252,7 @@ public nonisolated struct ElementProposer: Sendable {
         func run(_ groups: [FitLineGroup], on data: [Double]) throws -> Pass {
             if cancelled() { throw ProposerError.cancelled }
             defer { fitsDone += 1; tick() }
-            let model = EDSLineModel(groups: groups, resolutionMnKaEV: s.resolutionMnKaEV, beamEnergy: s.beamEnergy,
-                                     escapePeaks: s.escapePeaks, droppedLines: dropped)
-            try EDSFit.validate(s.referenceShapes, axis: axis, model: model)
-            let design = LinearDesign.build(model: model, axis: axis, channels: channels, background: s.background,
-                                            shapes: s.referenceShapes, counts: data)
-            let result = EDSFit.fit(design: design, model: model, counts: data, settings: s, computeCovariance: false)
-            guard let v = FitNullVariance.compute(design: design, result: result) else { throw ProposerError.rankDeficient }
-            return Pass(model: model, result: result, variances: v)
+            return try Self.fitPass(groups: groups, data: data, settings: s, axis: axis, channels: channels, dropped: dropped)
         }
         func stat(_ p: Pass, _ gi: Int) -> Stat? {
             guard p.result.supported[gi], let v0 = p.variances.null[gi], let vf = p.variances.atFit[gi] else { return nil }
@@ -370,16 +391,32 @@ public nonisolated struct ElementProposer: Sendable {
             fitsPlanned = poolGroups.filter { !active.contains($0.id) && !banned.contains($0.id) }.count + 2
             let key = active.sorted().joined(separator: ",")
             if key != cacheKey { cache = [:]; cacheKey = key }
-            var best: (id: String, significance: Double)?
-            for g in poolGroups where !active.contains(g.id) && !banned.contains(g.id) {
-                if cache[g.id] == nil {
-                    trials += 1
+            // The pending single-candidate fits are independent of each other (each reads the settled state only), so they run side by
+            // side, a bounded chunk at a time; the results are taken in pool order, exactly as the serial loop took them.
+            let pending = poolGroups.filter { !active.contains($0.id) && !banned.contains($0.id) && cache[$0.id] == nil }
+            let chunkSize = max(2 * ProcessInfo.processInfo.activeProcessorCount, 1)
+            var start = 0
+            while start < pending.count {
+                let chunk = pending[start..<min(start + chunkSize, pending.count)]
+                start += chunkSize
+                var jobs: [[FitLineGroup]] = []
+                for g in chunk {
+                    if cancelled() { throw ProposerError.cancelled }
                     let design = currentGroups + poolGroups.filter { active.contains($0.id) || $0.id == g.id }
-                    let p = try run(design + sumColumns(parents, claiming: claiming(active).union([g.id]), design: design), on: counts)
+                    jobs.append(design + sumColumns(parents, claiming: claiming(active).union([g.id]), design: design))
+                }
+                let passes = Self.fitPasses(jobs: jobs, data: counts, settings: s, axis: axis, channels: channels, dropped: dropped)
+                for (g, result) in zip(chunk, passes) {
+                    trials += 1
+                    fitsDone += 1; tick()
+                    let p = try result.get()
                     guard let gi = p.model.groups.firstIndex(where: { $0.id == g.id }), let st = stat(p, gi) else { continue }
                     cache[g.id] = st
                     last[g.id] = st
                 }
+            }
+            var best: (id: String, significance: Double)?
+            for g in poolGroups where !active.contains(g.id) && !banned.contains(g.id) {
                 if let st = cache[g.id], st.net >= st.ld, st.significance > (best?.significance ?? 0) { best = (g.id, st.significance) }
             }
             guard let b = best else { break }
