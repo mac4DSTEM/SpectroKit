@@ -104,6 +104,19 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
+        // EDX stage gates (docs/edx-stage-gates-registration.md): counts, energy axis and peak identification on pins (exSpy,
+        // HyperSpy, RosettaSciIO) and planted truth (Fixtures/, tools/edx-stages/), and the Gate D diagnosis of the Mg auto-ID
+        // miss. Its own target (registration Q6), so SpectroCoreTests stays the 258 moved names.
+        .testTarget(
+            name: "SpectroEDXTests",
+            dependencies: ["SpectroEDX", "SpectroCore"],
+            exclude: ["Fixtures"],
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+                .enableUpcomingFeature("MemberImportVisibility"),
+            ]
+        ),
         // A child process for the quit-barrier tests: `exit` runs the atexit handlers, which a test cannot watch from
         // inside its own process. Not a product; SpectroKitTests depends on it only so `swift test` builds it.
         .executableTarget(

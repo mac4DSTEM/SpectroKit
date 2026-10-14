@@ -51,6 +51,16 @@ commit 049e7d70), copied byte for byte as a test fixture under rosettasciio's GP
 data is not stated by rosettasciio. The two .truth.json files beside it are rosettasciio's readings of
 rsciio-EELS_SI.dm4 and of eels-planted.dm4 (written by tools/eels-reader/make_planted.py, no third-party data).
 
+Tests/SpectroEDXTests/Fixtures/public/ holds three of rosettasciio's public Velox test files, copied byte for byte under
+rosettasciio's GPL-3.0-or-later (commit 049e7d70, rsciio/tests/data/emd/, from fei_emd_files.zip, velox_emd_v11_elementSelection.zip
+and velox_emd_version11.zip): fei_emd_si.emd (sha256 f4c29211588e7b1bd3cdf1d61bccb5eb406f860fe2f654e5c4a02f7241c7b86f),
+"SI_empty selection.emd" (11299d32c986c3300980c93ab1e9d39974aecf3a66956cc171aa53eee167700b) and "Test SI 16x16 215 kx.emd"
+(511e2983038542776603ca8bfc7ec8fb95994ab3e723cab7095d4f97d0168f58); who recorded them is not stated by rosettasciio. The EDX stage
+gates (docs/edx-stage-gates-registration.md) read the larger public files (the 4-detector file among them) from the gitignored
+References/rosettasciio checkout instead, and skip when it is absent. The planted files beside them (velox-stream-*.emd,
+edx-planted*, edx-calibration*) are written by tools/edx-stages (no third-party data); pins.json holds exSpy's and
+HyperSpy's outputs (GPL-3.0-or-later) and NumPy's decode of the public files.
+
 
 ================================================================================
 SciPy, NumPy, HyperSpy and eXSpy (EELS thickness, SpectroEELS)

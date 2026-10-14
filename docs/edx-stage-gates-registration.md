@@ -359,3 +359,132 @@ Not yet run: any Swift code, `tools/edx-stages/pins.py`, `make_planted.py`, the 
 5. **To test (not run):** on a planted file whose detector keys are in the file order Detector-0, Detector-10, Detector-2,
    RosettaSciIO takes Detector-10's axis (file order) and `VeloxEMDReader` may take Detector-2's (it sorts by index). G-E
    decides; a difference is a finding about the reader, fixed only by its own registered change.
+
+### 2026-10-14, while implementing the Swift tests (amendment 2; facts and readings, no gate loosened)
+
+1. **Amendment 1 item 2 misread the `"scale"` pin.** exSpy's `calibrate_energy_axis("scale")` does not return 0.0199577 for every
+   planted gain: that is the MEAN of two values it returns, 0.0198877 and 0.0201678 (both present at each of the gains −3e-4,
+   0, +3e-4; asserted in `AxisGateTests`). Conclusion unchanged: it does not track the planted gain.
+2. **P1 is tested on the table, the lookup lives in the test.** The registration asks for a new `package` function
+   `XRayLines.near(energy:width:onlyLines:)`; this slice changes no `Sources/`, so the port of `get_xray_lines_near_energy`
+   is a test helper over `XRayLines.all` (exSpy's selection rule, `only_lines` "a", canonical order of amendment 1 item 1).
+   What is gated is the table (energies, names, H and He as shipped) through exSpy's rule. The function itself is not added.
+3. **Set M is not matched at the line-shape level.** Registration 5.2 integrates each Gaussian over the channel
+   ([E_k − 0.01, E_k + 0.01)); the fit model samples it at the channel centre (hyperspy's convention, `EDSModel.swift:16`).
+   The relative peak difference is about (Δ/σ)²/24 = 1.7 % at Al Kα, invisible at N_Al ≤ 1e5 and decisive at 1e7. The P2
+   criteria were evaluated exactly as registered, with L_D(M) taken from the shipped proposer's own noise-free run on the cell
+   (so 3 L_D(M) is the threshold of criterion 2, not the surrogate's 2.2e3). An unregistered control (`GateDTests.testD4…`:
+   the stored mean with its bin-integrated Mg, Al, Si lines replaced by the same lines centre-sampled) separates the two
+   effects; results below.
+4. **D0's wording contradicts its prediction** ("Refuted if … different"; "Predicted: the same … D0 refuted"). Read as: D0 is
+   supported iff the full pool loses a Mg that the single-candidate test proposes (net lower by more than 10 %, or not
+   proposed); equal results refute it.
+5. **The full pool is not ~20 s a spectrum on this path.** Matched spectra take about 0.5 s, mismatched ones tens of seconds.
+   The "reduced grid" of the full-pool design is: the noise-free mean and the first ten realisations of every M cell (396
+   spectra), and, for D0, of every M and U130 cell with Mg (528 spectra).
+6. **E3 has no registered bound for the FWHM at Al Kα**: it is reported (refined R_MnKa through the Fiori–Newbury law against
+   the Fano truth), not gated. The offset and gain bounds of section 7 are gated and fail (a registered finding, below);
+   the line positions on the refined axis (what a user sees) are reported and asserted at the measured 1.2 eV.
+7. **P3** has nothing to run in Swift (the pins hold HyperSpy's results). The test asserts the registered readings of the pins,
+   that the pinned Al peak is where the rebuilt spectrum peaks, and reports the Swift proposer on the same spectra beside them.
+8. **G-C is partly conditional on `References/`.** Three small public Velox files are copied into `Fixtures/public/` (NOTICE);
+   the 4-detector file (9 MB), the three 10x50 SuperX files and `example_velox_EELS_EDS.emd` are read from
+   `References/rosettasciio` and their checks are skipped (with a message) when it is absent.
+
+## 14. Results (Swift tests of 2026-10-14, release build, libhdf5 2.1.1; numbers from the gate log of the run)
+
+`SpectroEDXTests`: 32 tests, 0 failures (the two registered findings are `XCTExpectFailure`); the full `tools/test.sh`: SpectroCoreTests 258 (the same names), SpectroGoldenTests green (one recorder test skipped, as before), SpectroKitTests 55, SpectroEELSTests 74, 0 warnings. Run time of the EDX target 227 s (D0 150 s of it).
+
+| gate | outcome |
+|---|---|
+| C1 public files | 8 of 8 files (grid, channel sums, pixel totals, dense-cube hash) equal the NumPy decode; 4-detector file 3 562 739 events, streams 865 236 / 913 682 / 867 647 / 916 174 |
+| C1 planted | 6 of 6 files equal the draw, every frame range (0..1 … 0..3) equal; extremes (channel 0 and 4095, empty pixel, 70 000 in one channel, unterminated last pixel) equal |
+| C2 | masks (nil, rectangle, ellipse, arbitrary, empty, full, one pixel), overlapping and empty windows, `densified`: exact, sparse and dense; pool of 12 294 967 295 counts exact in UInt64 |
+| C3 | no wrap (65 535 + 65 535 = 131 070), LiveTime 0 passed through as stored |
+| E1 | 8 public files and 5 of 6 planted headers equal rsciio's rule bit for bit; `energyCalibrationAgrees` false on the 4-detector planted file. **Finding:** `axis-order` (keys Detector-0, Detector-10, Detector-2): the reader takes Detector-2 (0.01 keV/ch, −0.5 keV), rsciio Detector-10 (0.02, −1.9). `VeloxMetadata.parse` sorts by index. No public file and not the owner's header has out-of-order keys. Marked `XCTExpectFailure` |
+| E2 | 12 573 `value2index` cases (3 raise in HyperSpy, all equal) and 52 slices equal |
+| E3 | **Finding (the registered prediction "may fail"):** 349 of 384 fits have an offset error above 1 eV and 374 a gain error above 1e-4 (offset mean −3 to −4 eV, up to 14 eV; gain mean +1e-3, up to 4e-3): on lines spanning only 1.25 to 1.84 keV offset and gain trade off. The lines themselves land within 0.17 eV (Al Kα), 0.96 eV (Mg Kα), 1.06 eV (Si Kα) of the planted positions; FWHM at Al Kα +1.1 eV (mean) against the Fano truth; 384 of 384 converge. exSpy pinned: max 0.71 / 0.62 eV (as amendment 1) |
+| P1 | 360 lookups equal exSpy (45 tied pairs in canonical order); line energies and widths equal |
+| P2 M, single candidate | false alarm 0 of 100 / 20 at every N_Al (≤ 10 % met); detection ≥ 90 % met in every cell where ρN ≥ 3 L_D(M) (P = 1.00); bias within 3 σ met (worst −2.5 σ; Mg is read 17 to 18 % low at ρ 0.01 for N_Al ≥ 1e5, a constant ≈ 1.7e-3 N_Al deficit) |
+| P2 M, full pool | the same three criteria met on 396 spectra; other elements proposed in 38 of 396 (Nd, Ce, Tb, Pr, Eu, La; Te, I, Sb, Cs, Ba, Cd, Th): unregistered, the proposer's own look-elsewhere rate |
+| P2 mismatched | table in the gate log (430 cells); highlights below |
+| P3 | pins hold (defaults: Al Kα only, 0 of 45 Mg; 0.2 %/medfilt 3: Mg in 5 of 5 at every cell but ρ 0.002 / 1e5 with 2 of 5). The Swift proposer on the same U130/L spectra proposes Mg only at ρ 0.05 (5 of 5) and not at ρ 0.002 or 0.01 at any N_Al, where the peak finder sees it |
+| windows | integration and background windows (merged, unmerged) equal exSpy exactly; `get_lines_intensity` on 26 280 values (430 cells, means and realisations) within 4e-16 relative |
+
+Mismatched-set highlights (N_Al 1e7, ρ_Mg 0.01, family s, noise-free net/truth; surrogate of 7.3 in brackets): M 0.83 (1.00 with
+centre sampling); S+1 0.68 [0.87], S+2 0.53 [0.71], S+3 0.36 [0.54], S+5 0.00 [0.15], S−1 0.40, S−2 0.04, S−3 and beyond 0.00;
+HALF 0.00; T1 0.90 / T2 0.77 / T5 0.36 of the matched net; U125 1.03, U130 0.00, U140 0.00, U150 0.00; C1, C2 and B 0.82 to 0.83
+(the matched value) with P(proposed) 1.00; W1 0.70.
+
+### Gate D outcomes (each against its registered refuting observation and prediction)
+
+- **D0, pool interplay: SUPPORTED (reading 4).** 528 spectra (48 cells): the full pool loses a Mg the single test proposes on 9
+  (for example M.L.N7 ρ 0.01: noise-free net 91 594 single, 23 426 full pool; L_D 119 891; P(proposed) over ten realisations 0.7;
+  M.s.N4 ρ 0.05: 401 single, 177 full). Decisions differ in 6, nets by more than 10 % in 21. Prediction "same net in both" NOT met. The
+  pool costs Mg on part of the family-L cells at 1e7 and some low-count cells; elsewhere the two agree.
+- **D1, Al Kα width: NOT refuted; prediction partly met.** U130 at N_Al 1e7, ρ 0.01: net/truth 0.00 in the mean and in 20 of 20
+  realisations (family s), 0.26 (family L); P(proposed) 0.00; flank factors 48 (s) and 25 (L), predicted 0.39 / 0.10 and 20 to 41.
+  The loss is stronger than the surrogate's and depends sharply on how far the model's R_MnKa is from the truth: U125 keeps Mg
+  (1.03, P = 1.00), U140 and U150 lose it (flank factor 139 and 236), and the model's R scan on U130 gives 0.00 at R ≤ 130 and
+  1.04 to 1.11 at R 135 to 150 (flank factor 18.6 at 135, 85 to 165 beyond) at ρ 0.01.
+- **D2, axis error: NOT refuted; prediction partly met.** S+3 0.36 and S−3 0.00 (ρ 0.01, noise-free; surrogate 0.54), P(proposed)
+  0.00 for every S cell (5 realisations); the half-channel set HALF 0.00. After `EnergyAxisRefinement` first (elements Al, Si or
+  Mg, Al, Si; file resolution) the shifted cells all read 0.82 to 0.84, i.e. the matched value, with Mg proposed; refining the
+  resolution too (R refined) gives 0.99 on M, every S, HALF and U130 (0.98 on U130, which the prediction said would stay biased).
+  Refinement of axis and R_MnKa before proposing recovers Mg in all planted mismatches here, including the half channel; on the
+  Fano widths (U130) refining the axis alone leaves 0.00 and only the refined R_MnKa recovers it.
+- **D3, tail: NOT refuted; prediction met.** A 2 % tail leaves 0.77 of the matched net at ρ 0.01 (predicted 0.81) and Mg is
+  proposed in 0 of 5; at ρ 0.002 the net is 0 for 1 %, 2 % and 5 %. Supplying the true tail as a reference shape raises net/truth
+  from 0.64 to 0.84 (2 %), 0.30 to 0.83 (5 %) and 0.75 to 0.83 (1 %), flank factor 24.5 → 6.6, L_D 84 584 → 22 481 (2 %).
+- **D4, too little Mg: neither refuted nor confirmed (needs the owner and D6).** The measured fact that bears on it: on
+  the registered matched set the margin truth / L_D(M) at N_Al 1e7 is 0.79 (ρ 0.002), 1.98 (0.005), 3.99 (0.01), not the 20 to 50
+  predicted from the surrogate (L_D 2.2e3): the shipped proposer's L_D(M) at 1e7 is 2.5e4 (flank factor 7.7). With the same
+  lines centre-sampled (the model's own convention, flank factor 1.00) L_D is 3.2e3 and the margin 6.2, 15.5, 31.1: the
+  line-shape sampling convention alone costs a factor 8 in L_D at 1e7 (2.5 at 1e6, none at 1e5). A real detector integrates
+  over the channel: the same effect applies to real pooled spectra at 1e7 counts and by itself puts the Mg/Al detection limit at
+  about 2.5e-3, the size of the owner's raw Mg/Al window ratio of 0.002.
+- **D5, window method: not refuted, prediction met.** The SpectroKit window net equals exSpy's on all 26 280 values; Mg net at
+  ρ = 0, U130: −1 323 ± 55 (sd of a realisation, 20 realisations, N_Al 1e6, family s; −24 sd), −1 308 ± 111 (family L), −13 348 ± 212
+  (1e7), −130 ± 15 (1e5): the bias is the method's (−1.3e-3 N_Al).
+- **D6, real data: not run** (the owner's Al-Mg-Si files are not on this Mac).
+
+**What this says about the miss, said with its limits.** On planted data the shipped proposer loses a weak Mg beside a
+dominant Al Kα by three independent mechanisms of the registered size or larger (width mismatch, axis error, tail), each a model
+misfit the reported σ contains only through the flank factor, and it recovers fully when the axis and R_MnKa are refined
+first. Even a perfectly matched model, once the lines are integrated over the channel as a detector does, has L_D(M) of
+2.5e-3 N_Al at 1e7 counts. None of this was run on a real file (D6). A fix (refine-then-propose with the resolution free, a
+channel-integrated line shape, a tail reference) is a separate registration (Q5).
+
+### Mutation record (each new test broken once in the scratch clone, `Sources/` restored after every run; 29 mutations)
+
+Red = the named tests failed; every new test is red under at least one mutant. Runner: the scratch `mutants.py`, logs not committed.
+
+| mutant (file) | red |
+|---|---|
+| stream decode skips frame 0 (`first <= frame` → `<`) | 6 of 8 CountsGate tests (C1 ×5, C2 sums) |
+| decode drops channel 4095 | the same 6 |
+| dense `sum` wraps at 16 bits / at UInt16 `&` | C2 pool above 2^32, C3 no-wrap |
+| sparse `sum` ignores the mask | C2 sums, C2 pool |
+| sparse `windowSums` upper bound inclusive | C2 window edges (the 8 earlier tests stayed green: the first version of C2 had no event on a window edge; the edge test was added) |
+| `densified` halves | C1 planted ×2, C1 public, C2 sums |
+| LiveTime altered in the opener | C3 |
+| dispersion / 1000.5 | E1 public |
+| calibration flag `<= 4` | E1 planted headers |
+| detector sort descending | E1 planted headers, E1 axis-order (the expected failure is no longer a failure) |
+| `index(of:)` tie rounding reversed | E2 value2index |
+| `channelRange` start + 1 | E2 slices |
+| refinement gain unit ×2 | E3 refinement |
+| refinement offset not applied | D2 |
+| table energy of Mg Kα / Se Ln moved | P1 line energy / P1 lookup |
+| Fiori-Newbury slope 2.4 | P1 widths, windows ×2 |
+| merged background window end + 0.001 | windows |
+| net counts with the left window only | window intensities, D5 |
+| proposer bar `net >= 0` | P2 false alarm, P2 full pool |
+| proposer bar ×30 | P2 detection |
+| flank scaling off | P2 bias, D4 |
+| flank factor ×3 | D0 |
+| Gaussian exponent ×1.2 | D1, D4 |
+| everything pruned in the backward step | D0 |
+| minimum line energy 1.3 keV (no Mg candidate) | P2 mismatched table |
+| tail reference tie ×0 | D3 |
+| expectation edited (fixtures only): peaks 7…25 → 30…40; exSpy offset max 0.71 → 0.5 | P3, E3 exSpy pins |
