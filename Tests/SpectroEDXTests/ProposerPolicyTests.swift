@@ -122,6 +122,25 @@ struct ProposerPolicyTests {
         #expect(three.candidates.map(\.misfit) != on.candidates.map(\.misfit))
         let wide = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(binWidthFWHM: 2)))
         #expect(wide.candidates.map(\.misfit) != on.candidates.map(\.misfit))
+        // Bins of ten widths hold about 78 channels: they pass a floor of 50 channels, and bins of one width (8 channels) would not.
+        let floor50 = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(binWidthFWHM: 10, minimumChannelsPerBin: 50)))
+        #expect(floor50.candidates.contains { $0.misfit > 1.005 })
+        // One bin 400 widths wide swallows the whole flank, the next starts past the range: two bins a line, fewer than three, so the
+        // factor is 1 everywhere, as with scaling off. A width that is not honoured (small bins, five a side) would see the bump.
+        let huge = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(binWidthFWHM: 400)))
+        #expect(huge.candidates == off.candidates)
+        // Bins of two widths reach 11.5 widths from the line, the default's 6.5: a candidate 8 to 10 widths from the bump sees it only
+        // with the wider bins, and only if the bins are laid end to end (not overlapping from the second bin on).
+        let seen = zip(on.candidates, wide.candidates).filter { $0.0.misfit <= 1.005 && $0.1.misfit > 1.005 }.map { $0.0.element }
+        let listing = "default " + on.candidates.map { $0.element + String(format: " %.3f", $0.misfit) }.joined(separator: ", ")
+            + " | wide " + wide.candidates.map { $0.element + String(format: " %.3f", $0.misfit) }.joined(separator: ", ")
+        #expect(!seen.isEmpty, "\(listing)")
+        // Zr and P lie 11 widths from the bump (measured: misfit 1.000 by default, 1.419 and 1.500 with bins of two widths); bins of
+        // two widths that overlapped from the second on would stop at 7.5 widths and miss it.
+        for el in ["Zr", "P"] {
+            let d = try #require(Self.candidate(on, el)), w = try #require(Self.candidate(wide, el))
+            #expect(d.misfit <= 1.005 && w.misfit > 1.005, "\(el): \(d.misfit) -> \(w.misfit)")
+        }
     }
 
     @Test func testRangeMarginAddsAGroupAtTheRangeStart() throws {
@@ -147,6 +166,13 @@ struct ProposerPolicyTests {
         let n = try Self.propose(counts, policy: ProposerPolicy(sumPeakToleranceKeV: 0.005))
         #expect(try #require(Self.candidate(d, "Ar")).hasSumPeakQuestion)
         #expect(!(try #require(Self.candidate(n, "Ar")).hasSumPeakQuestion))
+        // With the energy claimed by Ar (15 eV away, inside 0.06) the pile-up has no column of its own; at 0.005 keV it has.
+        let pileUp: (ProposalResult) -> Bool = { r in r.sumPeaks.contains { $0.label.contains("Al+Al") } }
+        #expect(!pileUp(d) && pileUp(n), "default \(d.sumPeaks.map(\.label)) tight \(n.sumPeaks.map(\.label))")
+        // Ar sits on the listed Al's pile-up peak (inside 0.06 keV), so it is the question, not a parent of further pile-ups; at 0.005 keV
+        // it is a parent and the Ar sums get columns.
+        #expect(!d.sumPeaks.contains { $0.label.contains("Ar+") } && n.sumPeaks.contains { $0.label.contains("Ar+") },
+                "default \(d.sumPeaks.map(\.label)) tight \(n.sumPeaks.map(\.label))")
 
         // Context: Cu, Ga and a made-up grid and implantation element.
         let cu = Self.expected(areas: ["Al_Ka": 9000, "Cu_Ka": 900, "Ga_La": 900, "Ni_Ka": 900], dose: 10)

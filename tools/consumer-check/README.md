@@ -63,6 +63,16 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
   `EELSMicroscope` (init, three fields); `LowLossIntensity`; `CoreLossEdge` (`.element .subshell .onsetEV`,
   `.carbonK .nitrogenK .oxygenK`, `.bundled`, `description`, `Equatable`); `ArealDensityMap` (fifteen fields);
   `ArealDensityPixel` (eight fields); `EdgeUnavailable` (four cases); `EELSEdgeError`. Section: `EdgeQuantificationChecks`.
+- **SpectroEDX policies and SpectroCore kernels (0.5.0, 37 checks).** The parameters of docs/generality-0.5.0-registration.md used
+  from outside the package, each with its default (no change against the call that names none) and one non-default value that
+  moves the result as predicted: `WindowRules` through `ElementWindows.build(rules:)` and `defaultFamily(of:rules:)` (9, section
+  `windowRulesChecks`); `QuantificationPolicy` (`FitPolicy`, `AbundancePolicy`, `DetectorLayers`, `SingleLineRule`, `IRLSSettings`,
+  `AxisRefinementSettings`) through `PooledQuantificationInput.policy` and `PooledQuantifier.run`, and
+  `FitRangeSensitivityCheck.run(alternativeToKeV:)` (13, `quantificationPolicyChecks`); `ProposerPolicy` (with `Currie.init`,
+  `FlankMisfitGeometry`, `ElementContext`), `ElementProposer(policy:)`, the public `ProposalRules` fields and `UnlistedLineRules`
+  with `UnlistedLineChecker.neighbour` (10, `proposerPolicyChecks`); `SmoothingKernel` with `MapSmoothing.apply(kernel:)` and
+  `defaultBackgroundWindow(onsetEV:belowOnsetEV:gapEV:)` (5, `kernelAndWindowChecks`). The consumer now depends on the
+  `SpectroEDX` product too. The negative controls (`--controls`, 151 of 151 since 0.5.0) cover the types they are passed in (13), `PooledQuantificationInput.policy` and `MapSmoothing.smoothingKernel`.
 - **Public.** The target compiles only while each symbol above is `public`. `run.sh --controls` shows it for every one: see
   Negative controls.
 - **Debug, no unsafe flags, no setup.** `run.sh` builds in Debug, as a consumer's Debug build does, with zero warnings except the

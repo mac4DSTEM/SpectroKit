@@ -125,6 +125,10 @@ struct QuantificationPolicyTests {
         #expect(a.fit.channels.count - b.fit.channels.count == 80)                       // 0.8 keV / 10 eV
         #expect(b.footerLines.contains { $0.hasPrefix("fit range 1\u{2013}") }, "\(b.footerLines)")
         #expect(a.footerLines.contains { $0.hasPrefix("fit range 0.2\u{2013}") })
+        // A non-default policy is named in the footer, one line; a default one adds none.
+        let named = b.footerLines.filter { $0.hasPrefix("policy (non-default): ") }
+        #expect(named.count == 1 && named[0].contains("fit.fitFromKeV = 1"), "\(b.footerLines)")
+        #expect(!a.footerLines.contains { $0.hasPrefix("policy") })
         // The typed end must lie above the start: 0.5 keV is fine at 0.2 and refused at 1.0.
         var m = Self.method(Self.threeElements); m.fitToKeV = 0.5
         _ = try PooledQuantifier.run(Self.input(c, method: m), tables: Self.tables)

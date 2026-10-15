@@ -314,3 +314,96 @@ Counted from the tables of section 2 (one row = one policy):
 **21** not parameterised (N). So 38 policies change code (B + C), each with one prediction in section 5 and one tier-2 test
 (the 38 prediction rows), the 12 A items get documentation only, and the 21 N items get a reason. The brief's expected
 pooling rules and the ratio method's minimum counts do not exist in the kit (section 1).
+
+## 11. Amendments
+
+### 2026-10-15, phase 2: the code, and what it changed in this registration
+
+Phase 2 (the code, four families, one tier-1 commit each; the session approved the registration). Every
+family: `tools/test.sh` green with the 302 original names unchanged plus the new ones (7 + 13 + 9 + 6 = 35, so 337), the golden
+byte-identical, 0 warnings, `tools/consumer-check/run.sh` green (152 checks before, 189 now: 9 + 13 + 10 + 5 added). Family 1
+`WindowRules` (W1-W7), family 2 `QuantificationPolicy` (F1-F13, Q3-Q7), family 3 `ProposerPolicy` and `UnlistedLineRules`
+(E1-E11, U1-U3), family 4 `SmoothingKernel` and the ratio method's default window offsets (M1, L2); then the status A
+documentation pass (W8, Q1, Q2, E3-E5, L1, L3-L7), tier 3.
+
+**Departures from section 3 (names and shapes, none changes a default):**
+
+1. `WindowRules` holds the two background gaps as `backgroundGapLeft` and `backgroundGapRight`, not a `backgroundLineWidth` array
+   (an array of the wrong length would trap `BackgroundWindows.estimate`); `backgroundLineWidth` stays as a package accessor.
+2. The policy is **not** stored on `PooledQuantification`. The golden walks every stored field of a result by reflection, so a new
+   stored `policy` (or an `escapeRatioWarning` on `FitSettings`, which `PooledQuantification.fitSettings` holds) would have moved
+   the golden. The policy reaches the code by argument (`PooledQuantificationInput.policy`, `EDSFit.run(escapeRatioWarning:)`,
+   `FitRangeChoice(policy:)`) and is named by the footer line `policy (non-default): path = value, ...`; a default adds none.
+3. `ProposerPolicy` is `Equatable` only: `Currie` is not `Codable` (a decoder would bypass its precondition). `FlankMisfitGeometry`,
+   `ElementContext` and `UnlistedLineRules` are `Codable`. `ProposerPolicy.swift` is in `Method/`, not `Proposer/`: a moved test
+   pins the file list of that folder.
+4. `SmoothingKernel` is an enum (`.box(width:)`, `.gaussian(sigma:truncation:)`) with `taps` and `isValid`, applied by
+   `MapSmoothing.apply(_:width:height:kernel:)`; `MapSmoothing.smoothingKernel` gives the menu entry's kernel.
+5. `ElementContext`'s wording for a grid or implanted element other than Cu and Ga is generic ("X from the grid or from the
+   sample?", id `x-grid` / `x-fib`); Cu and Ga keep their exact sentences, so the default is unchanged.
+6. `FitPolicy.continuumEfficiency` is realised by `PooledQuantifier` from the library's own FFAST table
+   (`MassAbsorptionTable.bundled`) when no `QuantificationTables` is given, so the refits of the unlisted-line check and the
+   range-sensitivity statement (which pass none) honour it.
+7. `QuantificationMethod.defaultSigmaK` is the one source of the 20 % (the duplicate in `KFactorSet` reads it); the default
+   `ContinuumForm.alKEdge` reads `FitPolicy.alKEdgeKeV`; `ProposerPolicy.defaultSumPeakToleranceKeV` is the source of
+   `LineConflicts.sumPeakToleranceKeV`. No second copy of a default is left.
+8. Not done, as section 2 says: nothing in N. One A item changed shape: `defaultBackgroundWindow(onsetEV:)` gained its two defaulted
+   offsets (L2, status C).
+
+**Predictions refuted (section 5), each recorded where the test sits:**
+
+- **W1.** 0.775 ± 0.01 holds on 1 eV channels (measured within the bound, test `testNarrowerIntegrationWindowKeepsTheGaussianFraction`); on the
+  5 eV channels of the other tests the whole-channel windows give 0.764 (0.011 off). The tolerance was too tight for that
+  axis, not the physics wrong; the test uses 1 eV channels for the bound and asserts 0.015 on the coarse axis.
+- **F6.** "χ²_red falls with the detector efficiency in the continuum" is refuted at the default orders (9, 5): 0.01064 with it
+  against 0.01052 without, both at the counts' rounding, because the polynomial already absorbs the roll-off. It holds where the
+  polynomial cannot, orders (3, 2) (asserted).
+- **Q4.** "A thicker Al layer raises k_Mg / k_Si" is refuted: it lowers it. The Al K edge (1.560 keV) lies between Mg Kα (1.254) and
+  Si Kα (1.740 keV), so the layer absorbs Si Kα more. A silicon dead layer (Si K edge at 1.839 keV, above both) raises it as
+  predicted (asserted); the Al-layer direction is asserted as measured.
+- **E6.** "L_D with flank scaling off does not exceed L_D with it on" is refuted: with scaling off, most candidates' L_D is
+  slightly larger (297.4 against 295.8 counts, and the like), because the scaling also changes which candidates survive the
+  pruning, so the two runs end on different joint fits. What holds, and is asserted: every `misfit` is exactly 1 with scaling off,
+  and `criticalLevel` carries the factor within one run.
+- Predictions that held as written: W2-W7, F1-F5, F7-F13, Q3, Q5-Q7, E1, E2, E7-E10, U1-U3, M1, L2.
+
+### 2026-10-15, G2: the mutants, 61 of 61 caught
+
+Each new test broken once (section 6), on the final tree, by `mut.py`-style text edits that put a literal back where a parameter is
+read (the parameter ignored), or break the default (D1, D2, D4). All mutants of a family were applied at once and the family's
+tests run (`tools/test.sh --filter <suite>`); a mutant is counted caught when an expectation about **its** parameter went red (the
+failing expectation is named by its line), and a mutant that could hide behind another's was rerun alone. Everything was restored
+from a saved copy and the tree checked clean after each run.
+
+| family | suite | mutants | caught | notes |
+|---|---|---|---|---|
+| 1 `WindowRules` | `WindowRulesTests` (7) | 9: W1, W2, W3, W4, W5, W6 (both sites), W7, D1 (default 2.0 → 2.1) | 9 / 9 | all seven tests red |
+| 2 `QuantificationPolicy` | `QuantificationPolicyTests` (13) | 25: F1 (four sites: standard, polynomial, `FitRangeChoice`, the refusal bound), F2 (two), F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, Q3, Q4, Q5 (two), Q6, Q7, the footer line, D2 | 25 / 25 | F1's polynomial site was masked by F1's other sites in the combined run (both fits fell to 0.2 keV and agreed) and was caught alone |
+| 3 `ProposerPolicy`, `UnlistedLineRules` | `ProposerPolicyTests` (9) | 22: E1, E2 (two), E6, E7 (bins, minimum bins, inner edge, minimum channels, bin width at two sites), E8, E9 (three sites), E10 (four), U1, U2, U3, D4 | 22 / 22 | see below: four survived the first version of the tests, three were masked |
+| 4 `SmoothingKernel`, window offsets | `SmoothingKernelTests`, `DefaultWindowTests` (6) | 5: M1 (box width, truncation, the menu entry's sigma), L2 (both offsets) | 5 / 5 | |
+
+**Tests strengthened because a mutant survived (registered rule: a test that cannot fail is not a test).** Four survived the
+first version of `ProposerPolicyTests` (E7 bin width at two sites, E9 at two sites), and three more were only masked by another mutant:
+
+- E7, the bin width: replacing the stride (`Double(b) * width`) by 1, or the upper edge by `inner + 1`, kept the old assertion
+  ("the misfit differs from the default's") true, because the bins still differed. The test now pins the width on the data:
+  Zr and P, 11 widths from the planted bump, must read 1.000 with the default bins and above 1.005 with bins of two widths (they
+  do: 1.419 and 1.500), which bins overlapping from the second on (reach 7.5 widths) or bins of one width with gaps cannot; and
+  bins of ten widths must pass a floor of 50 channels.
+- E9, the sum-peak tolerance: only the conflict attachment was pinned. Two assertions added: with the tolerance at 0.005 keV the
+  Al+Al pile-up gets a column of its own (Ar, 15 eV away, no longer claims it) and Ar becomes a parent of further pile-ups (Ar+...
+  columns); with 0.06 neither.
+- E6, in the combined run, hid the checks of E7's minimum bins, inner edge and minimum channels (those tests compare against the
+  run with scaling off, which the E6 mutant had turned back on); the three were rerun without it and are red.
+
+**The G2 negative controls.** `tools/consumer-check/run.sh --controls`: **151 of 151 caught** (the 136 of 0.4.0 plus the 15 added here: 13 type declarations, `PooledQuantificationInput.policy`, `MapSmoothing.smoothingKernel`; the changed `defaultBackgroundWindow` declaration kept its control), run once at the end on the final tree, 379 s.
+
+### 2026-10-15, items added by the coordinator
+
+- `SpectroscopyExport.csv`'s default `title` was "mac4DSTEM Spectroscopy quantification", an app name in `Sources`. It is now the
+  neutral "Spectroscopy quantification" (a caller that wants the old title passes it): tier 2, its own commit. The golden's CSV
+  hashes moved on purpose and nowhere else: re-recorded into a scratch directory with `SPECTRO_GOLDEN_DIR`, diffed, and only the
+  13 lines whose key ends in `csv-fnv` (10) or `csv-withholding-fnv` (3: the same CSV hashed again, which the instruction did
+  not name but which moves for the same cause) were copied; the before and after values are in the commit message. Every other
+  golden line is byte-identical.
+- The consumer-check README and `controls.py` name the new symbols (13 type declarations and two members as controls).

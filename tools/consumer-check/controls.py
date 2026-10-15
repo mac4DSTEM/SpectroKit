@@ -42,6 +42,7 @@ SOURCE = CORE + "SpectrumImageSource.swift"
 AXIS = CORE + "EnergyAxis.swift"
 CANCEL = CORE + "SpectroCancellation.swift"
 EELS = "Sources/SpectroEELS/"
+SDX = "Sources/SpectroEDX/Spectroscopy/"
 LOWLOSS = EELS + "LowLossSpectrumImage.swift"
 THICKNESS = EELS + "EELSThickness.swift"
 THICKNESSMAP = EELS + "ThicknessMap.swift"
@@ -205,7 +206,7 @@ CONTROLS = [
     # SpectroEELS (EELS slice 2): the areal density by the ratio method
     decl('EELSEdgeQuantification', EDGE, 'public nonisolated enum EELSEdgeQuantification {', 'EELSEdgeQuantification'),
     access('EELSEdgeQuantification.methodName', EDGE, 'public static let methodName =', 'EELSEdgeQuantification', 'methodName', module="SpectroEELS"),
-    access('EELSEdgeQuantification.defaultBackgroundWindow', EDGE, 'public static func defaultBackgroundWindow(onsetEV: Double)', 'EELSEdgeQuantification', 'defaultBackgroundWindow', 'defaultBackgroundWindow(onsetEV:)', module="SpectroEELS"),
+    access('EELSEdgeQuantification.defaultBackgroundWindow', EDGE, 'public static func defaultBackgroundWindow(onsetEV: Double,', 'EELSEdgeQuantification', 'defaultBackgroundWindow', 'defaultBackgroundWindow(onsetEV:belowOnsetEV:gapEV:)', module="SpectroEELS"),
     access('EELSEdgeQuantification.differentialCrossSection', EDGE, 'public static func differentialCrossSection(edge: CoreLossEdge', 'EELSEdgeQuantification', 'differentialCrossSection', 'differentialCrossSection(edge:microscope:energiesEV:)', module="SpectroEELS"),
     access('EELSEdgeQuantification.ratioMethod', EDGE, 'public static func ratioMethod(', 'EELSEdgeQuantification', 'ratioMethod', 'ratioMethod(coreLoss:edge:microscope:lowLoss:backgroundWindowEV:edgeOnsetEV:integrationWidthEV:coreLossToLowLossDose:cancelled:)', module="SpectroEELS"),
     decl('CoreLossSpectrumImage', EDGE, 'public nonisolated struct CoreLossSpectrumImage: Sendable {', 'CoreLossSpectrumImage'),
@@ -265,6 +266,22 @@ CONTROLS = [
     access('CoreLossEdge.bundled', GOS, 'public static let bundled', 'CoreLossEdge', 'bundled', module="SpectroEELS"),
     library("CoreLossEdge.description", GOS, "public var description: String",
             "property 'description' must be declared public because it matches a requirement in public protocol 'CustomStringConvertible'", "GOSTable.swift"),
+    # SpectroEDX policies and SpectroCore kernels (0.5.0): the types the new parameters are passed in
+    decl("WindowRules", SDX + "WindowRules.swift", "public nonisolated struct WindowRules: Sendable, Equatable, Codable {", "WindowRules"),
+    decl("FitPolicy", SDX + "Quant/QuantificationPolicy.swift", "public nonisolated struct FitPolicy: Sendable, Equatable, Codable {", "FitPolicy"),
+    decl("AbundancePolicy", SDX + "Quant/QuantificationPolicy.swift", "public nonisolated struct AbundancePolicy: Sendable, Equatable, Codable {", "AbundancePolicy"),
+    decl("QuantificationPolicy", SDX + "Quant/QuantificationPolicy.swift", "public nonisolated struct QuantificationPolicy: Sendable, Equatable, Codable {", "QuantificationPolicy"),
+    decl("DetectorLayers", SDX + "Quant/QuantificationPolicy.swift", "public nonisolated struct DetectorLayers: Sendable, Equatable, Codable {", "DetectorLayers"),
+    decl("SingleLineRule", SDX + "Quant/QuantificationPolicy.swift", "public nonisolated enum SingleLineRule: String, Sendable, Codable {", "SingleLineRule"),
+    decl("ProposerPolicy", SDX + "Method/ProposerPolicy.swift", "public nonisolated struct ProposerPolicy: Sendable, Equatable {", "ProposerPolicy"),
+    decl("FlankMisfitGeometry", SDX + "Method/ProposerPolicy.swift", "public nonisolated struct FlankMisfitGeometry: Sendable, Equatable, Codable {", "FlankMisfitGeometry"),
+    decl("ElementContext", SDX + "Method/ProposerPolicy.swift", "public nonisolated struct ElementContext: Sendable, Equatable, Codable {", "ElementContext"),
+    decl("UnlistedLineRules", SDX + "Method/ProposerPolicy.swift", "public nonisolated struct UnlistedLineRules: Sendable, Equatable, Codable {", "UnlistedLineRules"),
+    decl("AxisRefinementSettings", SDX + "Fit/EnergyAxisRefinement.swift", "public nonisolated struct AxisRefinementSettings: Sendable, Equatable, Codable {", "AxisRefinementSettings"),
+    decl("IRLSSettings", CORE + "Fit/PoissonMLFit.swift", "public nonisolated struct IRLSSettings: Sendable, Equatable, Codable {", "IRLSSettings"),
+    decl("SmoothingKernel", CORE + "MapSmoothing.swift", "public nonisolated enum SmoothingKernel: Sendable, Equatable, Codable {", "SmoothingKernel"),
+    access("PooledQuantificationInput.policy", SDX + "Quant/PooledQuantification.swift", "public var policy: QuantificationPolicy", "PooledQuantificationInput", "policy", module="SpectroEDX"),
+    access("MapSmoothing.smoothingKernel", CORE + "MapSmoothing.swift", "public var smoothingKernel: SmoothingKernel?", "MapSmoothing", "smoothingKernel"),
 ]
 
 
