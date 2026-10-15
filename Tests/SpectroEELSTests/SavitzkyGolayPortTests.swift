@@ -10,11 +10,11 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroEELS
 import SpectroCore
 
-final class SavitzkyGolayPortTests: XCTestCase {
+struct SavitzkyGolayPortTests {
 
     private let caseNames = ["planted-noiseless", "planted-noisy", "exspy-linescan"]
 
@@ -56,25 +56,25 @@ final class SavitzkyGolayPortTests: XCTestCase {
     /// The five coefficients SciPy's `savgol_coeffs(5, 3, deriv=1, delta=scale)` returned (pins.json `recipe.coefficients`) against
     /// this port's: BIT-IDENTICAL (the port solves with `dgelsd`, as `scipy.linalg.lstsq` does; SciPy's centre coefficient is
     /// -8.3e-15, not 0).
-    func testCoefficientsAreBitIdenticalToSciPy() throws {
+    @Test func testCoefficientsAreBitIdenticalToSciPy() throws {
         for name in caseNames {
             let c = EELSFixtures.pinCase(name)
             let pinned = c.estimated.recipe!.coefficients!
             let ours = try SavitzkyGolay.coefficients(windowLength: 5, polynomialOrder: 3, derivative: 1, delta: c.energyAxis.scale)
-            XCTAssertEqual(ours.map(\.bitPattern), pinned.map(\.bitPattern), name)
+            #expect(ours.map(\.bitPattern) == pinned.map(\.bitPattern), "\(name)")
             // the exact answer is (1, -8, 0, 8, -1) / (12 delta) in convolution order, negated: [-1, 8, 0, -8, 1] / (12 delta)
             let big = pinned.map(abs).max()!
             let exact = [-1.0, 8, 0, -8, 1].map { $0 / (12 * c.energyAxis.scale) }
-            for (o, e) in zip(ours, exact) { XCTAssertEqual(o, e, accuracy: 1e-13 * big, name) }
+            for (o, e) in zip(ours, exact) { #expect(isEqual(o, e, accuracy: 1e-13 * big), "\(name)") }
         }
     }
 
     /// The summation order of the interior: tap 0 first, then the last tap down to tap 1 (the README's (0, 4, 3, 2, 1)); it is
     /// what pins.json records as `fmaOrder`.
-    func testInteriorTapOrderIsTheRecordedRecipe() {
-        XCTAssertEqual(SavitzkyGolay.interiorTapOrder(windowLength: 5), [0, 4, 3, 2, 1])
+    @Test func testInteriorTapOrderIsTheRecordedRecipe() {
+        #expect(SavitzkyGolay.interiorTapOrder(windowLength: 5) == [0, 4, 3, 2, 1])
         for name in caseNames {
-            XCTAssertEqual(EELSFixtures.pinCase(name).estimated.recipe!.fmaOrder!, SavitzkyGolay.interiorTapOrder(windowLength: 5), name)
+            #expect(EELSFixtures.pinCase(name).estimated.recipe!.fmaOrder! == SavitzkyGolay.interiorTapOrder(windowLength: 5), "\(name)")
         }
     }
 
@@ -82,7 +82,7 @@ final class SavitzkyGolayPortTests: XCTestCase {
 
     /// With SciPy's own coefficients the fused accumulation reproduces SciPy's interior derivative values BIT FOR BIT
     /// (every interior value of the three pinned rows).
-    func testInteriorIsBitExactWithSciPysCoefficients() throws {
+    @Test func testInteriorIsBitExactWithSciPysCoefficients() throws {
         for name in caseNames {
             let (row, step, _) = try croppedRow(name)
             let coeffs = EELSFixtures.pinCase(name).estimated.recipe!.coefficients!
@@ -91,7 +91,7 @@ final class SavitzkyGolayPortTests: XCTestCase {
             var mismatches = 0
             for i in 2..<(row.count - 2) where out[i].bitPattern != step.derivative[i].bitPattern { mismatches += 1 }
             print("EELS-REPORT interior bit-exact \(name): \(row.count - 4) values, \(mismatches) mismatches")
-            XCTAssertEqual(mismatches, 0, name)
+            #expect(mismatches == 0, "\(name)")
         }
     }
 
@@ -99,22 +99,22 @@ final class SavitzkyGolayPortTests: XCTestCase {
 
     /// The full cropped derivative of the pinned pixel, from the whole pinned image, with SciPy's coefficients: EVERY value
     /// (interior and the four edge values) bit-identical to what SciPy returned.
-    func testWholeDerivativeIsBitIdenticalWithSciPysCoefficients() throws {
+    @Test func testWholeDerivativeIsBitIdenticalWithSciPysCoefficients() throws {
         for name in caseNames {
             let (row, step, scale) = try croppedRow(name)
             let image = try croppedImage(name)
             let sg = try SavitzkyGolayFirstDerivative(windowLength: 5, polynomialOrder: 3, delta: scale,
                                                       coefficientsOverride: EELSFixtures.pinCase(name).estimated.recipe!.coefficients!)
             let d = try applyImage(sg, image, pixel: step.pixel.index)
-            XCTAssertEqual(d.count, row.count)
+            #expect(d.count == row.count)
             let mismatches = (0..<row.count).filter { d[$0].bitPattern != step.derivative[$0].bitPattern }
             print("EELS-REPORT whole derivative (SciPy coefficients) \(name): \(row.count) values, \(mismatches.count) mismatches")
-            XCTAssertEqual(mismatches, [], name)
+            #expect(mismatches == [], "\(name)")
         }
     }
 
     /// The same with THIS port's coefficients (no override): bit-identical too.
-    func testWholeDerivativeWithOwnCoefficientsIsBitIdentical() throws {
+    @Test func testWholeDerivativeWithOwnCoefficientsIsBitIdentical() throws {
         for name in caseNames {
             let (row, step, scale) = try croppedRow(name)
             let image = try croppedImage(name)
@@ -122,14 +122,14 @@ final class SavitzkyGolayPortTests: XCTestCase {
             let d = try applyImage(sg, image, pixel: step.pixel.index)
             let mismatches = (0..<row.count).filter { d[$0].bitPattern != step.derivative[$0].bitPattern }
             print("EELS-REPORT whole derivative (own coefficients) \(name): \(row.count) values, \(mismatches.count) mismatches")
-            XCTAssertEqual(mismatches, [], name)
+            #expect(mismatches == [], "\(name)")
         }
     }
 
     /// The edge fits depend on the number of spectra in the image (dgelsd with different numbers of right-hand sides): a pixel
     /// alone is NOT the same bits as the pixel in the pinned image. This is why `edgeTable` takes the whole image; if this stops
     /// holding (another LAPACK) the image-wide call is no longer needed.
-    func testEdgeBitsDependOnTheImageNotOnThePixelAlone() throws {
+    @Test func testEdgeBitsDependOnTheImageNotOnThePixelAlone() throws {
         var differing = 0
         for name in caseNames {
             let (row, step, scale) = try croppedRow(name)
@@ -138,12 +138,12 @@ final class SavitzkyGolayPortTests: XCTestCase {
             if (0..<row.count).contains(where: { alone[$0].bitPattern != step.derivative[$0].bitPattern }) { differing += 1 }
         }
         print("EELS-REPORT pixel alone differs from the pixel in its image in \(differing) of 3 pinned cases")
-        XCTAssertGreaterThan(differing, 0)
+        #expect(differing > 0)
     }
 
     /// The Savitzky-Golay first derivative of a cubic polynomial is the cubic's derivative EXACTLY (the fit reproduces it), at
     /// every sample including the edges: a check of the edge fits that needs no SciPy.
-    func testCubicIsDifferentiatedExactlyEverywhere() throws {
+    @Test func testCubicIsDifferentiatedExactlyEverywhere() throws {
         let delta = 0.05
         let n = 40
         let x = (0..<n).map { 1.0 + delta * Double($0) }
@@ -152,7 +152,7 @@ final class SavitzkyGolayPortTests: XCTestCase {
         for (wl, po) in [(5, 3), (7, 3), (9, 4), (5, 4)] {
             let sg = try SavitzkyGolayFirstDerivative(windowLength: wl, polynomialOrder: po, delta: delta)
             let d: [Double] = applyKernel(sg, f)
-            for i in 0..<n { XCTAssertEqual(d[i], df[i], accuracy: 1e-9, "window \(wl) order \(po) sample \(i)") }
+            for i in 0..<n { #expect(isEqual(d[i], df[i], accuracy: 1e-9), "window \(wl) order \(po) sample \(i)") }
         }
     }
 
@@ -160,7 +160,7 @@ final class SavitzkyGolayPortTests: XCTestCase {
 
     /// `window_length = 0`: the derivative is `numpy.gradient(cropped, cropped_axis)` and is reproduced BIT FOR BIT, on the
     /// planted axis (non-uniform spacing by ulps: the a/b/c branch) and on the line scan's (uniform: the scalar branch).
-    func testGradientIsBitExact() throws {
+    @Test func testGradientIsBitExact() throws {
         for name in caseNames {
             let (row, step, scale) = try croppedRow(name)
             let c = EELSFixtures.pinCase(name)
@@ -172,20 +172,20 @@ final class SavitzkyGolayPortTests: XCTestCase {
             var mismatches = 0
             for i in 0..<row.count where out[i].bitPattern != step.gradientDerivative[i].bitPattern { mismatches += 1 }
             print("EELS-REPORT numpy.gradient \(name): \(row.count) values, \(mismatches) bit mismatches, uniform branch = \(g.uniformSpacing != nil)")
-            XCTAssertEqual(mismatches, 0, name)
+            #expect(mismatches == 0, "\(name)")
         }
         // the two branches are both exercised
-        XCTAssertNotNil(NumpyGradient(axis: (0..<20).map { 1.0 + 0.5 * Double($0) }).uniformSpacing)
+        #expect(NumpyGradient(axis: (0..<20).map { 1.0 + 0.5 * Double($0) }).uniformSpacing != nil)
         let planted = EELSFixtures.pinCase("planted-noiseless")
         let xs = (0..<200).map { planted.energyAxis.offset + 0.05 * Double(220) + 0.05 * Double($0) }
-        XCTAssertNil(NumpyGradient(axis: xs).uniformSpacing)
+        #expect(NumpyGradient(axis: xs).uniformSpacing == nil)
     }
 
     /// The Savitzky-Golay window and order that SciPy would reject or that this port does not support are refused.
-    func testUnsupportedWindowsAreRefused() {
+    @Test func testUnsupportedWindowsAreRefused() {
         for (wl, po) in [(4, 3), (2, 1), (1, 1), (5, 5), (5, 0), (-3, 1)] {
-            XCTAssertThrowsError(try SavitzkyGolayFirstDerivative(windowLength: wl, polynomialOrder: po, delta: 0.05), "\(wl),\(po)") { error in
-                guard case EELSThicknessError.invalidSavitzkyGolay = error else { return XCTFail("\(error)") }
+            if let error = #expect(throws: (any Error).self, "\(wl),\(po)", performing: { try SavitzkyGolayFirstDerivative(windowLength: wl, polynomialOrder: po, delta: 0.05) }) {
+                if case EELSThicknessError.invalidSavitzkyGolay = error {} else { Issue.record("\(error)") }
             }
         }
     }

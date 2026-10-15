@@ -12,10 +12,10 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroEELS
 
-final class RefuterRegressionTests: XCTestCase {
+struct RefuterRegressionTests {
 
     private let cases = ["B1_negative_counts", "B3_flat_and_ramp", "B5_ramps", "R22", "R26", "R52", "R58"]
 
@@ -24,7 +24,7 @@ final class RefuterRegressionTests: XCTestCase {
     }
     private func num(_ x: Any?) -> Double? { (x as? NSNumber)?.doubleValue }
 
-    func testEveryRefuterImageMatchesExSpyAtEveryPixel() throws {
+    @Test func testEveryRefuterImageMatchesExSpyAtEveryPixel() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/refuter")
         var routesChecked = 0, pixelsChecked = 0, nanPixels = 0, estimatedRoutes = 0
         for name in cases {
@@ -46,37 +46,37 @@ final class RefuterRegressionTests: XCTestCase {
                                       tolerance: num(r["tolerance"]))
                     estimatedRoutes += 1
                 case "fixed": rule = .fixed(num(r["value"])!)
-                default: XCTFail("route kind \(kind)"); continue
+                default: Issue.record("route kind \(kind)"); continue
                 }
                 let map = try EELSThickness.logRatio(img, threshold: rule, zeroLoss: nil)
                 let it = ex["it"] as! [Any], i0 = ex["i0"] as! [Any], tl = ex["tl"] as! [Any]
-                XCTAssertEqual(map.pixels.count, it.count, tag)
+                #expect(map.pixels.count == it.count, "\(tag)")
                 for (p, px) in map.pixels.enumerated() {
                     pixelsChecked += 1
                     if let thr = ex["thrEV"] as? [Any] {
                         if let e = num(thr[p]) {
-                            XCTAssertEqual(px.thresholdEV?.bitPattern, e.bitPattern, "\(tag) pixel \(p): threshold energy")
+                            #expect(px.thresholdEV?.bitPattern == e.bitPattern, "\(tag) pixel \(p): threshold energy")
                         } else {
                             nanPixels += 1
-                            XCTAssertNil(px.thresholdEV, "\(tag) pixel \(p)")
-                            XCTAssertEqual(px.unavailable, .noInflexionFound, "\(tag) pixel \(p)")
+                            #expect(px.thresholdEV == nil, "\(tag) pixel \(p)")
+                            #expect(px.unavailable == .noInflexionFound, "\(tag) pixel \(p)")
                         }
                     }
-                    if let e = num(it[p]) { XCTAssertEqual(px.iTotal, e, accuracy: 1e-12 * abs(e), "\(tag) pixel \(p) I_t") }
-                    else { XCTFail("\(tag) pixel \(p): exSpy I_t is not finite") }
+                    if let e = num(it[p]) { #expect(isEqual(px.iTotal, e, accuracy: 1e-12 * abs(e)), "\(tag) pixel \(p) I_t") }
+                    else { Issue.record("\(tag) pixel \(p): exSpy I_t is not finite") }
                     if let e = num(tl[p]) {
-                        guard let a = px.tOverLambda else { XCTFail("\(tag) pixel \(p): exSpy t/lambda \(e), port nil (\(String(describing: px.unavailable)))"); continue }
-                        XCTAssertEqual(a, e, accuracy: 1e-12, "\(tag) pixel \(p) t/lambda")
-                        if let e0 = num(i0[p]), let a0 = px.i0 { XCTAssertEqual(a0, e0, accuracy: 1e-12 * abs(e0), "\(tag) pixel \(p) I_0") }
-                        else { XCTFail("\(tag) pixel \(p): I_0") }
+                        guard let a = px.tOverLambda else { Issue.record("\(tag) pixel \(p): exSpy t/lambda \(e), port nil (\(String(describing: px.unavailable)))"); continue }
+                        #expect(isEqual(a, e, accuracy: 1e-12), "\(tag) pixel \(p) t/lambda")
+                        if let e0 = num(i0[p]), let a0 = px.i0 { #expect(isEqual(a0, e0, accuracy: 1e-12 * abs(e0)), "\(tag) pixel \(p) I_0") }
+                        else { Issue.record("\(tag) pixel \(p): I_0") }
                     } else {
-                        XCTAssertNil(px.tOverLambda, "\(tag) pixel \(p): exSpy t/lambda is not finite")
+                        #expect(px.tOverLambda == nil, "\(tag) pixel \(p): exSpy t/lambda is not finite")
                     }
                 }
                 routesChecked += 1
             }
         }
         print("EELS-REPORT refuter regression: \(cases.count) images, \(routesChecked) routes (\(estimatedRoutes) estimated), \(pixelsChecked) pixel-route answers, \(nanPixels) NaN-threshold pixels")
-        XCTAssertGreaterThan(nanPixels, 0)
+        #expect(nanPixels > 0)
     }
 }

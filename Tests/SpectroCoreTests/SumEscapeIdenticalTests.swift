@@ -1,4 +1,5 @@
-import XCTest
+import Foundation
+import Testing
 import SpectroCore
 import SpectroEDX
 
@@ -8,7 +9,7 @@ import SpectroEDX
 /// `docs/archive/v5/sum-escape-only-preregistration-2026-10-12.md` (a pair is not added as a column when a group of the design the
 /// fit serves has a one-component ESCAPE column at its energy; one-line LINE groups are not compared, owner card A1 option a). The spectra are generated from the fit's own line model with seeded
 /// Gaussian-approximated counting noise, as in `SumColumnDedupTests`.
-final class SumEscapeIdenticalTests: XCTestCase {
+struct SumEscapeIdenticalTests {
 
     private struct SplitMix64 {
         var state: UInt64
@@ -65,13 +66,13 @@ final class SumEscapeIdenticalTests: XCTestCase {
     /// (the pile-up column and V's escape column are identical design columns); with it the run scores. At 40 000 V claims the
     /// energy and no pile-up column sits there. At 0 and 300 V is not in the final design, so the pair is compared with nothing and
     /// keeps its own column (registration: docs/archive/v5/sum-escape-only-preregistration-2026-10-12.md, P1 and P2).
-    func testVKaEscapeEqualToTbMaPlusIrMaScoresOnAShortAxis() throws {
+    @Test func testVKaEscapeEqualToTbMaPlusIrMaScoresOnAShortAxis() throws {
         let sum = XRayLines.line("Tb_Ma")!.energy + XRayLines.line("Ir_Ma")!.energy
         let escape = XRayLines.line("V_Ka")!.energy - XRayLines.line("Si_Ka")!.energy
-        XCTAssertEqual(sum, escape, accuracy: 1e-6, "the premise: the pile-up energy is V K-alpha's escape energy")
+        #expect(isEqual(sum, escape, accuracy: 1e-6), "the premise: the pile-up energy is V K-alpha's escape energy")
         let g = EDSLineModel.build(elements: ["V"], axis: Self.shortAxis, beamEnergy: 200, resolutionMnKaEV: 130).groups.first { $0.id == "V_Ka" }!
-        XCTAssertEqual(g.lines.count, 1, "the premise: V K-alpha is the only line of its group on this axis")
-        XCTAssertEqual(g.escapes.count, 1, "the premise: its escape column is one Gaussian")
+        #expect(g.lines.count == 1, "the premise: V K-alpha is the only line of its group on this axis")
+        #expect(g.escapes.count == 1, "the premise: its escape column is one Gaussian")
         for amp in [0.0, 300, 40000] {
             let counts = Self.spectrum(Self.shortAxis, areas: ["Tb_Ma": 40000, "Ir_Ma": 40000, "V_Ka": amp], seed: 24)
             let r: ProposalResult
@@ -79,13 +80,12 @@ final class SumEscapeIdenticalTests: XCTestCase {
                 r = try ElementProposer(pool: ["Tb", "Ir", "V", "Mg", "Al", "Fe"])
                     .propose(counts: counts, axis: Self.shortAxis, settings: Self.settings(Self.shortAxis))
             } catch {
-                XCTFail("amplitude \(amp): the run must score, not throw: \(error) (old code: rankDeficient)")
+                Issue.record("amplitude \(amp): the run must score, not throw: \(error) (old code: rankDeficient)")
                 continue
             }
             // Only where V claims the energy: at 0 and 300 the pair has no identical column in its design (V is not in it).
             if amp == 40000 {
-                XCTAssertFalse(r.sumPeaks.contains { abs($0.energyKeV - sum) <= LineConflicts.sumPeakToleranceKeV },
-                               "amplitude \(amp): no pile-up column at the one-component escape energy: \(r.sumPeaks.map(\.label))")
+                #expect(!(r.sumPeaks.contains { abs($0.energyKeV - sum) <= LineConflicts.sumPeakToleranceKeV }), "amplitude \(amp): no pile-up column at the one-component escape energy: \(r.sumPeaks.map(\.label))")
             }
         }
     }
@@ -96,18 +96,18 @@ final class SumEscapeIdenticalTests: XCTestCase {
     /// pair is not compared with it. Tb and Ir are detected at 40 000 counts each; a real Tb + Ir pile-up (2 000 counts, one Gaussian
     /// at 3.2125 keV with the law's FWHM) is planted at the same energy. The final fit must keep a Tb + Ir sum column with a positive
     /// net there. A pool-wide comparison drops it (no identical column is in the design, so nothing justifies the drop).
-    func testPileUpAtAnInactivePoolGroupsOneComponentEnergyKeepsItsSumColumn() throws {
+    @Test func testPileUpAtAnInactivePoolGroupsOneComponentEnergyKeepsItsSumColumn() throws {
         let sum = XRayLines.line("Tb_Ma")!.energy + XRayLines.line("Ir_Ma")!.energy
-        let w = try XCTUnwrap(XRayLines.fwhm(resolutionMnKaEV: 130, atEnergy: sum), "the law's FWHM at the pile-up energy")
+        let w = try #require(XRayLines.fwhm(resolutionMnKaEV: 130, atEnergy: sum), "the law's FWHM at the pile-up energy")
         let counts = Self.spectrum(Self.shortAxis, areas: ["Tb_Ma": 40000, "Ir_Ma": 40000, "V_Ka": 0],
                                    planted: [(energy: sum, area: 2000, fwhm: w)], seed: 25)
         let r = try ElementProposer(pool: ["Tb", "Ir", "V", "Mg", "Al", "Fe"])
             .propose(counts: counts, axis: Self.shortAxis, settings: Self.settings(Self.shortAxis))
         let pileUp = r.sumPeaks.filter { abs($0.energyKeV - sum) <= LineConflicts.sumPeakToleranceKeV }
-        XCTAssertEqual(pileUp.count, 1, "one column at the Tb + Ir energy; sum peaks: \(r.sumPeaks.map { ($0.label, $0.net) })")
-        let column = try XCTUnwrap(pileUp.first)
-        XCTAssertEqual(Set(column.elements), ["Tb", "Ir"], "the column is the Tb + Ir pair, not V's escape")
-        XCTAssertGreaterThan(column.net, 0, "the planted pile-up is fitted with a positive net")
+        #expect(pileUp.count == 1, "one column at the Tb + Ir energy; sum peaks: \(r.sumPeaks.map { ($0.label, $0.net) })")
+        let column = try #require(pileUp.first)
+        #expect(Set(column.elements) == ["Tb", "Ir"], "the column is the Tb + Ir pair, not V's escape")
+        #expect(column.net > 0, "the planted pile-up is fitted with a positive net")
     }
 
     // MARK: P3: a one-LINE group is not compared (La K-alpha = Cd K-alpha + Tl L-alpha)
@@ -120,14 +120,14 @@ final class SumEscapeIdenticalTests: XCTestCase {
     /// throws `rankDeficient`; with the line branch the same runs complete with La at net 106 to 185. Pinned: 160 counts throws the
     /// clear error; with none planted the Cd + Tl pair keeps its column (net 0) beside La (net 54, below L_D); at 2 000 La claims
     /// the energy and is a sum-peak question. La is never in `proposed`.
-    func testLaKaEqualToCdKaPlusTlLaIsNotDroppedAndNeverProposesLa() throws {
+    @Test func testLaKaEqualToCdKaPlusTlLaIsNotDroppedAndNeverProposesLa() throws {
         let sum = XRayLines.line("Cd_Ka")!.energy + XRayLines.line("Tl_La")!.energy
-        XCTAssertEqual(sum, XRayLines.line("La_Ka")!.energy, accuracy: 1e-6, "the premise: the pile-up energy is La K-alpha")
+        #expect(isEqual(sum, XRayLines.line("La_Ka")!.energy, accuracy: 1e-6), "the premise: the pile-up energy is La K-alpha")
         let axis = EnergyAxis(offset: 0, scale: 0.02, size: 1800)
-        XCTAssertLessThan(axis.energy(ofChannel: axis.size - 1), XRayLines.line("La_Kb")!.energy, "the premise: La K-beta is off the axis")
+        #expect(axis.energy(ofChannel: axis.size - 1) < XRayLines.line("La_Kb")!.energy, "the premise: La K-beta is off the axis")
         let g = EDSLineModel.build(elements: ["La"], axis: axis, beamEnergy: 200, resolutionMnKaEV: 130).groups.first { $0.id == "La_Ka" }!
-        XCTAssertEqual(g.lines.count, 1, "the premise: La's K group is one Gaussian on this axis")
-        let w = try XCTUnwrap(XRayLines.fwhm(resolutionMnKaEV: 130, atEnergy: sum))
+        #expect(g.lines.count == 1, "the premise: La's K group is one Gaussian on this axis")
+        let w = try #require(XRayLines.fwhm(resolutionMnKaEV: 130, atEnergy: sum))
         // The default fit range stops at 20 keV, where La K-alpha is out of range; the coincidence needs the Expert range to the axis top.
         var settings = Self.settings(axis)
         settings.fitTo = axis.energy(ofChannel: axis.size - 1)
@@ -136,30 +136,28 @@ final class SumEscapeIdenticalTests: XCTestCase {
                                        planted: area > 0 ? [(energy: sum, area: area, fwhm: w)] : [], seed: 26)
             return try ElementProposer(pool: ["Cd", "Tl", "La", "Mg", "Al", "Fe"]).propose(counts: counts, axis: axis, settings: settings)
         }
-        XCTAssertThrowsError(try run(pileUp: 160), "La active but not claiming: the pair stays a column identical to La's, a clear error") {
-            XCTAssertEqual($0 as? ProposerError, .rankDeficient)
+        if let error = #expect(throws: (any Error).self, "La active but not claiming: the pair stays a column identical to La's, a clear error", performing: { try run(pileUp: 160) }) {
+            #expect((error as? ProposerError) == .rankDeficient)
         }
         let none = try run(pileUp: 0)
-        XCTAssertFalse(none.proposed.contains { $0.element == "La" }, "no pile-up: La is not proposed")
-        XCTAssertTrue(none.sumPeaks.contains { abs($0.energyKeV - sum) <= LineConflicts.sumPeakToleranceKeV && Set($0.elements) == ["Cd", "Tl"] },
-                      "no pile-up planted: the Cd + Tl pair keeps its column at La's energy; sum peaks: \(none.sumPeaks.map(\.label))")
+        #expect(!(none.proposed.contains { $0.element == "La" }), "no pile-up: La is not proposed")
+        #expect(none.sumPeaks.contains { abs($0.energyKeV - sum) <= LineConflicts.sumPeakToleranceKeV && Set($0.elements) == ["Cd", "Tl"] }, "no pile-up planted: the Cd + Tl pair keeps its column at La's energy; sum peaks: \(none.sumPeaks.map(\.label))")
         let big = try run(pileUp: 2000)
-        XCTAssertFalse(big.proposed.contains { $0.element == "La" }, "La is never proposed from the Cd + Tl pile-up")
-        XCTAssertTrue(big.sumPeakQuestions.contains { $0.element == "La" }, "La claims the energy and is a sum-peak question")
+        #expect(!(big.proposed.contains { $0.element == "La" }), "La is never proposed from the Cd + Tl pile-up")
+        #expect(big.sumPeakQuestions.contains { $0.element == "La" }, "La claims the energy and is a sum-peak question")
     }
 
     // MARK: Multi-line groups keep their pile-up column
 
     /// Tb L-alpha 6.2728 = Sr L-alpha + Ba L-alpha. Tb's group has nine lines, so its column is not one Gaussian and the
     /// pile-up column at its energy stays (Tb at 300 counts is in the window, not claiming). The rule must not fire here.
-    func testSrPlusBaSumAtAMultiLineGroupsAlphaKeepsItsColumn() throws {
+    @Test func testSrPlusBaSumAtAMultiLineGroupsAlphaKeepsItsColumn() throws {
         let sum = XRayLines.line("Sr_La")!.energy + XRayLines.line("Ba_La")!.energy
-        XCTAssertEqual(sum, XRayLines.line("Tb_La")!.energy, accuracy: 1e-6, "the premise")
+        #expect(isEqual(sum, XRayLines.line("Tb_La")!.energy, accuracy: 1e-6), "the premise")
         let counts = Self.spectrum(Self.axis, areas: ["Sr_La": 40000, "Ba_La": 40000, "Tb_La": 300], seed: 21)
         let r = try ElementProposer(pool: ["Sr", "Ba", "Tb", "Mg", "Al", "Fe"])
             .propose(counts: counts, axis: Self.axis, settings: Self.settings(Self.axis))
-        let col = try XCTUnwrap(r.sumPeaks.first { abs($0.energyKeV - sum) <= LineConflicts.sumPeakToleranceKeV },
-                                "a column at the Sr+Ba energy; labels: \(r.sumPeaks.map(\.label))")
-        XCTAssertEqual(Set(col.elements), ["Sr", "Ba"])
+        let col = try #require(r.sumPeaks.first { abs($0.energyKeV - sum) <= LineConflicts.sumPeakToleranceKeV }, "a column at the Sr+Ba energy; labels: \(r.sumPeaks.map(\.label))")
+        #expect(Set(col.elements) == ["Sr", "Ba"])
     }
 }

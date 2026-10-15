@@ -1,4 +1,5 @@
-import XCTest
+import Foundation
+import Testing
 import SpectroCore
 import SpectroEDX
 
@@ -7,7 +8,7 @@ import SpectroEDX
 /// gave two identical design columns. Registered fix: `docs/archive/v5/sum-column-dedup-preregistration-2026-10-08.md`
 /// (a sum column within `sumPeakToleranceKeV` of one already added in the pass is not added again; the kept column's label names
 /// every pair). The spectra are generated from the fit's own line model with seeded Gaussian-approximated counting noise.
-final class SumColumnDedupTests: XCTestCase {
+struct SumColumnDedupTests {
 
     private struct SplitMix64 {
         var state: UInt64
@@ -58,45 +59,45 @@ final class SumColumnDedupTests: XCTestCase {
 
     /// Without the fix this throws `rankDeficient` (both pairs enter one pass as identical columns); with it the run scores,
     /// the four elements are proposed, and the one column at 11.006 keV names both pairs.
-    func testTwoCoincidingSumPairsScoreAndTheKeptColumnNamesBoth() throws {
+    @Test func testTwoCoincidingSumPairsScoreAndTheKeptColumnNamesBoth() throws {
         let e1 = XRayLines.line("Dy_La")!.energy + XRayLines.line("Ti_Ka")!.energy
         let e2 = XRayLines.line("Cs_La")!.energy + XRayLines.line("Ho_La")!.energy
-        XCTAssertEqual(e1, e2, accuracy: 1e-3, "the premise: the two pairs coincide in the line table")
+        #expect(isEqual(e1, e2, accuracy: 1e-3), "the premise: the two pairs coincide in the line table")
         let r: ProposalResult
         do { r = try propose(Self.fourPlanted, pool: Self.fourPool, seed: 11) }
-        catch { XCTFail("the run must score, not throw: \(error) (old code: rankDeficient)"); return }
-        for el in ["Dy", "Ti", "Cs", "Ho"] { XCTAssertTrue(r.candidates.first { $0.element == el }!.isProposed, "\(el) is proposed") }
+        catch { Issue.record("the run must score, not throw: \(error) (old code: rankDeficient)"); return }
+        for el in ["Dy", "Ti", "Cs", "Ho"] { #expect(r.candidates.first { $0.element == el }!.isProposed, "\(el) is proposed") }
         let at = r.sumPeaks.filter { abs($0.energyKeV - e1) <= LineConflicts.sumPeakToleranceKeV }
-        XCTAssertEqual(at.count, 1, "one column at the coinciding energy, not two")
-        let col = try XCTUnwrap(at.first)
-        XCTAssertTrue(col.label.contains("Dy+Ti") && col.label.contains("Cs+Ho"), "the label names both pairs: \(col.label)")
-        XCTAssertEqual(Set(col.elements), ["Dy", "Ti", "Cs", "Ho"])
+        #expect(at.count == 1, "one column at the coinciding energy, not two")
+        let col = try #require(at.first)
+        #expect(col.label.contains("Dy+Ti") && col.label.contains("Cs+Ho"), "the label names both pairs: \(col.label)")
+        #expect(Set(col.elements) == ["Dy", "Ti", "Cs", "Ho"])
     }
 
     // MARK: A lone pair is unchanged
 
     /// One planted pair of parents (Al + Mg-like): every sum column is a lone pair, with the plain label and elements.
-    func testALonePairKeepsItsPlainLabelAndElements() throws {
+    @Test func testALonePairKeepsItsPlainLabelAndElements() throws {
         let r = try propose(["Dy_La": 40000, "Ti_Ka": 40000], pool: ["Dy", "Ti", "Mg", "Al"], seed: 12)
-        let dyTi = try XCTUnwrap(r.sumPeaks.first { $0.label == "Dy+Ti sum" }, "labels: \(r.sumPeaks.map(\.label))")
-        XCTAssertEqual(dyTi.elements, ["Dy", "Ti"])
-        XCTAssertFalse(r.sumPeaks.contains { $0.label.contains(" / ") }, "no merged column when no two pairs coincide")
-        let self2 = try XCTUnwrap(r.sumPeaks.first { $0.label == "Dy+Dy sum" })
-        XCTAssertEqual(self2.elements, ["Dy", "Dy"], "a self pair keeps both entries")
+        let dyTi = try #require(r.sumPeaks.first { $0.label == "Dy+Ti sum" }, "labels: \(r.sumPeaks.map(\.label))")
+        #expect(dyTi.elements == ["Dy", "Ti"])
+        #expect(!(r.sumPeaks.contains { $0.label.contains(" / ") }), "no merged column when no two pairs coincide")
+        let self2 = try #require(r.sumPeaks.first { $0.label == "Dy+Dy sum" })
+        #expect(self2.elements == ["Dy", "Dy"], "a self pair keeps both entries")
     }
 
     // MARK: Near is not equal
 
     /// Si+Ti (6.2506 keV) and Ca+Ru (6.2502 keV) are 0.4 eV apart in the table: near, not equal. The exact rule keeps two
     /// columns; a tolerance of 0.06 keV would merge them (the refuted rule, `sum-column-dedup-results-2026-10-08.md`).
-    func testNearPairsFourHundredEVApartStayTwoColumns() throws {
+    @Test func testNearPairsFourHundredEVApartStayTwoColumns() throws {
         let e1 = XRayLines.line("Si_Ka")!.energy + XRayLines.line("Ti_Ka")!.energy
         let e2 = XRayLines.line("Ca_Ka")!.energy + XRayLines.line("Ru_La")!.energy
-        XCTAssertEqual(abs(e1 - e2), 0.0004, accuracy: 1e-6, "the premise: the two pairs differ by 0.0004 keV")
+        #expect(isEqual(abs(e1 - e2), 0.0004, accuracy: 1e-6), "the premise: the two pairs differ by 0.0004 keV")
         let r = try propose(["Si_Ka": 40000, "Ti_Ka": 40000, "Ca_Ka": 40000, "Ru_La": 40000],
                             pool: ["Si", "Ti", "Ca", "Ru", "Mg", "Al", "Fe"], seed: 13)
         let cols = r.sumPeaks.filter { abs($0.energyKeV - e1) <= 0.01 }
-        XCTAssertEqual(cols.count, 2, "two columns, not one merged column: \(r.sumPeaks.map(\.label))")
-        XCTAssertFalse(cols.contains { $0.label.contains(" / ") }, "neither column names both pairs")
+        #expect(cols.count == 2, "two columns, not one merged column: \(r.sumPeaks.map(\.label))")
+        #expect(!(cols.contains { $0.label.contains(" / ") }), "neither column names both pairs")
     }
 }

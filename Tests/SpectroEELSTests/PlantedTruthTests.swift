@@ -13,10 +13,10 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroEELS
 
-final class PlantedTruthTests: XCTestCase {
+struct PlantedTruthTests {
 
     private let thresholds: [Double] = [2.5, 4.5, 6.0]
 
@@ -26,9 +26,9 @@ final class PlantedTruthTests: XCTestCase {
 
     // MARK: gate 2: noiseless
 
-    func testNoiselessFixedThresholdsRecoverTauToThePredictedBias() throws {
+    @Test func testNoiselessFixedThresholdsRecoverTauToThePredictedBias() throws {
         let image = try EELSFixtures.image("planted-noiseless")
-        XCTAssertEqual(EELSFixtures.truth.thresholdRule.thresholdsEV, thresholds)
+        #expect(EELSFixtures.truth.thresholdRule.thresholdsEV == thresholds)
         var worstVsBound = -Double.infinity, worstSigned = 0.0
         var table = [String]()
         for theta in thresholds {
@@ -39,10 +39,10 @@ final class PlantedTruthTests: XCTestCase {
                 let t = map.pixels[p].tOverLambda.orFail()
                 let error = t - truth.tau
                 // the registered inequality
-                XCTAssertLessThanOrEqual(abs(error), abs(comp.bias) + 1e-9, "tau \(truth.tau) theta \(theta)")
+                #expect(abs(error) <= (abs(comp.bias) + 1e-9), "tau \(truth.tau) theta \(theta)")
                 // and the signed equality (a sign error or a bias twice as large cannot hide under the inequality)
-                XCTAssertEqual(error, comp.bias, accuracy: 1e-9, "tau \(truth.tau) theta \(theta): error against the predicted bias")
-                XCTAssertEqual(map.pixels[p].thresholdChannel, comp.index)
+                #expect(isEqual(error, comp.bias, accuracy: 1e-9), "tau \(truth.tau) theta \(theta): error against the predicted bias")
+                #expect(map.pixels[p].thresholdChannel == comp.index)
                 worstVsBound = max(worstVsBound, abs(error) - abs(comp.bias))
                 worstSigned = max(worstSigned, abs(error - comp.bias))
                 table.append("tau \(truth.tau) theta \(theta): bias \(comp.bias) error \(error)")
@@ -52,7 +52,7 @@ final class PlantedTruthTests: XCTestCase {
         for line in table { print("EELS-REPORT planted-table \(line)") }
     }
 
-    func testNoiselessEstimatedThresholdErrorEqualsTheBiasAtTheChannelFound() throws {
+    @Test func testNoiselessEstimatedThresholdErrorEqualsTheBiasAtTheChannelFound() throws {
         let image = try EELSFixtures.image("planted-noiseless")
         let map = try EELSThickness.logRatio(image, threshold: .estimated())
         var worstError = 0.0, worstDiff = 0.0
@@ -62,8 +62,8 @@ final class PlantedTruthTests: XCTestCase {
             let channel = px.thresholdChannel.orFail()
             let bias = truth.biasByChannel.bias[channel - truth.biasByChannel.firstChannel]
             let error = px.tOverLambda.orFail() - truth.tau
-            XCTAssertEqual(error, bias, accuracy: 1e-9, "tau \(truth.tau) at channel \(channel)")
-            XCTAssertLessThanOrEqual(abs(error), 0.02, "tau \(truth.tau)")
+            #expect(isEqual(error, bias, accuracy: 1e-9), "tau \(truth.tau) at channel \(channel)")
+            #expect(abs(error) <= 0.02, "tau \(truth.tau)")
             worstError = max(worstError, abs(error)); worstDiff = max(worstDiff, abs(error - bias))
             print("EELS-REPORT planted-table tau \(truth.tau) estimated theta \(px.thresholdEV.orFail()) (channel \(channel)): bias at channel \(bias) error \(error)")
         }
@@ -74,7 +74,7 @@ final class PlantedTruthTests: XCTestCase {
 
     /// On the stored noisy image (NumPy seed 20261014): per pixel |t/lambda_noisy - t/lambda_noiseless| <= 4 sigma_counting, with
     /// sigma_counting of the noisy pixel's own counts.
-    func testStoredNoisyImageIsWithinFourSigmaOfTheNoiselessOneForFixedThresholds() throws {
+    @Test func testStoredNoisyImageIsWithinFourSigmaOfTheNoiselessOneForFixedThresholds() throws {
         let noiseless = try EELSFixtures.image("planted-noiseless"), noisy = try EELSFixtures.image("planted-noisy")
         var worst = 0.0
         for theta in thresholds {
@@ -83,7 +83,7 @@ final class PlantedTruthTests: XCTestCase {
                 let sigma = b.pixels[p].sigmaCounting.orFail()
                 let ratio = abs(b.pixels[p].tOverLambda.orFail() - a.pixels[p].tOverLambda.orFail()) / sigma
                 worst = max(worst, ratio)
-                XCTAssertLessThanOrEqual(ratio, 4, "theta \(theta) pixel \(p)")
+                #expect(ratio <= 4, "theta \(theta) pixel \(p)")
             }
         }
         print("EELS-REPORT planted noisy (stored), fixed thresholds: worst |noisy - noiseless| / sigma_counting = \(worst) (gate 4)")
@@ -104,7 +104,7 @@ final class PlantedTruthTests: XCTestCase {
     /// 200 Poisson realisations of the noiseless image (seeds 1 to 200): for each fixed threshold and each tau, the standard
     /// deviation of t/lambda against sigma_counting of the noiseless image's expected counts. Within 15 %. And the estimated
     /// threshold on the same realisations, REPORTED without a bound (amendment 1).
-    func testTwoHundredRealisationsStandardDeviationAgainstSigmaCounting() throws {
+    @Test func testTwoHundredRealisationsStandardDeviationAgainstSigmaCounting() throws {
         let noiseless = try EELSFixtures.image("planted-noiseless")
         var fixed = [[[Double]]](repeating: [[Double]](repeating: [], count: 10), count: 3)       // [threshold][pixel][realisation]
         var estimated = [[Double]](repeating: [], count: 10)
@@ -133,7 +133,7 @@ final class PlantedTruthTests: XCTestCase {
                 let ratio = sd / sigma
                 worst = max(worst, abs(ratio - 1))
                 print("EELS-REPORT sigma-table theta \(theta) tau \(EELSFixtures.truth.pixels[p].tau): sigma_counting \(sigma) sd over 200 \(sd) ratio \(ratio)")
-                XCTAssertEqual(ratio, 1, accuracy: 0.15, "theta \(theta) tau \(EELSFixtures.truth.pixels[p].tau)")
+                #expect(isEqual(ratio, 1, accuracy: 0.15), "theta \(theta) tau \(EELSFixtures.truth.pixels[p].tau)")
             }
         }
         print("EELS-REPORT sigma check, fixed thresholds: worst |sd / sigma_counting - 1| = \(worst) (gate 0.15)")

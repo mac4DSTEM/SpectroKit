@@ -7,7 +7,7 @@
 
 import CryptoKit
 import Foundation
-import XCTest
+import Testing
 import SpectroCore
 import SpectroEDX
 
@@ -89,7 +89,9 @@ enum EDXFixtures {
     // MARK: RosettaSciIO's public Velox files
 
     /// Small public files are copied into Fixtures/public (NOTICE); the others are read from the gitignored
-    /// References/rosettasciio checkout (zip member, extracted once per process) and the test is skipped when it is absent.
+    /// References/rosettasciio checkout (zip member, extracted once per process) and the test is skipped when it is absent:
+    /// `FixtureAbsent` (XCTSkip before the Swift Testing migration) is caught by the loops that go on, and turned into
+    /// `Test.cancel` (the skip) by `publicVeloxOrCancel` where the test needs the one file.
     static func publicVelox(label: String) throws -> String {
         let parts = label.split(separator: "/", maxSplits: 1).map(String.init)
         let member = parts[1]
@@ -97,7 +99,7 @@ enum EDXFixtures {
         if FileManager.default.fileExists(atPath: copy.path) { return copy.path }
         let zip = repoRoot.appendingPathComponent("References/rosettasciio/rsciio/tests/data/emd").appendingPathComponent(parts[0])
         guard FileManager.default.fileExists(atPath: zip.path) else {
-            throw XCTSkip("References/rosettasciio is absent: \(label) is read from it (registration C1; the gate is partly conditional on References)")
+            throw FixtureAbsent(reason: "References/rosettasciio is absent: \(label) is read from it (registration C1; the gate is partly conditional on References)")
         }
         return try extractLock.withLock { cache in
             if let p = cache[label] { return p }
@@ -111,13 +113,21 @@ enum EDXFixtures {
             let h = try FileHandle(forWritingTo: out)
             p.standardOutput = h
             try p.run(); p.waitUntilExit(); try h.close()
-            guard p.terminationStatus == 0 else { throw XCTSkip("unzip of \(label) failed") }
+            guard p.terminationStatus == 0 else { throw FixtureAbsent(reason: "unzip of \(label) failed") }
             cache[label] = out.path
             return out.path
         }
     }
     private static let extractLock = NSMutex()
+
+    /// `publicVelox`, cancelling (skipping) the test when the file is absent, as XCTSkip did.
+    static func publicVeloxOrCancel(label: String) throws -> String {
+        do { return try publicVelox(label: label) } catch let absent as FixtureAbsent { try Test.cancel(Comment(rawValue: absent.reason)) }
+    }
 }
+
+/// A fixture the test reads is not on this machine (the References checkout): the test skips, it does not fail.
+struct FixtureAbsent: Error { let reason: String }
 
 /// A lock around a dictionary cache (strings to strings), for the extracted public files.
 final class NSMutex: @unchecked Sendable {

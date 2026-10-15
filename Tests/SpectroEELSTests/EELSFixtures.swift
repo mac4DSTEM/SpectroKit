@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroEELS
 
 // MARK: - Decodable views of pins.json (only what the tests read)
@@ -198,17 +198,19 @@ func relativeDifference(_ a: Double, _ b: Double) -> Double {
 
 extension Optional where Wrapped == Double {
     /// Unwraps a result for a comparison; a nil is a failed assertion, not a crash that hides the tests after it.
-    func orFail(file: StaticString = #filePath, line: UInt = #line) -> Double {
+    func orFail(fileID: String = #fileID, filePath: String = #filePath, line: Int = #line, column: Int = #column) -> Double {
+        let sourceLocation = SourceLocation(fileID: fileID, filePath: filePath, line: line, column: column)
         if let v = self { return v }
-        XCTFail("a value that should be present is nil", file: file, line: line)
+        Issue.record("a value that should be present is nil", sourceLocation: sourceLocation)
         return .nan
     }
 }
 
 extension Optional where Wrapped == Int {
-    func orFail(file: StaticString = #filePath, line: UInt = #line) -> Int {
+    func orFail(fileID: String = #fileID, filePath: String = #filePath, line: Int = #line, column: Int = #column) -> Int {
+        let sourceLocation = SourceLocation(fileID: fileID, filePath: filePath, line: line, column: column)
         if let v = self { return v }
-        XCTFail("a value that should be present is nil", file: file, line: line)
+        Issue.record("a value that should be present is nil", sourceLocation: sourceLocation)
         return -1
     }
 }

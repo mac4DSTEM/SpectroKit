@@ -11,14 +11,20 @@
 //  E3: `EnergyAxisRefinement.refine` against the planted offset and gain (truth), with exSpy's `calibrate_energy_axis` pinned
 //      beside it as a second estimate (never as the truth).
 //
+//  DEVIATION (0.4.0, approved by the suite coordinator 2026-10-15; docs/consumers-0.4.0.md section 7): FormatoKit 0.0.2 keeps
+//  `VeloxStreamInfo.id` and `VeloxSpectrumImage.energyCalibrationAgrees` `package`. This file reads the pinned stream ids in
+//  name order (the reader's order) and the calibration flag recomputed from the public segments by the reader's rule
+//  (`swiftAxes`) instead. Reverts to the reader's own members at the next FormatoKit pin that makes them public (asked of
+//  FormatoKit 0.0.3).
+//
 
 import Foundation
-import XCTest
+import Testing
 import SpectroCore
 import SpectroEDX
 import FormatoEMD
 
-final class AxisGateTests: XCTestCase {
+struct AxisGateTests {
 
     private var rule: [String: Any] { EDXFixtures.pins.d("axis").d("rsciio_rule") }
 
@@ -38,7 +44,7 @@ final class AxisGateTests: XCTestCase {
     /// Both go back to the reader's own members when FormatoKit makes them public.
     private func swiftAxes(_ path: String, ids: [String]) throws -> (perStream: [String: Cal?], first: Cal?, agrees: Bool) {
         let v = try VeloxEMDReader(path: path).readSpectrumImage()
-        XCTAssertEqual(v.streams.count, Set(ids).count, "\(path): one pinned id per stream")
+        #expect(v.streams.count == Set(ids).count, "\(path): one pinned id per stream")
         var per: [String: Cal?] = [:]
         for (id, s) in zip(Set(ids).sorted(), v.streams) {
             if let seg = s.segments.first, let d = seg.dispersionEV, let o = seg.offsetEnergyEV {
@@ -54,30 +60,30 @@ final class AxisGateTests: XCTestCase {
 
     /// E1 on every public file RosettaSciIO's test data holds with a stream: the axis of every stream, and of the file (the first
     /// stream), equal rsciio's rule bit for bit; the calibration flag equals "all streams equal".
-    func testE1PublicFilesAxisEqualsRosettaSciIOsRule() throws {
+    @Test func testE1PublicFilesAxisEqualsRosettaSciIOsRule() throws {
         let files = rule.d("files")
         let skipLabels: Set<String> = []
         var checked = 0
         for (label, list) in files.sorted(by: { $0.key < $1.key }) where !skipLabels.contains(label) {
             let expected = pinned(list)
             let path: String
-            do { path = try EDXFixtures.publicVelox(label: label) } catch is XCTSkip { continue }
+            do { path = try EDXFixtures.publicVelox(label: label) } catch is FixtureAbsent { continue }
             let got = try swiftAxes(path, ids: expected.map(\.stream))
             for (id, cal) in expected {
-                let g = try XCTUnwrap(got.perStream[id], "\(label): stream \(id)")
-                XCTAssertEqual(g?.dispersionKeV.bitPattern, cal.dispersionKeV.bitPattern, "\(label) \(id) dispersion")
-                XCTAssertEqual(g?.offsetKeV.bitPattern, cal.offsetKeV.bitPattern, "\(label) \(id) offset")
+                let g = try #require(got.perStream[id], "\(label): stream \(id)")
+                #expect(g?.dispersionKeV.bitPattern == cal.dispersionKeV.bitPattern, "\(label) \(id) dispersion")
+                #expect(g?.offsetKeV.bitPattern == cal.offsetKeV.bitPattern, "\(label) \(id) offset")
             }
-            XCTAssertEqual(got.first?.offsetKeV.bitPattern, expected[0].cal.offsetKeV.bitPattern, "\(label): metadata axis")
-            XCTAssertEqual(got.first?.dispersionKeV.bitPattern, expected[0].cal.dispersionKeV.bitPattern, "\(label): metadata axis")
-            XCTAssertEqual(got.agrees, Set(expected.map { [$0.cal.dispersionKeV, $0.cal.offsetKeV] }).count == 1, "\(label): agreement flag")
+            #expect(got.first?.offsetKeV.bitPattern == expected[0].cal.offsetKeV.bitPattern, "\(label): metadata axis")
+            #expect(got.first?.dispersionKeV.bitPattern == expected[0].cal.dispersionKeV.bitPattern, "\(label): metadata axis")
+            #expect(got.agrees == (Set(expected.map { [$0.cal.dispersionKeV, $0.cal.offsetKeV] }).count == 1), "\(label): agreement flag")
             // the opener's axis is the first stream's
             let image = try SpectrumImageOpener.open(path: path, kind: .veloxSpectrumImage)
-            XCTAssertEqual(image.energyAxis.offset.bitPattern, expected[0].cal.offsetKeV.bitPattern, "\(label): opener")
-            XCTAssertEqual(image.energyAxis.scale.bitPattern, expected[0].cal.dispersionKeV.bitPattern, "\(label): opener")
+            #expect(image.energyAxis.offset.bitPattern == expected[0].cal.offsetKeV.bitPattern, "\(label): opener")
+            #expect(image.energyAxis.scale.bitPattern == expected[0].cal.dispersionKeV.bitPattern, "\(label): opener")
             checked += 1
         }
-        if checked == 0 { throw XCTSkip("no public Velox file available") }
+        if checked == 0 { try Test.cancel("no public Velox file available") }
         gateNote("EDX E1: \(checked) public files, every stream's axis equal to rsciio's rule bit for bit")
     }
 
@@ -88,35 +94,35 @@ final class AxisGateTests: XCTestCase {
     /// E1 on the planted headers where the reader and rsciio's rule must agree: 1 stream, 3 frames, 4 streams with offsets
     /// -1000/-1000/-996/-1000 eV (the calibration flag must be false), the decoy (rsciio takes the FIRST detector whose name
     /// contains BinaryResult.Detector, in file order).
-    func testE1PlantedHeadersEqualTheRule() throws {
+    @Test func testE1PlantedHeadersEqualTheRule() throws {
         for name in ["1stream-1frame", "1stream-3frames", "4streams-2frames", "axis-decoy", "unterminated"] {
             let expected = pinned(rule.d("planted")[name]!)
             let truth = EDXFixtures.streamTruth.d("cases").d(name)
             let got = try swiftAxes(plantedPath(name), ids: expected.map(\.stream))
             for (id, cal) in expected {
-                let g = try XCTUnwrap(got.perStream[id], "\(name) \(id)")
-                XCTAssertEqual(g?.dispersionKeV.bitPattern, cal.dispersionKeV.bitPattern, "\(name) \(id) dispersion")
-                XCTAssertEqual(g?.offsetKeV.bitPattern, cal.offsetKeV.bitPattern, "\(name) \(id) offset")
+                let g = try #require(got.perStream[id], "\(name) \(id)")
+                #expect(g?.dispersionKeV.bitPattern == cal.dispersionKeV.bitPattern, "\(name) \(id) dispersion")
+                #expect(g?.offsetKeV.bitPattern == cal.offsetKeV.bitPattern, "\(name) \(id) offset")
             }
-            XCTAssertEqual(got.first?.offsetKeV.bitPattern, expected[0].cal.offsetKeV.bitPattern, name)
-            XCTAssertEqual(got.agrees, truth["expect_calibration_agrees"] as? Bool, "\(name): energyCalibrationAgrees")
+            #expect(got.first?.offsetKeV.bitPattern == expected[0].cal.offsetKeV.bitPattern, "\(name)")
+            #expect(got.agrees == (truth["expect_calibration_agrees"] as? Bool), "\(name): energyCalibrationAgrees")
         }
         // 4 detectors: the summed spectrum mixes scales, so the flag is false (offsets differ by 4 eV)
         let four = try swiftAxes(plantedPath("4streams-2frames"), ids: pinned(rule.d("planted")["4streams-2frames"]!).map(\.stream))
-        XCTAssertFalse(four.agrees)
+        #expect(!four.agrees)
     }
 
     /// E1 file order. Registration amendment 1, item 5: keys in file order Detector-0, Detector-10, Detector-2.
     /// RosettaSciIO takes Detector-10 (20 eV, -1900 eV) by FILE order; `VeloxMetadata.parse` sorts the detectors by index (a JSON
     /// object has no order in Swift), which takes Detector-2 (10 eV, -500 eV). REGISTERED FINDING: the reader deviates from the
     /// rule on a file whose keys are not in index order (no public file and not the owner's header is such a file).
-    func testE1DetectorKeysOutOfIndexOrderFollowTheFileOrder() throws {
+    @Test func testE1DetectorKeysOutOfIndexOrderFollowTheFileOrder() throws {
         let expected = pinned(rule.d("planted")["axis-order"]!)
-        XCTAssertEqual(expected[0].cal, Cal(dispersionKeV: 0.02, offsetKeV: -1.9), "rsciio's rule takes Detector-10")
+        #expect(expected[0].cal == Cal(dispersionKeV: 0.02, offsetKeV: -1.9), "rsciio's rule takes Detector-10")
         let got = try swiftAxes(plantedPath("axis-order"), ids: expected.map(\.stream))
-        XCTExpectFailure("registered finding (amendment 1 item 5): VeloxEMDReader sorts Detector-<n> by index, so on a file with keys Detector-0, Detector-10, Detector-2 it takes Detector-2's axis; rsciio takes the first in file order, Detector-10") {
-            XCTAssertEqual(got.first?.offsetKeV, expected[0].cal.offsetKeV)
-            XCTAssertEqual(got.first?.dispersionKeV, expected[0].cal.dispersionKeV)
+        withKnownIssue("registered finding (amendment 1 item 5): VeloxEMDReader sorts Detector-<n> by index, so on a file with keys Detector-0, Detector-10, Detector-2 it takes Detector-2's axis; rsciio takes the first in file order, Detector-10") {
+            #expect(got.first?.offsetKeV == expected[0].cal.offsetKeV)
+            #expect(got.first?.dispersionKeV == expected[0].cal.dispersionKeV)
         }
         gateNote("EDX E1 axis-order: reader takes dispersion \(String(describing: got.first?.dispersionKeV)) keV, offset \(String(describing: got.first?.offsetKeV)) keV; rsciio takes 0.02, -1.9")
     }
@@ -125,15 +131,15 @@ final class AxisGateTests: XCTestCase {
 
     private var e2: [String: Any] { EDXFixtures.pins.d("axis").d("e2") }
 
-    func testE2ValueToIndexEqualsHyperSpyOnTheWholeGrid() throws {
+    @Test func testE2ValueToIndexEqualsHyperSpyOnTheWholeGrid() throws {
         let pin = e2
         let values = EDXFixtures.data("edx-axis-e2.f64", as: Double.self)
-        XCTAssertEqual(EDXFixtures.sha256(try Data(contentsOf: EDXFixtures.url("edx-axis-e2.f64"))), pin.s("sha256"))
+        #expect(EDXFixtures.sha256(try Data(contentsOf: EDXFixtures.url("edx-axis-e2.f64"))) == pin.s("sha256"))
         let idx = pin["index"] as! [Any]
-        XCTAssertEqual(values.count, pin.i("count")); XCTAssertEqual(idx.count, values.count)
+        #expect(values.count == pin.i("count")); #expect(idx.count == values.count)
         let ax = pin.d("axis")
         let axis = EnergyAxis(offset: ax.x("offset"), scale: ax.x("scale"), size: ax.i("size"))
-        XCTAssertEqual(axis, EDXFixtures.axis)
+        #expect(axis == EDXFixtures.axis)
         var raised = 0, wrong: [String] = []
         for (i, v) in values.enumerated() {
             if let want = (idx[i] as? NSNumber)?.intValue {
@@ -143,24 +149,24 @@ final class AxisGateTests: XCTestCase {
                 if (try? axis.index(of: v)) != nil { wrong.append("\(v): HyperSpy raises, got an index") }
             }
         }
-        XCTAssertTrue(wrong.isEmpty, "\(wrong.count) of \(values.count): \(wrong.prefix(5))")
-        XCTAssertGreaterThan(raised, 0, "the pins include values HyperSpy raises on (the ends)")
+        #expect(wrong.isEmpty, "\(wrong.count) of \(values.count): \(wrong.prefix(5))")
+        #expect(raised > 0, "the pins include values HyperSpy raises on (the ends)")
         // the table lines in Z 5 to 50 are covered
-        XCTAssertEqual(pin.i("n_lines"), (pin["line_names"] as! [Any]).count)
-        XCTAssertEqual(pin.i("n_midpoints"), 4095)
+        #expect(pin.i("n_lines") == (pin["line_names"] as! [Any]).count)
+        #expect(pin.i("n_midpoints") == 4095)
         gateNote("EDX E2: \(values.count) value2index cases, \(raised) raise in HyperSpy, all equal")
     }
 
-    func testE2SlicesEqualHyperSpyArraySlices() throws {
+    @Test func testE2SlicesEqualHyperSpyArraySlices() throws {
         let axis = EDXFixtures.axis
         let slices = EDXFixtures.pins.d("axis")["slices"] as! [[String: Any]]
-        XCTAssertGreaterThan(slices.count, 40)
+        #expect(slices.count > 40)
         for s in slices {
             let lo = s.x("lo"), hi = s.x("hi")
             if s["error"] != nil {
-                XCTAssertThrowsError(try axis.channelRange(from: lo, to: hi), "\(s.s("line")) [\(lo), \(hi)]")
+                #expect(throws: (any Error).self, "\(s.s("line")) [\(lo), \(hi)]") { try axis.channelRange(from: lo, to: hi) }
             } else {
-                XCTAssertEqual(try axis.channelRange(from: lo, to: hi), s.i("i1")..<s.i("i2"), "\(s.s("line")) [\(lo), \(hi)]")
+                #expect((try axis.channelRange(from: lo, to: hi)) == (s.i("i1")..<s.i("i2")), "\(s.s("line")) [\(lo), \(hi)]")
             }
         }
     }
@@ -202,11 +208,11 @@ final class AxisGateTests: XCTestCase {
     /// Mg Ka 1.25 to Si Kb 1.84 keV, the `EnergyAxisRefinement` header says offset and gain are well determined only when the
     /// lines span the range) offset and gain trade off: the joint estimate has an offset error of about -3 to -4 eV and a gain
     /// error of about +1e-3, which nearly cancel at the lines. The positions of the three alpha lines on the refined axis are
-    /// reported (they are what a user sees). The failing bounds are in `XCTExpectFailure`; the run-level facts that hold today
+    /// reported (they are what a user sees). The failing bounds are in `withKnownIssue` (XCTExpectFailure before the Swift Testing migration); the run-level facts that hold today
     /// (all 384 converge, positions within the bounds below) are asserted outside it.
-    func testE3RefinementRecoversPlantedOffsetAndGain() throws {
+    @Test func testE3RefinementRecoversPlantedOffsetAndGain() throws {
         let rows = calibrationRows()
-        XCTAssertEqual(rows.count, 384)
+        #expect(rows.count == 384)
         let axis = EDXFixtures.axis
         struct Out: Sendable { var offErr: Double, gainErr: Double, fwhmErr: Double, converged: Bool, posErr: [Double] }
         let nominal = [1.2536, 1.4865, 1.7400]   // Mg Ka, Al Ka, Si Ka (booklet = table)
@@ -225,8 +231,8 @@ final class AxisGateTests: XCTestCase {
             return Out(offErr: (res.refinedAxis.offset - r.trueOffset) * 1000, gainErr: res.refinedAxis.scale / r.trueScale - 1,
                        fwhmErr: fw - AxisGateTests.fanoFWHM(1.4865, r.r), converged: res.converged, posErr: pos)
         }
-        XCTAssertTrue(results.allSatisfy { $0.offErr.isFinite }, "every refinement returned")
-        XCTAssertEqual(results.filter { $0.converged }.count, 384, "every refinement converged")
+        #expect(results.allSatisfy { $0.offErr.isFinite }, "every refinement returned")
+        #expect(results.filter { $0.converged }.count == 384, "every refinement converged")
         func stats(_ sel: (Int) -> Bool, _ f: (Out) -> Double) -> String {
             let v = results.indices.filter(sel).map { f(results[$0]) }
             return String(format: "n %d mean %+.3g max|.| %.3g", v.count, v.reduce(0, +) / Double(v.count), v.map { abs($0) }.max() ?? .nan)
@@ -247,10 +253,10 @@ final class AxisGateTests: XCTestCase {
         // refinement improves the fit. Not registered bounds: they guard the measured behaviour against a regression.
         let worstPos = results.flatMap { $0.posErr.map(abs) }.max()!
         gateNote("EDX E3 swift worst line position error \(worstPos) eV")
-        XCTAssertLessThan(worstPos, 1.2, "measured worst line position error on the refined axis")
-        XCTExpectFailure("registered finding (section 7, Predicted for E3): offset and gain are not recovered within 1 eV and 1e-4 on spectra whose lines span 1.25-1.84 keV; they trade off") {
-            XCTAssertTrue(badOff.isEmpty, "offset outside 1 eV: \(badOff.count) of 384, e.g. \(badOff.prefix(3).map { "\(rows[$0].id)#\(rows[$0].real) \(String(format: "%.2f", results[$0].offErr)) eV" })")
-            XCTAssertTrue(badGain.isEmpty, "gain outside 1e-4: \(badGain.count) of 384, e.g. \(badGain.prefix(3).map { "\(rows[$0].id)#\(rows[$0].real) \(String(format: "%.2e", results[$0].gainErr))" })")
+        #expect(worstPos < 1.2, "measured worst line position error on the refined axis")
+        withKnownIssue("registered finding (section 7, Predicted for E3): offset and gain are not recovered within 1 eV and 1e-4 on spectra whose lines span 1.25-1.84 keV; they trade off") {
+            #expect(badOff.isEmpty, "offset outside 1 eV: \(badOff.count) of 384, e.g. \(badOff.prefix(3).map { "\(rows[$0].id)#\(rows[$0].real) \(String(format: "%.2f", results[$0].offErr)) eV" })")
+            #expect(badGain.isEmpty, "gain outside 1e-4: \(badGain.count) of 384, e.g. \(badGain.prefix(3).map { "\(rows[$0].id)#\(rows[$0].real) \(String(format: "%.2e", results[$0].gainErr))" })")
         }
     }
 
@@ -258,7 +264,7 @@ final class AxisGateTests: XCTestCase {
     /// shift. Amendment 1 item 2 recorded: mean +0.03 eV and at most 0.71 eV at N_Al 1e6 (288 fits), +0.02 / 0.62 at 1e7 (96),
     /// and that "scale" returns 0.0199577 for every planted gain. These readings are asserted so the fixture cannot drift;
     /// exSpy is the second estimate, not the truth, and no gate bound rests on it.
-    func testE3ExSpyCalibrationPinsAreTheRecordedSecondEstimate() throws {
+    @Test func testE3ExSpyCalibrationPinsAreTheRecordedSecondEstimate() throws {
         let rows = EDXFixtures.pins.d("axis").d("calibration").l("rows")
         let cells = Dictionary(uniqueKeysWithValues: EDXFixtures.calibration.l("cells").map { ($0.s("id"), $0) })
         var errs: [Double: [Double]] = [:]
@@ -276,20 +282,20 @@ final class AxisGateTests: XCTestCase {
             if modes.d("resolution")["error"] != nil { resolutionRaised += 1 }
         }
         let e6 = errs[1e6]!, e7 = errs[1e7]!
-        XCTAssertEqual(e6.count, 288); XCTAssertEqual(e7.count, 96)
-        XCTAssertEqual(e6.map { abs($0) }.max()!, 0.71, accuracy: 0.005)
-        XCTAssertEqual(e7.map { abs($0) }.max()!, 0.62, accuracy: 0.005)
-        XCTAssertEqual(e6.reduce(0, +) / 288, 0.03, accuracy: 0.005)
+        #expect(e6.count == 288); #expect(e7.count == 96)
+        #expect(isEqual(e6.map { abs($0) }.max()!, 0.71, accuracy: 0.005))
+        #expect(isEqual(e7.map { abs($0) }.max()!, 0.62, accuracy: 0.005))
+        #expect(isEqual(e6.reduce(0, +) / 288, 0.03, accuracy: 0.005))
         // Amendment 1 item 2 said `"scale"` returns 0.0199577 for every planted gain; 0.0199577 is the MEAN of two values,
         // 0.0198877 and 0.0201678 (corrected in amendment 2): the same two values at every planted gain, so it does not track gain.
-        XCTAssertEqual(scaleValues, [0.0198877, 0.0201678], "scale mode returns one of two scales whatever the planted gain")
+        #expect(scaleValues == [0.0198877, 0.0201678], "scale mode returns one of two scales whatever the planted gain")
         for g in ["-0.0003", "0.0", "0.0003"] {
             let v = Set(rows.filter { cells[$0.s("cell")]!.s("gain") == g }.compactMap { r -> Double? in
                 let m = r.d("modes").d("scale"); return m["error"] == nil ? (m.x("scale_after") * 1e7).rounded() / 1e7 : nil })
-            XCTAssertEqual(v, [0.0198877, 0.0201678], "gain \(g)")
+            #expect(v == [0.0198877, 0.0201678], "gain \(g)")
         }
-        XCTAssertEqual(resolutionRaised, 2)
+        #expect(resolutionRaised == 2)
         // the registered prediction "within +-0.2 eV at N_Al >= 1e6" is FALSE for exSpy (amendment 1 item 2):
-        XCTAssertGreaterThan(e6.map { abs($0) }.max()!, 0.2)
+        #expect(e6.map { abs($0) }.max()! > 0.2)
     }
 }

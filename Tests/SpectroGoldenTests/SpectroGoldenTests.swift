@@ -26,7 +26,7 @@
 //  71929a01 baseline, unchanged.
 //
 
-import XCTest
+import Testing
 import Foundation
 import SpectroCore
 import SpectroEDX
@@ -150,7 +150,7 @@ enum GoldenQ {
     static let tables = try! QuantificationTables(directory: resources)
 
     static func image() throws -> LoadedSpectrumImage {
-        try XCTUnwrap(try SpectrumImageOpener.openGMSEDS(path: fixtures.appendingPathComponent("demo-edx-tiny.dm4").path))
+        try #require(try SpectrumImageOpener.openGMSEDS(path: fixtures.appendingPathComponent("demo-edx-tiny.dm4").path))
     }
 
     static func method(elements: [(String, QuantificationMethod.ElementRole)] = [("Al", .quantify), ("Mg", .quantify), ("Si", .quantify), ("Cu", .quantify), ("O", .fitOnly), ("Ga", .fitOnly)]) -> QuantificationMethod {
@@ -347,7 +347,7 @@ enum SpectroGolden {
         }
 
         try add("eds-unlisted-sim") { out in
-            let o = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: fixtures.appendingPathComponent("eds-unlisted-sim.json"))) as? [String: Any])
+            let o = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: fixtures.appendingPathComponent("eds-unlisted-sim.json"))) as? [String: Any])
             let e = o["expected"] as! [Double]
             let axis = EnergyAxis(offset: o["offset"] as! Double, scale: o["scale"] as! Double, size: e.count)
             let beam = o["beam"] as! Double
@@ -381,7 +381,7 @@ enum SpectroGolden {
         }
 
         try add("eds-weakline-sim") { out in
-            let o = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: fixtures.appendingPathComponent("eds-weakline-sim.json"))) as? [String: Any])
+            let o = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: fixtures.appendingPathComponent("eds-weakline-sim.json"))) as? [String: Any])
             let axis = EnergyAxis(offset: o["offset"] as! Double, scale: o["scale"] as! Double, size: o["size"] as! Int)
             for (i, level) in (o["levels"] as! [[String: Any]]).enumerated() where i == 0 || i == 4 {
                 let c = draw(level["expected"] as! [Double], seed: 2)
@@ -398,13 +398,13 @@ enum SpectroGolden {
 }
 
 @MainActor
-final class SpectroGoldenTests: XCTestCase {
+struct SpectroGoldenTests {
     private var recordDir: String? { ProcessInfo.processInfo.environment["SPECTRO_GOLDEN_DIR"] }
 
     /// RECORDER: with `TEST_RUNNER_SPECTRO_GOLDEN_DIR` set, writes one file per scenario there. Skipped otherwise.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["SPECTRO_GOLDEN_DIR"] != nil, "set TEST_RUNNER_SPECTRO_GOLDEN_DIR to record"))
     func testRecordBaseline() async throws {
-        try XCTSkipIf(recordDir == nil, "set TEST_RUNNER_SPECTRO_GOLDEN_DIR to record")
-        let dir = try XCTUnwrap(recordDir) 
+        let dir = try #require(recordDir)
         try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
         for s in try await SpectroGolden.scenarios() { try s.text.write(toFile: dir + "/" + s.name + ".txt", atomically: true, encoding: .utf8) }
         try SpectroGolden.times.joined(separator: "\n").write(toFile: dir + "/times.log", atomically: true, encoding: .utf8)   // not part of the baseline
@@ -412,17 +412,17 @@ final class SpectroGoldenTests: XCTestCase {
 
     /// COMPARISON: recomputes every scenario and compares each against the committed baseline, byte for byte, reporting the
     /// first differing line. Mutation: one bit of any fitted net flipped (net * (1 + 1e-15)) - red on that scenario's file.
+    @Test(.disabled(if: ProcessInfo.processInfo.environment["SPECTRO_GOLDEN_DIR"] != nil, "recording run"))
     func testOutputsAreByteIdenticalToTheBaseline() async throws {
-        try XCTSkipIf(recordDir != nil, "recording run")
         let scenarios = try await SpectroGolden.scenarios()
-        XCTAssertEqual(scenarios.count, 6)   // mac4DSTEM's 7 minus demo-spectrum-fixture
+        #expect(scenarios.count == 6)   // mac4DSTEM's 7 minus demo-spectrum-fixture
         for s in scenarios {
             let url = SpectroGolden.baselineDirectory.appendingPathComponent(s.name + ".txt")
             let recorded = try String(contentsOf: url, encoding: .utf8)
             if s.text == recorded { continue }
             let a = s.text.split(separator: "\n", omittingEmptySubsequences: false), b = recorded.split(separator: "\n", omittingEmptySubsequences: false)
             let i = (0..<min(a.count, b.count)).first { a[$0] != b[$0] } ?? min(a.count, b.count)
-            XCTFail("\(s.name) moved at line \(i + 1): now \(i < a.count ? String(a[i]) : "<end>") | baseline \(i < b.count ? String(b[i]) : "<end>")")
+            Issue.record("\(s.name) moved at line \(i + 1): now \(i < a.count ? String(a[i]) : "<end>") | baseline \(i < b.count ? String(b[i]) : "<end>")")
         }
     }
 }

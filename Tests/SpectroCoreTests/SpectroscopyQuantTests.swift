@@ -1,4 +1,5 @@
-import XCTest
+import Foundation
+import Testing
 import SpectroCore
 import SpectroEDX
 
@@ -8,7 +9,7 @@ import SpectroEDX
 /// docs/archive/v5/edx-research-2026-10-05/) -- full precision where the upstream
 /// test's own tolerance is looser. The Al-Zn window intensities are the values the
 /// synthetic image in eXSpy's test_eds_tem.py yields from `get_lines_intensity()`.
-final class SpectroscopyQuantTests: XCTestCase {
+struct SpectroscopyQuantTests {
     // MARK: fixtures
 
     private static let resources: URL = URL(fileURLWithPath: #filePath)
@@ -35,13 +36,14 @@ final class SpectroscopyQuantTests: XCTestCase {
 
     private func rel(_ a: Double, _ b: Double) -> Double { abs(a - b) / abs(b) }
     private func assertRel(_ a: Double, _ b: Double, _ tol: Double = 1e-9, _ msg: String = "",
-                           file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertLessThanOrEqual(rel(a, b), tol, "\(msg) got \(a), want \(b)", file: file, line: line)
+                           fileID: String = #fileID, filePath: String = #filePath, line: Int = #line, column: Int = #column) {
+        let sourceLocation = SourceLocation(fileID: fileID, filePath: filePath, line: line, column: column)
+        #expect(rel(a, b) <= tol, "\(msg) got \(a), want \(b)", sourceLocation: sourceLocation)
     }
 
     // MARK: take-off angle
 
-    func testTakeOffPins() {
+    @Test func testTakeOffPins() {
         assertRel(TakeOff.angle(tiltAlpha: 30, azimuth: 0, elevation: 10), 40.0)
         assertRel(TakeOff.angle(tiltAlpha: 0, azimuth: 90, elevation: 10, tiltBeta: 30), 40.0)
         assertRel(TakeOff.angle(tiltAlpha: 45, azimuth: 45, elevation: 45, tiltBeta: 45), 73.15788376370121)
@@ -53,7 +55,7 @@ final class SpectroscopyQuantTests: XCTestCase {
 
     // MARK: mass absorption
 
-    func testMassAbsorptionPins() throws {
+    @Test func testMassAbsorptionPins() throws {
         let t = Self.table
         assertRel(try t.mac(element: "Al", energyKeV: 3.5), 506.0153356472)
         let ta = try [1.0, 3.2, 2.3].map { try t.mac(element: "Ta", energyKeV: $0) }
@@ -69,30 +71,30 @@ final class SpectroscopyQuantTests: XCTestCase {
         assertRel(try t.mixture(elements: ["Cu", "Sn"], weights: [88, 12], energyKeV: Self.lineKeV["Al_Ka"]!), 4213.4235561, 1e-9)
     }
 
-    func testSentinelIsStrippedAndOutsideTableRefuses() throws {
+    @Test func testSentinelIsStrippedAndOutsideTableRefuses() throws {
         // Above the last real FFAST point (and the (0,0) row) the answer is a refusal.
-        XCTAssertThrowsError(try Self.table.mac(element: "Al", energyKeV: 5000)) {
-            XCTAssertEqual($0 as? QuantError, .outsideTable("Al", energyKeV: 5000))
+        if let error = #expect(throws: (any Error).self, performing: { try Self.table.mac(element: "Al", energyKeV: 5000) }) {
+            #expect((error as? QuantError) == .outsideTable("Al", energyKeV: 5000))
         }
-        XCTAssertThrowsError(try Self.table.mac(element: "Al", energyKeV: 1e-6))
+        #expect(throws: (any Error).self) { try Self.table.mac(element: "Al", energyKeV: 1e-6) }
         // The last REAL point (432.9451 keV) is served; a kept sentinel row would sit
         // after it in the searched list and break the search.
         assertRel(try Self.table.mac(element: "Al", energyKeV: 432.9451), 0.00016838, 1e-9)
-        XCTAssertGreaterThan(try Self.table.mac(element: "Al", energyKeV: 300), 0)
+        #expect((try Self.table.mac(element: "Al", energyKeV: 300)) > 0)
         // Sentinel gone: the last entry is the 432.9451 keV point, not (0, 0), for all 90 elements.
-        XCTAssertEqual(Self.table.energyRange(element: "Al")?.upperBound, 432.9451)
+        #expect(Self.table.energyRange(element: "Al")?.upperBound == 432.9451)
         for z in ["Li", "C", "Fe", "Zn", "Pt", "U"] {
-            XCTAssertGreaterThan(Self.table.energyRange(element: z)!.lowerBound, 0, z)
-            XCTAssertGreaterThan(Self.table.energyRange(element: z)!.upperBound, 100, z)
+            #expect(Self.table.energyRange(element: z)!.lowerBound > 0, "\(z)")
+            #expect(Self.table.energyRange(element: z)!.upperBound > 100, "\(z)")
         }
-        XCTAssertThrowsError(try Self.table.mac(element: "Al", energyKeV: 500))
+        #expect(throws: (any Error).self) { try Self.table.mac(element: "Al", energyKeV: 500) }
         // The table has the 90 elements eXSpy has.
-        XCTAssertTrue(Self.table.hasElement("Al")); XCTAssertTrue(Self.table.hasElement("U"))
+        #expect(Self.table.hasElement("Al")); #expect(Self.table.hasElement("U"))
     }
 
     // MARK: Cliff-Lorimer
 
-    func testCliffLorimerAlZnAndFePt() throws {
+    @Test func testCliffLorimerAlZnAndFePt() throws {
         let w = try CliffLorimer.weightFractions(intensities: alZnIntensities, kFactors: alZnK)
         assertRel(w[0] * 100, 22.70778972092306)
         assertRel(w[1] * 100, 77.29221027907694)
@@ -113,7 +115,7 @@ final class SpectroscopyQuantTests: XCTestCase {
         assertRel(try feAt([2800.0213, 14921.183]).at, 15.77546544)   // model-fit route, 15.775466
     }
 
-    func testCuSnWeightToAtomic() throws {
+    @Test func testCuSnWeightToAtomic() throws {
         let a = try CompositionConversion.weightToAtomic([88, 12], elements: ["Cu", "Sn"])
         assertRel(a[0], 93.19698614474471); assertRel(a[1], 6.803013855255298)
         assertRel(a[0], 93.196986, 1e-8)
@@ -121,7 +123,7 @@ final class SpectroscopyQuantTests: XCTestCase {
         assertRel(w[0], 88.0050198855369); assertRel(w[1], 11.994980114463088)
     }
 
-    func testCliffLorimerZeroHandlingTable() throws {
+    @Test func testCliffLorimerZeroHandlingTable() throws {
         // eXSpy test_quant_zeros: first line above 0.1 are the references; k [1,1,3].
         let cases: [([Double], [Double])] = [
             ([0.5, 0.5, 0.5], [0.2, 0.2, 0.6]),
@@ -131,20 +133,20 @@ final class SpectroscopyQuantTests: XCTestCase {
         ]
         for (i, want) in cases {
             let got = try CliffLorimer.weightFractions(intensities: i, kFactors: [1, 1, 3])
-            for (g, w) in zip(got, want) { XCTAssertEqual(g, w, accuracy: 1e-15, "\(i)") }
+            for (g, w) in zip(got, want) { #expect(isEqual(g, w, accuracy: 1e-15), "\(i)") }
         }
         // Single line: eXSpy says 100 %; here a refusal, with the parity switch for the pin.
-        XCTAssertThrowsError(try CliffLorimer.weightFractions(intensities: [0.5, 0, 0], kFactors: [1, 1, 3])) {
-            XCTAssertEqual($0 as? QuantError, .needTwoLines(linesAbove: 1))
+        if let error = #expect(throws: (any Error).self, performing: { try CliffLorimer.weightFractions(intensities: [0.5, 0, 0], kFactors: [1, 1, 3]) }) {
+            #expect((error as? QuantError) == .needTwoLines(linesAbove: 1))
         }
         let hundred = try CliffLorimer.weightFractions(intensities: [0.5, 0, 0], kFactors: [1, 1, 3], singleLine: .exspyHundredPercent)
-        XCTAssertEqual(hundred, [1, 0, 0])
-        XCTAssertThrowsError(try CliffLorimer.weightFractions(intensities: [0, 0, 0], kFactors: [1, 1, 3]))
+        #expect(hundred == [1, 0, 0])
+        #expect(throws: (any Error).self) { try CliffLorimer.weightFractions(intensities: [0, 0, 0], kFactors: [1, 1, 3]) }
         // A line at the floor (0.1) is NOT above it: eXSpy uses a strict >.
-        XCTAssertThrowsError(try CliffLorimer.weightFractions(intensities: [0.5, 0.1, 0], kFactors: [1, 1, 3]))
+        #expect(throws: (any Error).self) { try CliffLorimer.weightFractions(intensities: [0.5, 0.1, 0], kFactors: [1, 1, 3]) }
     }
 
-    func testMassThicknessCL() throws {
+    @Test func testMassThicknessCL() throws {
         let w = try CliffLorimer.weightFractions(intensities: alZnIntensities, kFactors: alZnK)
         let mt = try CliffLorimer.massThickness(weightPercent: w.map { $0 * 100 }, elements: ["Al", "Zn"], thicknessNm: 100)
         assertRel(mt, 6.1317741e-4, 1e-7)
@@ -152,7 +154,7 @@ final class SpectroscopyQuantTests: XCTestCase {
 
     // MARK: absorption iteration
 
-    func testCLAbsorptionPinsBothCriteria() throws {
+    @Test func testCLAbsorptionPinsBothCriteria() throws {
         for crit in [AbsorptionIterationOptions.Criterion.exspySigned, .absolute] {
             let opts = AbsorptionIterationOptions(criterion: crit)
             let t1 = try AbsorptionCorrection.cliffLorimer(intensities: alZnIntensities, kFactors: alZnK, setup: alZnSetup, thicknessNm: 1, options: opts)
@@ -160,7 +162,7 @@ final class SpectroscopyQuantTests: XCTestCase {
             // Measured 2026-10-05: on these two-element pins the criteria stop on the same
             // iteration (2 and 4), so both reproduce eXSpy to rounding.
             let tol = 1e-9
-            XCTAssertEqual(t1.iterations, 2); XCTAssertEqual(t300.iterations, 4)
+            #expect(t1.iterations == 2); #expect(t300.iterations == 4)
             assertRel(t1.composition[0], 22.74301268687288, tol, "\(crit) t=1")
             assertRel(t300.composition[0], 31.81690816938681, tol, "\(crit) t=300")
             assertRel(t300.massThickness, 0.0017181987831837676, tol)
@@ -168,22 +170,22 @@ final class SpectroscopyQuantTests: XCTestCase {
         }
         // t -> 0: no correction (eXSpy: atol 1e-5 against the uncorrected value).
         let t0 = try AbsorptionCorrection.cliffLorimer(intensities: alZnIntensities, kFactors: alZnK, setup: alZnSetup, thicknessNm: 1e-4)
-        XCTAssertEqual(t0.composition[0], 22.70778972092306, accuracy: 1e-5)
+        #expect(isEqual(t0.composition[0], 22.70778972092306, accuracy: 1e-5))
         // Exactly zero thickness: the x -> 0 limit, finite (eXSpy gives nan).
         let z = try AbsorptionCorrection.cliffLorimer(intensities: alZnIntensities, kFactors: alZnK, setup: alZnSetup, thicknessNm: 0)
-        XCTAssertEqual(z.composition[0], 22.70778972092306, accuracy: 1e-9)
+        #expect(isEqual(z.composition[0], 22.70778972092306, accuracy: 1e-9))
     }
 
-    func testConvergenceMeasure() {
+    @Test func testConvergenceMeasure() {
         // Changes sum to zero (percent), so with >= 3 elements a signed max can sit below
         // the true largest change: eXSpy would stop here, the default does not.
         let new = [49.2, 25.4, 25.4], old = [50.0, 25.0, 25.0]
-        XCTAssertEqual(AbsorptionCorrection.change(new: new, old: old, criterion: .exspySigned), 0.4, accuracy: 1e-12)
-        XCTAssertEqual(AbsorptionCorrection.change(new: new, old: old, criterion: .absolute), 0.8, accuracy: 1e-12)
-        XCTAssertEqual(AbsorptionIterationOptions().criterion, .absolute)
+        #expect(isEqual(AbsorptionCorrection.change(new: new, old: old, criterion: .exspySigned), 0.4, accuracy: 1e-12))
+        #expect(isEqual(AbsorptionCorrection.change(new: new, old: old, criterion: .absolute), 0.8, accuracy: 1e-12))
+        #expect(AbsorptionIterationOptions().criterion == .absolute)
     }
 
-    func testZetaAndCrossSectionPins() throws {
+    @Test func testZetaAndCrossSectionPins() throws {
         let dose = ZetaFactor.dose(liveTime: 2.5, beamCurrentNA: 0.05)
         assertRel(dose, 780188634.3075954)
         let z = try ZetaFactor.quantify(intensities: alZnIntensities, zetaFactors: [20, 50], dose: dose)
@@ -221,7 +223,7 @@ final class SpectroscopyQuantTests: XCTestCase {
                                        solidAngleSr: 0.2, holderShadowFraction: shadow[$0]) }
     }
 
-    func testFourIdenticalSegmentsEqualSingleDetector() throws {
+    @Test func testFourIdenticalSegmentsEqualSingleDetector() throws {
         let segs = (0..<4).map { DetectorSegment(label: "S\($0)", azimuthDegrees: 0, elevationDegrees: 35, solidAngleSr: 0.17) }
         let four = try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0)
         let setup = AbsorptionSetup(elements: ["Al", "Zn"], lineEnergiesKeV: [1.4865, 8.6389], geometry: four, table: Self.table)
@@ -232,21 +234,21 @@ final class SpectroscopyQuantTests: XCTestCase {
                                                                options: .init(criterion: crit))
             assertRel(r.composition[0], single.composition[0], 1e-13, "four identical == single")
             assertRel(r.composition[0], 31.81690816938681, 1e-9)
-            XCTAssertEqual(r.segments.count, 4)
-            XCTAssertEqual(single.segments.map(\.takeOffDegrees), [35])
-            for s in r.segments { assertRel(s.takeOffDegrees, 35, 1e-12); XCTAssertEqual(s.weight, 0.17) }
+            #expect(r.segments.count == 4)
+            #expect(single.segments.map(\.takeOffDegrees) == [35])
+            for s in r.segments { assertRel(s.takeOffDegrees, 35, 1e-12); #expect(s.weight == 0.17) }
         }
     }
 
-    func testWeightedMeanIsNotGeometricMeanAndShadowWeights() throws {
+    @Test func testWeightedMeanIsNotGeometricMeanAndShadowWeights() throws {
         // Stage tilt -16.9 deg: the four segments see very different take-off angles.
         let g = try FourDetectorGeometry(segments: fourSegments(), tiltAlphaDegrees: -16.9)
         let takeOffs = g.segments.map(\.takeOffDegrees)
-        XCTAssertGreaterThan((takeOffs.max()! - takeOffs.min()!), 10, "segments must differ: \(takeOffs)")
+        #expect((takeOffs.max()! - takeOffs.min()!) > 10, "segments must differ: \(takeOffs)")
         let mac = 3000.0 * 0.1 /* m^2/kg */, mt = 0.003
         let am = g.meanTransmission(macM2PerKg: mac, massThickness: mt)
         let gm = g.geometricMeanTransmission(macM2PerKg: mac, massThickness: mt)
-        XCTAssertGreaterThan(am - gm, 1e-4, "weighted \(am) vs geometric \(gm)")
+        #expect((am - gm) > (1e-4), "weighted \(am) vs geometric \(gm)")
         // Hand computation of the weighted mean over the four resolved take-offs.
         var num = 0.0
         for t in takeOffs { let x = mac * mt / abs(sin(t * .pi / 180)); num += (1 - exp(-x)) / x }
@@ -259,7 +261,7 @@ final class SpectroscopyQuantTests: XCTestCase {
             let x = mac * mt / abs(sin(t * .pi / 180)); n2 += w * (1 - exp(-x)) / x; d2 += w
         }
         assertRel(gs.meanTransmission(macM2PerKg: mac, massThickness: mt), n2 / d2, 1e-12)
-        XCTAssertGreaterThan(abs(gs.meanTransmission(macM2PerKg: mac, massThickness: mt) - am), 1e-6)
+        #expect(abs(gs.meanTransmission(macM2PerKg: mac, massThickness: mt) - am) > (1e-6))
         // Hand-computed weighted geometric mean (the reported comparison).
         var lg = 0.0, dg = 0.0
         for (i, t) in takeOffs.enumerated() {
@@ -269,38 +271,39 @@ final class SpectroscopyQuantTests: XCTestCase {
         assertRel(gs.geometricMeanTransmission(macM2PerKg: mac, massThickness: mt), exp(lg / dg), 1e-12)
     }
 
-    func testSymmetricSegmentsIgnoreTheTiltSign() throws {
+    @Test func testSymmetricSegmentsIgnoreTheTiltSign() throws {
         let plus = try FourDetectorGeometry(segments: fourSegments(), tiltAlphaDegrees: 16.9)
         let minus = try FourDetectorGeometry(segments: fourSegments(), tiltAlphaDegrees: -16.9)
         assertRel(plus.meanTransmission(macM2PerKg: 300, massThickness: 0.003),
                   minus.meanTransmission(macM2PerKg: 300, massThickness: 0.003), 1e-12)
-        XCTAssertEqual(plus.segmentSummary.count, 4)
-        XCTAssertEqual(plus.segmentSummary.map(\.weight), [0.2, 0.2, 0.2, 0.2])
+        #expect(plus.segmentSummary.count == 4)
+        #expect(plus.segmentSummary.map(\.weight) == [0.2, 0.2, 0.2, 0.2])
     }
 
-    func testFourDetectorRefusals() {
+    @Test func testFourDetectorRefusals() {
         var segs = fourSegments()
-        XCTAssertThrowsError(try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: nil)) { XCTAssertEqual($0 as? QuantError, .missingTilt) }
+        if let error = #expect(throws: (any Error).self, performing: { try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: nil) }) { #expect((error as? QuantError) == .missingTilt) }
         segs[2].elevationDegrees = nil
-        XCTAssertThrowsError(try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0)) {
-            XCTAssertEqual($0 as? QuantError, .missingGeometry(segment: "S3", field: "elevation"))
+        if let error = #expect(throws: (any Error).self, performing: { try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0) }) {
+            #expect((error as? QuantError) == .missingGeometry(segment: "S3", field: "elevation"))
         }
         segs = fourSegments(); segs[0].solidAngleSr = nil
-        XCTAssertThrowsError(try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0))
+        #expect(throws: (any Error).self) { try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0) }
         segs = fourSegments(); segs[1].azimuthDegrees = nil
-        XCTAssertThrowsError(try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0))
+        #expect(throws: (any Error).self) { try FourDetectorGeometry(segments: segs, tiltAlphaDegrees: 0) }
         // Take-off <= 0 (detector below the film plane): undefined, refused.
         let below = [DetectorSegment(label: "B", azimuthDegrees: 0, elevationDegrees: -10, solidAngleSr: 0.1)]
-        XCTAssertThrowsError(try FourDetectorGeometry(segments: below, tiltAlphaDegrees: 0)) {
-            guard case .grazingTakeOff(let s, let d)? = $0 as? QuantError else { return XCTFail("\($0)") }
-            XCTAssertEqual(s, "B"); XCTAssertEqual(d, -10, accuracy: 1e-9)
+        if let error = #expect(throws: (any Error).self, performing: { try FourDetectorGeometry(segments: below, tiltAlphaDegrees: 0) }) {
+            if case .grazingTakeOff(let s, let d)? = error as? QuantError {
+                #expect(s == "B"); #expect(isEqual(d, -10, accuracy: 1e-9))
+            } else { Issue.record("\(error)") }
         }
         // Elevation 0 and no tilt: the detector looks along the film.
         let flat = [DetectorSegment(label: "F", azimuthDegrees: 0, elevationDegrees: 0, solidAngleSr: 0.1)]
-        XCTAssertThrowsError(try FourDetectorGeometry(segments: flat, tiltAlphaDegrees: 0))
+        #expect(throws: (any Error).self) { try FourDetectorGeometry(segments: flat, tiltAlphaDegrees: 0) }
     }
 
-    func testThicknessSigmaByFiniteDifference() throws {
+    @Test func testThicknessSigmaByFiniteDifference() throws {
         let g = try FourDetectorGeometry(segments: fourSegments(), tiltAlphaDegrees: -16.9)
         let setup = AbsorptionSetup(elements: ["Al", "Zn"], lineEnergiesKeV: [1.4865, 8.6389], geometry: g, table: Self.table)
         let f: (Double) throws -> Double = {
@@ -309,25 +312,25 @@ final class SpectroscopyQuantTests: XCTestCase {
         let s = try ThicknessPropagation.sigma(at: 80, sigmaNm: 15, f: f)
         // The full-step estimate (c(t+sigma) - c(t-sigma))/2 agrees within 5 % for this smooth curve.
         let full = abs(try f(95) - f(65)) / 2
-        XCTAssertGreaterThan(s, 0)
+        #expect(s > 0)
         assertRel(s, full, 0.05)
-        XCTAssertEqual(try ThicknessPropagation.sigma(at: 80, sigmaNm: 0, f: f), 0)
+        #expect((try ThicknessPropagation.sigma(at: 80, sigmaNm: 0, f: f)) == 0)
     }
 
     // MARK: k-factors
 
-    func testKFactorSourceAndRatioSigma() throws {
+    @Test func testKFactorSourceAndRatioSigma() throws {
         let k = KFactorSet(kind: .typed, elements: ["Mg", "Si"], values: [1.0, 1.1], source: "test table", date: "2026-10-05")!
-        XCTAssertEqual(k.relativeSigma, [0.2, 0.2])
+        #expect(k.relativeSigma == [0.2, 0.2])
         assertRel(RatioSigma.kTerm(k, numerator: "Mg", denominator: "Si")!, 0.28284271247461906, 1e-12)
-        XCTAssertEqual(RatioSigma.kTerm(k, numerator: "Mg", denominator: "Si", sameKSetInBothRatios: true), 0)
-        XCTAssertNil(KFactorSet(kind: .typed, elements: ["Mg"], values: [1], source: "  ", date: "2026-10-05"))
-        XCTAssertNil(KFactorSet(kind: .typed, elements: ["Mg"], values: [-1], source: "x", date: "2026-10-05"))
+        #expect(RatioSigma.kTerm(k, numerator: "Mg", denominator: "Si", sameKSetInBothRatios: true) == 0)
+        #expect(KFactorSet(kind: .typed, elements: ["Mg"], values: [1], source: "  ", date: "2026-10-05") == nil)
+        #expect(KFactorSet(kind: .typed, elements: ["Mg"], values: [-1], source: "x", date: "2026-10-05") == nil)
         // A reference element (k = 1) carries no sigma: Mg/Si against Si is 20 %, not 28 %.
         let r = KFactorSet(kind: .computed, elements: ["Mg", "Si"], values: [0.93, 1], source: "x", date: "2026-10-05", reference: "Si")!
-        XCTAssertEqual(r.relativeSigma, [0.2, 0])
+        #expect(r.relativeSigma == [0.2, 0])
         assertRel(RatioSigma.kTerm(r, numerator: "Mg", denominator: "Si")!, 0.2, 1e-12)
-        XCTAssertNil(KFactorSet(kind: .computed, elements: ["Mg"], values: [1], source: "x", date: "d", reference: "Si"))
+        #expect(KFactorSet(kind: .computed, elements: ["Mg"], values: [1], source: "x", date: "d", reference: "Si") == nil)
     }
 
     // Toy models, labelled as such: they test the k ALGEBRA, not any published cross-section.
@@ -342,7 +345,7 @@ final class SpectroscopyQuantTests: XCTestCase {
         func omega(element: String, line: String) -> Double? { ["Mg": 0.03, "Si": 0.05, "Cu": 0.4][element] }
     }
 
-    func testComputedKClosedLoop() throws {
+    @Test func testComputedKClosedLoop() throws {
         let eff = TabulatedEfficiency(points: [(0.5, 0.2), (2.0, 0.9), (9.0, 0.5)], sourceName: "typed test curve")!
         let ck = ComputedKFactor(cross: ToySigma(), yield: ToyOmega(), efficiency: eff, beamEnergyKeV: 200)
         let lines = [
@@ -351,7 +354,7 @@ final class SpectroscopyQuantTests: XCTestCase {
             LineIngredients(element: "Cu", line: "Ka", energyKeV: 8.0478, lineWeight: 0.8),
         ]
         let k = try ck.kFactors(lines: lines)
-        XCTAssertEqual(k[0], 1)
+        #expect(k[0] == 1)
         // Forward model: a known weight composition -> intensities -> Cliff-Lorimer.
         let truth = [0.2, 0.5, 0.3]
         var intensities: [Double] = []
@@ -361,21 +364,21 @@ final class SpectroscopyQuantTests: XCTestCase {
                 * ToyOmega().omega(element: l.element, line: l.line)! * l.lineWeight * eff.efficiency(energyKeV: l.energyKeV) * 1e4)
         }
         let w = try CliffLorimer.weightFractions(intensities: intensities, kFactors: k)
-        for (g, t) in zip(w, truth) { XCTAssertEqual(g, t, accuracy: 1e-12) }
-        XCTAssertTrue(ck.sourceDescription.contains("TOY") && ck.sourceDescription.contains("typed test curve"))
+        for (g, t) in zip(w, truth) { #expect(isEqual(g, t, accuracy: 1e-12)) }
+        #expect(ck.sourceDescription.contains("TOY") && ck.sourceDescription.contains("typed test curve"))
         // A missing ingredient is a refusal, never a default.
         let bad = LineIngredients(element: "Zn", line: "Ka", energyKeV: 8.6, lineWeight: 0.9)
-        XCTAssertThrowsError(try ck.kFactors(lines: [lines[0], bad]))
-        XCTAssertFalse(eff.covers(10)); XCTAssertNil(TabulatedEfficiency(points: [(1, 1)], sourceName: "x"))
+        #expect(throws: (any Error).self) { try ck.kFactors(lines: [lines[0], bad]) }
+        #expect(!eff.covers(10)); #expect(TabulatedEfficiency(points: [(1, 1)], sourceName: "x") == nil)
     }
 
     // MARK: EPQ line weights
 
-    func testEPQLineWeights() throws {
+    @Test func testEPQLineWeights() throws {
         let lw = try EPQLineWeights(contentsOf: Self.resources.appendingPathComponent("LineWeights.csv"))
-        XCTAssertEqual(lw.weight(element: "Mg", transition: "K-L3"), 1.0)
-        XCTAssertEqual(lw.weight(element: "Mg", transition: "K-L2"), 0.507)
-        XCTAssertEqual(lw.weight(element: "Al", transition: "K-M3"), 0.0316)
+        #expect(lw.weight(element: "Mg", transition: "K-L3") == 1.0)
+        #expect(lw.weight(element: "Mg", transition: "K-L2") == 0.507)
+        #expect(lw.weight(element: "Al", transition: "K-M3") == 0.0316)
         // Al Ka share of the K shell: (1 + 0.505) / (1 + 0.505 + 0.0316 + 0.0158).
         assertRel(lw.fraction(element: "Al", shell: "K", transitions: ["K-L3", "K-L2"])!, 1.505 / 1.5524, 1e-9)
     }

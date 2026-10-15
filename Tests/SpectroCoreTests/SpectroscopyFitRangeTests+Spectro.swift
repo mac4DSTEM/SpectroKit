@@ -1,6 +1,7 @@
 // SpectroKit S1 test partition (ADR 064 section 3.3): the methods of SpectroscopyFitRangeTests that move with the EDX core;
 // the rest stay in SpectroscopyFitRangeTests.swift. Helpers are duplicated, not shared, across the split.
-import XCTest
+import Foundation
+import Testing
 import SpectroCore
 import SpectroEDX
 
@@ -13,7 +14,7 @@ import SpectroEDX
 /// `plantSn` for P6); lines added with the app's own shapes, Poisson counts from SplitMix64 per seed (platform independent).
 /// The pinned numbers were measured by the lane's harness on the pristine and the new Core (lane C report, logs P1-P6).
 @MainActor
-final class SpectroscopyFitRangeSpectro: XCTestCase {
+struct SpectroscopyFitRangeSpectro {
 
     private typealias Q = SpectroscopyQuantifySpectro
 
@@ -94,7 +95,7 @@ final class SpectroscopyFitRangeSpectro: XCTestCase {
     }
 
     private static func row(_ q: PooledQuantification, _ el: String) throws -> PooledQuantification.Row {
-        try XCTUnwrap(q.rows.first { $0.element == el }, el)
+        try #require(q.rows.first { $0.element == el }, "\(el)")
     }
 
     // MARK: P1
@@ -102,18 +103,18 @@ final class SpectroscopyFitRangeSpectro: XCTestCase {
     /// P1: 7 elements, default settings: the fit stops at 20 keV (the channel holding it) and Ti is unbiased - E1's 20 keV row,
     /// Ti 2972/3147/2984/3080/3060, mean 3049 +- 108 (z +0.45); Expert 60 keV moves no other planted K-alpha's mean z by > 0.5.
     /// Mutation M1: `FitSettings.defaultFitTo` returning min(axis end, beam) (the fit forced to the axis end) - red (Ti z -2.28).
-    func testP1TheDefaultStopsAt20keVAndTiIsUnbiased() throws {
+    @Test func testP1TheDefaultStopsAt20keVAndTiIsUnbiased() throws {
         let measured: [Double] = [2972, 3147, 2984, 3080, 3060]
         let ka = ["O", "Si", "Ti", "Ni", "Ge", "Cu", "Ga"]
         var tis: [Double] = [], sigmas: [Double] = []
         var z20 = [String: Double](), z60 = [String: Double]()
         for (i, seed) in Self.fx.seeds.enumerated() {
             let q = try PooledQuantifier.run(Self.input(seed: seed, quantify: Self.fx.listedSeven), tables: nil)
-            XCTAssertEqual(q.fitRange.source, .defaultLimit)
-            XCTAssertEqual(q.fitRange.toKeV, 20)
-            XCTAssertEqual(Self.fx.axis.energy(ofChannel: q.fit.channels.upperBound - 1), 20, accuracy: Self.fx.scale / 2)
+            #expect(q.fitRange.source == .defaultLimit)
+            #expect(q.fitRange.toKeV == 20)
+            #expect(isEqual(Self.fx.axis.energy(ofChannel: q.fit.channels.upperBound - 1), 20, accuracy: Self.fx.scale / 2))
             let ti = try Self.row(q, "Ti")
-            XCTAssertEqual(ti.net, measured[i], accuracy: 1, "seed \(seed)")
+            #expect(isEqual(ti.net, measured[i], accuracy: 1), "seed \(seed)")
             tis.append(ti.net); sigmas.append(ti.sigma)
             let q60 = try PooledQuantifier.run(Self.input(seed: seed, quantify: Self.fx.listedSeven, fitTo: 60), tables: nil)
             for el in ka {
@@ -123,9 +124,9 @@ final class SpectroscopyFitRangeSpectro: XCTestCase {
             }
         }
         let mean = tis.reduce(0, +) / 5, sigma = sigmas.reduce(0, +) / 5
-        XCTAssertLessThan(abs(mean - 3000) / sigma, 1, "mean Ti \(mean) +- \(sigma)")
+        #expect((abs(mean - 3000) / sigma) < 1, "mean Ti \(mean) +- \(sigma)")
         for el in ka where el != "Ti" {
-            XCTAssertLessThanOrEqual(abs(z60[el]! - z20[el]!), 0.5, "\(el): mean z \(z20[el]!) at 20 keV, \(z60[el]!) at 60 keV")
+            #expect(abs(z60[el]! - z20[el]!) <= 0.5, "\(el): mean z \(z20[el]!) at 20 keV, \(z60[el]!) at 60 keV")
         }
     }
 
@@ -136,34 +137,34 @@ final class SpectroscopyFitRangeSpectro: XCTestCase {
     /// refined as the room runs, refined end up to 20.019 keV) no statement and no second fit; nor for a typed range.
     /// Mutation M1 (above) - red (the default reaches the axis end, no statement). Mutation M4: `FitRangeChoice` deciding the
     /// default on the used (refined) axis - red on the weak-line sim (a second fit "to 20.0024 keV" ran, lane C P3.log).
-    func testP3TheSensitivityStatementAppearsOnlyPastTheDefault() throws {
+    @Test func testP3TheSensitivityStatementAppearsOnlyPastTheDefault() throws {
         for seed in Self.fx.seeds {
             let input = Self.input(seed: seed, quantify: Self.fx.listedSeven)
             let q = try PooledQuantifier.run(input, tables: nil)
-            XCTAssertEqual(try XCTUnwrap(FitRangeSensitivityCheck.alternative(for: q)), Self.fx.axis.highValue, accuracy: 1e-12)
-            let s = try XCTUnwrap(FitRangeSensitivityCheck.run(input: input, quantification: q))
-            XCTAssertNil(s.failure)
+            #expect(isEqual(try #require(FitRangeSensitivityCheck.alternative(for: q)), Self.fx.axis.highValue, accuracy: 1e-12))
+            let s = try #require(FitRangeSensitivityCheck.run(input: input, quantification: q))
+            #expect(s.failure == nil)
             for m in s.moves {
-                let sd = try XCTUnwrap(m.inSigma)
+                let sd = try #require(m.inSigma)
                 if m.element == "Ti" {
-                    XCTAssertTrue((-0.125 ... -0.070).contains(try XCTUnwrap(m.relative)), "seed \(seed) Ti \(String(describing: m.relative))")
-                    XCTAssertTrue((-3.4 ... -2.1).contains(sd), "seed \(seed) Ti \(sd) sigma")
+                    #expect((-0.125 ... -0.070).contains(try #require(m.relative)), "seed \(seed) Ti \(String(describing: m.relative))")
+                    #expect((-3.4 ... -2.1).contains(sd), "seed \(seed) Ti \(sd) sigma")
                 } else {
-                    XCTAssertLessThanOrEqual(abs(sd), 2, "seed \(seed) \(m.element) \(sd) sigma")
+                    #expect(abs(sd) <= 2, "seed \(seed) \(m.element) \(sd) sigma")
                 }
             }
             let shown = FitRangeSensitivityCheck.attaching(q, s)
-            XCTAssertTrue(shown.footerLines.contains { $0.hasPrefix("range sensitivity (not in \u{03C3}): if fitted to 79.97 keV, ") }, "\(shown.footerLines)")
-            XCTAssertEqual(shown.rows.map(\.sigma), q.rows.map(\.sigma), "a statement, not a sigma term")
-            XCTAssertTrue(SpectroscopyExport.csv(shown, regionName: "synthetic").contains("# range sensitivity (not in \u{03C3}): if fitted to 79.97 keV, "))
+            #expect(shown.footerLines.contains { $0.hasPrefix("range sensitivity (not in \u{03C3}): if fitted to 79.97 keV, ") }, "\(shown.footerLines)")
+            #expect(shown.rows.map(\.sigma) == q.rows.map(\.sigma), "a statement, not a sigma term")
+            #expect(SpectroscopyExport.csv(shown, regionName: "synthetic").contains("# range sensitivity (not in \u{03C3}): if fitted to 79.97 keV, "))
         }
         // A typed range: the user chose it, no statement.
         let typed = try PooledQuantifier.run(Self.input(seed: 0, quantify: Self.fx.listedSeven, fitTo: 30), tables: nil)
-        XCTAssertNil(FitRangeSensitivityCheck.alternative(for: typed))
+        #expect(FitRangeSensitivityCheck.alternative(for: typed) == nil)
 
         // The weak-line sim, 19.997 keV, refined as in the room.
         let url = Q.fixtures.appendingPathComponent("eds-weakline-sim.json")
-        let o = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let o = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         let axis = EnergyAxis(offset: o["offset"] as! Double, scale: o["scale"] as! Double, size: o["size"] as! Int)
         for level in (o["levels"] as! [[String: Any]]) {
             var rng = SplitMix64(state: 2)
@@ -175,10 +176,10 @@ final class SpectroscopyFitRangeSpectro: XCTestCase {
                                              energyOffsetEV: axis.offset * 1000, energyDispersionEV: axis.scale * 1000)
             let input = PooledQuantificationInput(counts: counts, axis: axis, method: m, metadata: meta, regionName: "w", pixelCount: 1)
             let q = try PooledQuantifier.run(input, tables: nil)
-            XCTAssertEqual(q.fitRange.source, .defaultReach)
-            XCTAssertEqual(q.fitRange.toKeV, q.usedAxis.highValue, "the fit runs to the refined axis end, as before WP3c")
-            XCTAssertNil(FitRangeSensitivityCheck.alternative(for: q))
-            XCTAssertNil(FitRangeSensitivityCheck.run(input: input, quantification: q), "no second fit on a 20 keV file")
+            #expect(q.fitRange.source == .defaultReach)
+            #expect(q.fitRange.toKeV == q.usedAxis.highValue, "the fit runs to the refined axis end, as before WP3c")
+            #expect(FitRangeSensitivityCheck.alternative(for: q) == nil)
+            #expect(FitRangeSensitivityCheck.run(input: input, quantification: q) == nil, "no second fit on a 20 keV file")
         }
     }
 
@@ -187,19 +188,19 @@ final class SpectroscopyFitRangeSpectro: XCTestCase {
     /// P4: the unlisted-line check at the new default. Four listed (O, Si, Ti, Ni): Ti at the bound, Ge, Cu and Ga named (A2: at% is shown with a caveat, not withheld), Ti's move many sigma (harness: +27.5 ... +29.4 against the 4-element row's sigma; E2's +27.8 ... +29.0 divided by
     /// the 7-element sigma). Mutation M1 (above) - red, through the pinned default (fitTo == 20); the withholding decision itself holds at
     /// both ranges, so this test guards the F1 premise at the default.
-    func testP4TheUnlistedCheckStillWithholdsAtTheDefault() throws {
+    @Test func testP4TheUnlistedCheckStillWithholdsAtTheDefault() throws {
         for seed in Self.fx.seeds {
             let input = Self.input(seed: seed, quantify: Self.fx.listedFour)
             let q = try PooledQuantifier.run(input, tables: Q.tables)
-            XCTAssertEqual(q.fitSettings.fitTo, 20)
+            #expect(q.fitSettings.fitTo == 20)
             let ti = try Self.row(q, "Ti")
-            XCTAssertTrue(ti.atBound, "seed \(seed): Ti \(ti.net)")
+            #expect(ti.atBound, "seed \(seed): Ti \(ti.net)")
             let proposal = try UnlistedLineChecker.propose(counts: input.counts.map { Double($0) }, quantification: q)
             let check = UnlistedLineChecker.check(proposal: proposal, input: input, quantification: q)
-            XCTAssertTrue(Set(check.names).isSuperset(of: ["Ge", "Cu", "Ga"]), "seed \(seed): \(check.summary)")
-            XCTAssertTrue(check.withholds, check.summary)
-            let move = try XCTUnwrap(check.moves.first { $0.element == "Ti" }, check.summary)
-            XCTAssertGreaterThan((move.after - move.before) / move.sigma, 1, "seed \(seed)")
+            #expect(Set(check.names).isSuperset(of: ["Ge", "Cu", "Ga"]), "seed \(seed): \(check.summary)")
+            #expect(check.withholds, "\(check.summary)")
+            let move = try #require(check.moves.first { $0.element == "Ti" }, "\(check.summary)")
+            #expect(((move.after - move.before) / move.sigma) > 1, "seed \(seed)")
         }
     }
 
@@ -209,24 +210,24 @@ final class SpectroscopyFitRangeSpectro: XCTestCase {
     /// harness, P5-dump-{old,new}.log): on a file axis ending at or below 20 keV the default is exactly the old min(axis end, beam),
     /// whatever the refinement does to the used axis; past 20 keV it is 20.
     /// Mutation M4 (above) - red.
-    func testP5AxesEndingAt20keVKeepTheOldRange() {
+    @Test func testP5AxesEndingAt20keVKeepTheOldRange() {
         let file = EnergyAxis(offset: -0.478, scale: 0.005, size: 4096)                      // 19.997 keV
-        XCTAssertEqual(FitSettings.defaultFitTo(axis: file, beamEnergy: 200), file.highValue)
+        #expect(FitSettings.defaultFitTo(axis: file, beamEnergy: 200) == file.highValue)
         let refined = EnergyAxis(offset: -0.4801, scale: 0.0050058, size: 4096)               // ends at 20.019 keV
-        XCTAssertGreaterThan(refined.highValue, 20)
+        #expect(refined.highValue > 20)
         var m = QuantificationMethod()
         let r = FitRangeChoice(method: m, fileAxis: file, usedAxis: refined, beamEnergy: 200)
-        XCTAssertEqual(r.toKeV, refined.highValue)
-        XCTAssertEqual(r.source, .defaultReach)
-        XCTAssertEqual(r.footerText, "fit range 0.2\u{2013}20.0187 keV (default; the axis end)")
+        #expect(r.toKeV == refined.highValue)
+        #expect(r.source == .defaultReach)
+        #expect(r.footerText == "fit range 0.2\u{2013}20.0187 keV (default; the axis end)")
         let gms = EnergyAxis(offset: -0.4698, scale: 0.0050048, size: 4096)                   // 20.025 keV, as the demo GMS file (20.027)
         let g = FitRangeChoice(method: m, fileAxis: gms, usedAxis: gms, beamEnergy: 200)
-        XCTAssertEqual(g.toKeV, 20); XCTAssertEqual(g.source, .defaultLimit)
+        #expect(g.toKeV == 20); #expect(g.source == .defaultLimit)
         let beam = FitRangeChoice(method: m, fileAxis: Self.fx.axis, usedAxis: Self.fx.axis, beamEnergy: 15)
-        XCTAssertEqual(beam.toKeV, 15); XCTAssertEqual(beam.source, .defaultReach)
+        #expect(beam.toKeV == 15); #expect(beam.source == .defaultReach)
         m.background = .wholeRangePolynomial6
         let poly = FitRangeChoice(method: m, fileAxis: Self.fx.axis, usedAxis: Self.fx.axis, beamEnergy: 200)
-        XCTAssertEqual(poly.toKeV, Self.fx.axis.highValue, "eXSpy's whole-range polynomial keeps the whole axis")
-        XCTAssertEqual(poly.source, .polynomialWholeRange)
+        #expect(poly.toKeV == Self.fx.axis.highValue, "eXSpy's whole-range polynomial keeps the whole axis")
+        #expect(poly.source == .polynomialWholeRange)
     }
 }

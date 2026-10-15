@@ -1,4 +1,5 @@
-import XCTest
+import Foundation
+import Testing
 import SpectroCore
 import SpectroEDX
 
@@ -6,7 +7,7 @@ import SpectroEDX
 /// axis refinement, reference shapes). Pins come from RUNNING eXSpy 7185a4d1 / hyperspy 2.4.0
 /// (`Fixtures/eds-fit-exspy-7185a4d1.json`, generator `gen/fit_pins.py` of the lane). Statistical tests use
 /// this file's own Poisson synthetic spectra (the simulator's truth comes later); each says so.
-final class SpectroscopyFitTests: XCTestCase {
+struct SpectroscopyFitTests {
 
     // MARK: Fixture (JSONDecoder: JSONSerialization parses 17-digit doubles up to 1 ulp off)
 
@@ -144,28 +145,28 @@ final class SpectroscopyFitTests: XCTestCase {
 
     // MARK: 1. The design reproduces hyperspy's model components
 
-    func testDesignColumnsMatchHyperspy() {
+    @Test func testDesignColumnsMatchHyperspy() {
         for (name, c) in Self.fixture.cases {
             let axis = c.axis
-            XCTAssertTrue(c.binned, "\(name): the fixture axis is binned, so A is an area in counts")
+            #expect(c.binned, "\(name): the fixture axis is binned, so A is an area in counts")
             let model = EDSLineModel.build(elements: c.elements, axis: axis, beamEnergy: c.beamEnergy,
                                            resolutionMnKaEV: c.resolutionMnKa, escapePeaks: false)
-            XCTAssertEqual(model.groups.map(\.id), c.groups.map(\.name).sorted(), "\(name): groups")
+            #expect(model.groups.map(\.id) == c.groups.map(\.name).sorted(), "\(name): groups")
             let design = LinearDesign.build(model: model, axis: axis, channels: 0..<axis.size, background: .none)
             for (gi, g) in model.groups.enumerated() {
                 let ref = c.groups.first { $0.name == g.id }!
-                XCTAssertEqual(g.lines.map(\.id), ref.members, "\(name) \(g.id) members")
+                #expect(g.lines.map(\.id) == ref.members, "\(name) \(g.id) members")
                 for (k, l) in g.lines.enumerated() {
-                    XCTAssertEqual(l.energy, ref.energies[k], accuracy: 1e-12, "\(name) \(l.id) centre")
-                    XCTAssertEqual(l.fwhm, ref.fwhm[k], accuracy: 1e-12, "\(name) \(l.id) FWHM")
-                    XCTAssertEqual(l.weight, ref.weights[k], accuracy: 1e-12, "\(name) \(l.id) tied weight")
+                    #expect(isEqual(l.energy, ref.energies[k], accuracy: 1e-12), "\(name) \(l.id) centre")
+                    #expect(isEqual(l.fwhm, ref.fwhm[k], accuracy: 1e-12), "\(name) \(l.id) FWHM")
+                    #expect(isEqual(l.weight, ref.weights[k], accuracy: 1e-12), "\(name) \(l.id) tied weight")
                 }
                 let refCol = c.columns[c.groups.firstIndex { $0.name == g.id }!]
                 let mine = design.areaColumns[gi].values
                 let peak = refCol.max()!
                 var worst = 0.0
                 for i in 0..<axis.size { worst = max(worst, abs(mine[i] - refCol[i])) }
-                XCTAssertLessThan(worst / peak, 1e-9, "\(name) \(g.id) column")
+                #expect((worst / peak) < (1e-9), "\(name) \(g.id) column")
             }
         }
     }
@@ -179,45 +180,45 @@ final class SpectroscopyFitTests: XCTestCase {
         return try EDSFit.run(counts: c.data, axis: c.axis, settings: settings)
     }
 
-    func testClosedLoopRecoversWeightFractions() throws {
+    @Test func testClosedLoopRecoversWeightFractions() throws {
         let r = try closedLoop()
-        XCTAssertEqual(r.groupIDs, ["Cr_Ka", "Fe_Ka", "Zn_Ka"])
+        #expect(r.groupIDs == ["Cr_Ka", "Fe_Ka", "Zn_Ka"])
         for (v, expected) in zip(r.values, [0.5, 0.2, 0.3]) {
-            XCTAssertEqual(v, expected, accuracy: 1e-4, "closed-loop pin (eXSpy test_edsmodel.py:53-59)")
+            #expect(isEqual(v, expected, accuracy: 1e-4), "closed-loop pin (eXSpy test_edsmodel.py:53-59)")
         }
         let ref = Self.fixture.cases["closedLoop"]!.fitted
-        for (id, v) in zip(r.groupIDs, r.values) { XCTAssertEqual(v, ref[id]!, accuracy: 1e-6, "vs eXSpy's own fit \(id)") }
-        XCTAssertEqual(r.methodLabel, "least squares, unweighted")
-        XCTAssertEqual(r.referenceShapesLabel, "reference shapes: none")
-        XCTAssertEqual(r.escapeLabel, "escape peaks: off (eXSpy parity)")
+        for (id, v) in zip(r.groupIDs, r.values) { #expect(isEqual(v, ref[id]!, accuracy: 1e-6), "vs eXSpy's own fit \(id)") }
+        #expect(r.methodLabel == "least squares, unweighted")
+        #expect(r.referenceShapesLabel == "reference shapes: none")
+        #expect(r.escapeLabel == "escape peaks: off (eXSpy parity)")
     }
 
     /// The poly-6 path (Expert, parity) reproduces the whole eXSpy model, not just the areas.
-    func testPoly6PathEqualsHyperspyModel() throws {
+    @Test func testPoly6PathEqualsHyperspyModel() throws {
         let c = Self.fixture.cases["closedLoop"]!
         let r = try closedLoop()
-        XCTAssertEqual(r.model.count, c.model.count)
+        #expect(r.model.count == c.model.count)
         var worst = 0.0
         for i in r.model.indices { worst = max(worst, abs(r.model[i] - c.model[i])) }
-        XCTAssertLessThan(worst, 1e-7, "model equals hyperspy's as_signal() to 1e-7 counts")
-        XCTAssertEqual(r.backgroundNames.count, 7)
+        #expect(worst < (1e-7), "model equals hyperspy's as_signal() to 1e-7 counts")
+        #expect(r.backgroundNames.count == 7)
     }
 
     /// With escape peaks ON the closed loop still holds (no Si-escape signal in the data: those columns fit ~0).
-    func testClosedLoopWithEscapeColumnsStillWithinPin() throws {
+    @Test func testClosedLoopWithEscapeColumnsStillWithinPin() throws {
         let r = try closedLoop(escape: true)
-        for (v, expected) in zip(r.values, [0.5, 0.2, 0.3]) { XCTAssertEqual(v, expected, accuracy: 1e-4) }
-        XCTAssertTrue(r.escapeLabel.contains("fitted for 3 line groups"), r.escapeLabel)
+        for (v, expected) in zip(r.values, [0.5, 0.2, 0.3]) { #expect(isEqual(v, expected, accuracy: 1e-4)) }
+        #expect(r.escapeLabel.contains("fitted for 3 line groups"), "\(r.escapeLabel)")
     }
 
     // MARK: 3. FePt least squares (pin, tolerance measured first)
 
-    func testFePtLeastSquaresPins() throws {
+    @Test func testFePtLeastSquaresPins() throws {
         let c = Self.fixture.cases["fept"]!
         let axis = c.axis
         // set_signal_range(5.5, 10.0) is inclusive of the last channel.
         let channels = axis.fitChannels(from: 5.5, to: 10.0)
-        XCTAssertEqual(Array(channels), c.channelMask, "hyperspy's channel mask")
+        #expect(Array(channels) == c.channelMask, "hyperspy's channel mask")
         let settings = FitSettings(elements: c.elements, resolutionMnKaEV: c.resolutionMnKa, beamEnergy: c.beamEnergy,
                                    fitFrom: 5.5, fitTo: 10.0, background: .polynomial(order: 6), escapePeaks: false)
         let r = try EDSFit.run(counts: c.data, axis: axis, settings: settings)
@@ -226,42 +227,42 @@ final class SpectroscopyFitTests: XCTestCase {
         // The pin 2800.0213 / 14921.183 is hyperspy's "lm" stopped 7e-5 / 3e-5 (relative) short of the exact minimum
         // 2800.2296 / 14920.805 (scipy NNLS and lstsq on hyperspy's own columns, fixture). Measured, then asserted:
         // against the pin 2e-4 relative (measured 7.4e-5 and 2.5e-5), against the exact minimiser 1e-6.
-        XCTAssertEqual(c.pinFe!, 2800.0213390651193); XCTAssertEqual(c.pinPt!, 14921.182988439612)
-        XCTAssertEqual(fe, c.pinFe!, accuracy: 2e-4 * c.pinFe!)
-        XCTAssertEqual(pt, c.pinPt!, accuracy: 2e-4 * c.pinPt!)
-        XCTAssertEqual(fe, c.nnlsRef!["Fe_Ka"]!, accuracy: 1e-6 * fe)
-        XCTAssertEqual(pt, c.nnlsRef!["Pt_La"]!, accuracy: 1e-6 * pt)
+        #expect(c.pinFe! == 2800.0213390651193); #expect(c.pinPt! == 14921.182988439612)
+        #expect(isEqual(fe, c.pinFe!, accuracy: 2e-4 * c.pinFe!))
+        #expect(isEqual(pt, c.pinPt!, accuracy: 2e-4 * c.pinPt!))
+        #expect(isEqual(fe, c.nnlsRef!["Fe_Ka"]!, accuracy: 1e-6 * fe))
+        #expect(isEqual(pt, c.nnlsRef!["Pt_La"]!, accuracy: 1e-6 * pt))
         for (id, v) in zip(r.groupIDs, r.values) {
-            XCTAssertGreaterThanOrEqual(v, 0, "\(id) area is non-negative")
-            if let ref = c.nnlsRef?[id] { XCTAssertEqual(v, ref, accuracy: 1e-4 * max(abs(ref), 1) , id) }
+            #expect(v >= 0, "\(id) area is non-negative")
+            if let ref = c.nnlsRef?[id] { #expect(isEqual(v, ref, accuracy: 1e-4 * max(abs(ref), 1)), "\(id)") }
         }
         // Pt_Ma lies 3.5 keV below the range: hyperspy leaves it at its start value; here it is unsupported and reported 0.
-        XCTAssertFalse(r.supported[r.groupIDs.firstIndex(of: "Pt_Ma")!])
+        #expect(!(r.supported[r.groupIDs.firstIndex(of: "Pt_Ma")!]))
         // Fit quality: hyperspy's reduced chi-square (RSS / dof, unit variance) with its dof (every free parameter counted).
-        XCTAssertEqual(r.degreesOfFreedom, channels.count - 13)
+        #expect(r.degreesOfFreedom == (channels.count - 13))
         // hyperspy divides by (n - p - 1) (model.py:1723), this fit by (n - p): same RSS, so rescale to compare.
         let hyperspyStyle = r.reducedChiSquared * Double(r.degreesOfFreedom) / Double(r.degreesOfFreedom - 1)
-        XCTAssertEqual(hyperspyStyle, c.redChisq, accuracy: 1e-5 * c.redChisq)
-        XCTAssertLessThanOrEqual(r.residual.reduce(0) { $0 + $1 * $1 }, c.rss * (1 + 1e-9), "never worse than hyperspy's RSS")
+        #expect(isEqual(hyperspyStyle, c.redChisq, accuracy: 1e-5 * c.redChisq))
+        #expect(r.residual.reduce(0) { $0 + $1 * $1 } <= (c.rss * (1 + 1e-9)), "never worse than hyperspy's RSS")
     }
 
     // MARK: 4. NNLS against scipy, on cases where the unbounded solution has negative entries
 
-    func testNNLSMatchesScipyAndDiffersFromUnbounded() {
+    @Test func testNNLSMatchesScipyAndDiffersFromUnbounded() {
         for (k, c) in Self.fixture.nnlsCases.enumerated() {
             let a = ColumnMatrix(columns: c.A)
             let s = LeastSquaresFit.solve(nonNegative: a, y: c.y)
             for j in 0..<c.cols {
-                XCTAssertEqual(s.nonNegative[j], c.nnls[j], accuracy: 1e-8, "case \(k) x[\(j)]")
-                XCTAssertGreaterThanOrEqual(s.nonNegative[j], 0)
+                #expect(isEqual(s.nonNegative[j], c.nnls[j], accuracy: 1e-8), "case \(k) x[\(j)]")
+                #expect(s.nonNegative[j] >= 0)
             }
-            XCTAssertTrue(c.lstsq.contains { $0 < 0 }, "case \(k): the unbounded solution is negative somewhere")
-            XCTAssertTrue(s.nonNegative.contains(0), "case \(k): a constraint is active")
+            #expect(c.lstsq.contains { $0 < 0 }, "case \(k): the unbounded solution is negative somewhere")
+            #expect(s.nonNegative.contains(0), "case \(k): a constraint is active")
         }
     }
 
     /// Free-sign columns are eliminated exactly: same minimiser as scipy's NNLS on a (+F, -F) split.
-    func testFreeColumnsAreExactlyEliminated() {
+    @Test func testFreeColumnsAreExactlyEliminated() {
         let c = Self.fixture.nnlsCases[0]
         // Treat the first column as free: compare with scipy-free reference solved here by brute force over the passive sets.
         let all = ColumnMatrix(columns: c.A)
@@ -272,10 +273,10 @@ final class SpectroscopyFitTests: XCTestCase {
         var r = c.y
         let fit = nn.times(s.nonNegative); let f = free.times(s.free)
         for i in r.indices { r[i] -= fit[i] + f[i] }
-        XCTAssertEqual(free.transposeTimes(r)[0], 0, accuracy: 1e-9, "free column: zero gradient")
+        #expect(isEqual(free.transposeTimes(r)[0], 0, accuracy: 1e-9), "free column: zero gradient")
         for (j, g) in nn.transposeTimes(r).enumerated() {
-            if s.nonNegative[j] > 0 { XCTAssertEqual(g, 0, accuracy: 1e-8, "passive column \(j)") }
-            else { XCTAssertLessThanOrEqual(g, 1e-8, "active column \(j): KKT") }
+            if s.nonNegative[j] > 0 { #expect(isEqual(g, 0, accuracy: 1e-8), "passive column \(j)") }
+            else { #expect(g <= (1e-8), "active column \(j): KKT") }
         }
     }
 
@@ -292,16 +293,16 @@ final class SpectroscopyFitTests: XCTestCase {
         return (axis, Self.poissonSpectrum(e, seed: seed), settings)
     }
 
-    func testIRLSDevianceNonIncreasingConvergesAndSatisfiesKKT() throws {
+    @Test func testIRLSDevianceNonIncreasingConvergesAndSatisfiesKKT() throws {
         let (axis, counts, settings) = irlsSpectrum(seed: 11)
         let r = try EDSFit.run(counts: counts, axis: axis, settings: settings)
-        XCTAssertTrue(r.converged)
-        XCTAssertLessThan(r.iterations, settings.method == .poissonML(IRLSSettings()) ? 200 : 0, "converges inside the cap")
+        #expect(r.converged)
+        #expect(r.iterations < (settings.method == .poissonML(IRLSSettings()) ? 200 : 0), "converges inside the cap")
         for k in 1..<r.devianceHistory.count {
-            XCTAssertLessThanOrEqual(r.devianceHistory[k], r.devianceHistory[k - 1], "iteration \(k)")
+            #expect(r.devianceHistory[k] <= r.devianceHistory[k - 1], "iteration \(k)")
         }
-        XCTAssertEqual(r.irls, IRLSSettings(), "cap and tolerance are recorded")
-        XCTAssertTrue(r.methodLabel.contains("cap 200"))
+        #expect(r.irls == IRLSSettings(), "cap and tolerance are recorded")
+        #expect(r.methodLabel.contains("cap 200"))
         // KKT of the Poisson likelihood, from first principles (independent of the IRLS weights):
         // g_j = sum_i D_ij (1 - y_i / mu_i) is 0 for a positive area and a free column, >= 0 at an active bound.
         let model = EDSLineModel.build(elements: ["Fe", "Cu"], axis: axis, beamEnergy: 200, resolutionMnKaEV: 130, escapePeaks: false)
@@ -317,18 +318,18 @@ final class SpectroscopyFitTests: XCTestCase {
             if norm == 0 { continue }          // unsupported line: not in the fit
             let g = zip(col, w).reduce(0) { $0 + $1.0 * $1.1 }
             checked += 1
-            if j < d.areaColumns.count, r.values[j] == 0 { XCTAssertGreaterThanOrEqual(g / norm, -1e-6) }
+            if j < d.areaColumns.count, r.values[j] == 0 { #expect((g / norm) >= (-1e-6)) }
             else { worst = max(worst, abs(g) / norm) }
         }
-        XCTAssertGreaterThanOrEqual(checked, 4)
-        XCTAssertLessThan(worst, 1e-5, "Poisson score equations hold; measured value recorded in the report")
+        #expect(checked >= 4)
+        #expect(worst < (1e-5), "Poisson score equations hold; measured value recorded in the report")
         note("IRLS KKT worst |g|/|col|_1 = \(worst), iterations \(r.iterations), deviance \(r.deviance), history \(r.devianceHistory.count)")
     }
 
     /// Low counts, where an undamped Fisher step can overshoot: 200 single pixels at ~10 counts, every deviance history non-increasing.
     /// With a non-negative model (lines only) every pixel ends converged or at a KKT-checked stationary point; with a SIGNED linear
     /// background many pixels reach a model below zero, where the clamped deviance has no maximum: those must say "stalled", not "converged".
-    func testIRLSDevianceNonIncreasingOnLowCountPixels() throws {
+    @Test func testIRLSDevianceNonIncreasingOnLowCountPixels() throws {
         let axis = EnergyAxis(offset: 0.9, scale: 0.01, size: 100)
         let els = ["Mg", "Al"]
         let model = EDSLineModel.build(elements: els, axis: axis, beamEnergy: 200, resolutionMnKaEV: 130, escapePeaks: false)
@@ -350,26 +351,26 @@ final class SpectroscopyFitTests: XCTestCase {
                 if r.converged != (r.exit == "converged" || r.exit.hasPrefix("stationary")) { inconsistent += 1 }
             }
             note("IRLS low-count (\(bgName)): \(steps) steps over 200 pixels, deviance increases \(increases), stalled \(stalled) (\(stalledWithNegativeModel) with a negative model)")
-            XCTAssertEqual(increases, 0, bgName)
-            XCTAssertEqual(inconsistent, 0, bgName)
-            if bg == .none { XCTAssertEqual(stalled, 0, "a non-negative model always ends at a maximum") }
+            #expect(increases == 0, "\(bgName)")
+            #expect(inconsistent == 0, "\(bgName)")
+            if bg == .none { #expect(stalled == 0, "a non-negative model always ends at a maximum") }
             else {
-                XCTAssertGreaterThan(stalled, 0, "the signed background does reach a negative model, and says so")
-                XCTAssertEqual(stalled, stalledWithNegativeModel, "every stall is a negative-model stall")
+                #expect(stalled > 0, "the signed background does reach a negative model, and says so")
+                #expect(stalled == stalledWithNegativeModel, "every stall is a negative-model stall")
             }
         }
     }
 
-    func testPoissonDevianceKnownValues() {
+    @Test func testPoissonDevianceKnownValues() {
         // y = 0: 2 mu; y = mu: 0; y = 4, mu = 2: 2 (4 ln 2 - 2).
-        XCTAssertEqual(PoissonMLFit.deviance(y: [0, 3, 4], mu: [1.5, 3, 2], floor: 1e-6), 2 * 1.5 + 0 + 2 * (4 * log(2.0) - 2), accuracy: 1e-12)
+        #expect(isEqual(PoissonMLFit.deviance(y: [0, 3, 4], mu: [1.5, 3, 2], floor: 1e-6), 2 * 1.5 + 0 + 2 * (4 * log(2.0) - 2), accuracy: 1e-12))
         // A model clamped at the floor stays finite.
-        XCTAssertTrue(PoissonMLFit.deviance(y: [5], mu: [0], floor: 1e-6).isFinite)
+        #expect(PoissonMLFit.deviance(y: [5], mu: [0], floor: 1e-6).isFinite)
     }
 
     // MARK: 6. Covariance (Monte Carlo, own Poisson synthetic data)
 
-    func testCovarianceMatchesRepeatedFits() throws {
+    @Test func testCovarianceMatchesRepeatedFits() throws {
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1000)
         let truth = Self.expected(axis: axis, elements: ["Fe", "Cu"], resolution: 130, beam: 200,
                                   areas: ["Fe_Ka": 1500, "Cu_Ka": 900], continuumTotal: 30000)
@@ -390,20 +391,20 @@ final class SpectroscopyFitTests: XCTestCase {
             }
             func sd(_ v: [Double]) -> Double { let m = v.reduce(0, +) / Double(v.count); return (v.reduce(0) { $0 + ($1 - m) * ($1 - m) } / Double(v.count - 1)).squareRoot() }
             // Predicted sigma of ONE realisation uses its own mu; empirical over 300 has ~4 % relative error.
-            XCTAssertEqual(predicted / sd(fe), 1, accuracy: 0.15, "\(method) Fe Ka sigma: predicted \(predicted) empirical \(sd(fe))")
-            XCTAssertEqual(predictedCu / sd(cu), 1, accuracy: 0.15, "\(method) Cu Ka sigma")
+            #expect(isEqual(predicted / sd(fe), 1, accuracy: 0.15), "\(method) Fe Ka sigma: predicted \(predicted) empirical \(sd(fe))")
+            #expect(isEqual(predictedCu / sd(cu), 1, accuracy: 0.15), "\(method) Cu Ka sigma")
         }
     }
 
     // MARK: 7. Continuum (F3), on a physically generated Al-matrix spectrum
 
-    func testContinuumAlEdgeResidualIsFlat() throws {
+    @Test func testContinuumAlEdgeResidualIsFlat() throws {
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1024)
         let areas = ["Al_Ka": 300_000.0, "Mg_Ka": 30_000, "Si_Ka": 20_000, "Cu_Ka": 40_000]
         let e = Self.expected(axis: axis, elements: ["Mg", "Al", "Si", "Cu"], resolution: 130, beam: 200, areas: areas,
                               continuumTotal: 400_000, escapeFraction: 0.01)
         let counts = Self.poissonSpectrum(e, seed: 3)
-        XCTAssertGreaterThan(counts.reduce(0, +), 5e5)
+        #expect(counts.reduce(0, +) > 5e5)
         let settings = FitSettings.standard(elements: ["Mg", "Al", "Si", "Cu"], axis: axis, resolutionMnKaEV: 130, beamEnergy: 200)
         let r = try EDSFit.run(counts: counts, axis: axis, settings: settings)
         var band: [Double] = []
@@ -411,25 +412,25 @@ final class SpectroscopyFitTests: XCTestCase {
             let en = axis.energy(ofChannel: c)
             if en >= 1.1 && en <= 1.9 { band.append(r.standardizedResidual[k]) }
         }
-        XCTAssertGreaterThan(band.count, 70)
+        #expect(band.count > 70)
         let worst = band.map(abs).max()!
         let mean = band.reduce(0, +) / Double(band.count)
         note("F3 seed 3: band channels \(band.count), max |r| \(worst), mean r \(mean), Pearson reduced chi2 \(r.pearsonReducedChiSquared)")
-        XCTAssertLessThanOrEqual(worst, 3, "every standardized residual in 1.1-1.9 keV within +-3")
-        XCTAssertLessThanOrEqual(abs(mean), 1, "band mean")
-        XCTAssertEqual(r.negativeModelChannels, 0)
-        XCTAssertEqual(r.backgroundCoefficients.count, 16)
-        XCTAssertTrue(r.backgroundCoefficients.allSatisfy { $0 >= 0 }, "non-negative Bernstein continuum")
+        #expect(worst <= 3, "every standardized residual in 1.1-1.9 keV within +-3")
+        #expect(abs(mean) <= 1, "band mean")
+        #expect(r.negativeModelChannels == 0)
+        #expect(r.backgroundCoefficients.count == 16)
+        #expect(r.backgroundCoefficients.allSatisfy { $0 >= 0 }, "non-negative Bernstein continuum")
         // The fitted Al area recovers truth within a few sigma.
         let iMg = r.groupIDs.firstIndex(of: "Mg_Ka")!
-        XCTAssertEqual(r.values[iMg], 30_000, accuracy: 3 * r.sigma(at: iMg), "the planted Mg Ka is recovered within 3 sigma")
+        #expect(isEqual(r.values[iMg], 30_000, accuracy: 3 * r.sigma(at: iMg)), "the planted Mg Ka is recovered within 3 sigma")
         let al = r.values[r.groupIDs.firstIndex(of: "Al_Ka")!]
-        XCTAssertEqual(al, 300_000, accuracy: 5 * r.sigma(at: r.groupIDs.firstIndex(of: "Al_Ka")!) + 3000)
+        #expect(isEqual(al, 300_000, accuracy: 5 * r.sigma(at: r.groupIDs.firstIndex(of: "Al_Ka")!) + 3000))
     }
 
     /// "All |r| <= 3 over ~80 channels" fails about 20 % of the time for a PERFECT model (0.9973^80 = 0.81), so the
     /// criterion is also measured across seeds against the true expectation. Own Poisson synthetic data.
-    func testContinuumResidualAcrossSeedsMatchesPerfectModel() throws {
+    @Test func testContinuumResidualAcrossSeedsMatchesPerfectModel() throws {
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1024)
         let els = ["Mg", "Al", "Si", "Cu"]
         let e = Self.expected(axis: axis, elements: els, resolution: 130, beam: 200,
@@ -456,13 +457,13 @@ final class SpectroscopyFitTests: XCTestCase {
             worstMean = max(worstMean, abs(fitBand.reduce(0, +) / Double(fitBand.count)))
         }
         note("F3 across \(seeds) seeds: fit passes max|r|<=3 in \(fitPass), perfect model in \(perfectPass); worst band |mean r| \(worstMean); max|r| per seed \(maxima.map { String(format: "%.2f", $0) })")
-        XCTAssertLessThanOrEqual(worstMean, 1, "band mean |r| <= 1 in every seed")
-        XCTAssertGreaterThanOrEqual(fitPass, perfectPass - 4, "the fit's residual is as flat as the true model's, within binomial scatter")
+        #expect(worstMean <= 1, "band mean |r| <= 1 in every seed")
+        #expect(fitPass >= (perfectPass - 4), "the fit's residual is as flat as the true model's, within binomial scatter")
     }
 
     /// A polynomial that cannot step is visibly worse at the Al edge than the continuum with the step:
     /// the edge matters (otherwise the step in the default would be decoration).
-    func testContinuumStepBeatsPlainPolynomialAtTheEdge() throws {
+    @Test func testContinuumStepBeatsPlainPolynomialAtTheEdge() throws {
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1024)
         let e = Self.expected(axis: axis, elements: ["Mg", "Al", "Si", "Cu"], resolution: 130, beam: 200,
                               areas: ["Al_Ka": 300_000, "Mg_Ka": 30_000, "Si_Ka": 20_000, "Cu_Ka": 40_000],
@@ -474,72 +475,72 @@ final class SpectroscopyFitTests: XCTestCase {
         noStep.background = .continuum(ContinuumForm(beamEnergy: 200, edges: [], orders: [9]))
         let plain = try EDSFit.run(counts: counts, axis: axis, settings: noStep)
         note("Pearson reduced chi2 with Al step \(withStep.pearsonReducedChiSquared), without \(plain.pearsonReducedChiSquared)")
-        XCTAssertLessThan(withStep.pearsonReducedChiSquared, plain.pearsonReducedChiSquared)
+        #expect(withStep.pearsonReducedChiSquared < plain.pearsonReducedChiSquared)
         // The step belongs AT the Al K edge: the same form with the edge moved to 1.7 keV fits worse.
-        XCTAssertEqual(ContinuumForm.alKEdge, 1.5596)
+        #expect(ContinuumForm.alKEdge == 1.5596)
         var moved = FitSettings.standard(elements: els, axis: axis, resolutionMnKaEV: 130, beamEnergy: 200)
         moved.background = .continuum(ContinuumForm(beamEnergy: 200, edges: [1.7], orders: [9, 5]))
         let misplaced = try EDSFit.run(counts: counts, axis: axis, settings: moved)
         note("Pearson reduced chi2 edge at 1.5596 \(withStep.pearsonReducedChiSquared), edge at 1.7 \(misplaced.pearsonReducedChiSquared)")
-        XCTAssertLessThan(withStep.pearsonReducedChiSquared, misplaced.pearsonReducedChiSquared)
+        #expect(withStep.pearsonReducedChiSquared < misplaced.pearsonReducedChiSquared)
     }
 
-    func testStandardizedResidualStaysFiniteWhereModelIsZero() throws {
+    @Test func testStandardizedResidualStaysFiniteWhereModelIsZero() throws {
         let c = Self.fixture.cases["closedLoop"]!
         var settings = FitSettings(elements: c.elements, resolutionMnKaEV: c.resolutionMnKa, beamEnergy: c.beamEnergy,
                                    background: .none, escapePeaks: false)
         settings.background = .none
         let r = try EDSFit.run(counts: c.data, axis: c.axis, settings: settings)
-        XCTAssertTrue(r.standardizedResidual.allSatisfy { $0.isFinite })
-        XCTAssertTrue(r.model.contains { $0 < 1e-9 }, "the lines-only model reaches zero far from a line")
+        #expect(r.standardizedResidual.allSatisfy { $0.isFinite })
+        #expect(r.model.contains { $0 < 1e-9 }, "the lines-only model reaches zero far from a line")
         // With model 0 and data 0.002 the floor 1.0 makes r = data - model.
         let i = r.model.firstIndex { $0 < 1e-12 }!
-        XCTAssertEqual(r.standardizedResidual[i], r.residual[i] / EDSFitResult.standardizedFloor.squareRoot(), accuracy: 1e-12)
+        #expect(isEqual(r.standardizedResidual[i], r.residual[i] / EDSFitResult.standardizedFloor.squareRoot(), accuracy: 1e-12))
     }
 
     // MARK: 8. Axis refinement (F4), own Poisson synthetic data
 
-    func testAxisRefinementRecoversPlantedOffsetAndGain() throws {
+    @Test func testAxisRefinementRecoversPlantedOffsetAndGain() throws {
         let trueAxis = EnergyAxis(offset: 0.003, scale: 0.01, size: 1024)
         let els = ["Mg", "Al", "Si", "K", "Fe", "Cu"]
         let areas = ["Mg_Ka": 12_000.0, "Al_Ka": 20_000, "Si_Ka": 15_000, "K_Ka": 8_000, "Fe_Ka": 18_000, "Cu_Ka": 20_000]
         let e = Self.expected(axis: trueAxis, elements: els, resolution: 129, beam: 200, areas: areas, continuumTotal: 120_000)
         let counts = Self.poissonSpectrum(e, seed: 5)
         let total = counts.reduce(0, +)
-        XCTAssertGreaterThan(total, 1e5)
+        #expect(total > 1e5)
         // The FILE axis is wrong: offset 10 eV too low, gain 0.2 % too high; resolution 8 eV off.
         let fileAxis = EnergyAxis(offset: trueAxis.offset - 0.010, scale: trueAxis.scale * 1.002, size: 1024)
         let settings = FitSettings.standard(elements: els, axis: fileAxis, resolutionMnKaEV: 137, beamEnergy: 200)
         let r = try EnergyAxisRefinement.refine(counts: counts, fileAxis: fileAxis, fileResolutionMnKaEV: 137, settings: settings)
         note("F4: total counts \(total), offset err eV \((r.offset - trueAxis.offset) * 1000), gain err % \((r.scale / trueAxis.scale - 1) * 100), R \(r.resolutionMnKaEV), iterations \(r.iterations), converged \(r.converged), rss \(r.rssFile) -> \(r.rssRefined)")
-        XCTAssertLessThan(abs(r.offset - trueAxis.offset) * 1000, 1.0, "offset within 1 eV")
-        XCTAssertLessThan(abs(r.scale / trueAxis.scale - 1) * 100, 0.05, "gain within 0.05 %")
-        XCTAssertEqual(r.resolutionMnKaEV, 129, accuracy: 3)
-        XCTAssertLessThan(r.rssRefined, r.rssFile)
+        #expect((abs(r.offset - trueAxis.offset) * 1000) < 1.0, "offset within 1 eV")
+        #expect((abs(r.scale / trueAxis.scale - 1) * 100) < 0.05, "gain within 0.05 %")
+        #expect(isEqual(r.resolutionMnKaEV, 129, accuracy: 3))
+        #expect(r.rssRefined < r.rssFile)
         // The file's values stay beside the refined ones.
-        XCTAssertEqual(r.fileOffset, fileAxis.offset); XCTAssertEqual(r.fileScale, fileAxis.scale)
-        XCTAssertEqual(r.fileResolutionMnKaEV, 137)
-        XCTAssertEqual(r.offsetShiftEV, 10, accuracy: 1.0)
-        XCTAssertEqual(r.gainShift, 1 / 1.002 - 1, accuracy: 5e-4)
+        #expect(r.fileOffset == fileAxis.offset); #expect(r.fileScale == fileAxis.scale)
+        #expect(r.fileResolutionMnKaEV == 137)
+        #expect(isEqual(r.offsetShiftEV, 10, accuracy: 1.0))
+        #expect(isEqual(r.gainShift, 1 / 1.002 - 1, accuracy: 5e-4))
     }
 
     // MARK: 9. Escape peaks and reference shapes
 
-    func testEscapePeaksAreFittedAndMgAlSiHaveNone() throws {
+    @Test func testEscapePeaksAreFittedAndMgAlSiHaveNone() throws {
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1024)
         let els = ["Mg", "Al", "Si", "K", "Fe", "Cu"]
         let model = EDSLineModel.build(elements: els, axis: axis, beamEnergy: 200, resolutionMnKaEV: 130)
-        XCTAssertEqual(EDSLineModel.siKEdge, 1.839, "the Si K edge, keV")
+        #expect(EDSLineModel.siKEdge == 1.839, "the Si K edge, keV")
         for g in model.groups {
             let above = g.lines.contains { $0.energy > 1.839 }
-            XCTAssertEqual(!g.escapes.isEmpty, above, "\(g.id)")
+            #expect(!g.escapes.isEmpty == above, "\(g.id)")
         }
         // K K-alpha (3.31 keV) is above the edge but below 5 keV: its escape peak sits at 3.31 - 1.74 keV.
         let kEsc = model.groups.first { $0.id == "K_Ka" }!.escapes.first!
-        XCTAssertEqual(kEsc.energy, XRayLines.line("K_Ka")!.energy - XRayLines.line("Si_Ka")!.energy, accuracy: 1e-12)
-        XCTAssertTrue(model.groups.first { $0.id == "Mg_Ka" }!.escapes.isEmpty)
-        XCTAssertTrue(model.groups.first { $0.id == "Al_Ka" }!.escapes.isEmpty)
-        XCTAssertTrue(model.groups.first { $0.id == "Si_Ka" }!.escapes.isEmpty)
+        #expect(isEqual(kEsc.energy, XRayLines.line("K_Ka")!.energy - XRayLines.line("Si_Ka")!.energy, accuracy: 1e-12))
+        #expect(model.groups.first { $0.id == "Mg_Ka" }!.escapes.isEmpty)
+        #expect(model.groups.first { $0.id == "Al_Ka" }!.escapes.isEmpty)
+        #expect(model.groups.first { $0.id == "Si_Ka" }!.escapes.isEmpty)
         // Planted 2 % Fe and Cu escape: recovered; with escapes off the reduced chi2 is worse.
         let areas = ["Fe_Ka": 80_000.0, "Cu_Ka": 60_000, "Al_Ka": 100_000, "Mg_Ka": 10_000, "Si_Ka": 10_000, "K_Ka": 20_000]
         let e = Self.expected(axis: axis, elements: els, resolution: 130, beam: 200, areas: areas, continuumTotal: 100_000, escapeFraction: 0.02)
@@ -549,14 +550,14 @@ final class SpectroscopyFitTests: XCTestCase {
         s.escapePeaks = false
         let off = try EDSFit.run(counts: counts, axis: axis, settings: s)
         let iFe = on.groupIDs.firstIndex(of: "Fe_Ka")!
-        XCTAssertEqual(on.escapeValues[iFe]!, 0.02 * 80_000, accuracy: 0.2 * 0.02 * 80_000)
-        XCTAssertNil(on.escapeValues[on.groupIDs.firstIndex(of: "Al_Ka")!])
-        XCTAssertLessThan(on.pearsonReducedChiSquared, off.pearsonReducedChiSquared)
-        XCTAssertTrue(on.escapeLabel.contains("above the Si K edge"))
+        #expect(isEqual(on.escapeValues[iFe]!, 0.02 * 80_000, accuracy: 0.2 * 0.02 * 80_000))
+        #expect(on.escapeValues[on.groupIDs.firstIndex(of: "Al_Ka")!] == nil)
+        #expect(on.pearsonReducedChiSquared < off.pearsonReducedChiSquared)
+        #expect(on.escapeLabel.contains("above the Si K edge"))
     }
 
-    func testReferenceShapeSlotIsEmptyByDefaultAndTiesWork() throws {
-        XCTAssertEqual(ReferenceShapes.none.label, "reference shapes: none")
+    @Test func testReferenceShapeSlotIsEmptyByDefaultAndTiesWork() throws {
+        #expect(ReferenceShapes.none.label == "reference shapes: none")
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 600)
         let els = ["Mg", "Al"]
         let model = EDSLineModel.build(elements: els, axis: axis, beamEnergy: 200, resolutionMnKaEV: 130)
@@ -577,12 +578,12 @@ final class SpectroscopyFitTests: XCTestCase {
         let without = try EDSFit.run(counts: counts, axis: axis, settings: base)
         base.referenceShapes = ReferenceShapes([ReferenceShape(name: "Al Ka tail", profile: tail, tie: .lineAmplitude(group: "Al_Ka", fraction: f))])
         let with = try EDSFit.run(counts: counts, axis: axis, settings: base)
-        XCTAssertEqual(with.referenceShapesLabel, "reference shapes: Al Ka tail")
+        #expect(with.referenceShapesLabel == "reference shapes: Al Ka tail")
         let iMg = with.groupIDs.firstIndex(of: "Mg_Ka")!
         let errWith = abs(with.values[iMg] - 8_000), errWithout = abs(without.values[iMg] - 8_000)
         note("tail tie: Mg error with \(errWith) without \(errWithout), Pearson chi2 \(with.pearsonReducedChiSquared) vs \(without.pearsonReducedChiSquared)")
-        XCTAssertLessThan(with.pearsonReducedChiSquared, without.pearsonReducedChiSquared)
-        XCTAssertLessThan(errWith, errWithout)
+        #expect(with.pearsonReducedChiSquared < without.pearsonReducedChiSquared)
+        #expect(errWith < errWithout)
 
         // Si fluorescence: tied to the counts above 1.84 keV, a known term (not a column).
         let siProfile: [Double] = {
@@ -601,15 +602,15 @@ final class SpectroscopyFitTests: XCTestCase {
             ReferenceShape(name: "Si fluorescence", profile: siProfile, tie: .countsAboveEdge(edge: 1.84, fractionPerCount: c0))])
         let both = try EDSFit.run(counts: counts2, axis: axis, settings: s2)
         note("Si tie: Pearson chi2 tail only \(tailOnly.pearsonReducedChiSquared), tail + Si fluorescence \(both.pearsonReducedChiSquared)")
-        XCTAssertLessThan(both.pearsonReducedChiSquared, tailOnly.pearsonReducedChiSquared)
-        XCTAssertEqual(both.referenceShapesLabel, "reference shapes: Al Ka tail, Si fluorescence")
+        #expect(both.pearsonReducedChiSquared < tailOnly.pearsonReducedChiSquared)
+        #expect(both.referenceShapesLabel == "reference shapes: Al Ka tail, Si fluorescence")
     }
 
     // MARK: 10. F2: ML versus LS bias at ~10 counts per pixel (own Poisson synthetic pixels, NOT the simulator)
 
     /// 1e4 single pixels at ~10 counts per pixel in 0.9-1.9 keV. Variant A: lines only (Mg Ka 4, Al Ka 6 counts/px)
     /// and a lines-only fit. Variant B: Mg Ka 3, Al Ka 4, a flat background of 3 counts/px and a linear background in the fit.
-    func testMaximumLikelihoodBiasVersusLeastSquaresAtLowCounts() throws {
+    @Test func testMaximumLikelihoodBiasVersusLeastSquaresAtLowCounts() throws {
         let axis = EnergyAxis(offset: 0.9, scale: 0.01, size: 100)
         let els = ["Mg", "Al"]
         let model = EDSLineModel.build(elements: els, axis: axis, beamEnergy: 200, resolutionMnKaEV: 130, escapePeaks: false)
@@ -641,11 +642,11 @@ final class SpectroscopyFitTests: XCTestCase {
             }
             let l = stats(ls), m = stats(ml)
             note("F2 \(variant): truth Mg \(mgArea)/px; LS bias \(l.bias) (se \(l.se), sd \(l.sd)); ML bias \(m.bias) (se \(m.se), sd \(m.sd)); ML on \(ml.count) converged pixels, \(stalledPixels) stalled (signed background, negative model); LS on all \(ls.count)")
-            XCTAssertTrue(l.bias.isFinite && m.bias.isFinite)
+            #expect(l.bias.isFinite && m.bias.isFinite)
             // Variant B's ML subset (converged pixels only, ~49 %) is a selected subset and reads -0.077 (2.9 se): not an
             // unbiased sample, so only variant A (0 stalled) asserts the ML bias.
-            if stalledPixels == 0 { XCTAssertLessThan(abs(m.bias), 2 * m.se, "\(variant): ML bias within 2 se of zero") }
-            else { XCTAssertGreaterThan(stalledPixels, 1000, "signed background: many ML fits stall at a negative model") }
+            if stalledPixels == 0 { #expect(abs(m.bias) < (2 * m.se), "\(variant): ML bias within 2 se of zero") }
+            else { #expect(stalledPixels > 1000, "signed background: many ML fits stall at a negative model") }
         }
     }
 
@@ -696,7 +697,7 @@ final class SpectroscopyFitTests: XCTestCase {
     /// The registered criterion (docs: report2.md, written before the runs). Gate 1: no false positive at Mg = 0
     /// (mean <= 0.399 sigma_sandwich + 1 se: NNLS clamps, so an unbiased estimator has mean +0.399 sigma);
     /// selection: smallest max |bias| at 0.3 % and 1 % over both generators; if not <= 1 se at 0.3 % on both, badge.
-    func testWeakLineRecoveryRegisteredSelection() throws {
+    @Test func testWeakLineRecoveryRegisteredSelection() throws {
         struct Form { let name: String; let orders: [Int]; let eps: Bool }
         let forms = [Form(name: "kramers (9,5)", orders: [9, 5], eps: false), Form(name: "eps (3,3)", orders: [3, 3], eps: true),
                      Form(name: "eps (4,3)", orders: [4, 3], eps: true), Form(name: "eps (9,5)", orders: [9, 5], eps: true)]
@@ -714,24 +715,24 @@ final class SpectroscopyFitTests: XCTestCase {
         let winner = scores.filter(\.passesGate).min { $0.score < $1.score }!
         // The rule has no tie clause: the default (Kramers-only, no filler) must be within 1 se of the minimum score.
         let def = scores.first { $0.name == "kramers (9,5)" }!
-        XCTAssertTrue(def.passesGate)
-        XCTAssertLessThanOrEqual(def.score, winner.score + def.se, "default \(def.score) vs best \(winner.name) \(winner.score), se \(def.se)")
+        #expect(def.passesGate)
+        #expect(def.score <= (winner.score + def.se), "default \(def.score) vs best \(winner.name) \(winner.score), se \(def.se)")
         // Criterion 3: not <= 1 se at 0.3 % on both generators, so the badge must exist and carry the measured numbers.
         let c = chosen!
-        XCTAssertGreaterThan(abs(c.a[2].bias), c.a[2].se, "generator A: bias at 0.3 % exceeds 1 se")
-        XCTAssertGreaterThan(abs(c.s[2].bias), c.s[2].se, "generator S: bias at 0.3 % exceeds 1 se")
+        #expect(abs(c.a[2].bias) > c.a[2].se, "generator A: bias at 0.3 % exceeds 1 se")
+        #expect(abs(c.s[2].bias) > c.s[2].se, "generator S: bias at 0.3 % exceeds 1 se")
         // The measured band the badge quotes (counts): a deficit of 150-450 on both generators at 0.3 % and 1 %.
-        for cell in [c.a[2], c.a[3], c.s[2], c.s[3]] { XCTAssertTrue((-450 ... -150).contains(cell.bias), "bias \(cell.bias)") }
-        XCTAssertTrue(ContinuumForm.weakLineBiasNote.contains("eak-line bias measured on synthetic data"))
+        for cell in [c.a[2], c.a[3], c.s[2], c.s[3]] { #expect((-450 ... -150).contains(cell.bias), "bias \(cell.bias)") }
+        #expect(ContinuumForm.weakLineBiasNote.contains("eak-line bias measured on synthetic data"))
         // The badge quotes the measured numbers (rounded): the registered table's Kramers (9,5) cells.
         for v in [c.a[2].bias, c.a[3].bias, c.s[2].bias, c.s[3].bias] {
-            XCTAssertTrue(ContinuumForm.weakLineBiasNote.contains(String(format: "\u{2212}%.0f \u{00B1}", abs(v))), "badge lacks \(v)")
+            #expect(ContinuumForm.weakLineBiasNote.contains(String(format: "\u{2212}%.0f \u{00B1}", abs(v))), "badge lacks \(v)")
         }
     }
 
     /// The finding behind the bias on the simulator: with its Al K-alpha tail supplied as a reference shape the Mg bias
     /// collapses (noise-free fit of the 1 % pool). The slot, not the continuum, is where the owner's pure-Al spectrum helps.
-    func testTailReferenceShapeRemovesTheSimulatorWeakLineBias() throws {
+    @Test func testTailReferenceShapeRemovesTheSimulatorWeakLineBias() throws {
         let sim = Self.simPools, axis = sim.axis
         let level = sim.levels[3]
         let els = ["Mg", "Al", "Si", "Cu", "O"]
@@ -746,14 +747,14 @@ final class SpectroscopyFitTests: XCTestCase {
         s.referenceShapes = ReferenceShapes([ReferenceShape(name: "Al Ka tail", profile: tail, tie: .lineAmplitude(group: "Al_Ka", fraction: level.alTail / level.alKa))])
         let with = try EDSFit.run(counts: level.expected, axis: axis, settings: s).values[iMg] - level.mgKa
         note("sim 1 % Mg, eps (4,3), noise-free: bias without tail \(without), with the true tail \(with)")
-        XCTAssertLessThan(without, -100)
-        XCTAssertLessThan(abs(with), 100)
+        #expect(without < -100)
+        #expect(abs(with) < 100)
     }
 
     // MARK: 12. Round 2: covariance of the default continuum, validation, warnings
 
     /// The default continuum fit (Kramers x eps x Bernstein): predicted sandwich sigma against the scatter of 120 refits.
-    func testCovarianceOfTheDefaultContinuumFit() throws {
+    @Test func testCovarianceOfTheDefaultContinuumFit() throws {
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1024)
         let els = ["Mg", "Al", "Si", "Cu"]
         let truth = Self.expected(axis: axis, elements: els, resolution: 130, beam: 200,
@@ -772,78 +773,78 @@ final class SpectroscopyFitTests: XCTestCase {
                 vals[id, default: []].append(r.values[i]); pred[id, default: 0] += r.sigma(at: i) / Double(reps)
             }
         }
-        XCTAssertTrue(kind.contains("on the passive set"), kind)
+        #expect(kind.contains("on the passive set"), "\(kind)")
         for id in ["Al_Ka", "Si_Ka", "Cu_Ka"] {
             let v = vals[id]!, m = v.reduce(0, +) / Double(reps)
             let sd = (v.reduce(0) { $0 + ($1 - m) * ($1 - m) } / Double(reps - 1)).squareRoot()
             note("default-continuum covariance \(id): predicted \(pred[id]!) empirical \(sd) ratio \(pred[id]! / sd)")
             // Stated band: predicted / empirical within 0.80-1.25 (the empirical sd of 120 refits has ~6 % error). Measured before the passive-set
             // change (lane Sigma): Al Ka 1.20 (bound-active columns counted free), Si 0.89, Cu 0.99; after: see the note.
-            XCTAssertTrue((0.80 ... 1.25).contains(pred[id]! / sd), "\(id): ratio \(pred[id]! / sd)")
+            #expect((0.80 ... 1.25).contains(pred[id]! / sd), "\(id): ratio \(pred[id]! / sd)")
         }
     }
 
     /// The badge rides on every continuum fit and on no polynomial fit.
-    func testWeakLineBadgeAccompaniesContinuumFitsOnly() throws {
+    @Test func testWeakLineBadgeAccompaniesContinuumFitsOnly() throws {
         let c = Self.fixture.cases["closedLoop"]!
         let cont = FitSettings.standard(elements: c.elements, axis: c.axis, resolutionMnKaEV: c.resolutionMnKa, beamEnergy: c.beamEnergy)
-        XCTAssertTrue(try EDSFit.run(counts: c.data, axis: c.axis, settings: cont).warnings.contains(ContinuumForm.weakLineBiasNote))
+        #expect(try EDSFit.run(counts: c.data, axis: c.axis, settings: cont).warnings.contains(ContinuumForm.weakLineBiasNote))
         let poly = FitSettings(elements: c.elements, resolutionMnKaEV: c.resolutionMnKa, beamEnergy: c.beamEnergy, background: .polynomial(order: 6))
-        XCTAssertFalse(try EDSFit.run(counts: c.data, axis: c.axis, settings: poly).warnings.contains(ContinuumForm.weakLineBiasNote))
-        XCTAssertTrue(ContinuumForm.weakLineBiasNote.contains("unmeasured on real data"))
+        #expect(!(try EDSFit.run(counts: c.data, axis: c.axis, settings: poly).warnings.contains(ContinuumForm.weakLineBiasNote)))
+        #expect(ContinuumForm.weakLineBiasNote.contains("unmeasured on real data"))
     }
 
-    func testEfficiencyIsComparedByParametersNotName() {
+    @Test func testEfficiencyIsComparedByParametersNotName() {
         let a = ContinuumForm(beamEnergy: 200, efficiency: Self.sdd)
         var thick = Self.sdd; thick.siliconMicrons = 300
-        XCTAssertNotEqual(a, ContinuumForm(beamEnergy: 200, efficiency: thick))
-        XCTAssertEqual(a, ContinuumForm(beamEnergy: 200, efficiency: Self.sdd))
-        XCTAssertNotEqual(a, ContinuumForm(beamEnergy: 200))
+        #expect(a != ContinuumForm(beamEnergy: 200, efficiency: thick))
+        #expect(a == ContinuumForm(beamEnergy: 200, efficiency: Self.sdd))
+        #expect(a != ContinuumForm(beamEnergy: 200))
         // Same name, different values: a parameter the name does not spell out.
         struct Flat: DetectorEfficiency { let k: Double; var sourceName: String { "typed" }; func efficiency(energyKeV: Double) -> Double { k } }
-        XCTAssertNotEqual(ContinuumForm(beamEnergy: 200, efficiency: Flat(k: 0.9)), ContinuumForm(beamEnergy: 200, efficiency: Flat(k: 0.8)))
-        XCTAssertEqual(ContinuumForm(beamEnergy: 200, efficiency: Flat(k: 0.9)), ContinuumForm(beamEnergy: 200, efficiency: Flat(k: 0.9)))
+        #expect(ContinuumForm(beamEnergy: 200, efficiency: Flat(k: 0.9)) != ContinuumForm(beamEnergy: 200, efficiency: Flat(k: 0.8)))
+        #expect(ContinuumForm(beamEnergy: 200, efficiency: Flat(k: 0.9)) == ContinuumForm(beamEnergy: 200, efficiency: Flat(k: 0.9)))
     }
 
-    func testReferenceShapePreconditionsThrow() throws {
+    @Test func testReferenceShapePreconditionsThrow() throws {
         let c = Self.fixture.cases["closedLoop"]!
         var s = FitSettings(elements: c.elements, resolutionMnKaEV: c.resolutionMnKa, beamEnergy: c.beamEnergy,
                             background: .polynomial(order: 2), escapePeaks: false)
         let ok = [Double](repeating: 1.0 / Double(c.size), count: c.size)
         func run(_ shape: ReferenceShape) throws { s.referenceShapes = ReferenceShapes([shape]); _ = try EDSFit.run(counts: c.data, axis: c.axis, settings: s) }
-        XCTAssertThrowsError(try run(ReferenceShape(name: "short", profile: [1, 2, 3], tie: .lineAmplitude(group: "Fe_Ka", fraction: 0.1)))) {
-            XCTAssertEqual($0 as? EDSFitError, .referenceShapeLength(name: "short", expected: c.size, got: 3))
+        if let error = #expect(throws: (any Error).self, performing: { try run(ReferenceShape(name: "short", profile: [1, 2, 3], tie: .lineAmplitude(group: "Fe_Ka", fraction: 0.1))) }) {
+            #expect((error as? EDSFitError) == .referenceShapeLength(name: "short", expected: c.size, got: 3))
         }
         var bad = ok; bad[7] = .nan
-        XCTAssertThrowsError(try run(ReferenceShape(name: "nan", profile: bad, tie: .lineAmplitude(group: "Fe_Ka", fraction: 0.1)))) {
-            XCTAssertEqual($0 as? EDSFitError, .referenceShapeNotFinite(name: "nan"))
+        if let error = #expect(throws: (any Error).self, performing: { try run(ReferenceShape(name: "nan", profile: bad, tie: .lineAmplitude(group: "Fe_Ka", fraction: 0.1))) }) {
+            #expect((error as? EDSFitError) == .referenceShapeNotFinite(name: "nan"))
         }
-        XCTAssertThrowsError(try run(ReferenceShape(name: "ghost", profile: ok, tie: .lineAmplitude(group: "Zz_Ka", fraction: 0.1)))) {
-            XCTAssertEqual($0 as? EDSFitError, .referenceShapeUnknownGroup(name: "ghost", group: "Zz_Ka"))
+        if let error = #expect(throws: (any Error).self, performing: { try run(ReferenceShape(name: "ghost", profile: ok, tie: .lineAmplitude(group: "Zz_Ka", fraction: 0.1))) }) {
+            #expect((error as? EDSFitError) == .referenceShapeUnknownGroup(name: "ghost", group: "Zz_Ka"))
         }
-        XCTAssertNoThrow(try run(ReferenceShape(name: "fine", profile: ok, tie: .lineAmplitude(group: "Fe_Ka", fraction: 0.1))))
+        #expect(throws: Never.self) { try run(ReferenceShape(name: "fine", profile: ok, tie: .lineAmplitude(group: "Fe_Ka", fraction: 0.1))) }
     }
 
     /// A low line on a good detector has no real width under the law: the line is dropped with its reason, never NaN.
-    func testLineWithoutARealWidthIsDroppedAndReported() throws {
+    @Test func testLineWithoutARealWidthIsDroppedAndReported() throws {
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1024)
         let counts = [Double](repeating: 5, count: 1024)
         // C K-alpha 0.277 keV: radicand 2.5 (0.277 - 5.8987) 1000 + 100^2 < 0.
         let s = FitSettings(elements: ["C", "Al"], resolutionMnKaEV: 110, beamEnergy: 200, background: .polynomial(order: 2))
         let model = EDSLineModel.build(elements: ["C", "Al"], axis: axis, beamEnergy: 200, resolutionMnKaEV: 110)
-        XCTAssertFalse(model.groups.contains { $0.id == "C_Ka" })
-        XCTAssertTrue(model.droppedLines.contains { $0.contains("C_Ka") })
+        #expect(!(model.groups.contains { $0.id == "C_Ka" }))
+        #expect(model.droppedLines.contains { $0.contains("C_Ka") })
         let r = try EDSFit.run(counts: counts, axis: axis, settings: s)
-        XCTAssertTrue(r.model.allSatisfy { $0.isFinite }); XCTAssertTrue(r.values.allSatisfy { $0.isFinite })
-        XCTAssertTrue(r.warnings.contains { $0.hasPrefix("line dropped") && $0.contains("C_Ka") })
-        XCTAssertEqual(r.droppedLines, model.droppedLines)
+        #expect(r.model.allSatisfy { $0.isFinite }); #expect(r.values.allSatisfy { $0.isFinite })
+        #expect(r.warnings.contains { $0.hasPrefix("line dropped") && $0.contains("C_Ka") })
+        #expect(r.droppedLines == model.droppedLines)
         // 100 eV drops Al K-alpha too: with no line left the fit is the background alone, not a trap.
         let none = try EDSFit.run(counts: counts, axis: axis, settings: FitSettings(elements: ["C", "Al"], resolutionMnKaEV: 100, beamEnergy: 200, background: .polynomial(order: 2)))
-        XCTAssertTrue(none.values.isEmpty); XCTAssertTrue(none.model.allSatisfy { $0.isFinite })
-        XCTAssertEqual(none.model[500], 5, accuracy: 1e-6)
+        #expect(none.values.isEmpty); #expect(none.model.allSatisfy { $0.isFinite })
+        #expect(isEqual(none.model[500], 5, accuracy: 1e-6))
     }
 
-    func testWarningsNameTheLargeEscapeRatioAndTheSignedMLBackground() throws {
+    @Test func testWarningsNameTheLargeEscapeRatioAndTheSignedMLBackground() throws {
         let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1024)
         let els = ["Al", "Fe"]
         // 9 % Fe escape planted: above the 5 % flag.
@@ -852,12 +853,12 @@ final class SpectroscopyFitTests: XCTestCase {
         let counts = Self.poissonSpectrum(e, seed: 31)
         let r = try EDSFit.run(counts: counts, axis: axis, settings: .standard(elements: els, axis: axis, resolutionMnKaEV: 130, beamEnergy: 200))
         let iFe = r.groupIDs.firstIndex(of: "Fe_Ka")!
-        XCTAssertEqual(r.escapeRatios[iFe]!, 0.09, accuracy: 0.015)
-        XCTAssertTrue(r.warnings.contains { $0.contains("Fe_Ka") && $0.contains("exceeds 5 %") }, "\(r.warnings)")
-        XCTAssertNil(r.escapeRatios[r.groupIDs.firstIndex(of: "Al_Ka")!])
+        #expect(isEqual(r.escapeRatios[iFe]!, 0.09, accuracy: 0.015))
+        #expect(r.warnings.contains { $0.contains("Fe_Ka") && $0.contains("exceeds 5 %") }, "\(r.warnings)")
+        #expect(r.escapeRatios[r.groupIDs.firstIndex(of: "Al_Ka")!] == nil)
         // Footer labels name the background form.
-        XCTAssertTrue(r.backgroundLabel.hasPrefix("continuum: Kramers\u{00D7}Bernstein(9,5), split at 1.5596 keV"), r.backgroundLabel)
-        XCTAssertTrue(r.backgroundLabel.hasSuffix("orders chosen on synthetic data"))
+        #expect(r.backgroundLabel.hasPrefix("continuum: Kramers\u{00D7}Bernstein(9,5), split at 1.5596 keV"), "\(r.backgroundLabel)")
+        #expect(r.backgroundLabel.hasSuffix("orders chosen on synthetic data"))
         // Poisson ML with an Expert signed polynomial that goes negative is named.
         var s = FitSettings(elements: ["Fe", "Cu"], resolutionMnKaEV: 130, beamEnergy: 200, fitFrom: 5.0, fitTo: 9.5,
                             background: .polynomial(order: 6), escapePeaks: false, method: .poissonML(IRLSSettings()))
@@ -865,7 +866,7 @@ final class SpectroscopyFitTests: XCTestCase {
         let few = Self.poissonSpectrum(Self.expected(axis: EnergyAxis(offset: 0, scale: 0.01, size: 1000), elements: ["Fe", "Cu"], resolution: 130,
                                                     beam: 200, areas: ["Fe_Ka": 60, "Cu_Ka": 40], continuumTotal: 120), seed: 4)
         let ml = try EDSFit.run(counts: few, axis: EnergyAxis(offset: 0, scale: 0.01, size: 1000), settings: s)
-        XCTAssertEqual(ml.negativeModelChannels > 0, ml.warnings.contains { $0.contains("Poisson ML with a model below zero") })
-        XCTAssertEqual(ml.exit == "converged" || ml.exit.hasPrefix("stationary"), ml.converged)
+        #expect((ml.negativeModelChannels > 0) == ml.warnings.contains { $0.contains("Poisson ML with a model below zero") })
+        #expect((ml.exit == "converged" || ml.exit.hasPrefix("stationary")) == ml.converged)
     }
 }

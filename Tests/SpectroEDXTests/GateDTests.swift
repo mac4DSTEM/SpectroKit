@@ -11,11 +11,11 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroCore
 import SpectroEDX
 
-final class GateDTests: XCTestCase {
+struct GateDTests {
 
     private func ratio(_ r: MgRun, _ truth: Double) -> Double { truth > 0 ? r.net / truth : .nan }
     private func f(_ x: Double, _ digits: Int = 2) -> String { String(format: "%.\(digits)f", x) }
@@ -29,7 +29,7 @@ final class GateDTests: XCTestCase {
     /// refuted"). Read here as: D0 is SUPPORTED if the full pool loses Mg (net lower by more than 10 %, or not proposed) where
     /// the single-candidate test proposes it; equal results refute it. Amendment 2 says so.
     /// Experiment: every cell of M (s, L) and U130 (s, L) with realisations, the noise-free mean and the first ten realisations.
-    func testD0PoolPruningInterplay() throws {
+    @Test func testD0PoolPruningInterplay() throws {
         let ids = EDXFixtures.cells.filter { ($0.set == "M" || $0.set == "U130") && $0.nReal > 0 && $0.truth["Mg"]! > 0 }.map(\.id)
         var spectra = 0, decisionDiffers = 0, netDiffers = 0, fullLoses = 0
         var examples: [String] = []
@@ -48,12 +48,12 @@ final class GateDTests: XCTestCase {
         }
         gateNote("EDX D0: \(ids.count) cells, \(spectra) spectra (noise-free mean + first 10 realisations): single and full pool differ by a decision in \(decisionDiffers), by more than 10 % of the net in \(netDiffers); full pool loses a Mg the single test proposes in \(fullLoses). \(examples)")
         gateNote("EDX D0 verdict: \(fullLoses == 0 ? "REFUTED (no pruning loss: the full pool and the single-candidate design agree where it matters)" : "SUPPORTED on \(fullLoses) spectra")  [registered prediction: same net in both, D0 refuted: \(netDiffers == 0 && decisionDiffers == 0 ? "met" : "NOT met in \(netDiffers + decisionDiffers) cases")]")
-        XCTAssertGreaterThan(spectra, 100)
+        #expect(spectra > 100)
         // measured outcome guarded (not a registered bound): the full pool loses Mg on some spectra the single test proposes (9 here)
-        XCTAssertGreaterThanOrEqual(fullLoses, 1, "D0 measured: pruning by the pool costs Mg on some spectra")
+        #expect(fullLoses >= 1, "D0 measured: pruning by the pool costs Mg on some spectra")
         // the control: on matched, strongly detectable data both designs find Mg
         let ctl = RunStore.shared.full("M.s.N6.rho0p05", reals: 10)
-        XCTAssertTrue(ctl.mean.proposed && ctl.reals.allSatisfy(\.proposed), "M.s.N6.rho0p05 is detected by the full pool")
+        #expect(ctl.mean.proposed && ctl.reals.allSatisfy(\.proposed), "M.s.N6.rho0p05 is detected by the full pool")
     }
 
     // MARK: D1 Al Ka width mismatch
@@ -62,7 +62,7 @@ final class GateDTests: XCTestCase {
     /// Swift proposer's Mg net is within +-20 % of the truth AND Mg is proposed in at least 90 % of the realisations.
     /// Predicted: net/truth 0.39 noise-free (0.10 with noise and rho_c = 0.0008), P(proposed) = 0 for rho_Mg <= 0.01, flank factor 20 to 41.
     /// Plus the R_MnKa scan of E4 (the model's resolution against Fano-planted data).
-    func testD1AlKaWidthMismatch() throws {
+    @Test func testD1AlKaWidthMismatch() throws {
         var refuted = false
         for fam in ["s", "L"] {
             for r in ["U125", "U130", "U140", "U150"] {
@@ -90,9 +90,9 @@ final class GateDTests: XCTestCase {
             gateNote("EDX D1 R scan (\(label), U130 s, N 1e7, noise-free, net/truth (flank factor)): " + row.joined(separator: ", "))
         }
         let m = RunStore.shared.single("M.s.N7.rho0p01")
-        XCTAssertGreaterThan(ratio(m.mean, 100_000), 0.7, "control: matched widths keep Mg at rho 0.01")
+        #expect(ratio(m.mean, 100_000) > 0.7, "control: matched widths keep Mg at rho 0.01")
         let u = RunStore.shared.single("U130.s.N7.rho0p01")
-        XCTAssertLessThan(ratio(u.mean, 100_000), ratio(m.mean, 100_000), "Fano widths lose Mg relative to matched widths")
+        #expect(ratio(u.mean, 100_000) < ratio(m.mean, 100_000), "Fano widths lose Mg relative to matched widths")
         gateNote("EDX D1 verdict: \(refuted ? "REFUTED (U130 s N 1e7 rho 0.01 keeps Mg within 20 % and proposes it in >= 90 %)" : "NOT refuted: at U130 s N 1e7 rho 0.01 Mg net/truth is \(f(ratio(u.reals.isEmpty ? u.mean : MgRun(net: u.reals.meanNet, sigma: 0, sigmaZero: 0, lc: 0, ld: 0, misfit: 0, proposed: false, other: [], present: true), 100_000))) and P(proposed) \(f(u.reals.pProposed))")")
     }
 
@@ -108,7 +108,7 @@ final class GateDTests: XCTestCase {
     /// D2. Axis error: offset, gain, or the half channel. Refuted if on set S a shift of +-3 eV leaves Mg net within +-20 % of the
     /// truth. Predicted: net/truth 0.54 at +3 eV, 0.15 at +5, 0 at +-10 (rho_Mg = 0.01, noise-free, surrogate); after refinement the
     /// planted cells recover to within +-30 % of the truth for N_Al >= 1e6 on set M's widths and stay biased on set U.
-    func testD2AxisError() throws {
+    @Test func testD2AxisError() throws {
         let surrogate: [String: Double] = ["S+1": 0.87, "S+2": 0.71, "S+3": 0.54, "S+5": 0.15, "S+10": 0, "S-10": 0]
         var refutedAt3 = false
         for rho in ["0p01", "0p002"] {
@@ -151,11 +151,11 @@ final class GateDTests: XCTestCase {
         }
         // measured outcome guarded (not a registered bound): refining axis and R_MnKa first brings Mg back on a +3 eV axis error
         let c3 = cell("S+3.s.N7.rho0p01")
-        let refined = try XCTUnwrap(refineThenPropose(EDXFixtures.meanSpectrum(c3), elements: ["Mg", "Al", "Si"], useRefinedResolution: true))
-        XCTAssertGreaterThan(ratio(refined, c3.truth["Mg"]!), 0.9, "refine-then-propose recovers Mg on S+3 (measured 0.99)")
-        XCTAssertTrue(refined.proposed)
+        let refined = try #require(refineThenPropose(EDXFixtures.meanSpectrum(c3), elements: ["Mg", "Al", "Si"], useRefinedResolution: true))
+        #expect(ratio(refined, c3.truth["Mg"]!) > 0.9, "refine-then-propose recovers Mg on S+3 (measured 0.99)")
+        #expect(refined.proposed)
         let m = RunStore.shared.single("M.s.N7.rho0p01"), p3 = RunStore.shared.single("S+3.s.N7.rho0p01")
-        XCTAssertGreaterThan(ratio(m.mean, 100_000), ratio(p3.mean, 100_000), "a +3 eV axis error costs Mg relative to the matched axis")
+        #expect(ratio(m.mean, 100_000) > ratio(p3.mean, 100_000), "a +3 eV axis error costs Mg relative to the matched axis")
         gateNote("EDX D2 verdict (refuting observation: S +-3 eV keeps Mg within 20 %): \(refutedAt3 ? "REFUTED" : "NOT refuted: both S+3 and S-3 move Mg net by more than 20 % at rho 0.01, N 1e7")")
     }
 
@@ -173,7 +173,7 @@ final class GateDTests: XCTestCase {
     /// D3. Al Ka incomplete-charge tail. Refuted if on set T a 2 % tail does not change Mg net by more than 10 % at
     /// rho_Mg = 0.01, N_Al = 1e7. Predicted 0.81 of the matched result (0.14 at rho 0.002). Then the tail supplied as a reference
     /// shape (ReferenceShapes, `.lineAmplitude` tied to Al_Ka): how much is recovered.
-    func testD3AlKaTail() throws {
+    @Test func testD3AlKaTail() throws {
         var changed2 = false
         for rho in ["0p01", "0p002"] {
             let base = RunStore.shared.single("M.s.N7.rho\(rho)").mean.net
@@ -197,12 +197,12 @@ final class GateDTests: XCTestCase {
                 let without = RunStore.shared.single(id).mean
                 if t == "T2" && rho == "0p01" {
                     // measured outcome guarded (not a registered bound): the true tail as a reference shape brings Mg back (0.64 -> 0.84)
-                    XCTAssertGreaterThan(ratio(withRef, truth), ratio(without, truth) + 0.1, "the true tail supplied as a reference shape recovers Mg")
+                    #expect(ratio(withRef, truth) > (ratio(without, truth) + 0.1), "the true tail supplied as a reference shape recovers Mg")
                 }
                 gateNote("EDX D3 reference shape \(id): net/truth without \(f(ratio(without, truth))) with the true tail supplied \(f(ratio(withRef, truth))) (flank factor \(f(without.misfit, 1)) -> \(f(withRef.misfit, 1)), L_D \(f(without.ld, 0)) -> \(f(withRef.ld, 0)))")
             }
         }
-        XCTAssertGreaterThan(RunStore.shared.single("M.s.N7.rho0p01").mean.net, 0)
+        #expect(RunStore.shared.single("M.s.N7.rho0p01").mean.net > 0)
         gateNote("EDX D3 verdict (refuting observation: a 2 % tail changes Mg net by <= 10 % at rho 0.01, N 1e7): \(changed2 ? "NOT refuted (a 2 % tail changes Mg net by more than 10 %)" : "REFUTED")")
     }
 
@@ -243,7 +243,7 @@ final class GateDTests: XCTestCase {
     /// alloy is nominally >= 0.3 wt % Mg, AND the real Al Ka misfit is small. The last two need the owner (Q2, D6) and are not run.
     /// What is measured here: the margin (planted Mg / L_D(M)) of the shipped proposer on set M, and the same on the centre-sampled
     /// control, which separates the line-shape sampling convention of the model from the rest.
-    func testD4TooLittleMgMargin() throws {
+    @Test func testD4TooLittleMgMargin() throws {
         for n in ["N5", "N6", "N7"] {
             for rho in ["0p002", "0p005", "0p01"] {
                 let id = "M.s.\(n).rho\(rho)"
@@ -255,8 +255,8 @@ final class GateDTests: XCTestCase {
         }
         let c = cell("M.s.N7.rho0p002")
         let m0 = PlantedRuns.run(centreSampledMatched(c))
-        XCTAssertLessThan(m0.misfit, 3, "control: with the model's own sampling convention the matched flank factor is small")
-        XCTAssertGreaterThan(RunStore.shared.single("M.s.N7.rho0p002").mean.misfit, m0.misfit, "the generator's bin integration is what inflates the flank factor")
+        #expect(m0.misfit < 3, "control: with the model's own sampling convention the matched flank factor is small")
+        #expect(RunStore.shared.single("M.s.N7.rho0p002").mean.misfit > m0.misfit, "the generator's bin integration is what inflates the flank factor")
         gateNote("EDX D4 verdict: registration predicts a margin of 20 to 50 at N_Al 1e7 (L_D(M) = 2.2e3); the generator-matched set gives the margin printed above; D6 and the alloy's nominal Mg (Q2) are not available, so D4 can be neither refuted nor confirmed on real data")
     }
 }

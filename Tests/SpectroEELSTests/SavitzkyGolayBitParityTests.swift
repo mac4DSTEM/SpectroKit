@@ -10,11 +10,11 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroEELS
 import SpectroCore
 
-final class SavitzkyGolayBitParityTests: XCTestCase {
+struct SavitzkyGolayBitParityTests {
 
     struct Meta: Decodable {
         struct Setting: Decodable { let wl: Int; let po: Int; let delta: Double; let outOffset: Int }
@@ -45,7 +45,7 @@ final class SavitzkyGolayBitParityTests: XCTestCase {
 
     /// `savgol_coeffs` of every setting, and the whole derivative (interior + both edges) of every spectrum of every image at
     /// every setting of that image, the image filtered as ONE array (as HyperSpy does): 0 bit mismatches.
-    func testCoefficientsAndDerivativeAreBitIdenticalToSciPy() throws {
+    @Test func testCoefficientsAndDerivativeAreBitIdenticalToSciPy() throws {
         for dir in dirs() {
             let (meta, v) = try load(dir)
             var compared = 0, coeffMismatch = 0, derivMismatch = 0, runs = 0, pixels = 0
@@ -72,13 +72,13 @@ final class SavitzkyGolayBitParityTests: XCTestCase {
                 }
             }
             print("EELS-REPORT sg bit parity [\(dir.lastPathComponent)]: \(meta.images.count) images, \(runs) image x setting runs, \(pixels) spectra, \(compared) derivative values, \(derivMismatch) mismatches; \(meta.coefficients.count) coefficient sets, \(coeffMismatch) mismatches")
-            XCTAssertEqual(coeffMismatch, 0)
-            XCTAssertEqual(derivMismatch, 0)
+            #expect(coeffMismatch == 0)
+            #expect(derivMismatch == 0)
         }
     }
 
     /// `convolve1d`'s interior for hand-made weights on each of the three paths (including pairs within and beyond DBL_EPSILON).
-    func testConvolutionPathsAreBitIdenticalToSciPy() throws {
+    @Test func testConvolutionPathsAreBitIdenticalToSciPy() throws {
         for dir in dirs() {
             let (meta, v) = try load(dir)
             var mismatches = 0, compared = 0
@@ -92,22 +92,22 @@ final class SavitzkyGolayBitParityTests: XCTestCase {
                 let h = c.wl / 2
                 for i in h..<(im.n - h) {
                     compared += 1
-                    if !same(out[i], v[c.outOffset + i]) { mismatches += 1; XCTFail("\(c.label) wl \(c.wl) pixel \(c.pixel) index \(i): \(out[i]) vs SciPy \(v[c.outOffset + i])") }
+                    if !same(out[i], v[c.outOffset + i]) { mismatches += 1; Issue.record("\(c.label) wl \(c.wl) pixel \(c.pixel) index \(i): \(out[i]) vs SciPy \(v[c.outOffset + i])") }
                 }
                 paths.insert("\(SavitzkyGolay.interiorPath(coefficients: w))")
             }
             print("EELS-REPORT convolve paths [\(dir.lastPathComponent)]: \(meta.convolutions.count) cases, \(compared) values, \(mismatches) mismatches, paths hit \(paths.sorted())")
-            XCTAssertEqual(mismatches, 0)
-            XCTAssertEqual(paths, ["general", "antisymmetric", "symmetric"])
+            #expect(mismatches == 0)
+            #expect(paths == ["general", "antisymmetric", "symmetric"])
         }
     }
 
     /// Which path SciPy's own coefficients take: the nearly-antisymmetric derivative filter is "general" only when its
     /// asymmetry exceeds DBL_EPSILON (window 5, order 3, delta 0.05: yes; window 21, order 3, delta 1: anti-symmetric).
-    func testPathSelectionOnSciPyCoefficients() throws {
+    @Test func testPathSelectionOnSciPyCoefficients() throws {
         let general = try SavitzkyGolay.coefficients(windowLength: 5, polynomialOrder: 3, derivative: 1, delta: 0.05)
-        XCTAssertEqual(SavitzkyGolay.interiorPath(coefficients: general), .general)
+        #expect(SavitzkyGolay.interiorPath(coefficients: general) == .general)
         let anti = try SavitzkyGolay.coefficients(windowLength: 21, polynomialOrder: 3, derivative: 1, delta: 1.0)
-        XCTAssertEqual(SavitzkyGolay.interiorPath(coefficients: anti), .antisymmetric)
+        #expect(SavitzkyGolay.interiorPath(coefficients: anti) == .antisymmetric)
     }
 }

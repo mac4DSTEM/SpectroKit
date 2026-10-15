@@ -9,7 +9,7 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroCore
 import SpectroEELS
 
@@ -53,24 +53,24 @@ extension Dictionary where Key == String, Value == Any {
     func i(_ k: String) -> Int { (self[k] as! NSNumber).intValue }
 }
 
-final class EdgePinsTests: XCTestCase {
+struct EdgePinsTests {
 
     // Gate 1: the cross section on the whole registered grid (192 edge cases x 3 scales x 4 widths).
-    func testCrossSectionEqualsExSpyOnTheGrid() throws {
+    @Test func testCrossSectionEqualsExSpyOnTheGrid() throws {
         let grid = EdgeFixtures.pins["grid"] as! [[String: Any]]
-        XCTAssertEqual(grid.count, 192)
+        #expect(grid.count == 192)
         let angle = Worst(), qint = Worst(), fn = Worst(), sig = Worst()
         for g in grid {
             let edge = EdgeFixtures.edge(g["element"] as! String)
-            let table = try XCTUnwrap(GOSTable.bundled(edge))
-            let xs = try XCTUnwrap(EdgeCrossSection(table: table, beamEnergyKeV: g.x("E0"), convergenceMrad: g.x("alpha"),
+            let table = try #require(GOSTable.bundled(edge))
+            let xs = try #require(EdgeCrossSection(table: table, beamEnergyKeV: g.x("E0"), convergenceMrad: g.x("alpha"),
                                                     collectionMrad: g.x("beta")))
             let tag = "\(edge) E0 \(g.x("E0")) a \(g.x("alpha")) b \(g.x("beta"))"
             angle.record(relativeDifference(xs.effectiveAngleMrad, g.x("effectiveAngleMrad")), tag)
-            XCTAssertEqual(table.energyAxis.map { Double($0) }, g.a("tabulatedEnergies"), tag)
+            #expect(table.energyAxis.map { Double($0) } == g.a("tabulatedEnergies"), "\(tag)")
             for (p, e) in zip(xs.qint, g.a("qint")) { qint.record(relativeDifference(p, e), tag) }
-            XCTAssertEqual(relativeDifference(xs.powerLawR, g.x("powerLawR")), 0, accuracy: 1e-12, tag)
-            XCTAssertEqual(relativeDifference(xs.powerLawA, g.x("powerLawA")), 0, accuracy: 1e-12, tag)
+            #expect(isEqual(relativeDifference(xs.powerLawR, g.x("powerLawR")), 0, accuracy: 1e-12), "\(tag)")
+            #expect(isEqual(relativeDifference(xs.powerLawA, g.x("powerLawA")), 0, accuracy: 1e-12), "\(tag)")
             for s in g["byScale"] as! [[String: Any]] {
                 let scale = s.x("scale"), offset = s.x("offset"), n = s.i("nChannels")
                 let energies = (0 ..< n).map { offset + scale * Double($0) }
@@ -80,7 +80,7 @@ final class EdgePinsTests: XCTestCase {
                 for (delta, v) in s.d("byDelta") {
                     let w = v as! [String: Any]
                     let range = try axis.channelRange(from: edge.onsetEV, to: edge.onsetEV + Double(delta)!)
-                    XCTAssertEqual(range, w.i("i0") ..< w.i("i1"), "\(tag) scale \(scale) Δ \(delta)")
+                    #expect(range == (w.i("i0") ..< w.i("i1")), "\(tag) scale \(scale) Δ \(delta)")
                     let sigma = NumpySum.sum(f[range].map { $0 * scale })
                     sig.record(relativeDifference(sigma, w.x("sigmaK")), "\(tag) scale \(scale) Δ \(delta)")
                 }
@@ -88,30 +88,31 @@ final class EdgePinsTests: XCTestCase {
         }
         print("edge pins: effective angle \(angle.value) at \(angle.where_); qint \(qint.value) at \(qint.where_); "
               + "function \(fn.value) at \(fn.where_); sigma_k \(sig.value) at \(sig.where_)")
-        XCTAssertLessThanOrEqual(angle.value, 1e-14, angle.where_)
-        XCTAssertLessThanOrEqual(qint.value, 1e-12, qint.where_)
-        XCTAssertLessThanOrEqual(fn.value, 1e-10, fn.where_)
-        XCTAssertLessThanOrEqual(sig.value, 1e-10, sig.where_)
+        #expect(angle.value <= (1e-14), "\(angle.where_)")
+        #expect(qint.value <= (1e-12), "\(qint.where_)")
+        #expect(fn.value <= (1e-10), "\(fn.where_)")
+        #expect(sig.value <= (1e-10), "\(sig.where_)")
     }
 
     // Gate 1: the spline itself and the q limits for one setting (the steps that locate a divergence).
-    func testSplineAndQLimitsEqualExSpy() throws {
+    @Test func testSplineAndQLimitsEqualExSpy() throws {
         let s = EdgeFixtures.pins.d("splineC")
         let c = s.d("case")
-        let xs = try XCTUnwrap(EdgeCrossSection(table: XCTUnwrap(GOSTable.bundled(.carbonK)), beamEnergyKeV: c.x("E0"),
+        let table = try #require(GOSTable.bundled(.carbonK))
+        let xs = try #require(EdgeCrossSection(table: table, beamEnergyKeV: c.x("E0"),
                                                 convergenceMrad: c.x("alpha"), collectionMrad: c.x("beta")))
-        XCTAssertEqual(xs.spline.knots, s.a("knots"))
+        #expect(xs.spline.knots == s.a("knots"))
         let worst = zip(xs.spline.coefficients, s.a("coefficients")).map { relativeDifference($0, $1) }.max()!
-        XCTAssertLessThanOrEqual(worst, 1e-10)
-        XCTAssertEqual(relativeDifference(xs.powerLawR, s.x("extrapolationR")), 0, accuracy: 1e-12)
-        XCTAssertEqual(relativeDifference(xs.powerLawA, s.x("extrapolationA")), 0, accuracy: 1e-12)
+        #expect(worst <= (1e-10))
+        #expect(isEqual(relativeDifference(xs.powerLawR, s.x("extrapolationR")), 0, accuracy: 1e-12))
+        #expect(isEqual(relativeDifference(xs.powerLawA, s.x("extrapolationA")), 0, accuracy: 1e-12))
     }
 
     // Gate 2: pyEELSMODEL's independent integration of the same GOS within 3 %.
-    func testCrossSectionWithinThreePercentOfPyEELSMODEL() throws {
+    @Test func testCrossSectionWithinThreePercentOfPyEELSMODEL() throws {
         let p = EdgeFixtures.pins.d("pyEELSMODEL")
         let cases = p["cases"] as! [[String: Any]]
-        XCTAssertEqual(cases.count, 72)
+        #expect(cases.count == 72)
         var worst = 0.0
         for c in cases {
             let edge = EdgeFixtures.edge(c["element"] as! String)
@@ -120,16 +121,16 @@ final class EdgePinsTests: XCTestCase {
             let energies = (0 ..< n).map { p.x("axisOffset") + scale * Double($0) }
             let f = try EELSEdgeQuantification.differentialCrossSection(edge: edge, microscope: m, energiesEV: energies).barnPerEV
             let sigma = NumpySum.sum(f[c.i("i0") ..< c.i("i1")].map { $0 * scale })
-            XCTAssertEqual(relativeDifference(sigma, c.x("sigmaExSpy")), 0, accuracy: 1e-10, "\(c)")
+            #expect(isEqual(relativeDifference(sigma, c.x("sigmaExSpy")), 0, accuracy: 1e-10), "\(c)")
             let rel = abs(sigma / c.x("sigmaPyEELSMODEL") - 1)
             worst = max(worst, rel)
-            XCTAssertLessThanOrEqual(rel, 0.03, "\(c)")
+            #expect(rel <= 0.03, "\(c)")
         }
         print("pyEELSMODEL: worst |sigma_port / sigma_pyEELSMODEL - 1| = \(worst)")
     }
 
     // Gate 1: background, windows, I_k, I_b and n on every planted image, window and width.
-    func testRatioMethodEqualsExSpyOnThePlantedImages() throws {
+    @Test func testRatioMethodEqualsExSpyOnThePlantedImages() throws {
         let planted = EdgeFixtures.pins.d("planted")
         let images = planted["images"] as! [[String: Any]]
         let fit = Worst(), sums = Worst(), dens = Worst()
@@ -147,16 +148,16 @@ final class EdgePinsTests: XCTestCase {
                         coreLoss: core, edge: .carbonK, microscope: EdgeFixtures.plantedMicroscope,
                         lowLoss: .integratedToWidth(low), backgroundWindowEV: range[0]...range[1],
                         integrationWidthEV: Double(delta)!)
-                    XCTAssertEqual(map.edgeChannels, dd.i("i0") ..< dd.i("i1"), tag)
-                    XCTAssertEqual(map.backgroundWindowEV, w.x("x1")...w.x("x2"), tag)
-                    XCTAssertEqual(relativeDifference(map.crossSectionBarn, dd.x("sigmaK")), 0, accuracy: 1e-10, tag)
-                    XCTAssertEqual(map.validation, "none")
+                    #expect(map.edgeChannels == (dd.i("i0") ..< dd.i("i1")), "\(tag)")
+                    #expect(map.backgroundWindowEV == w.x("x1")...w.x("x2"), "\(tag)")
+                    #expect(isEqual(relativeDifference(map.crossSectionBarn, dd.x("sigmaK")), 0, accuracy: 1e-10), "\(tag)")
+                    #expect(map.validation == "none")
                     for (p, px) in map.pixels.enumerated() {
                         fit.record(relativeDifference(px.powerLawR.orFail(), w.a("r")[p]), tag)
                         fit.record(relativeDifference(px.powerLawA.orFail(), w.a("A")[p]), tag)
                         sums.record(relativeDifference(px.edgeCounts.orFail(), dd.a("iK")[p]), tag)
                         sums.record(relativeDifference(px.backgroundCounts.orFail(), dd.a("iB")[p]), tag)
-                        XCTAssertEqual(px.lowLossIntensity.orFail(), dd.a("iLow")[p], tag)
+                        #expect(px.lowLossIntensity.orFail() == dd.a("iLow")[p], "\(tag)")
                         dens.record(relativeDifference(px.atomsPerNM2.orFail(), dd.a("n")[p]), tag)
                         compared += 1
                     }
@@ -168,7 +169,7 @@ final class EdgePinsTests: XCTestCase {
                             coreLoss: core, edge: .carbonK, microscope: EdgeFixtures.plantedMicroscope,
                             lowLoss: .zeroLoss(tm), backgroundWindowEV: range[0]...range[1], integrationWidthEV: Double(delta)!)
                         for (p, px) in m0.pixels.enumerated() {
-                            XCTAssertEqual(px.lowLossIntensity.orFail(), t.a("i0")[p], "\(tag) θ \(theta)")
+                            #expect(px.lowLossIntensity.orFail() == t.a("i0")[p], "\(tag) θ \(theta)")
                             dens.record(relativeDifference(px.atomsPerNM2.orFail(), t.a("n")[p]), "\(tag) θ \(theta)")
                         }
                     }
@@ -177,8 +178,8 @@ final class EdgePinsTests: XCTestCase {
                 let core0 = try EdgeFixtures.core(im["coreFile"] as! String)
                 let axis = try EELSAxis(offset: core0.energyOffsetEV, scale: core0.energyScaleEV, size: core0.channels)
                 let pw = try PowerLawWindow(axis: axis, from: range[0], to: range[1])
-                XCTAssertEqual([pw.i1, pw.i2, pw.i3], [w.i("i1"), w.i("i2"), w.i("i3")])
-                XCTAssertEqual([pw.x1, pw.x2, pw.x3], [w.x("x1"), w.x("x2"), w.x("x3")])
+                #expect([pw.i1, pw.i2, pw.i3] as [Int] == [w.i("i1"), w.i("i2"), w.i("i3")])
+                #expect([pw.x1, pw.x2, pw.x3] as [Double] == [w.x("x1"), w.x("x2"), w.x("x3")])
                 let from = w.i("backgroundFromChannel"), nb = w.i("backgroundNChannels")
                 let bgPins = w["background"] as! [[Any]]
                 try core0.counts.withUnsafeBufferPointer { buf in
@@ -197,9 +198,9 @@ final class EdgePinsTests: XCTestCase {
         }
         print("planted vs exSpy (\(compared) pixel results): fit \(fit.value) at \(fit.where_); sums \(sums.value) at "
               + "\(sums.where_); n \(dens.value) at \(dens.where_)")
-        XCTAssertGreaterThan(compared, 0)
-        XCTAssertLessThanOrEqual(fit.value, 1e-12, fit.where_)
-        XCTAssertLessThanOrEqual(sums.value, 1e-12, sums.where_)
-        XCTAssertLessThanOrEqual(dens.value, 1e-10, dens.where_)
+        #expect(compared > 0)
+        #expect(fit.value <= (1e-12), "\(fit.where_)")
+        #expect(sums.value <= (1e-12), "\(sums.where_)")
+        #expect(dens.value <= (1e-10), "\(dens.where_)")
     }
 }

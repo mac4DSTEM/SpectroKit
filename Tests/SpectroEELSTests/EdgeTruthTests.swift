@@ -11,10 +11,10 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroEELS
 
-final class EdgeTruthTests: XCTestCase {
+struct EdgeTruthTests {
 
     struct Set { let tag: String; let truth: String; let prefix: String }
     static let sets = [Set(tag: "registered", truth: "edge-planted-truth.json", prefix: "edge-"),
@@ -32,7 +32,7 @@ final class EdgeTruthTests: XCTestCase {
     }
 
     // Gates 3 and 4: noiseless, every case, window and width, both routes, against the method's own predicted bias.
-    func testNoiselessRecoversTheTruthUpToThePredictedBias() throws {
+    @Test func testNoiselessRecoversTheTruthUpToThePredictedBias() throws {
         var worst = 0.0, worstAt = "", worstR2 = 0.0
         for set in Self.sets {
             let truth = EdgeFixtures.load(set.truth)
@@ -72,14 +72,14 @@ final class EdgeTruthTests: XCTestCase {
             }
         }
         print("planted truth: worst |n − predicted| / n_true = \(worst) at \(worstAt); set R, Δ 50, default: worst |n/n_true − 1| = \(worstR2)")
-        XCTAssertLessThanOrEqual(worst, 1e-9, worstAt)
-        XCTAssertLessThanOrEqual(worstR2, 0.02)
-        XCTAssertGreaterThan(worstR2, 0)        // the bias exists; a zero would mean the port read the truth, not the counts
+        #expect(worst <= (1e-9), "\(worstAt)")
+        #expect(worstR2 <= 0.02)
+        #expect(worstR2 > 0)        // the bias exists; a zero would mean the port read the truth, not the counts
     }
 
     // Gate 5, per pixel: the noisy image within 4 σ_n of the noiseless one, both sets, every case, window and width; and the
     // port's σ_n equals the generator's (the same formula, the image's own counts).
-    func testNoisyWithinFourSigma() throws {
+    @Test func testNoisyWithinFourSigma() throws {
         var worstZ = 0.0, worstSigma = 0.0
         for set in Self.sets {
             let pins = EdgeFixtures.pins.d(set.tag == "R" ? "plantedR" : "planted")
@@ -101,18 +101,18 @@ final class EdgeTruthTests: XCTestCase {
                             worstSigma = max(worstSigma, relativeDifference(s, dd.a("sigmaN")[p]))
                             let z = abs(b.pixels[p].atomsPerNM2.orFail() - a.pixels[p].atomsPerNM2.orFail()) / s
                             worstZ = max(worstZ, z)
-                            XCTAssertLessThanOrEqual(z, 4, "\(set.tag) \(c) \(wn) Δ \(delta) px \(p)")
+                            #expect(z <= 4, "\(set.tag) \(c) \(wn) Δ \(delta) px \(p)")
                         }
                     }
                 }
             }
         }
         print("noisy: worst |Δn| / σ_n = \(worstZ); port σ_n vs generator's: \(worstSigma)")
-        XCTAssertLessThanOrEqual(worstSigma, 1e-9)
+        #expect(worstSigma <= (1e-9))
     }
 
     // Gate 5, the spread: set R, single scattering, Δ 50, default window, 200 Poisson realisations of the noiseless image.
-    func testTwoHundredRealisationsMatchSigma() throws {
+    @Test func testTwoHundredRealisationsMatchSigma() throws {
         let f = Self.files(Self.sets[1], "ss", "noiseless")
         let core = try EdgeFixtures.core(f.core), low = try EdgeFixtures.low(f.low)
         let truth = EdgeFixtures.load(Self.sets[1].truth)
@@ -137,7 +137,7 @@ final class EdgeTruthTests: XCTestCase {
             let sigma = sigmas[p].reduce(0, +) / 200
             let ratio = sd / sigma
             lines.append("px \(p) n_true \(nTrue[p]): sd/σ_n = \(ratio)")
-            if nTrue[p] >= 500 { XCTAssertEqual(ratio, 1, accuracy: 0.15, "px \(p)") }
+            if nTrue[p] >= 500 { #expect(isEqual(ratio, 1, accuracy: 0.15), "px \(p)") }
         }
         print("200 realisations (set R, ss, Δ 50, default window):\n" + lines.joined(separator: "\n"))
     }

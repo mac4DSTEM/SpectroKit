@@ -1,6 +1,7 @@
 // SpectroKit S1 test partition (ADR 064 section 3.3): the methods of FinalPolishDTests that move with the EDX core;
 // the rest stay in FinalPolishDTests.swift. Helpers are duplicated, not shared, across the split.
-import XCTest
+import Foundation
+import Testing
 import SpectroCore
 import FormatoDM
 
@@ -16,23 +17,21 @@ import FormatoDM
 /// still refuses) is archived beside the Slot 4⅞ record. These tests drive the
 /// reader through an injected liveness check, and the real descriptor check
 /// through what a healthy disk can still do (a rename, an unlink).
-final class FinalPolishDSpectro: XCTestCase {
+final class FinalPolishDSpectro {
 
-    private var directory: URL!
+    private let directory: URL
 
-    override func setUpWithError() throws {
+    init() throws {
         directory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("mac4dstem-finalpolish-d-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    deinit {
         try? FileManager.default.removeItem(at: directory)
     }
 
-    func testTheErrorTextIsTheOwnersSentence() {
-        XCTAssertEqual(
-            DM4Error.volumeGone("scan_042.dm4").errorDescription,
-            "scan_042.dm4 is no longer reachable: its disk was disconnected. Reconnect it and reopen.")
+    @Test func testTheErrorTextIsTheOwnersSentence() {
+        #expect(DM4Error.volumeGone("scan_042.dm4").errorDescription == "scan_042.dm4 is no longer reachable: its disk was disconnected. Reconnect it and reopen.")
     }
 }

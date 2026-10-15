@@ -1,4 +1,5 @@
-import XCTest
+import Foundation
+import Testing
 import SpectroCore
 import SpectroEDX
 
@@ -28,7 +29,7 @@ import SpectroEDX
 /// Level 2 adds counting statistics (the result's own counting term, 3 sigma) and the documented weak-line bias next to Al
 /// K-alpha (`ContinuumForm.weakLineBiasNote`: -295 +- 31 at 900, -310 +- 23 at 882, -402 +- 33 at 3000 Mg counts, so
 /// 402 + 3 x 33 = 501 counts as an envelope; it is MEASURED for Mg only and ASSUMED to bound Si here).
-final class SpectroscopyAbsorptionTruthTests: XCTestCase {
+final class SpectroscopyAbsorptionTruthTests {
 
     static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         .appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy")
@@ -83,7 +84,7 @@ final class SpectroscopyAbsorptionTruthTests: XCTestCase {
     /// Al 98.802 / Mg 0.5995 / Si 0.5981 (Si -0.31 % from truth), factors 1/T = 1.0201 / 1.0303 / 1.1722; without it
     /// Al 98.885 / Mg 0.5941 / Si 0.5209 (Si -13.2 %). Refuted if any share leaves the derived bound, or if the
     /// correction does not raise Si and Mg and lower Al.
-    func testExactAreasRecoverTruthWithTheSimulatorsGeometryAndTheUncorrectedIsOffAsPredicted() throws {
+    @Test func testExactAreasRecoverTruthWithTheSimulatorsGeometryAndTheUncorrectedIsOffAsPredicted() throws {
         let p = Self.pool
         let I = Self.elements.map { p.areasAbsorptionFree[$0 + "_Ka"]! * p.tEff[$0 + "_Ka"]! }
         let k = Self.typedK.map(\.1)
@@ -92,10 +93,10 @@ final class SpectroscopyAbsorptionTruthTests: XCTestCase {
         // The k conversion itself: absorption-free areas must give truth (guards the test's own arithmetic).
         let free = Self.elements.map { p.areasAbsorptionFree[$0 + "_Ka"]! }
         let freeAt = try Self.at(try CliffLorimer.weightFractions(intensities: free, kFactors: k).map { $0 * 100 })
-        for (a, t) in zip(freeAt, truth) { XCTAssertEqual(a, t, accuracy: 1e-5) }   // the test types Al 26.9815, the app 26.9815386
+        for (a, t) in zip(freeAt, truth) { #expect(isEqual(a, t, accuracy: 1e-5)) }   // the test types Al 26.9815, the app 26.9815386
 
         let geometry = try FourDetectorGeometry(segments: Self.segments(), tiltAlphaDegrees: -16.87)
-        let energies = try Self.elements.map { try XCTUnwrap(XRayLines.line($0 + "_Ka")?.energy) }
+        let energies = try Self.elements.map { try #require(XRayLines.line($0 + "_Ka")?.energy) }
         let setup = AbsorptionSetup(elements: Self.elements, lineEnergiesKeV: energies, geometry: geometry, table: Self.tables.mac)
         let r = try AbsorptionCorrection.cliffLorimer(intensities: I, kFactors: k, setup: setup, thicknessNm: p.thicknessNm,
                                                       options: .init(convergence: 1e-7, maxIterations: 200))
@@ -103,21 +104,21 @@ final class SpectroscopyAbsorptionTruthTests: XCTestCase {
         let withoutAt = try Self.at(try CliffLorimer.weightFractions(intensities: I, kFactors: k).map { $0 * 100 })
 
         // Direction: 1/T Si > Mg > Al > 1; the correction raises Si and Mg and lowers Al.
-        XCTAssertGreaterThan(r.factors[2], r.factors[1]); XCTAssertGreaterThan(r.factors[1], r.factors[0]); XCTAssertGreaterThan(r.factors[0], 1)
-        XCTAssertGreaterThan(withAt[2], withoutAt[2]); XCTAssertGreaterThan(withAt[1], withoutAt[1]); XCTAssertLessThan(withAt[0], withoutAt[0])
+        #expect(r.factors[2] > r.factors[1]); #expect(r.factors[1] > r.factors[0]); #expect(r.factors[0] > 1)
+        #expect(withAt[2] > withoutAt[2]); #expect(withAt[1] > withoutAt[1]); #expect(withAt[0] < withoutAt[0])
 
         // Recovery inside the derived bound, element by element.
         let cAl = r.factors[0] - 1
         for i in 0..<3 {
             let bound = truth[i] * Self.modelGap * ((r.factors[i] - 1) + cAl) + 1e-6
-            Self.note(String(format: "L1 %@ with %.5f without %.5f truth %.1f 1/T %.4f bound %.5f", Self.elements[i], withAt[i], withoutAt[i], truth[i], r.factors[i], bound))
-            XCTAssertLessThanOrEqual(abs(withAt[i] - truth[i]), bound, "\(Self.elements[i]): \(withAt[i]) vs truth \(truth[i]), bound \(bound)")
+            note(String(format: "L1 %@ with %.5f without %.5f truth %.1f 1/T %.4f bound %.5f", Self.elements[i], withAt[i], withoutAt[i], truth[i], r.factors[i], bound))
+            #expect(abs(withAt[i] - truth[i]) <= bound, "\(Self.elements[i]): \(withAt[i]) vs truth \(truth[i]), bound \(bound)")
         }
         // Uncorrected: Si is low by about the predicted 13 % (the simulator's own T_eff gives the exact number).
         let predictedSiRatio = (p.tEff["Si_Ka"]! / p.tEff["Al_Ka"]!)             // Si/Al read without correction, relative to truth
-        XCTAssertEqual((withoutAt[2] / withoutAt[0]) / (truth[2] / truth[0]), predictedSiRatio, accuracy: 1e-5)
-        XCTAssertEqual(withoutAt[2] / truth[2] - 1, -0.132, accuracy: 0.003, "uncorrected Si share vs truth: \(withoutAt[2] / truth[2] - 1)")
-        XCTAssertLessThan(abs(withAt[2] - truth[2]), abs(withoutAt[2] - truth[2]) / 10, "the correction removes at least 90 % of the Si error")
+        #expect(isEqual((withoutAt[2] / withoutAt[0]) / (truth[2] / truth[0]), predictedSiRatio, accuracy: 1e-5))
+        #expect(isEqual(withoutAt[2] / truth[2] - 1, -0.132, accuracy: 0.003), "uncorrected Si share vs truth: \(withoutAt[2] / truth[2] - 1)")
+        #expect(abs(withAt[2] - truth[2]) < (abs(withoutAt[2] - truth[2]) / 10), "the correction removes at least 90 % of the Si error")
     }
 
     // MARK: Level 2 - the pooled fit on a Poisson draw of the simulator's spectrum
@@ -188,13 +189,12 @@ final class SpectroscopyAbsorptionTruthTests: XCTestCase {
     private static let biasEnvelopeCounts = ["Mg": 402.0 + 3 * 33.0, "Si": 164.0 + 3 * 40.0]
 
     /// Per-seed numbers go to stderr: `print` stays in the hosted app's stdout and never reaches the xcodebuild log.
-    /// Also kept as an attachment (read it from the xcresult: `xcresulttool export attachments`).
-    nonisolated(unsafe) private static var notes: [String] = []
-    private static func note(_ s: String) { notes.append(s); FileHandle.standardError.write(Data(("A4 " + s + "\n").utf8)) }
-    override func tearDown() {
-        let a = XCTAttachment(string: Self.notes.joined(separator: "\n")); a.lifetime = .keepAlways; add(a)
-        Self.notes = []
-        super.tearDown()
+    /// Also kept as an attachment (read it from the xcresult: `xcresulttool export attachments`, or the test run's attachments folder).
+    /// One instance per test (Swift Testing), so the notes are the test's own, attached when it ends.
+    private var notes: [String] = []
+    private func note(_ s: String) { notes.append(s); FileHandle.standardError.write(Data(("A4 " + s + "\n").utf8)) }
+    deinit {
+        Attachment.record(notes.joined(separator: "\n"), named: "notes")
     }
 
     /// The pooled fit (Poisson draw, simulator's k typed, true axis locked, 80 nm typed) against `phases_at_pct`.
@@ -205,60 +205,60 @@ final class SpectroscopyAbsorptionTruthTests: XCTestCase {
     /// tail left in the continuum moves Al by 1.5 % x the 1.2 at % non-Al share). Pile-up takes the same ~6 % from all
     /// three lines (kappa x a_Al), so it cancels in a ratio. Refuted if any share leaves its tolerance, or if with-absorption
     /// is not above without for Si and Mg (and below for Al) on every seed.
-    func testPooledFitRecoversTruthAndTheCorrectionMovesTheSharesTheRightWay() throws {
+    @Test func testPooledFitRecoversTruthAndTheCorrectionMovesTheSharesTheRightWay() throws {
         let p = Self.pool
         var siGain: [Double] = []
         for seed in Self.seeds {
             let on = try PooledQuantifier.run(Self.input(seed: seed, absorption: true), tables: Self.tables)
             let off = try PooledQuantifier.run(Self.input(seed: seed, absorption: false), tables: Self.tables)
-            guard case .applied = on.absorption else { return XCTFail("\(on.absorption)") }
-            XCTAssertEqual(off.absorption, .off)
-            func row(_ r: PooledQuantification, _ el: String) throws -> PooledQuantification.Row { try XCTUnwrap(r.rows.first { $0.element == el }) }
+            guard case .applied = on.absorption else { Issue.record("\(on.absorption)"); return }
+            #expect(off.absorption == .off)
+            func row(_ r: PooledQuantification, _ el: String) throws -> PooledQuantification.Row { try #require(r.rows.first { $0.element == el }) }
             var line = "seed \(seed):"
             for el in Self.elements {
                 let a = try row(on, el), b = try row(off, el)
                 let truth = p.truthAtPct[el]!
-                let at = try XCTUnwrap(a.atomicPercent), atOff = try XCTUnwrap(b.atomicPercent)
-                let sigmaCounting = try XCTUnwrap(a.atomicTerms)[.counting] * at
+                let at = try #require(a.atomicPercent), atOff = try #require(b.atomicPercent)
+                let sigmaCounting = try #require(a.atomicTerms)[.counting] * at
                 let tol = el == "Al" ? 3 * sigmaCounting + 0.05
                                       : 3 * sigmaCounting + truth * Self.biasEnvelopeCounts[el]! / p.areasWithAbsorption[el + "_Ka"]!
                 line += String(format: " %@ %.4f (off %.4f, truth %.1f, tol %.3f, net %.0f)", el, at, atOff, truth, tol, a.net)
-                XCTAssertLessThanOrEqual(abs(at - truth), tol, "\(el) \(line)")
+                #expect(abs(at - truth) <= tol, "\(el) \(line)")
                 switch el {
-                case "Al": XCTAssertLessThan(at, atOff, line)
-                default: XCTAssertGreaterThan(at, atOff, line)
+                case "Al": #expect(at < atOff, "\(line)")
+                default: #expect(at > atOff, "\(line)")
                 }
                 if el == "Si" { siGain.append(at - atOff) }
             }
-            Self.note("L2 " + line)
+            note("L2 " + line)
         }
         // The Si correction is a property of the geometry, not of the draw: the same on every seed (predicted +0.078 at%).
         let spread = (siGain.max() ?? 0) - (siGain.min() ?? 0)
-        XCTAssertLessThan(spread, 0.01, "Si correction by seed: \(siGain)")
-        XCTAssertEqual(siGain.reduce(0, +) / Double(siGain.count), 0.078, accuracy: 0.015, "\(siGain)")
+        #expect(spread < 0.01, "Si correction by seed: \(siGain)")
+        #expect(isEqual(siGain.reduce(0, +) / Double(siGain.count), 0.078, accuracy: 0.015), "\(siGain)")
     }
 
     /// Same fitted areas, two corrections: the app's (closed form, element-density mass thickness, no O) against the
     /// SIMULATOR's own per-line T_eff (`t_eff` in the fixture, the depth-weighted path integral). Counting statistics and the
     /// weak-line bias are in both areas, so they cancel; what is left is the correction model, bounded as in the header.
     /// Predicted: |difference| <= bound for Mg, Si and Al on every seed (Si ~0.002 at%, bound ~0.006).
-    func testPooledCorrectionAgreesWithTheSimulatorsOwnTransmissionOnTheSameFittedAreas() throws {
+    @Test func testPooledCorrectionAgreesWithTheSimulatorsOwnTransmissionOnTheSameFittedAreas() throws {
         let p = Self.pool
         let k = Self.typedK.map(\.1)
         for seed in Self.seeds {
             let on = try PooledQuantifier.run(Self.input(seed: seed, absorption: true), tables: Self.tables)
-            let nets = try Self.elements.map { el in try XCTUnwrap(on.rows.first { $0.element == el }).net }
+            let nets = try Self.elements.map { el in try #require(on.rows.first { $0.element == el }).net }
             let simFactors = Self.elements.map { 1 / p.tEff[$0 + "_Ka"]! }
             let simAt = try Self.at(try CliffLorimer.weightFractions(intensities: nets, kFactors: k, absorption: simFactors).map { $0 * 100 })
             let rawAt = try Self.at(try CliffLorimer.weightFractions(intensities: nets, kFactors: k).map { $0 * 100 })
             let cAl = simFactors[0] - 1
             for (i, el) in Self.elements.enumerated() {
-                let app = try XCTUnwrap(on.rows.first { $0.element == el }?.atomicPercent)
+                let app = try #require(on.rows.first { $0.element == el }?.atomicPercent)
                 let bound = simAt[i] * Self.modelGap * ((simFactors[i] - 1) + cAl) + 1e-6
-                XCTAssertLessThanOrEqual(abs(app - simAt[i]), bound, "seed \(seed) \(el): app \(app), simulator-geometry \(simAt[i]), bound \(bound)")
+                #expect(abs(app - simAt[i]) <= bound, "seed \(seed) \(el): app \(app), simulator-geometry \(simAt[i]), bound \(bound)")
                 // and the correction is real: the simulator-geometry result is far from the uncorrected one for Si
-                Self.note(String(format: "L2b seed %llu %@ app %.4f simulator-geometry %.4f raw %.4f bound %.4f", seed, el, app, simAt[i], rawAt[i], bound))
-                if el == "Si" { XCTAssertGreaterThan(simAt[i] - rawAt[i], 0.05, "seed \(seed): \(simAt[i]) vs raw \(rawAt[i])") }
+                note(String(format: "L2b seed %llu %@ app %.4f simulator-geometry %.4f raw %.4f bound %.4f", seed, el, app, simAt[i], rawAt[i], bound))
+                if el == "Si" { #expect((simAt[i] - rawAt[i]) > 0.05, "seed \(seed): \(simAt[i]) vs raw \(rawAt[i])") }
             }
         }
     }

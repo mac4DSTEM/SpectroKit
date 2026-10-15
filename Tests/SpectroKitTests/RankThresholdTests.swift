@@ -7,32 +7,32 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 import SpectroCore
 
-final class RankThresholdTests: XCTestCase {
+struct RankThresholdTests {
 
     func design(_ delta: Double) -> ColumnMatrix {
         ColumnMatrix(columns: [[1, 1, 1], [1, 1 + delta, 1 - delta]])
     }
 
-    func testWellConditionedDesignIsFullRankAndExact() throws {
+    @Test func testWellConditionedDesignIsFullRankAndExact() throws {
         let a = design(1e-6)
         // b = A (2, 3): an exact system, recovered at full rank.
         let b = ColumnMatrix(columns: [a.times([2, 3])])
-        let r = try XCTUnwrap(FitLinearAlgebra.leastSquares(a, b))
-        XCTAssertEqual(r.rank, 2)
-        XCTAssertEqual(r.x.data[0], 2, accuracy: 1e-6)
-        XCTAssertEqual(r.x.data[1], 3, accuracy: 1e-6)
+        let r = try #require(FitLinearAlgebra.leastSquares(a, b))
+        #expect(r.rank == 2)
+        #expect(isEqual(r.x.data[0], 2, accuracy: 1e-6))
+        #expect(isEqual(r.x.data[1], 3, accuracy: 1e-6))
     }
 
-    func testNearlyCollinearDesignIsCutToRankOneMinimumNorm() throws {
+    @Test func testNearlyCollinearDesignIsCutToRankOneMinimumNorm() throws {
         let a = design(1e-14)
         let b = ColumnMatrix(columns: [[5, 5, 5]])
-        let r = try XCTUnwrap(FitLinearAlgebra.leastSquares(a, b))
-        XCTAssertEqual(r.rank, 1)
+        let r = try #require(FitLinearAlgebra.leastSquares(a, b))
+        #expect(r.rank == 1)
         // Rank 1: the minimum-norm solution splits the weight equally, 2.5 and 2.5 (a rank-2 solve gives anything).
-        XCTAssertEqual(r.x.data[0], 2.5, accuracy: 1e-9)
-        XCTAssertEqual(r.x.data[1], 2.5, accuracy: 1e-9)
+        #expect(isEqual(r.x.data[0], 2.5, accuracy: 1e-9))
+        #expect(isEqual(r.x.data[1], 2.5, accuracy: 1e-9))
     }
 }
