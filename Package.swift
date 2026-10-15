@@ -1,5 +1,5 @@
 // swift-tools-version: 6.2
-// SpectroKit — a spectroscopy library (a Swift port of exSpy), extracted from its first host app at 5ba712a0.
+// SpectroKit — a spectroscopy library (a Swift port of exSpy), extracted from an application's source at 5ba712a0.
 //
 // Library targets (SpectroCore the shared part, SpectroEDX first, SpectroEELS later):
 // `SpectroCore` is what EDS and EELS share (the spectrum image, the energy axis, the least-squares and Poisson fits, the
@@ -10,7 +10,7 @@
 // are SpectroEDX's `Bundle.module` resources (`QuantificationTables.bundled()`, bundle `SpectroKit_SpectroEDX`); test
 // fixtures are read by `#filePath` and are not resources. What one module needs from the other is `package`, never `public`.
 //
-// 0.4.0: the file readers (`DM4Experiment`, `VeloxEMDReader`, `HDF5Serial`) live in FormatoKit (the suite's RosettaSciIO port,
+// 0.4.0: the file readers (`DM4Experiment`, `VeloxEMDReader`, `HDF5Serial`) live in FormatoKit (a Swift port of RosettaSciIO,
 // docs/consumers-0.4.0.md), a package dependency pinned to an exact tag so a consumer's `swift build` resolves it alone. FormatoKit
 // ships libhdf5 inside FormatoHDF5, so nothing here asks a consumer to supply one.
 import PackageDescription
@@ -29,8 +29,8 @@ let package = Package(
     targets: [
         // Plain-C wrappers over the four Accelerate LAPACK routines `FitLinearAlgebra` calls. ACCELERATE_NEW_LAPACK is
         // defined for this C target only (a `cSettings` define, which SwiftPM accepts in a versioned dependency); its public
-        // header includes no Accelerate. This replaces S2's `-Xcc -DACCELERATE_NEW_LAPACK` unsafe flag (ADR 064
-        // amendment a): no unsafe flags anywhere in this manifest.
+        // header includes no Accelerate. This replaces S2's `-Xcc -DACCELERATE_NEW_LAPACK` unsafe flag: no unsafe
+        // flags anywhere in this manifest.
         .target(
             name: "CSpectroLAPACK",
             cSettings: [.define("ACCELERATE_NEW_LAPACK")],
@@ -44,7 +44,7 @@ let package = Package(
                 .product(name: "FormatoDM", package: "FormatoKit"),
                 .product(name: "FormatoEMD", package: "FormatoKit"),
             ],
-            // No Debug `-O` (S2 carried the host app's unsafe `-O` flag for the Debug configuration). Measured in S3:
+            // No Debug `-O` (S2 carried the source application's unsafe `-O` flag for the Debug configuration). Measured in S3:
             // Debug at -Onone is 20-50x slower on every hot path (936 MB Velox 24.5 s vs 1.05 s, proposer 956 s vs 19.8 s),
             // and `@_optimize(speed)` does not help at -Onone, but a versioned dependency cannot carry unsafe flags. So the
             // optimisation is the consumer's: tools/test.sh runs this package's tests with `-c release`.
@@ -80,7 +80,7 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
-        // The 258 tests that moved from the first host app, by name (its test partition of 2026-10-13). They
+        // The 258 tests that moved from the application the library was extracted from, by name (its test partition of 2026-10-13). They
         // stay in one target across the split (the names are the contract), so it depends on both modules. At 0.4.0 the 68 reader
         // tests among them moved to FormatoKit with the readers; the 190 others stay here, by name.
         .testTarget(
@@ -131,7 +131,7 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
-        // G-golden: the first host app's byte-for-byte baseline (recorded at its 71929a01) for the scenarios the library reaches.
+        // G-golden: the source application's byte-for-byte baseline (recorded at its 71929a01) for the scenarios the library reaches.
         // Its own target so the moved-name count stays exact (190 since 0.4.0).
         .testTarget(
             name: "SpectroGoldenTests",

@@ -71,11 +71,13 @@ public nonisolated struct EnergyAxis: Equatable, Sendable {
     /// axis throws (hyperspy `IndexError`). An empty or reversed pair gives an empty range.
     package func channelRange(from start: Double, to stop: Double) throws -> Range<Int> {
         var lo = 0, hi = size
-        do { lo = try index(of: start) } catch EnergyAxisError.outsideAxis {
+        do { lo = try index(of: start) } catch let error as EnergyAxisError {
+            guard case .outsideAxis = error else { throw error }
             if start > highValue { throw EnergyAxisError.sliceBeyondAxis(start: start, stop: stop) }
             lo = 0
         }
-        do { hi = try index(of: stop) } catch EnergyAxisError.outsideAxis {
+        do { hi = try index(of: stop) } catch let error as EnergyAxisError {
+            guard case .outsideAxis = error else { throw error }
             if stop < lowValue { throw EnergyAxisError.sliceBeyondAxis(start: start, stop: stop) }
             hi = size
         }

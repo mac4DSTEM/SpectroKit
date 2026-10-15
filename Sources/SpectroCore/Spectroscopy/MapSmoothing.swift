@@ -16,7 +16,8 @@
 import Foundation
 
 /// A one-dimensional smoothing kernel for `MapSmoothing.apply(_:width:height:kernel:)`, applied along each axis in turn and
-/// renormalised over the in-bounds taps at the border. The menu of `MapSmoothing` is five of these.
+/// renormalised over the in-bounds taps at the border. The menu of `MapSmoothing` is five of these. The smoothed map is a plain
+/// array with no notes: a caller that shows a map smoothed with a kernel of its own records the kernel beside the map.
 public nonisolated enum SmoothingKernel: Sendable, Equatable, Codable {
     /// A box of `width` taps (odd, at least 1): 3 and 5 are the menu's.
     case box(width: Int)

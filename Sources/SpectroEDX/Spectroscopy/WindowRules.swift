@@ -13,6 +13,9 @@ import Foundation
 /// `WindowRules.default` is the rule set of eXSpy 7185a4d1 for the first three fields and the library's own choice for the rest.
 /// A window is always E ± a multiple of the line's FWHM (the detector's line width at that energy), so every width here is in
 /// FWHM units.
+///
+/// The window results (`ElementWindows`, the maps of `WindowIntensity`) carry numbers and no notes, so they do not name the rules
+/// they were built with: a caller that passes a non-default value records it with the numbers it shows.
 public nonisolated struct WindowRules: Sendable, Equatable, Codable {
     /// Integration window `[E - W F / 2, E + W F / 2]`: W. Default 2.0 (eXSpy `estimate_integration_windows`), which holds 98 % of a
     /// Gaussian line. A smaller W loses signal (W = 1 holds 76 %); a larger one adds noise.
