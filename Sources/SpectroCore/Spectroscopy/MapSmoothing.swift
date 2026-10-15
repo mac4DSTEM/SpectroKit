@@ -15,6 +15,36 @@
 
 import Foundation
 
+/// A one-dimensional smoothing kernel for `MapSmoothing.apply(_:width:height:kernel:)`, applied along each axis in turn and
+/// renormalised over the in-bounds taps at the border. The menu of `MapSmoothing` is five of these.
+public nonisolated enum SmoothingKernel: Sendable, Equatable, Codable {
+    /// A box of `width` taps (odd, at least 1): 3 and 5 are the menu's.
+    case box(width: Int)
+    /// A Gaussian of standard deviation `sigma` pixels, cut at `truncation` standard deviations (taps out to `ceil(truncation * sigma)`
+    /// pixels): the menu has sigma 1 and 2 with a truncation of 2, which holds 95 % of the weight.
+    case gaussian(sigma: Double, truncation: Double = 2)
+
+    /// The taps, centred, odd length. Empty when the kernel is not valid (see `isValid`).
+    public var taps: [Double] {
+        switch self {
+        case .box(let width):
+            return isValid ? [Double](repeating: 1, count: width) : []
+        case .gaussian(let sigma, let truncation):
+            guard isValid else { return [] }
+            let r = Int((truncation * sigma).rounded(.up))   // ±2σ holds 95 % of the weight; the renormalisation keeps the sum exact
+            return (-r...r).map { exp(-Double($0 * $0) / (2 * sigma * sigma)) }
+        }
+    }
+
+    /// A box needs an odd positive width; a Gaussian a positive finite sigma and a positive finite truncation.
+    public var isValid: Bool {
+        switch self {
+        case .box(let width): return width >= 1 && width % 2 == 1
+        case .gaussian(let sigma, let truncation): return sigma.isFinite && sigma > 0 && truncation.isFinite && truncation > 0
+        }
+    }
+}
+
 public nonisolated enum MapSmoothing: String, CaseIterable, Sendable, Codable {
     case none, box3, box5, gaussian1, gaussian2
 
@@ -40,17 +70,27 @@ public nonisolated enum MapSmoothing: String, CaseIterable, Sendable, Codable {
         }
     }
 
-    /// The one-dimensional kernel, centred, odd length; `[1]` for none.
-    package var kernel: [Double] {
+    /// The menu entry as a `SmoothingKernel`; nil for none.
+    public var smoothingKernel: SmoothingKernel? {
         switch self {
-        case .none: return [1]
-        case .box3: return [1, 1, 1]
-        case .box5: return [1, 1, 1, 1, 1]
-        case .gaussian1, .gaussian2:
-            let sigma = self == .gaussian1 ? 1.0 : 2.0
-            let r = Int((2 * sigma).rounded(.up))   // ±2σ holds 95 % of the weight; the renormalisation keeps the sum exact
-            return (-r...r).map { exp(-Double($0 * $0) / (2 * sigma * sigma)) }
+        case .none: return nil
+        case .box3: return .box(width: 3)
+        case .box5: return .box(width: 5)
+        case .gaussian1: return .gaussian(sigma: 1)
+        case .gaussian2: return .gaussian(sigma: 2)
         }
+    }
+
+    /// The one-dimensional kernel, centred, odd length; `[1]` for none.
+    package var kernel: [Double] { smoothingKernel?.taps ?? [1] }
+
+    /// The map filtered with any valid kernel, row-major `width × height`; the input when the kernel is not valid or the shape does
+    /// not match. `MapSmoothing.box3.apply(...)` is `apply(..., kernel: .box(width: 3))`.
+    public static func apply(_ map: [Double], width: Int, height: Int, kernel: SmoothingKernel) -> [Double] {
+        guard kernel.isValid, width > 0, height > 0, map.count == width * height else { return map }
+        let k = kernel.taps
+        let rows = pass(map, length: width, count: height, stride: 1, lineStride: width, kernel: k)
+        return pass(rows, length: height, count: width, stride: width, lineStride: 1, kernel: k)
     }
 
     /// The filtered map, row-major `width × height`; the input when none, or when the shape does not match.

@@ -150,8 +150,12 @@ public nonisolated enum EELSEdgeQuantification {
     public static let methodName =
         "power law (two-area, HyperSpy 2.4.0) + ratio method (Egerton eq. 4.65/4.66), cross section exSpy 7185a4d1 dft GOS (Segger, Guzzinati and Kohl 1.5.0)"
 
-    /// The registered default background window: [E_k − 50, E_k − 5] eV.
-    public static func defaultBackgroundWindow(onsetEV: Double) -> ClosedRange<Double> { (onsetEV - 50)...(onsetEV - 5) }
+    /// The default pre-edge background window: `[E_k − belowOnsetEV, E_k − gapEV]`, by default [E_k − 50, E_k − 5] eV. The library's
+    /// choice, registered with the method (exSpy has no default: its user picks the window); 50 eV is wide enough to estimate a power
+    /// law and 5 eV keeps the window clear of the edge's onset. `ratioMethod(backgroundWindowEV:)` takes any window.
+    public static func defaultBackgroundWindow(onsetEV: Double, belowOnsetEV: Double = 50, gapEV: Double = 5) -> ClosedRange<Double> {
+        (onsetEV - belowOnsetEV)...(onsetEV - gapEV)
+    }
 
     /// The energy-differential cross section of `edge` at `energiesEV`, barn/eV (exSpy's `EELSCLEdge.function` with
     /// intensity 1), and the effective collection angle used.
@@ -165,14 +169,15 @@ public nonisolated enum EELSEdgeQuantification {
     ///
     /// - Parameters:
     ///   - coreLoss: the core-loss spectrum image (counts per channel).
-    ///   - edge: one of `CoreLossEdge.bundled`.
+    ///   - edge: one of `CoreLossEdge.bundled`. Default `.carbonK`, the one edge whose pre-edge window holds no other edge.
     ///   - microscope: E0, α, β of the acquisition.
-    ///   - lowLoss: where I_low comes from; its pixels must match `coreLoss`'s.
+    ///   - lowLoss: where I_low comes from; its pixels must match `coreLoss`'s. Required: the library has no default.
+    ///     `.integratedToWidth` (Egerton eq. 4.66) corrects plural scattering and is the usual choice; `.zeroLoss` is for single scattering.
     ///   - backgroundWindowEV: the pre-edge window; default [E_k − 50, E_k − 5] eV.
-    ///   - edgeOnsetEV: the window's start; default the edge's tabulated onset (the cross section always starts there).
-    ///   - integrationWidthEV: Δ, default 50 eV.
-    ///   - coreLossToLowLossDose: exposure(core loss) / exposure(low loss), multiplies I_low (Dual EELS). The caller's
-    ///     number: no reader supplies it.
+    ///   - edgeOnsetEV: the window's start; default the edge's tabulated onset (exSpy's table; the cross section always starts there).
+    ///   - integrationWidthEV: Δ, default 50 eV (the library's choice; the pins also hold 30, 100 and 150 eV).
+    ///   - coreLossToLowLossDose: exposure(core loss) / exposure(low loss), multiplies I_low (Dual EELS). Default 1 (equal exposures).
+    ///     The caller's number: no reader supplies it.
     public static func ratioMethod(
         coreLoss: CoreLossSpectrumImage,
         edge: CoreLossEdge = .carbonK,

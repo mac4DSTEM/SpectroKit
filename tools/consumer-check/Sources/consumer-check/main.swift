@@ -27,4 +27,5 @@ report.section("SpectroEELS areal density (slice 2)") { try edgeQuantificationCh
 report.section("SpectroEDX windows (WindowRules)") { windowRulesChecks(&$0) }
 report.section("SpectroEDX quantification policy") { try quantificationPolicyChecks(&$0) }
 report.section("SpectroEDX proposer policy") { try proposerPolicyChecks(&$0) }
+report.section("SpectroCore smoothing kernels and the ratio method's default window") { kernelAndWindowChecks(&$0) }
 exit(report.finish())
