@@ -204,7 +204,7 @@ integers involved; this is a claim of G1, not an assumption). (5) A non-default 
 `tools/test.sh` passes with the same 302 test names (the new tests are additional names; no existing name removed or renamed),
 the golden files are **byte-identical** (`SpectroGoldenTests`, no regeneration), every pin and fixture reproduces to its
 registered tolerance (the `SpectroEDXTests` and `SpectroEELSTests` gates unchanged), and `tools/consumer-check` is green on
-its existing 371 checks / 143 controls (its call sites compile unchanged: source compatibility is checked by compiling
+its existing 152 checks / 136 negative controls (0.4.0, `62466ad`; its call sites compile unchanged: source compatibility is checked by compiling
 them) plus the checks added for the new API. In addition, for each family a new test calls the new entry point with an
 explicit `.default` and compares with the old call: equal arrays (bitwise on `Double`), equal footers, equal
 `PooledQuantification` rows. `QuantificationMethod.canonicalJSON` and `.hash` of a set of recorded methods are unchanged.
