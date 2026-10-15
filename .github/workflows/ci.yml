@@ -2,7 +2,10 @@
 #
 # Written 2026-10-14; enabling it (Actions on the repository) is the owner's. The package needs macOS 27 and a Swift 6.2
 # toolchain (Package.swift: `.macOS("27.0")`, tools 6.2): the runner image must carry an Xcode with the macOS 27 SDK.
-# `macos-latest` is used, with the newest Xcode selected; if the image lags, pin `runs-on` to the first image that has it.
+# Pinned (0.5.0): the `macos-26` image (the run of 2026-10-15 used it: Swift 6.3.3), with its newest Xcode, printed by the
+# job. The floor stays macOS 27 in 0.5.0; when 0.5.1 lowers it to macOS 15 (after FormatoKit 0.2.1's dylibs built for 15),
+# the `test-macos15` job below is enabled, with its Xcode pinned the same way (a macos-15 image's default Xcode may carry a
+# Swift older than the manifests' tools-version 6.2).
 # Since 0.4.0 the readers are FormatoKit's, a package dependency fetched from github.com/mac4DSTEM/FormatoKit, which ships
 # libhdf5 inside FormatoHDF5: no libhdf5 step. FormatoKit is public (2026-10-15), so the runner fetches it with no token.
 # Never `swift build --build-tests -c release` (fails on this toolchain's Swift Build backend); tools/test.sh is the gate.
@@ -20,7 +23,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: macos-26
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +31,7 @@ jobs:
         run: |
           xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
           sudo xcode-select -s "$xcode"
+          xcodebuild -version
           swift --version
       - name: Hook proof (no sleep or poll loops)
         run: tools/hooks/test-no-sleep-poll.sh
@@ -42,3 +46,10 @@ jobs:
           fi
       - name: Consumer check with its negative controls
         run: tools/consumer-check/run.sh --controls
+  # 0.5.1 (macOS 15 floor): enable, with the Xcode whose Swift is >= 6.2 on that image.
+  # test-macos15:
+  #   runs-on: macos-15
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: sudo xcode-select -s /Applications/Xcode_<version>.app && swift --version
+  #     - run: tools/test.sh
