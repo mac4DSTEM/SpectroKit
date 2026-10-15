@@ -17,9 +17,9 @@ public nonisolated enum SpectroscopyExport {
                                   "at_percent", "sigma_at_percent", "validation", "flags", "estimator"]
 
     /// The results table, one row per fitted element, with the fit's provenance as `#` header lines.
-    /// The first `#` line names the producing app: `title` is that name (E6, SpectroKit slot plan), defaulting to this app's.
+    /// The first `#` line names the producing application: `title` is that name, defaulting to the neutral "Spectroscopy quantification".
     public static func csv(_ q: PooledQuantification, regionName: String,
-                            title: String = "mac4DSTEM Spectroscopy quantification") -> String {
+                            title: String = "Spectroscopy quantification") -> String {
         var out: [String] = []
         out.append("# \(title), region: \(regionName)")
         out.append("# validation: " + (q.hasAbundance
