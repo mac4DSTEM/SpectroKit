@@ -17,14 +17,17 @@
 import Foundation
 
 public nonisolated struct Currie: Equatable, Sendable {
-    package let alpha: Double
-    package let beta: Double
+    /// The false-positive rate of the critical level L_C, in (0, 0.5).
+    public let alpha: Double
+    /// The false-negative rate at the detection limit L_D, in (0, 0.5).
+    public let beta: Double
 
     /// Currie's convention (alpha = beta = 0.05): a choice, reported with every result. L_C and L_D
     /// that follow from it are the dataset's properties.
     public static let standard = Currie(alpha: 0.05, beta: 0.05)
 
-    package init(alpha: Double, beta: Double) {
+    /// Traps unless both rates are in (0, 0.5).
+    public init(alpha: Double, beta: Double) {
         precondition(alpha > 0 && alpha < 0.5 && beta > 0 && beta < 0.5, "alpha, beta in (0, 0.5)")
         self.alpha = alpha
         self.beta = beta

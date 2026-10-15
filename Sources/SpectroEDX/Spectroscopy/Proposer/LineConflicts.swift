@@ -43,7 +43,7 @@ public nonisolated enum LineConflicts {
     /// A candidate's alpha line counts as "on" a sum-peak energy within this many keV (about half the
     /// Mn K-alpha FWHM of a Super-X detector). A sum energy with no candidate within it gets its own column in
     /// the fit instead (ElementProposer), so it can neither be missed nor be mistaken for an element.
-    package static let sumPeakToleranceKeV = 0.06
+    package static let sumPeakToleranceKeV = ProposerPolicy.defaultSumPeakToleranceKeV
 
     /// Every pair (self-pairs included) of detected parents, as (label, energy, the two elements).
     package static func sumEnergies(parents: [SumParent]) -> [(label: String, energyKeV: Double, elements: [String])] {
@@ -57,9 +57,10 @@ public nonisolated enum LineConflicts {
     }
 
     /// All conflicts that apply to `element` whose alpha line sits at `lineEnergyKeV`, given the detected parents.
-    package static func conflicts(element: String, line: String, lineEnergyKeV: Double, parents: [SumParent]) -> [LineConflict] {
+    package static func conflicts(element: String, line: String, lineEnergyKeV: Double, parents: [SumParent],
+                                  toleranceKeV: Double = sumPeakToleranceKeV, context: ElementContext = .default) -> [LineConflict] {
         var out: [LineConflict] = []
-        for s in sumEnergies(parents: parents) where abs(lineEnergyKeV - s.energyKeV) <= sumPeakToleranceKeV {
+        for s in sumEnergies(parents: parents) where abs(lineEnergyKeV - s.energyKeV) <= toleranceKeV {
             let near = abs(lineEnergyKeV - s.energyKeV) < 0.02
             out.append(LineConflict(
                 id: "sum-\(s.label)-\(element)", kind: .sumPeak, element: element, line: line,
@@ -68,19 +69,35 @@ public nonisolated enum LineConflicts {
                     + (near ? " They are \(String(format: "%.0f", abs(lineEnergyKeV - s.energyKeV) * 1000)) eV apart, far inside the detector resolution." : ""),
                 remedy: "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."))
         }
-        if element == "Ga" {
-            out.append(LineConflict(
-                id: "ga-fib", kind: .fibContamination, element: "Ga", line: line,
-                energiesKeV: [1.098, 1.254], requires: [],
-                question: "Ga from FIB? Ga is implanted by FIB milling; its L\u{03B1} (1.098 keV) sits 156 eV below Mg K\u{03B1} (1.254 keV).",
-                remedy: "Ga K\u{03B1} (9.25 keV) present? Check a thin or unmilled region; keep Ga fitted but excluded from Quantify."))
+        if context.implantedElements.contains(element) {
+            if element == "Ga" {
+                out.append(LineConflict(
+                    id: "ga-fib", kind: .fibContamination, element: "Ga", line: line,
+                    energiesKeV: [1.098, 1.254], requires: [],
+                    question: "Ga from FIB? Ga is implanted by FIB milling; its L\u{03B1} (1.098 keV) sits 156 eV below Mg K\u{03B1} (1.254 keV).",
+                    remedy: "Ga K\u{03B1} (9.25 keV) present? Check a thin or unmilled region; keep Ga fitted but excluded from Quantify."))
+            } else {
+                out.append(LineConflict(
+                    id: "\(element.lowercased())-fib", kind: .fibContamination, element: element, line: line,
+                    energiesKeV: [lineEnergyKeV], requires: [],
+                    question: "\(element) from ion milling? \(element) can be implanted by FIB milling.",
+                    remedy: "Check a thin or unmilled region; keep \(element) fitted but excluded from Quantify."))
+            }
         }
-        if element == "Cu" {
-            out.append(LineConflict(
-                id: "cu-grid", kind: .gridOrSample, element: "Cu", line: line,
-                energiesKeV: [lineEnergyKeV], requires: [],
-                question: "Cu from the grid or from the Q phase?",
-                remedy: "Measure Cu on a hole region (no sample): net Cu there is grid and holder signal."))
+        if context.gridElements.contains(element) {
+            if element == "Cu" {
+                out.append(LineConflict(
+                    id: "cu-grid", kind: .gridOrSample, element: "Cu", line: line,
+                    energiesKeV: [lineEnergyKeV], requires: [],
+                    question: "Cu from the grid or from the Q phase?",
+                    remedy: "Measure Cu on a hole region (no sample): net Cu there is grid and holder signal."))
+            } else {
+                out.append(LineConflict(
+                    id: "\(element.lowercased())-grid", kind: .gridOrSample, element: element, line: line,
+                    energiesKeV: [lineEnergyKeV], requires: [],
+                    question: "\(element) from the grid or from the sample?",
+                    remedy: "Measure \(element) on a hole region (no sample): net \(element) there is grid and holder signal."))
+            }
         }
         return out
     }

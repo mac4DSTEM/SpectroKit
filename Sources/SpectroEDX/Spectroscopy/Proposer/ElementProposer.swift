@@ -141,22 +141,50 @@ public nonisolated struct ElementProposer: Sendable {
     package var minimumLineEnergyKeV: Double
     /// Scale sigma_0 by the flank misfit factor (see `flankMisfit`). On unless a test compares it off.
     package var flankScaling = true
+    /// Elements left out of the default pool (see `defaultExcluded`); used when `pool` is nil.
+    package var excluded: Set<String> = ElementProposer.defaultExcluded
+    /// How the flank misfit is measured (see `FlankMisfitGeometry`).
+    package var flank = FlankMisfitGeometry.default
+    /// A candidate's alpha line must lie this many FWHM inside the fitted range at each end.
+    package var rangeMarginFWHM = 0.5
+    /// A candidate's alpha line counts as on a pile-up energy within this many keV.
+    package var sumPeakToleranceKeV = LineConflicts.sumPeakToleranceKeV
+    /// Which elements get the grid, implantation and quantify-by-default treatment.
+    package var context = ElementContext.default
 
     /// Elements the line table lists that no spectrum of a material shows or that the app has no use for:
     /// radioactive or absent from the table (Tc, Pm, Po, At, Rn, Fr, Ra, Ac, Pa, Np, Pu, Am), noble gases other than Ar
     /// (Ne, Kr, Xe; Ar is a named conflict). A reader may pass any `pool` instead.
-    package static let defaultExcluded: Set<String> = ["Tc", "Pm", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Pa", "Np", "Pu", "Am", "Ne", "Kr", "Xe"]
+    public static let defaultExcluded: Set<String> = ["Tc", "Pm", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Pa", "Np", "Pu", "Am", "Ne", "Kr", "Xe"]
 
     /// Every element of the line table, minus the refused (H, He, Li, Be) and `defaultExcluded`.
-    package static var defaultPool: [String] {
+    public static var defaultPool: [String] { defaultPool(excluding: defaultExcluded) }
+
+    /// The default pool with another exclusion list: every element of the line table minus the refused (H, He, Li, Be) and `excluded`.
+    public static func defaultPool(excluding excluded: Set<String>) -> [String] {
         var seen = Set<String>(), out: [String] = []
         for l in XRayLines.all where !seen.contains(l.element) {
             seen.insert(l.element)
-            if LineConflicts.refusal(for: l.element) == nil, !defaultExcluded.contains(l.element) { out.append(l.element) }
+            if LineConflicts.refusal(for: l.element) == nil, !excluded.contains(l.element) { out.append(l.element) }
         }
         return out
     }
 
+    /// The proposer with every choice named (`ProposerPolicy.default` is what the other initialiser builds).
+    public init(policy: ProposerPolicy) {
+        self.init(currie: policy.currie, pool: policy.pool, maxPasses: policy.maxPasses, maxForwardRounds: policy.maxForwardRounds,
+                  minimumLineEnergyKeV: policy.minimumLineEnergyKeV)
+        flankScaling = policy.flankScaling; excluded = policy.excluded; flank = policy.flank
+        rangeMarginFWHM = policy.rangeMarginFWHM; sumPeakToleranceKeV = policy.sumPeakToleranceKeV; context = policy.context
+    }
+
+    /// - Parameters:
+    ///   - currie: the false-positive and false-negative rates of the detection limit. Default `.standard` (0.05 each), Currie's convention.
+    ///   - pool: the elements tested; nil is `defaultPool`.
+    ///   - maxPasses: the backward step stops after this many joint fits. Default 5, the library's choice.
+    ///   - maxForwardRounds: the forward step stops after this many rounds. Default 24, the library's choice.
+    ///   - minimumLineEnergyKeV: lines below this are not tested. Default 0.45 keV, measured on one synthetic generator where the
+    ///     detector window cuts the continuum steeply (carbon, nitrogen, calcium and scandium were false there at 0.28-0.40 keV).
     public init(currie: Currie = .standard, pool: [String]? = nil, maxPasses: Int = 5, maxForwardRounds: Int = 24, minimumLineEnergyKeV: Double = 0.45) {
         self.currie = currie; self.pool = pool; self.maxPasses = maxPasses; self.maxForwardRounds = maxForwardRounds; self.minimumLineEnergyKeV = minimumLineEnergyKeV
     }
@@ -218,7 +246,7 @@ public nonisolated struct ElementProposer: Sendable {
         guard !channels.isEmpty else { throw ProposerError.noChannels }
         let lo = axis.energy(ofChannel: channels.lowerBound), hi = axis.energy(ofChannel: channels.upperBound - 1)
         let current = s.elements
-        let requested = pool ?? Self.defaultPool
+        let requested = pool ?? Self.defaultPool(excluding: excluded)
 
         var refused: [(element: String, reason: String)] = []
         var seenRefused = Set<String>()
@@ -233,8 +261,8 @@ public nonisolated struct ElementProposer: Sendable {
         let currentGroups = base.groups.filter { current.contains($0.element) }
         // A candidate group needs its alpha line inside the fitted range by half a width (its column must have support).
         let poolGroups = base.groups.filter { g in
-            poolElements.contains(g.element) && g.lines[0].energy >= max(lo + g.lines[0].fwhm / 2, minimumLineEnergyKeV)
-                && g.lines[0].energy <= hi - g.lines[0].fwhm / 2
+            poolElements.contains(g.element) && g.lines[0].energy >= max(lo + rangeMarginFWHM * g.lines[0].fwhm, minimumLineEnergyKeV)
+                && g.lines[0].energy <= hi - rangeMarginFWHM * g.lines[0].fwhm
         }
         for el in poolElements where !poolGroups.contains(where: { $0.element == el }) {
             if let low = base.groups.filter({ $0.element == el && $0.lines[0].energy < minimumLineEnergyKeV }).map({ $0.lines[0].energy }).max() {
@@ -270,17 +298,18 @@ public nonisolated struct ElementProposer: Sendable {
             let f = line.fwhm
             let first = p.result.channels.lowerBound
             var z2: [Double] = []
-            for side in [-1.0, 1.0] { for b in 0..<5 {
-                let a = line.energy + side * (1.5 + Double(b)) * f, c = line.energy + side * (2.5 + Double(b)) * f
+            for side in [-1.0, 1.0] { for b in 0..<flank.binsPerSide {
+                let inner = flank.innerFWHM + Double(b) * flank.binWidthFWHM
+                let a = line.energy + side * inner * f, c = line.energy + side * (inner + flank.binWidthFWHM) * f
                 let lowE = min(a, c), highE = max(a, c)
                 var r = 0.0, m = 0.0, n = 0
                 for ch in p.result.channels {
                     let e = axis.energy(ofChannel: ch)
                     if e >= lowE && e < highE { r += p.result.residual[ch - first]; m += max(p.result.model[ch - first], EDSFitResult.standardizedFloor); n += 1 }
                 }
-                if n >= 3 { z2.append(r * r / m) }
+                if n >= flank.minimumChannelsPerBin { z2.append(r * r / m) }
             } }
-            guard z2.count >= 3 else { return 1 }
+            guard z2.count >= flank.minimumBins else { return 1 }
             return max(1, z2.reduce(0, +) / Double(z2.count)).squareRoot()
         }
 
@@ -314,7 +343,7 @@ public nonisolated struct ElementProposer: Sendable {
             var pairs: [[(label: String, energyKeV: Double, elements: [String])]] = []
             for e in LineConflicts.sumEnergies(parents: parents) {
                 guard e.energyKeV > lo, e.energyKeV < hi, e.energyKeV < s.beamEnergy,
-                      !claimed.contains(where: { abs($0 - e.energyKeV) <= LineConflicts.sumPeakToleranceKeV }),
+                      !claimed.contains(where: { abs($0 - e.energyKeV) <= sumPeakToleranceKeV }),
                       !oneComponentEscape.contains(where: { abs($0 - e.energyKeV) <= exactSumToleranceKeV }),
                       XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: e.energyKeV) != nil else { continue }
                 // The first pair at an energy owns the column (its energy is the column's).
@@ -361,7 +390,7 @@ public nonisolated struct ElementProposer: Sendable {
                 let listed = best.filter { $0.value.listed }.map { SumParent(element: $0.key, energyKeV: $0.value.energy) }
                 let listedSums = LineConflicts.sumEnergies(parents: listed).map(\.energyKeV)
                 let found = best.filter { entry in
-                    !entry.value.listed && !listedSums.contains { abs($0 - entry.value.energy) <= LineConflicts.sumPeakToleranceKeV }
+                    !entry.value.listed && !listedSums.contains { abs($0 - entry.value.energy) <= sumPeakToleranceKeV }
                 }.map { SumParent(element: $0.key, energyKeV: $0.value.energy) }
                 let nextParents = (listed + found).sorted { $0.element < $1.element }
                 let stable = nextActive == active && sumColumns(nextParents, claiming: claiming(nextActive),
@@ -433,22 +462,24 @@ public nonisolated struct ElementProposer: Sendable {
             let gs = poolGroups.filter { $0.element == el }.compactMap { g in last[g.id].map { (g, $0) } }
             guard let (g, st) = gs.max(by: { $0.1.significance < $1.1.significance }) else { continue }
             let alpha = g.lines[0].energy
-            let conflicts = LineConflicts.conflicts(element: el, line: g.id, lineEnergyKeV: alpha, parents: parents)
+            let conflicts = LineConflicts.conflicts(element: el, line: g.id, lineEnergyKeV: alpha, parents: parents,
+                                                    toleranceKeV: sumPeakToleranceKeV, context: context)
             var note: String?
-            if el == "Cu" {
+            if context.gridElements.contains(el) {
                 if let hole = holeCounts {
-                    let hp = try run(currentGroups + poolGroups.filter { $0.element == "Cu" }, on: hole)
+                    let hp = try run(currentGroups + poolGroups.filter { $0.element == el }, on: hole)
                     if let gi = hp.model.groups.firstIndex(where: { $0.id == g.id }), let hs = stat(hp, gi) {
                         note = hs.net >= hs.ld
-                            ? String(format: "Cu is also detected on the hole region (net %.0f \u{2265} L_D %.0f): part of it is grid.", hs.net, hs.ld)
-                            : String(format: "No Cu on the hole region (net %.0f < L_D %.0f): the Cu belongs to the sample.", hs.net, hs.ld)
+                            ? String(format: "%@ is also detected on the hole region (net %.0f \u{2265} L_D %.0f): part of it is grid.", el, hs.net, hs.ld)
+                            : String(format: "No %@ on the hole region (net %.0f < L_D %.0f): the %@ belongs to the sample.", el, hs.net, hs.ld, el)
                     }
-                } else { note = "No hole region available: Cu grid and Q phase cannot be separated." }
+                } else { note = el == "Cu" ? "No hole region available: Cu grid and Q phase cannot be separated."
+                                              : "No hole region available: \(el) from the grid and from the sample cannot be separated." }
             }
             candidates.append(ElementCandidate(
                 element: el, group: g.id, energyKeV: alpha, net: st.net, sigma: st.sigma, sigmaZero: st.sigmaZero,
                 criticalLevel: st.lc, detectionLimit: st.ld, conflicts: conflicts,
-                suggestedRole: el == "Cu" ? .quantify : .fitOnly, holeRegionNote: note, misfit: st.misfit))
+                suggestedRole: context.quantifyByDefault.contains(el) ? .quantify : .fitOnly, holeRegionNote: note, misfit: st.misfit))
         }
         candidates.sort { $0.significance > $1.significance }
 

@@ -199,7 +199,8 @@ public nonisolated enum UnlistedLineChecker {
     /// that element's own line group sitting on its own edge, never an "excess beside the split". `element` is the candidate's
     /// symbol; nil (or an edge with no known owner) exempts nothing.
     public static func neighbour(energyKeV e: Double, listedGroups: [FitLineGroup], resolutionMnKaEV: Double,
-                                  edges: [Double], nets: [String: Double] = [:], element: String? = nil) -> (line: String, net: Double)? {
+                                  edges: [Double], nets: [String: Double] = [:], element: String? = nil,
+                                  rules: UnlistedLineRules = .default) -> (line: String, net: Double)? {
         guard let fwhm = XRayLines.fwhm(resolutionMnKaEV: resolutionMnKaEV, atEnergy: e) else { return nil }
         // The STRONGEST (alpha, the group's first) line of each listed group is the reference, the nearest in FWHM units wins; the
         // net it carries (and the fraction against it) is that group's alpha area. Never a beta line: the shape misfit the label
@@ -208,10 +209,10 @@ public nonisolated enum UnlistedLineChecker {
         for g in listedGroups {
             guard let l = g.lines.first else { continue }
             let d = abs(l.energy - e)
-            if d <= 2 * fwhm, d < (best?.d ?? .infinity) { best = (g.id, d) }
+            if d <= rules.besideLineFWHM * fwhm, d < (best?.d ?? .infinity) { best = (g.id, d) }
         }
         if let b = best { return (displayName(b.group), nets[b.group] ?? 0) }
-        if let edge = edges.filter({ abs($0 - e) <= fwhm && !(element != nil && edgeOwner($0) == element) })
+        if let edge = edges.filter({ abs($0 - e) <= rules.besideEdgeFWHM * fwhm && !(element != nil && edgeOwner($0) == element) })
             .min(by: { abs($0 - e) < abs($1 - e) }) {
             return (String(format: "the continuum split at %.3f keV", edge), 0)
         }
@@ -224,14 +225,16 @@ public nonisolated enum UnlistedLineChecker {
     }
 
     /// The decision for one proposal. `input` is the reported fit's input (counts, axis, method); `q` its result.
-    public static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification) -> UnlistedLineCheck {
+    public static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification,
+                              rules: UnlistedLineRules = .default) -> UnlistedLineCheck {
         // The closure never answers true, so the throwing core cannot throw.
-        try! check(proposal: proposal, input: input, quantification: q, cancelled: { false }, progress: nil)
+        try! check(proposal: proposal, input: input, quantification: q, rules: rules, cancelled: { false }, progress: nil)
     }
 
     /// The same decision, cancellable (ADR 064 amendment 2 §2): the refit is the long step; `SpectroCancelled` is thrown (never
     /// folded into the check's `failure`) and nothing is returned. `progress` is monotone in 0...1 and ends at 1.
     public static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification,
+                              rules: UnlistedLineRules = .default,
                               cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                               progress: (@Sendable (Double) -> Void)? = nil) throws -> UnlistedLineCheck {
         try SpectroCancellation.check(cancelled)
@@ -252,7 +255,8 @@ public nonisolated enum UnlistedLineChecker {
         let candidates = found.map { c -> UnlistedLineCheck.Candidate in
             var cand = UnlistedLineCheck.Candidate(element: c.element, group: c.group, net: c.net, detectionLimit: c.detectionLimit,
                                                    sumPeakQuestion: c.hasSumPeakQuestion)
-            if let n = neighbour(energyKeV: c.energyKeV, listedGroups: listed, resolutionMnKaEV: fs.resolutionMnKaEV, edges: edges, nets: nets, element: c.element) {
+            if let n = neighbour(energyKeV: c.energyKeV, listedGroups: listed, resolutionMnKaEV: fs.resolutionMnKaEV, edges: edges, nets: nets, element: c.element,
+                                 rules: rules) {
                 cand.besideLine = n.line
                 if n.net > 0 { cand.fractionOfNeighbour = c.net / n.net }
             }
@@ -278,7 +282,7 @@ public nonisolated enum UnlistedLineChecker {
             guard let new = after.rows.first(where: { $0.element == row.element && $0.failure == nil }) else { continue }
             let move = UnlistedLineCheck.Move(element: row.element, before: row.net, after: new.net, sigma: row.sigma)
             let delta = abs(new.net - row.net)
-            if delta > row.sigma { moves.append(move) }
+            if delta > rules.moveSigmaFactor * row.sigma { moves.append(move) }
             let ratio = row.sigma > 0 ? delta / row.sigma : (delta > 0 ? .infinity : 0)
             if ratio > (largest?.ratio ?? -1) { largest = (move, ratio) }
         }

@@ -26,4 +26,5 @@ report.section("SpectroEELS thickness map") { try spectroEELSChecks(&$0, eelsFix
 report.section("SpectroEELS areal density (slice 2)") { try edgeQuantificationChecks(&$0, eelsFixtures) }
 report.section("SpectroEDX windows (WindowRules)") { windowRulesChecks(&$0) }
 report.section("SpectroEDX quantification policy") { try quantificationPolicyChecks(&$0) }
+report.section("SpectroEDX proposer policy") { try proposerPolicyChecks(&$0) }
 exit(report.finish())

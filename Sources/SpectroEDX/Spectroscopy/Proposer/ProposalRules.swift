@@ -36,30 +36,30 @@ public nonisolated struct ProposalRules: Equatable, Sendable {
 
     public var hygiene: Bool
     /// R1's second half, separately switchable: the beside-K drop. Off in `shipped` (see the header).
-    package var besideK: Bool
+    public var besideK: Bool
     /// WP4b (docs/archive/v5/wp4b-autoid-rules-preregistration-2026-10-07.md), an OPTION that is off in `none`, `registered` and `shipped`:
     /// with `besideK`, an L or M pick beside a proposed K alpha is dropped only when its net / L_D is at or below that K candidate's;
     /// a stronger L/M stays. Measured, not shipped: turning it on anywhere is the registration's ship rule, not this flag's existence.
-    package var besideKGuard: Bool
+    public var besideKGuard: Bool
     public var corroboration: Bool
     public var release: Bool
     /// R1: an element with Z at or above this is never picked.
-    package var actinideZ = 89
+    public var actinideZ = 89
     /// R1: an L or M pick closer than this many FWHM to another proposed candidate's K alpha is dropped.
-    package var besideKFWHM = 1.5
+    public var besideKFWHM = 1.5
     /// R2: the net / L_D an L or M pick needs.
-    package var lineMinimumSignificance = 3.0
+    public var lineMinimumSignificance = 3.0
     /// R3: the net / L_D at which a held sum-peak candidate is released.
-    package var releaseSignificance = 10.0
+    public var releaseSignificance = 10.0
 
-    package init(hygiene: Bool, besideK: Bool? = nil, besideKGuard: Bool = false, corroboration: Bool, release: Bool) {
+    public init(hygiene: Bool, besideK: Bool? = nil, besideKGuard: Bool = false, corroboration: Bool, release: Bool) {
         self.hygiene = hygiene; self.besideK = besideK ?? hygiene; self.besideKGuard = besideKGuard; self.corroboration = corroboration; self.release = release
     }
 
     /// No rule: `apply` returns the proposer's own picks.
-    package static let none = ProposalRules(hygiene: false, corroboration: false, release: false)
+    public static let none = ProposalRules(hygiene: false, corroboration: false, release: false)
     /// The three cuts exactly as registered, 2026-10-07.
-    package static let registered = ProposalRules(hygiene: true, corroboration: true, release: true)
+    public static let registered = ProposalRules(hygiene: true, corroboration: true, release: true)
     /// What the room applies: R1 only. R3 was refuted on the demo-edx dose ladder (the Al+Al sum peak at 100 counts/px, 19.9 x L_D,
     /// was released as Ar, an element absent from truth) and R2 missed its hold-out bar (precision 38.7 % under 45 % on the nine June
     /// 2026 files); per the registration a cut that does not hold ships as the shown quantity (net / L_D beside each pick) and no
