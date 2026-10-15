@@ -180,7 +180,7 @@ I_low routes, with the dose ratio from the file's exposure tags read by RosettaS
 owner or the file (logged; when absent, the run says so and reports n for stated assumed values, labelled assumed); and
 its comparison with GMS's own C map in `EELS Map (1)/` (correlation, ratio median and spread), reported, never judged.
 N K and O K maps the same way, labelled "background under a preceding edge's tail". The numbers-only log goes under
-`docs/eels-real-data/`.
+`docs/eels-real-data/` (archived 2026-10-15: `../_archive/SpectroKit/docs/eels-real-data/`).
 
 ## 9. What is not claimed
 

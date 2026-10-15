@@ -4,7 +4,7 @@ SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS a
 mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. Modules: `SpectroCore` (spectrum image and its opening, `EnergyAxis`, statistics,
 least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantification, the six tables), `SpectroEELS`
 (thickness t/λ, the C K areal density). Since 0.4.0 the file readers are FormatoKit's (`FormatoDM`, `FormatoEMD`,
-`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.0.3"`. The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `docs/history.md`.
+`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.0.3"`. The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `../_archive/SpectroKit/docs/history.md` (archived).
 
 ## State (2026-10-15)
 
@@ -21,7 +21,7 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
   - Gate on 0.0.3: 190 + 76 + 32 (2 known issues: the `EnergyAxisRefinement` finding) + 2 golden (recorder skipped) + 2, 0
     warnings except FormatoKit's three signed-dylib notices; consumer-check and a cold build as the history records. Gate B
     (on the 0.0.2 candidate `c914b03`): no blocker, no should-fix; 45 runs of one consumer source against `301f1eb` (and
-    0.3.0 on its API) byte-identical, the owner's 1.7 GB Velox EDX SI and all 14 EELS DM4s included (`docs/history.md`).
+    0.3.0 on its API) byte-identical, the owner's 1.7 GB Velox EDX SI and all 14 EELS DM4s included (`../_archive/SpectroKit/docs/history.md` (archived)).
   - What each app changes: `docs/consumers-0.4.0.md` (imports, products, scripts, one HDF5 lock per process, the three
     libhdf5 options until the owner decides).
 - Open, the owner's: EDX Q1–Q5 (`docs/edx-stage-gates-registration.md` section 12); no EDX fix is registered until Q5. The
@@ -30,7 +30,7 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
   (R1, R2 bit for bit; C K vs GMS Pearson 0.985), the EDX stage gates and the Mg Gate D, CI (enabling Actions is the
   owner's), the rank test, the proposer about 7x faster.
 - Registrations: `docs/eels-slice-1-registration.md`, `docs/eels-slice-2-registration.md`,
-  `docs/eels-real-data-check-registration.md`, `docs/edx-stage-gates-registration.md`.
+  `docs/edx-stage-gates-registration.md`.
 
 ## Read first
 

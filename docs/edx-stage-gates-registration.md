@@ -3,7 +3,7 @@
 Registered 2026-10-14 (overnight session), before any SpectroKit code or test for these gates. In force: G-C, G-E, G-P P1 to P3, the planted truth and the Gate D order; P4 waits on the owner's permission (Q4) and the real-data diagnostics of section 9 on the owner's files (Q1). Tier 1: a number a scientist
 reads can move (which elements Auto ID proposes; a line area; an axis calibration). Order: suite `ROADMAP.md`, "Cross-repo
 order" 4 ("the exSpy stage gates for EDX (counts, energy axis, peak ID) with the Mg auto-ID diagnosis. Then the first
-real-truth check: a known standard (the owner's pure-Al foil)"); `docs/history.md`, "Then: the per-stage exSpy gates … which
+real-truth check: a known standard (the owner's pure-Al foil)"); `docs/history.md` (archived: `../_archive/SpectroKit/docs/history.md`), "Then: the per-stage exSpy gates … which
 are also the diagnosis of why Auto ID misses Mg in 37 of 38 Al-Mg-Si files". What is written here is fixed before the code; a
 change after code starts is an amendment, dated, with its reason. The background, Cliff-Lorimer, ζ and absorption stages are
 NOT in this registration (they follow it; the first real-truth check, the pure-Al foil, is its own later registration).
@@ -321,7 +321,7 @@ Agreement with exSpy's windows, lines and calibration, and recovery of planted a
 a validated identification; the thresholds are registered conventions (Currie α = β = 0.05). The Fano width law, the continuum roll-off and the tail are plausible stand-ins. The surrogate of section 7.3 is not
 the proposer and proves nothing about it until the Swift runs. The 37-of-38 count is taken from the record, unverified. `validation: "none"` on everything.
 
-## 11. Pre-registration probes (`tools/edx-stages/probes/`, Python, committed with this registration)
+## 11. Pre-registration probes (`tools/edx-stages/probes/`, Python, committed with this registration; archived 2026-10-15 to `../_archive/SpectroKit/tools/edx-stages/probes/`)
 
 `probe1.py` (planted generator, exSpy windows and FWHM), `probe2.py` (7.2), `probe3.py` / `probe4.py` / `probe5.py` / `probe6.py` / `probe11.py` / `probe14.py` (the surrogate, 7.3), `probe7.py` (P3, P1 lookup), `probe8.py` (E3 for exSpy),
 `probe9.py` (exSpy `sum`), `probe10.py` (raw window ratios), `probe12.py` / `probe13.py` (rsciio loader; fails without `sparse`), the inline NumPy decode of the 4-detector file (7.1). Run with `References/exspy-venv/bin/python -I -B`.

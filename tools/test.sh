@@ -2,7 +2,7 @@
 # SpectroKit test gate: `swift test -c release`.
 #
 # Release: the manifest carries no Debug `-O` (a versioned dependency cannot carry unsafe flags) and Debug at -Onone is
-# 20-50x slower on every hot path (SpectroGoldenTests 26 s vs 1349 s; S3 timings in docs/history.md). `-Xswiftc -O` on a Debug
+# 20-50x slower on every hot path (SpectroGoldenTests 26 s vs 1349 s; S3 timings in the archived history, ../_archive/SpectroKit/docs/history.md). `-Xswiftc -O` on a Debug
 # build is not an option: it also optimises the test targets. The tests use `package` access, not @testable.
 #
 # libhdf5 (0.4.0 on): the Velox reader is FormatoKit's, and FormatoKit ships libhdf5 2.1.1 inside FormatoHDF5 (the binaries
