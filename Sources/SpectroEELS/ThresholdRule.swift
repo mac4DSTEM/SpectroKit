@@ -29,6 +29,9 @@ import Foundation
 ///   `int` threshold as a channel index, which this type cannot express.
 /// - `.perPixel`: one threshold in eV per pixel, row-major `y * nx + x` (exSpy `threshold=<signal>`); NaN marks a pixel with none.
 ///   A threshold outside the energy axis gives that pixel no t/λ (a nil pixel with a reason); exSpy raises for the whole map.
+///
+/// The defaults of `.estimated` (window 10 eV, start 1 eV, Savitzky–Golay window length 5, order 3, tolerance from the data) are exSpy's
+/// `estimate_elastic_scattering_threshold` (`_eels.py:641-643`); none is the library's own choice.
 public nonisolated enum ThresholdRule: Sendable, Equatable {
     case estimated(window: Double = 10.0, start: Double = 1.0, windowLength: Int = 5, polynomialOrder: Int = 3,
                    tolerance: Double? = nil)

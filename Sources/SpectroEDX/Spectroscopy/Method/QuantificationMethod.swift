@@ -107,10 +107,13 @@ public nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     public var kReference: String?
     /// Typed factors (empty for `.computed`).
     public var typedK: [TypedK] = []
-    /// Default relative sigma_k per factor (Velox's rule, WP3 flag 5).
-    public var sigmaK: Double = 0.20
-    /// ADR 053 item 5: four-detector weighted transmission (solid-angle-weighted mean), badged; on by
-    /// default, refused by the quantification (not here) when geometry or tilt is unknown.
+    /// The default relative sigma_k per factor, 0.20 (a flat 20 %): the rule of the instrument vendor's software, adopted as the library's
+    /// choice and not measured. A typed factor can carry its own (`TypedK.relativeSigma`).
+    public static let defaultSigmaK = 0.20
+    /// Relative sigma_k per factor when none is typed. Default `defaultSigmaK` (0.20).
+    public var sigmaK: Double = QuantificationMethod.defaultSigmaK
+    /// Four-detector weighted transmission (solid-angle-weighted mean), badged. Default true (the library's choice: a thin-film
+    /// at% without it is biased for soft lines); the quantification refuses it, and says so, when geometry, tilt or thickness is unknown.
     public var absorptionCorrection = true
     /// Unset until the user types one: no thickness is assumed.
     public var thickness: Thickness?

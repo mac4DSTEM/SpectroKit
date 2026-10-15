@@ -29,7 +29,7 @@ package nonisolated struct KFactorSet: Sendable, Equatable {
     /// factor independent.
     package var reference: String?
 
-    package static let defaultRelativeSigma = 0.20
+    package static let defaultRelativeSigma = QuantificationMethod.defaultSigmaK
 
     package init?(kind: Kind, elements: [String], values: [Double], source: String, date: String,
                   relativeSigma: [Double]? = nil, reference: String? = nil) {

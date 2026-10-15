@@ -150,8 +150,9 @@ public nonisolated struct LineNetCount: Equatable, Sendable {
 }
 
 public nonisolated enum ElementWindows {
-    /// Detector resolution at Mn Kα when the file does not state one (eV). The simulated dataset and a Super-X G1 sit
-    /// near it; it sets the window widths through eXSpy's width law and nothing else.
+    /// Detector resolution at Mn Kα when the file does not state one (eV). Default 130, the library's stand-in (the simulated dataset and
+    /// a Super-X G1 sit near it, nothing measured here); it sets the window widths through eXSpy's width law and nothing else. Every
+    /// entry point takes the real value as `resolutionMnKaEV`.
     public static let defaultResolutionMnKaEV = 130.0
 
     /// The family an element is quantified with by default: K while the element's Kα is at most `WindowRules.kFamilyLimitKeV`
