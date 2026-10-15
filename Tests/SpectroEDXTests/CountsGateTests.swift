@@ -199,7 +199,10 @@ struct CountsGateTests {
         // the unterminated stream: the last pixel's events are counted
         let u = draw(case: "unterminated")
         let img = try open(plantedPath("unterminated"))
-        #expect(img.sum(mask: nil).reduce(0, +) == u.cube.reduce(0, +))
+        let imageSums: [UInt64] = img.sum(mask: nil)
+        let imageTotal: UInt64 = imageSums.reduce(0, +)
+        let cubeTotal: UInt64 = u.cube.reduce(0, +)
+        #expect(imageTotal == cubeTotal)
         #expect(img.windowSums([0..<4096])[0].last! > 0, "the unterminated last pixel keeps its events")
     }
 

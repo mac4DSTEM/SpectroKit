@@ -96,7 +96,9 @@ struct EDSQuantPinsTests {
     @Test func testFixtureCoversThePreRegisteredCases() {
         let names = Self.pins.cases.map(\.name)
         #expect(names.contains("fept_bw5_2"))
-        #expect(Set(Self.pins.cases.map { $0.lines.count }).intersection([2, 3, 4]) == [2, 3, 4], "2-, 3- and 4-element sets")
+        let lineCounts: Set<Int> = Set(Self.pins.cases.map { (c: Case) -> Int in c.lines.count })
+        let wanted: Set<Int> = [2, 3, 4]
+        #expect(lineCounts.intersection(wanted) == wanted, "2-, 3- and 4-element sets")
         #expect(Self.pins.cases.contains { $0.intensities.contains { $0 > 0 && $0 < 1 } }, "a near-zero intensity")
         #expect(Self.pins.minIntensity == CliffLorimer.minIntensity)
         for c in Self.pins.cases { for r in c.runs { #expect(r.exspyError == nil, "\(c.name): eXSpy itself failed on a pinned case") } }

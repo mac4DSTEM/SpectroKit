@@ -93,7 +93,12 @@ struct EdgeEdgeCaseTests {
         }
         // A background window not inside the axis: refused (review R2), where HyperSpy clamps it, below the axis to the whole
         // spectrum, a fit across the edge.
-        let above = try CoreLossSpectrumImage(nx: 5, ny: 3, channels: 1000, counts: (0 ..< 15).flatMap { p in core.counts[(p * 2000 + 560) ..< (p * 2000 + 1560)] },
+        let aboveCounts: [Double] = (0 ..< 15).flatMap { (p: Int) -> [Double] in
+            let first: Int = p * 2000 + 560
+            let last: Int = p * 2000 + 1560
+            return Array(core.counts[first ..< last])
+        }
+        let above = try CoreLossSpectrumImage(nx: 5, ny: 3, channels: 1000, counts: aboveCounts,
                                               energyOffsetEV: 290, energyScaleEV: 0.25)
         if let error = #expect(throws: (any Error).self, performing: { try EELSEdgeQuantification.ratioMethod(coreLoss: above, microscope: m, lowLoss: .integratedToWidth(low)) }) {
             #expect((error as? EELSEdgeError) == .backgroundWindowOutsideAxis(fromEV: 234, toEV: 279, axisFromEV: 290, axisToEV: 539.75))
