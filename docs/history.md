@@ -161,3 +161,36 @@ two findings on the way: NumPy 2.5 keeps exSpy's GOS arithmetic in float32, and 
 folds it), its refuter's fixes (`d5e5d2d`) and a crash the consumer check found (`19e046a`); the real-data check (R1, R2
 bit for bit; C K against GMS's map, Pearson 0.985); the EDX stage gates (registered `23fa2af`, generators `67ae402`, tests
 and Gate D `799bf81`); CI and the rank-threshold test (`505ea0d`); the proposer about 7x faster (`92f8dfc`).
+
+## 0.4.0 session (2026-10-15, day)
+
+The bump the apps take straight from 0.1.0 (mac4DSTEM) and 0.2.0 (macTEM). Commits, each at a green checkpoint:
+- `2d19214` (tier 2, no number moves): `.package(url: ".../FormatoKit", exact: "0.0.2")`; the four reader files, the exit
+  probe, the 121 moved tests (68 SpectroCoreTests, 53 SpectroKitTests: FormatoKit's `tools/step-1/names.sh` list), their
+  fixtures and `tools/velox-metadata-parity` deleted; `SpectroCancelled` a typealias of `FormatoCancelled`,
+  `SpectroCancellation` SpectroCore's own forwarding enum (so `.task` needs no FormatoCore import); `tools/test.sh` with no
+  libhdf5 search, the warning filter, xUnit output, the drive lock and CuboKit's untracked-file stamp rule;
+  `tools/test-names.py`. The 51 declarations FormatoKit's dry run made public were already public at 0.0.2; its dry run had
+  not compiled SpectroEDXTests, which read five more `package` members: public equivalents, approved by the coordinator as a
+  registered deviation (`docs/consumers-0.4.0.md` section 7), asked of FormatoKit 0.0.3. Baseline at `301f1eb`: 422 passed +
+  1 skipped; after: the 302 staying names identical (301 + the recorder skipped), golden byte-identical.
+- `f12d13a` (tier 3): the hook refuses `killall` and an unpinned `pkill`; 23 of 23 hook cases.
+- `9991a11` (tier 3): the 302 tests to Swift Testing by a mechanical converter plus hand fixes (teardown classes, source
+  locations, `withKnownIssue`, `FixtureAbsent` / `Test.cancel`, `.enabled(if:)`), names and outcomes identical
+  (`tools/test-names.py` on both runs), 4 known issues = the two registered EDX findings.
+- `62466ad` (tier 2): consumer-check without the reader sections, with SpectroCore's opening through FormatoKit and
+  `MAC4DSTEM_HDF5_PATH` unset: 152 checks, 136 / 136 controls (Sonnet subagent, reviewed).
+- `c914b03` (tier 3): `docs/consumers-0.4.0.md`. Frozen candidate; gate stamped there and green cold in a fresh copy.
+- **Gate B** (one Sonnet refuter on `c914b03`): no blocker, no should-fix. One consumer source built as six executables
+  (`c914b03` with nothing set up, `301f1eb` with the vendored libhdf5, tag 0.3.0; each as a pure-public consumer and as a
+  target inside the archived package): 45 runs, 21 + 20 dump files byte-identical new vs old (29 340 and 27 002 lines; 0.3.0
+  equal on its API). Inputs: velox-tiny, demo-edx-tiny, the three public Velox files, truncated / bit-flipped / garbage files
+  (same errors), the owner's `stem-edx/SI HAADF 1456 77000 x 20260420.emd` (reader, open, masks, windows, EDSFit, pooled
+  quantification with and without absorption, the proposer on the full pool) and all 14 EELS DM4s (readers, t/λ three ways,
+  C/N/O K ratio method). Both arms loaded libhdf5 images with the same UUID. Fresh consumer: Debug and release build alone;
+  Velox opens with the variable unset, empty, a directory or a bogus path. Cross-kit cancellation holds both ways. Notes
+  folded in: the stream order is Swift `sorted()`; the coverage-flag replacement is weaker (head stream only); the proposer
+  cancels with `ProposerError.cancelled` (unchanged since 0.3.0). Logs: the session scratchpad's `refuter/logs`.
+- Item 5: the Velox detector-order finding and its planted file went to FormatoKit's row as an ask (shared note
+  `spectrokit-velox-detector-order-ask-2026-10-15.md`). Item 6: Q5 unanswered, so no EDX registration this session.
+

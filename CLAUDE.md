@@ -1,34 +1,36 @@
 # CLAUDE.md — start here
 
 SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS and EELS), imported by tagged version by
-mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. Modules: `SpectroCore` (readers, spectrum image, `EnergyAxis`, statistics,
+mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. Modules: `SpectroCore` (spectrum image and its opening, `EnergyAxis`, statistics,
 least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantification, the six tables), `SpectroEELS`
-(thickness t/λ so far). The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `docs/history.md`.
+(thickness t/λ, the C K areal density). Since 0.4.0 the file readers are FormatoKit's (`FormatoDM`, `FormatoEMD`,
+`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.0.2"`. The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `docs/history.md`.
 
-## State (2026-10-14)
+## State (2026-10-15)
 
-- 0.1.0 tagged and public. 0.2.0 (macTEM's three asks) is tagged at `edb6ba8`.
-- **0.3.0 is ready for the owner's tag** (2026-10-14 overnight): the split into the three modules, EELS slice 1
-  (`EELSThickness.logRatio`) and 1b (`DM4Experiment.readEELSSpectrumImage`), and the fixes both refuters required (reader:
-  exact Data-tag length, `Signal == "EELS"` role; SpectroEELS: the Savitzky–Golay derivative bit-identical to SciPy, so
-  every threshold is exSpy's channel). Gate at `9febf05` (+ a one-line test warning fix): vendored 2.1.1 and Homebrew 2.2.0
-  libhdf5, 258 / 0 (same names), golden green, SpectroKitTests 55 / 0, SpectroEELSTests 60 / 0, consumer-check 318 checks
-  and 86 / 86 controls, 0 warnings cold. What each consumer changes: `docs/consumers-0.3.0.md`.
-- After 0.3.0 on `main` (green at `92f8dfc`: 258 / golden / SpectroKitTests 55 / SpectroEELSTests 76 / SpectroEDXTests 32,
-  0 warnings; consumer-check 371 checks, 143 / 143 controls):
-  - EELS slice 2, the C K areal density by the ratio method (`EELSEdgeQuantification.ratioMethod`): pins within 7e−16 of
-    exSpy, planted truth, its Gate B refuter's fixes in (`d5e5d2d`, `19e046a`). Public API additive; GOS tables are
-    `Bundle.module` resources of SpectroEELS (bundle `SpectroKit_SpectroEELS`), CC-BY-4.0 in NOTICE.
-  - The real-data check of the owner's scans passed (R1 reader, R2 t/λ, bit for bit); slice 2's C K map against GMS's:
-    Pearson 0.985 (`docs/eels-real-data/`).
-  - EDX stage gates (`SpectroEDXTests`): counts, axis, windows and peak ID pass; findings registered, not fixed (the owner's
-    Q1–Q5 in `docs/edx-stage-gates-registration.md` section 12): `VeloxEMDReader` sorts detectors by index (rsciio takes
-    file order), `EnergyAxisRefinement`'s offset/gain trade-off, and the Mg diagnosis (Gate D: a centre-sampled line
-    shape against channel-integrated data costs ×8 in L_D at 1e7 counts; refine axis and resolution before proposing
-    recovers Mg on planted shifts; the full pool's pruning loses Mg in some cells). D6 waits on the owner's files.
-  - CI workflow (enabling it is the owner's) and a test that reaches dgelsy's rank threshold.
-  - The element proposer about 7x faster, output bit for bit unchanged (`92f8dfc`: its single-candidate fits run
-    concurrently, results in pool order).
+- 0.1.0, 0.2.0 (`edb6ba8`) and 0.3.0 (`6ab9ec2`) tagged and pushed. The apps skip 0.3.0 and bump once to 0.4.0.
+- **0.4.0 is ready for the owner's tag once FormatoKit is public** (2026-10-15; candidate `c914b03`, the tag goes on the
+  closeout commit after it, which changes only docs and test comments):
+  - SpectroKit depends on FormatoKit 0.0.2 by tag (`Package.resolved`: `e111fc6`); `DM4Experiment`, `VeloxEMDReader`,
+    `HDF5Serial` and their 121 tests left SpectroCore; `SpectroCancelled = FormatoCancelled` (typealias), `SpectroCancellation`
+    stays SpectroCore's own enum; no re-export of the Formato modules. libhdf5 is FormatoKit's shipped 2.1.1 (sha256 equal to
+    mac4DSTEM `5ba712a0`'s). FormatoKit is private and SpectroKit public: push and tag wait until FormatoKit is public.
+  - The 302 staying tests are Swift Testing (Apple's modernize-tests mapping; same names, same outcomes, `isEqual(accuracy:)`
+    is XCTest's rule). Five SpectroEDXTests reads go through public equivalents (FormatoKit 0.0.2 keeps the members `package`;
+    asked for 0.0.3; `docs/consumers-0.4.0.md` section 7).
+  - Gate (stamped `c914b03`, and cold in a fresh copy): 190 + 76 + 32 (4 known issues: the two registered EDX findings) + 2
+    golden (recorder skipped) + 2, 0 warnings except FormatoKit's three signed-dylib notices. consumer-check 152 checks,
+    136 / 136 controls, `MAC4DSTEM_HDF5_PATH` unset. Gate B refuter: no blocker, no should-fix; 45 runs of one consumer
+    source against `301f1eb` (and 0.3.0 on its API) byte-identical, the owner's 1.7 GB Velox EDX SI and all 14 EELS DM4s
+    included (`docs/history.md`, 0.4.0).
+  - What each app changes: `docs/consumers-0.4.0.md` (imports, products, scripts, one HDF5 lock per process, the three
+    libhdf5 options until the owner decides).
+- Open, the owner's: EDX Q1–Q5 (`docs/edx-stage-gates-registration.md` section 12); no EDX fix is registered until Q5. The
+  Velox detector-order finding is FormatoKit's now (an ask on its row); SpectroKit keeps its strict `withKnownIssue` test as
+  the alarm for the bump.
+- Earlier on `main`: EELS slice 2 (C K by the ratio method, refuted and fixed), the real-data check of the owner's EELS scans
+  (R1, R2 bit for bit; C K vs GMS Pearson 0.985), the EDX stage gates and the Mg Gate D, CI (needs FormatoKit public or a
+  `FORMATOKIT_TOKEN` secret), the rank test, the proposer about 7x faster.
 - Registrations: `docs/eels-slice-1-registration.md`, `docs/eels-slice-2-registration.md`,
   `docs/eels-real-data-check-registration.md`, `docs/edx-stage-gates-registration.md`.
 
@@ -46,12 +48,16 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
 - **The gate is `tools/test.sh`** (`swift test -c release "$@"`). Never run `swift build --build-tests -c release` (fails on
   this toolchain). Debug is -Onone and 20-50x slower on hot paths and the manifest carries no Debug `-O` (a versioned
   dependency cannot carry unsafe flags), so a consumer builds SpectroKit optimised itself.
-- **libhdf5**: the library ships none; a consumer must supply it. `tools/test.sh` takes, in order, `MAC4DSTEM_HDF5_PATH`;
-  mac4DSTEM's vendored 2.1.1 by `git show` at `5ba712a0` into `.build/hdf5`; Homebrew `hdf5` (soname 320).
-- **Green stamp**: a full, passing `tools/test.sh` run on a clean tracked tree writes `.build/last-green` (commit, UTC time,
-  libhdf5); `tools/last-green.sh` prints it and says whether HEAD equals it.
+- **libhdf5** (0.4.0 on): FormatoKit ships 2.1.1 inside FormatoHDF5; the gate sets nothing (`MAC4DSTEM_HDF5_PATH`, when set,
+  still overrides). Swift Build's three "not stripping binary because it is signed" lines are the only warnings allowed.
+- **Green stamp**: a full, passing `tools/test.sh` run on a clean tree (no untracked file under Sources or Tests either) writes
+  `.build/last-green` (commit, UTC time, libhdf5); `tools/last-green.sh` prints it and says whether HEAD equals it.
+  `tools/test-names.py <log> .build/test-results/xunit-swift-testing.xml` lists the names a run passed or skipped.
+- **Tests are Swift Testing** (`@Test func testX()`: the names stay the contract). A mutation campaign reuses one warm
+  `.build` (never a cold build per mutant).
 - **Hook**: `.claude/settings.json` runs `tools/hooks/no-sleep-poll.sh` before every Bash call; it refuses a sleep of 30 s or
-  more and any `while`/`until` loop with a sleep in it. Wait on background-task notifications or Monitor. Proof:
+  more, any `while`/`until` loop with a sleep in it, `killall`, and `pkill` without `-P <pid>` or a session-specific pattern
+  (it matches text: write a commit message that names them to a file). Wait on background-task notifications or Monitor. Proof:
   `tools/hooks/test-no-sleep-poll.sh`.
 - **A reference for every number.** Pins: exSpy `7185a4d1`, HyperSpy 2.4.0, NIST EPQ `249dd3f8`, rsciio `049e7d70`, all in the
   gitignored `References/` (`exspy-7185a4d1`, `rosettasciio`, `pyEELSMODEL-pin` at `eed9f0721d5b`). An unpinned copy is never
@@ -68,5 +74,5 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
 - **Names** (the suite's standard): apps are `mac` + technique, libraries are domain + `Kit`, modules carry the library's
   prefix: `SpectroCore`, `SpectroEDX`, `SpectroEELS`.
 - **Public since 0.1.0.** Pushing, tagging and making things public are the owner's. One session per repo; `main` only; commit by
-  explicit paths. The public DM4 API is access only; the 258 moved test names and the golden files change only on purpose.
+  explicit paths. The public DM4 API is access only; the moved test names (190 since 0.4.0) and the golden files change only on purpose.
 - **Suite board**: this repo's row is `lanes/spectrokit`; how a session opens and closes it is in `../CLAUDE.md`.

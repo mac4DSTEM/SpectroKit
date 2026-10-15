@@ -13,7 +13,7 @@
 //
 //  DEVIATION (0.4.0, approved by the suite coordinator 2026-10-15; docs/consumers-0.4.0.md section 7): FormatoKit 0.0.2 keeps
 //  `VeloxStreamInfo.id` and `VeloxSpectrumImage.energyCalibrationAgrees` `package`. This file reads the pinned stream ids in
-//  name order (the reader's order) and the calibration flag recomputed from the public segments by the reader's rule
+//  name order (the reader sorts the stream names) and the calibration flag recomputed from the public segments by the reader's rule
 //  (`swiftAxes`) instead. Reverts to the reader's own members at the next FormatoKit pin that makes them public (asked of
 //  FormatoKit 0.0.3).
 //
@@ -38,7 +38,7 @@ struct AxisGateTests {
     ///
     /// 0.4.0 (FormatoKit 0.0.2, docs/consumers-0.4.0.md "Deviations"): `VeloxStreamInfo.id` and
     /// `VeloxSpectrumImage.energyCalibrationAgrees` are `package` in FormatoKit, out of reach from here. The reader lists the
-    /// streams in name order (HDF5's name index), so the stream ids are the pinned ids sorted, paired with `streams` in order
+    /// streams sorted by name (Swift `sorted()`, FormatoEMD VeloxEMDReader.swift:804), so the stream ids are the pinned ids sorted, paired with `streams` in order
     /// (the counts must match); the flag is the reader's rule recomputed from the public segments (one distinct
     /// dispersion|offset over every segment of every stream, FormatoEMD VeloxEMDReader.swift's `calibrations.count <= 1`).
     /// Both go back to the reader's own members when FormatoKit makes them public.

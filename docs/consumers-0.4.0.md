@@ -51,7 +51,8 @@ starts `FormatoKit:` (was `SpectroKit:`); one `HDF5Serial` per process (section 
 moved test names and golden, and here the 302 staying test names and the six golden scenarios against the same baseline.
 
 `SpectroCancelled()` constructed in an app's own code is `FormatoCancelled()`'s initialiser: under `MemberImportVisibility`
-that file needs `import FormatoCore`. `catch is SpectroCancelled` and `SpectroCancellation.task` need nothing new.
+that file needs `import FormatoCore`. `catch is SpectroCancelled` and `SpectroCancellation.task` need nothing new. One exception, unchanged since 0.3.0 and
+documented on `ElementProposer.propose`: the proposer reports cancellation as `ProposerError.cancelled`, not `SpectroCancelled`.
 
 ## 3. mac4DSTEM (0.1.0 to 0.4.0)
 
@@ -148,9 +149,10 @@ Five members SpectroEDXTests read are still `package` in FormatoKit 0.0.2 (its d
 tests and the golden, not SpectroEDXTests): `VeloxSpectrumImage.streamCount`, `.energyCalibrationAgrees`,
 `VeloxStreamInfo.id`, `VeloxEventStore.streamsAgreeOnCoverage`, `.pixelCount`. The tests read public equivalents instead:
 `streams.count` and `geometry.pixelsPerFrame` (exact: the reader sets the two from them); stream ids by name order (the
-reader lists the streams in HDF5 name order, so the pinned ids sorted pair with them); the calibration flag recomputed from
+reader sorts the stream names with Swift's `sorted()`, so the pinned ids sorted pair with them); the calibration flag recomputed from
 the public segments by the reader's own rule (one distinct dispersion|offset); the coverage flag through its public
-consequence (both frames complete, no partial frame) on the 4-detector file. They go back to the reader's members when
+consequence (both frames complete, no partial frame) on the 4-detector file, which is weaker: those come from the head
+stream only, so a non-head stream that ended early would pass (Gate B note). They go back to the reader's members when
 FormatoKit makes them public (asked on its row). Nothing a consumer calls is affected.
 
 ## 8. Checks behind this note

@@ -12,7 +12,8 @@
 //  DEVIATION (0.4.0, approved by the suite coordinator 2026-10-15; docs/consumers-0.4.0.md section 7): FormatoKit 0.0.2 keeps
 //  `VeloxSpectrumImage.streamCount`, `VeloxEventStore.pixelCount` and `.streamsAgreeOnCoverage` `package`. This file reads
 //  `streams.count` and `geometry.pixelsPerFrame` (exact replacements) and, for the coverage flag, its public consequence on
-//  the 4-detector file (both frames complete, no partial frame) instead. Reverts to the reader's own members at the next
+//  the 4-detector file (both frames complete, no partial frame) instead. That is WEAKER (Gate B note, 2026-10-15): the two
+//  come from the head stream only, so a non-head stream that ended early would pass; the flag itself returns at the bump. Reverts to the reader's own members at the next
 //  FormatoKit pin that makes them public (asked of FormatoKit 0.0.3).
 //
 
