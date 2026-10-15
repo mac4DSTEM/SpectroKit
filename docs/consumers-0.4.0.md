@@ -15,14 +15,14 @@ and are a guide: recheck at the bump (mac4DSTEM's DiffractoKit and CuboKit switc
 | 0.3.0 | DM4: a Data tag must declare exactly the image's bytes (else `.truncated`); `Meta Data.Signal == "EELS"` makes an EELS object; `readEELSSpectrumImage`. Now FormatoKit's | behaviour |
 | after 0.3.0 | SpectroEELS: the C K areal density by the ratio method (`EELSEdgeQuantification.ratioMethod`, `CoreLossSpectrumImage`, `ArealDensityMap`, ...), with exSpy's dft GOS tables in `SpectroKit_SpectroEELS.bundle` (CC-BY-4.0, NOTICE) | no (additive) |
 | after 0.3.0 | The element proposer about 7x faster, output bit for bit unchanged; a `dgelsd` solver (package) | no |
-| **0.4.0** | **The readers leave SpectroKit for FormatoKit 0.0.2** (section 2), and SpectroKit depends on it by tag | **yes** for reader users |
+| **0.4.0** | **The readers leave SpectroKit for FormatoKit 0.0.3** (section 2), and SpectroKit depends on it by tag | **yes** for reader users |
 | 0.4.0 | The tests are Swift Testing (nothing a consumer sees) | no |
 
 `docs/consumers-0.3.0.md` has the 0.3.0 details; this note repeats what an app needs.
 
 ## 2. The readers are FormatoKit's
 
-SpectroKit 0.4.0 declares `.package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.0.2")` and its
+SpectroKit 0.4.0 declares `.package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.0.3")` and its
 `SpectroCore` depends on FormatoKit's `FormatoCore`, `FormatoDM` and `FormatoEMD`. What moved, and the module to import
 (FormatoKit's `docs/consumers-0.0.1.md` has the full list and the behaviour notes):
 
@@ -34,9 +34,8 @@ SpectroKit 0.4.0 declares `.package(url: "https://github.com/mac4DSTEM/FormatoKi
 | `SpectroCancelled` | a struct in `SpectroCore` | `public typealias SpectroCancelled = FormatoCancelled` in `SpectroCore` |
 | `SpectroCancellation` (`task`; `check` stays `package`) | `SpectroCore` | unchanged: SpectroCore's own enum, forwarding to `FormatoCancellation` |
 
-**FormatoKit must be public before 0.4.0 is pushed and tagged.** SpectroKit is public and FormatoKit is private (2026-10-15):
-until FormatoKit is public, SpectroKit's CI and every clone without the owner's credentials fail to resolve the dependency.
-The owner's machine resolves it, which is how this session built and gated. Never work around it with a path dependency.
+**FormatoKit is public** (the owner, 2026-10-15, with its 0.0.3 tag on `8d647bd`), so a clone of SpectroKit resolves it with
+no credentials. The session built against 0.0.2 first; 0.0.3 adds only what section 7 says.
 
 **SpectroKit does not re-export the Formato modules** (no `@_exported import`): an app imports the module a type comes
 from, as `MemberImportVisibility` requires anyway, and lists the products it imports. The decision keeps each dependency
@@ -44,10 +43,12 @@ visible in the app's manifest and avoids an underscored attribute in a public li
 `LoadedSpectrumImage`, `SpectrumImageSource` and the rest of the spectrum image stay in `SpectroCore` with the same
 signatures; they call FormatoKit inside.
 
-Behaviour a consumer can see (all FormatoKit's, registered there): the 51 declarations FormatoKit's dry run needed are
+Behaviour a consumer can see (all FormatoKit's, registered there; its `docs/consumers-0.0.1.md` to `0.0.3.md`): the 51 declarations FormatoKit's dry run needed are
 `public` (among them `DM4Experiment.readEDSSpectrumImage`, `VeloxEMDReader.readSpectrumImage(frames:cancelled:progress:)`,
 `.isVeloxEMD(path:)`, `.storedElementSelection()`, `VeloxSpectrumImage` and `VeloxEventStore`); the quit barrier's stderr line
-starts `FormatoKit:` (was `SpectroKit:`); one `HDF5Serial` per process (section 5). Output is byte-identical: FormatoKit's 121
+starts `FormatoKit:` (was `SpectroKit:`); one `HDF5Serial` per process (section 5); and, from 0.0.3, the Velox detectors in
+the file's written order (RosettaSciIO's rule; it was the `Detector-<n>` index order), which moves the energy axis and
+`exposureTimeSeconds` only on a file that writes its detector keys out of index order (no known real file does). Output is byte-identical: FormatoKit's 121
 moved test names and golden, and here the 302 staying test names and the six golden scenarios against the same baseline.
 
 `SpectroCancelled()` constructed in an app's own code is `FormatoCancelled()`'s initialiser: under `MemberImportVisibility`
@@ -57,7 +58,7 @@ documented on `ElementProposer.propose`: the proposer reports cancellation as `P
 ## 3. mac4DSTEM (0.1.0 to 0.4.0)
 
 - **Pins, together** (section 5): `Package.swift:24` `exact: "0.4.0"` and a new
-  `.package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.0.2")`; the same in `mac4DSTEM.xcodeproj` (the
+  `.package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.0.3")`; the same in `mac4DSTEM.xcodeproj` (the
   package references, `project.pbxproj` requirements, the workspace `Package.resolved`).
 - **Products** for every target that lists `SpectroCore` today (`Package.swift:33` DSTEMCore, `:76`, and the Xcode targets):
   add `.product(name: "SpectroEDX", package: "SpectroKit")`, `.product(name: "FormatoDM", package: "FormatoKit")`,
@@ -93,7 +94,7 @@ documented on `ElementProposer.propose`: the proposer reports cancellation as `P
 
 ## 4. macTEM (0.2.0 to 0.4.0)
 
-- **Pins, together**: `Package.swift:19` `exact: "0.4.0"` plus FormatoKit `exact: "0.0.2"`; the Xcode project's own pin
+- **Pins, together**: `Package.swift:19` `exact: "0.4.0"` plus FormatoKit `exact: "0.0.3"`; the Xcode project's own pin
   (`macTEM.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, `xcodebuild -resolvePackageDependencies`).
 - **Products** for TEMCore (`Package.swift:24`): `FormatoDM`, `FormatoEMD`, `FormatoHDF5` (FormatoCore if needed); and
   `SpectroEDX` when the EDX room starts using it (it resumes on 0.4.0); `SpectroEELS` when thickness is wanted.
@@ -114,7 +115,7 @@ documented on `ElementProposer.propose`: the proposer reports cancellation as `P
 
 `HDF5Serial` is FormatoKit's. SpectroKit 0.1.0 to 0.3.0 define their own. A process that links FormatoKit's and an older
 SpectroKit's has two locks and two quit barriers around one libhdf5 that is not thread-safe, the race the lock exists to
-prevent. **Bump SpectroKit to 0.4.0 and add FormatoKit 0.0.2 in the same change; never one without the other.** No other
+prevent. **Bump SpectroKit to 0.4.0 and add FormatoKit 0.0.3 in the same change; never one without the other.** No other
 kit depends on FormatoKit today (DiffractoKit 0.0.3, CuboKit 0.0.3), so the exact pins do not conflict.
 
 ## 6. libhdf5: the owner's pending decision
@@ -143,25 +144,25 @@ For packages and command-line tools (SpectroKit's own tests, `tools/consumer-che
 is needed: the shipped copy loads with no setup, which SpectroKit's gate now relies on (it no longer sets
 `MAC4DSTEM_HDF5_PATH`).
 
-## 7. Deviations in SpectroKit's own tests (FormatoKit 0.0.2's access)
+## 7. FormatoKit 0.0.3: no deviation left in SpectroKit's tests
 
-Five members SpectroEDXTests read are still `package` in FormatoKit 0.0.2 (its dry run compiled SpectroCoreTests, the EELS
-tests and the golden, not SpectroEDXTests): `VeloxSpectrumImage.streamCount`, `.energyCalibrationAgrees`,
-`VeloxStreamInfo.id`, `VeloxEventStore.streamsAgreeOnCoverage`, `.pixelCount`. The tests read public equivalents instead:
-`streams.count` and `geometry.pixelsPerFrame` (exact: the reader sets the two from them); stream ids by name order (the
-reader sorts the stream names with Swift's `sorted()`, so the pinned ids sorted pair with them); the calibration flag recomputed from
-the public segments by the reader's own rule (one distinct dispersion|offset); the coverage flag through its public
-consequence (both frames complete, no partial frame) on the 4-detector file, which is weaker: those come from the head
-stream only, so a non-head stream that ended early would pass (Gate B note). They go back to the reader's members when
-FormatoKit makes them public (asked on its row). Nothing a consumer calls is affected.
+The candidate first built against FormatoKit 0.0.2, which kept five members SpectroEDXTests read `package`
+(`VeloxSpectrumImage.streamCount`, `.energyCalibrationAgrees`, `VeloxStreamInfo.id`, `VeloxEventStore.streamsAgreeOnCoverage`,
+`.pixelCount`); the tests read public stand-ins, a registered deviation. FormatoKit 0.0.3 makes the five public, and its two
+flags cover every stream (the stand-ins saw the head stream only), so the tests read the reader's members again, as they did
+before 0.4.0. FormatoKit 0.0.3 also takes the Velox detectors in the file's written order, which was SpectroKit's registered
+finding (EDX stage gates, amendment 1 item 5): `testE1DetectorKeysOutOfIndexOrderFollowTheFileOrder` passes without its
+`withKnownIssue` wrapper, and the planted `velox-stream-axis-order.emd` reads RosettaSciIO's 0.02 keV per channel from -1.9 keV.
 
 ## 8. Checks behind this note
 
 - `tools/test.sh` (release, FormatoKit's shipped libhdf5, no setup): the 302 staying test names equal the baseline at
-  `301f1eb` minus the 121 moved ones, before and after the Swift Testing migration; the six golden scenarios byte-identical;
+  `301f1eb` minus the 121 moved ones, before and after the Swift Testing migration and on FormatoKit 0.0.3 (2 known issues
+  left, the `EnergyAxisRefinement` finding); the six golden scenarios byte-identical;
   0 warnings except the three Swift Build prints for FormatoKit's signed dylibs.
 - `tools/consumer-check` (a separate package, Debug): the SpectroEELS public API and SpectroCore's spectrum-image opening
   through FormatoKit, with `MAC4DSTEM_HDF5_PATH` unset: 152 checks; negative controls 136 of 136 (the reader controls left
   with the readers: FormatoKit's own consumer check carries them).
-- The Gate B refuter on the frozen candidate (a separate package reading the owner's files through FormatoKit and the EDX and
-  EELS public API, bit for bit against 0.3.0's outputs on the same inputs): `docs/history.md`, 0.4.0.
+- The Gate B refuter on the frozen candidate on FormatoKit 0.0.2 (a separate package reading the owner's files through
+  FormatoKit and the EDX and EELS public API, bit for bit against 0.3.0's outputs on the same inputs): `docs/history.md`,
+  0.4.0. The re-pin to 0.0.3 changes no reading of a file whose detector keys are in index order (FormatoKit's own gates).

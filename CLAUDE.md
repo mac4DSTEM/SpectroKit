@@ -4,33 +4,31 @@ SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS a
 mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. Modules: `SpectroCore` (spectrum image and its opening, `EnergyAxis`, statistics,
 least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantification, the six tables), `SpectroEELS`
 (thickness t/λ, the C K areal density). Since 0.4.0 the file readers are FormatoKit's (`FormatoDM`, `FormatoEMD`,
-`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.0.2"`. The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `docs/history.md`.
+`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.0.3"`. The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `docs/history.md`.
 
 ## State (2026-10-15)
 
 - 0.1.0, 0.2.0 (`edb6ba8`) and 0.3.0 (`6ab9ec2`) tagged and pushed. The apps skip 0.3.0 and bump once to 0.4.0.
-- **0.4.0 is ready for the owner's tag once FormatoKit is public** (2026-10-15; candidate `c914b03`, the tag goes on the
-  closeout commit after it, which changes only docs and test comments):
-  - SpectroKit depends on FormatoKit 0.0.2 by tag (`Package.resolved`: `e111fc6`); `DM4Experiment`, `VeloxEMDReader`,
-    `HDF5Serial` and their 121 tests left SpectroCore; `SpectroCancelled = FormatoCancelled` (typealias), `SpectroCancellation`
-    stays SpectroCore's own enum; no re-export of the Formato modules. libhdf5 is FormatoKit's shipped 2.1.1 (sha256 equal to
-    mac4DSTEM `5ba712a0`'s). FormatoKit is private and SpectroKit public: push and tag wait until FormatoKit is public.
+- **0.4.0 is ready for the owner's tag** (2026-10-15; the commit named on the board row, after `c914b03`'s candidate and its
+  Gate B; the tag is the signal for macTEM's EDX room and both apps' bumps):
+  - SpectroKit depends on FormatoKit **0.0.3** by tag (`8d647bd`, public); `DM4Experiment`, `VeloxEMDReader`, `HDF5Serial`
+    and their 121 tests left SpectroCore; `SpectroCancelled = FormatoCancelled` (typealias), `SpectroCancellation` stays
+    SpectroCore's own enum; no re-export of the Formato modules. libhdf5 is FormatoKit's shipped 2.1.1 (sha256 equal to
+    mac4DSTEM `5ba712a0`'s).
   - The 302 staying tests are Swift Testing (Apple's modernize-tests mapping; same names, same outcomes, `isEqual(accuracy:)`
-    is XCTest's rule). Five SpectroEDXTests reads go through public equivalents (FormatoKit 0.0.2 keeps the members `package`;
-    asked for 0.0.3; `docs/consumers-0.4.0.md` section 7).
-  - Gate (stamped `c914b03`, and cold in a fresh copy): 190 + 76 + 32 (4 known issues: the two registered EDX findings) + 2
-    golden (recorder skipped) + 2, 0 warnings except FormatoKit's three signed-dylib notices. consumer-check 152 checks,
-    136 / 136 controls, `MAC4DSTEM_HDF5_PATH` unset. Gate B refuter: no blocker, no should-fix; 45 runs of one consumer
-    source against `301f1eb` (and 0.3.0 on its API) byte-identical, the owner's 1.7 GB Velox EDX SI and all 14 EELS DM4s
-    included (`docs/history.md`, 0.4.0).
+    is XCTest's rule). FormatoKit 0.0.3 made public the five Velox members SpectroEDXTests read (the 0.0.2 stand-ins are
+    gone) and takes the Velox detectors in written order (the detector-order test passes without its `withKnownIssue`).
+  - Gate on 0.0.3: 190 + 76 + 32 (2 known issues: the `EnergyAxisRefinement` finding) + 2 golden (recorder skipped) + 2, 0
+    warnings except FormatoKit's three signed-dylib notices; consumer-check and a cold build as the history records. Gate B
+    (on the 0.0.2 candidate `c914b03`): no blocker, no should-fix; 45 runs of one consumer source against `301f1eb` (and
+    0.3.0 on its API) byte-identical, the owner's 1.7 GB Velox EDX SI and all 14 EELS DM4s included (`docs/history.md`).
   - What each app changes: `docs/consumers-0.4.0.md` (imports, products, scripts, one HDF5 lock per process, the three
     libhdf5 options until the owner decides).
 - Open, the owner's: EDX Q1–Q5 (`docs/edx-stage-gates-registration.md` section 12); no EDX fix is registered until Q5. The
-  Velox detector-order finding is FormatoKit's now (an ask on its row); SpectroKit keeps its strict `withKnownIssue` test as
-  the alarm for the bump.
+  Velox detector-order finding is fixed in FormatoKit 0.0.3.
 - Earlier on `main`: EELS slice 2 (C K by the ratio method, refuted and fixed), the real-data check of the owner's EELS scans
-  (R1, R2 bit for bit; C K vs GMS Pearson 0.985), the EDX stage gates and the Mg Gate D, CI (needs FormatoKit public or a
-  `FORMATOKIT_TOKEN` secret), the rank test, the proposer about 7x faster.
+  (R1, R2 bit for bit; C K vs GMS Pearson 0.985), the EDX stage gates and the Mg Gate D, CI (enabling Actions is the
+  owner's), the rank test, the proposer about 7x faster.
 - Registrations: `docs/eels-slice-1-registration.md`, `docs/eels-slice-2-registration.md`,
   `docs/eels-real-data-check-registration.md`, `docs/edx-stage-gates-registration.md`.
 

@@ -193,4 +193,9 @@ The bump the apps take straight from 0.1.0 (mac4DSTEM) and 0.2.0 (macTEM). Commi
   cancels with `ProposerError.cancelled` (unchanged since 0.3.0). Logs: the session scratchpad's `refuter/logs`.
 - Item 5: the Velox detector-order finding and its planted file went to FormatoKit's row as an ask (shared note
   `spectrokit-velox-detector-order-ask-2026-10-15.md`). Item 6: Q5 unanswered, so no EDX registration this session.
+- **Re-pin to FormatoKit 0.0.3** (the owner tagged it on `8d647bd` and made FormatoKit public, 13:20): the dependency by tag;
+  the five Velox members SpectroEDXTests read are public there, so the 0.0.2 stand-ins and their deviation notes are gone
+  (the flags cover every stream now); 0.0.3 takes the Velox detectors in written order, so the strict `withKnownIssue` on
+  `testE1DetectorKeysOutOfIndexOrderFollowTheFileOrder` is dropped and the test passes (0.02 keV per channel from -1.9 keV on
+  the planted file). The CI's token step is gone (FormatoKit is public). Gate: the same 302 names, 2 known issues left.
 

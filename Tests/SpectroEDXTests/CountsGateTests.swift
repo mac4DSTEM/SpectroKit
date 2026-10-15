@@ -9,13 +9,6 @@
 //  C2: `sum(mask:)`, `windowSums`, `densified` against sums of that draw; totals above 2^32 stay exact.
 //  C3: what is not carried (live time, dead time) is stated; the one thing checkable (no live-time product, no wrap) is.
 //
-//  DEVIATION (0.4.0, approved by the suite coordinator 2026-10-15; docs/consumers-0.4.0.md section 7): FormatoKit 0.0.2 keeps
-//  `VeloxSpectrumImage.streamCount`, `VeloxEventStore.pixelCount` and `.streamsAgreeOnCoverage` `package`. This file reads
-//  `streams.count` and `geometry.pixelsPerFrame` (exact replacements) and, for the coverage flag, its public consequence on
-//  the 4-detector file (both frames complete, no partial frame) instead. That is WEAKER (Gate B note, 2026-10-15): the two
-//  come from the head stream only, so a non-head stream that ended early would pass; the flag itself returns at the bump. Reverts to the reader's own members at the next
-//  FormatoKit pin that makes them public (asked of FormatoKit 0.0.3).
-//
 
 import Foundation
 import Testing
@@ -111,17 +104,14 @@ struct CountsGateTests {
         #expect(image.sum(mask: nil).reduce(0, +) == 3_562_739)
         // The reader reports the streams in name order; rsciio's test names the totals in its own order.
         let v = try VeloxEMDReader(path: path).readSpectrumImage()
-        #expect(v.streams.count == 4)   // 0.4.0: `streamCount` is package in FormatoKit 0.0.2; the reader sets it to the streams' count
+        #expect(v.streamCount == 4)
         let published = Set([865_236, 913_682, 867_647, 916_174])
         let entry = countsPins.d("files").d(label)
         let perStream = entry.l("streams").map { $0.i("events") }
         #expect(Set(perStream) == published)
         #expect(v.eventStore.totalCounts == 3_562_739)
         #expect(v.eventStore.frameRange == (0..<2))
-        // 0.4.0: the reader's own flag `streamsAgreeOnCoverage` is package in FormatoKit 0.0.2 (docs/consumers-0.4.0.md
-        // "Deviations"). Its public consequence is asserted instead: both frames complete on every pixel, no partial frame.
-        #expect(v.eventStore.completeFrames == 2)
-        #expect(v.eventStore.partialFramePixels == 0)
+        #expect(v.streamsAgreeOnCoverageForGate)
     }
 
     // MARK: C1 / C2 planted streams
@@ -188,7 +178,7 @@ struct CountsGateTests {
                     for (p, t) in (s["pixel_totals"] as! [NSNumber]).enumerated() { expPix[p] += UInt64(t.intValue) }
                 }
                 #expect(store.summedSpectrum() == expSum, "\(name) frames \(key): channel sums")
-                let pix = (0..<store.geometry.pixelsPerFrame).map { p in   // 0.4.0: `pixelCount` (package) is this
+                let pix = (0..<store.pixelCount).map { p in
                     (store.rowOffsets[p]..<store.rowOffsets[p + 1]).reduce(UInt64(0)) { $0 + UInt64(store.counts[$1]) } }
                 #expect(pix == expPix, "\(name) frames \(key): pixel totals")
             }
@@ -314,4 +304,10 @@ struct CountsGateTests {
         #expect(!img.metadata.detectors.isEmpty)
         for d in img.metadata.detectors { #expect((d.liveTime ?? 0) == 0, "LiveTime 0 stored, passed through as stored"); #expect((d.realTime ?? 0) == 0) }
     }
+}
+
+extension VeloxSpectrumImage {
+    /// True when the streams of a multi-detector file ended in the same place (the reader's own flag; every stream since
+    /// FormatoKit 0.0.3).
+    var streamsAgreeOnCoverageForGate: Bool { eventStore.streamsAgreeOnCoverage }
 }

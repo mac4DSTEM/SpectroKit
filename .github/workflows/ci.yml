@@ -4,8 +4,7 @@
 # toolchain (Package.swift: `.macOS("27.0")`, tools 6.2): the runner image must carry an Xcode with the macOS 27 SDK.
 # `macos-latest` is used, with the newest Xcode selected; if the image lags, pin `runs-on` to the first image that has it.
 # Since 0.4.0 the readers are FormatoKit's, a package dependency fetched from github.com/mac4DSTEM/FormatoKit, which ships
-# libhdf5 inside FormatoHDF5: no libhdf5 step. While FormatoKit is private, the runner cannot fetch it without a token: either
-# FormatoKit is public, or a read token (secret FORMATOKIT_TOKEN) is set and the "FormatoKit access" step below uses it.
+# libhdf5 inside FormatoHDF5: no libhdf5 step. FormatoKit is public (2026-10-15), so the runner fetches it with no token.
 # Never `swift build --build-tests -c release` (fails on this toolchain's Swift Build backend); tools/test.sh is the gate.
 name: CI
 
@@ -30,13 +29,6 @@ jobs:
           xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
           sudo xcode-select -s "$xcode"
           swift --version
-      - name: FormatoKit access (only while it is private)
-        env:
-          FORMATOKIT_TOKEN: ${{ secrets.FORMATOKIT_TOKEN }}
-        run: |
-          if [ -n "$FORMATOKIT_TOKEN" ]; then
-            git config --global url."https://x-access-token:${FORMATOKIT_TOKEN}@github.com/mac4DSTEM/FormatoKit".insteadOf "https://github.com/mac4DSTEM/FormatoKit"
-          fi
       - name: Hook proof (no sleep or poll loops)
         run: tools/hooks/test-no-sleep-poll.sh
       - name: Gate (tools/test.sh, release)

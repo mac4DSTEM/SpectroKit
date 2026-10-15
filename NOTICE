@@ -41,7 +41,7 @@ The element table in Sources/SpectroEDX/Spectroscopy/Quant/QuantElementData.swif
 
 The file readers (the Velox EMD reader, the DM4 reader with its EDS and EELS spectrum images, the HDF5 lock) moved
 to FormatoKit (https://github.com/mac4DSTEM/FormatoKit, GPL-3.0-or-later) at SpectroKit 0.4.0, with their notices,
-their rosettasciio comparison and their fixtures. SpectroKit depends on FormatoKit 0.0.2.
+their rosettasciio comparison and their fixtures. SpectroKit depends on FormatoKit 0.0.3.
 
 Tests/SpectroEDXTests/Fixtures/public/ holds three of rosettasciio's public Velox test files, copied byte for byte under
 rosettasciio's GPL-3.0-or-later (commit 049e7d70, rsciio/tests/data/emd/, from fei_emd_files.zip, velox_emd_v11_elementSelection.zip

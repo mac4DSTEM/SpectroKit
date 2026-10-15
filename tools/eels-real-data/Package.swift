@@ -13,7 +13,7 @@ let package = Package(
     name: "EELSRealData",
     platforms: [.macOS("27.0")],
     // FormatoKit (the DM4 reader since SpectroKit 0.4.0) at the tag SpectroKit pins.
-    dependencies: [.package(path: "../.."), .package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.0.2")],
+    dependencies: [.package(path: "../.."), .package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.0.3")],
     targets: [
         .executableTarget(name: "eels-real-data", dependencies: [
             .product(name: "SpectroCore", package: spectroKit),

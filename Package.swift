@@ -24,7 +24,7 @@ let package = Package(
         .library(name: "SpectroEDX", targets: ["SpectroEDX"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.0.2"),
+        .package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.0.3"),
     ],
     targets: [
         // Plain-C wrappers over the four Accelerate LAPACK routines `FitLinearAlgebra` calls. ACCELERATE_NEW_LAPACK is
