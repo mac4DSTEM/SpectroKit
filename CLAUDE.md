@@ -4,33 +4,34 @@ SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS a
 mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. Modules: `SpectroCore` (spectrum image and its opening, `EnergyAxis`, statistics,
 least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantification, the six tables), `SpectroEELS`
 (thickness t/λ, the C K areal density). Since 0.4.0 the file readers are FormatoKit's (`FormatoDM`, `FormatoEMD`,
-`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.0.3"`. The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `../_archive/SpectroKit/docs/history.md` (archived).
+`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.0.3"`. The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `../_archive/SpectroKit/docs/history.md`.
 
 ## State (2026-10-15)
 
-- 0.1.0, 0.2.0 (`edb6ba8`) and 0.3.0 (`6ab9ec2`) tagged and pushed. The apps skip 0.3.0 and bump once to 0.4.0.
-- **0.4.0 is ready for the owner's tag** (2026-10-15; the commit named on the board row, after `c914b03`'s candidate and its
-  Gate B; the tag is the signal for macTEM's EDX room and both apps' bumps):
-  - SpectroKit depends on FormatoKit **0.0.3** by tag (`8d647bd`, public); `DM4Experiment`, `VeloxEMDReader`, `HDF5Serial`
-    and their 121 tests left SpectroCore; `SpectroCancelled = FormatoCancelled` (typealias), `SpectroCancellation` stays
-    SpectroCore's own enum; no re-export of the Formato modules. libhdf5 is FormatoKit's shipped 2.1.1 (sha256 equal to
-    mac4DSTEM `5ba712a0`'s).
-  - The 302 staying tests are Swift Testing (Apple's modernize-tests mapping; same names, same outcomes, `isEqual(accuracy:)`
-    is XCTest's rule). FormatoKit 0.0.3 made public the five Velox members SpectroEDXTests read (the 0.0.2 stand-ins are
-    gone) and takes the Velox detectors in written order (the detector-order test passes without its `withKnownIssue`).
-  - Gate on 0.0.3: 190 + 76 + 32 (2 known issues: the `EnergyAxisRefinement` finding) + 2 golden (recorder skipped) + 2, 0
-    warnings except FormatoKit's three signed-dylib notices; consumer-check and a cold build as the history records. Gate B
-    (on the 0.0.2 candidate `c914b03`): no blocker, no should-fix; 45 runs of one consumer source against `301f1eb` (and
-    0.3.0 on its API) byte-identical, the owner's 1.7 GB Velox EDX SI and all 14 EELS DM4s included (`../_archive/SpectroKit/docs/history.md` (archived)).
-  - What each app changes: `docs/consumers-0.4.0.md` (imports, products, scripts, one HDF5 lock per process, the three
-    libhdf5 options until the owner decides).
-- Open, the owner's: EDX Q1–Q5 (`docs/edx-stage-gates-registration.md` section 12); no EDX fix is registered until Q5. The
-  Velox detector-order finding is fixed in FormatoKit 0.0.3.
+- 0.1.0, 0.2.0 (`edb6ba8`), 0.3.0 (`6ab9ec2`) and 0.4.0 tagged and pushed (0.4.0: the readers are FormatoKit 0.0.3's; the
+  302 staying tests are Swift Testing).
+- **0.5.0 is ready for the owner's tag** (2026-10-15; the commit is named on the board row). Source-compatible with 0.4.0:
+  - The generality pass: the suite's policies are public parameters, each default 0.4.0's value, the default path bit for bit
+    (`docs/generality-0.5.0-registration.md`): `WindowRules`, `QuantificationPolicy` (`FitPolicy`, `AbundancePolicy`),
+    `ProposerPolicy`, `UnlistedLineRules`, `SmoothingKernel`, the EELS default window offsets, and the package members made
+    public; a non-default policy is named in the footer. The one behaviour change: `SpectroscopyExport.csv`'s default title is
+    the neutral "Spectroscopy quantification" (13 golden CSV-hash lines re-recorded on purpose).
+  - A stand-alone README and `Examples/QuantifyEDX` (built and drift-checked by `tools/consumer-check`), a DocC catalogue per
+    module, `docs/parity.md`, no app or suite name in sources, CI pinned to the macos-26 image.
+  - Gate: 337 test names (302 + 35), 2 known issues (E3), 0 warnings; consumer-check 189 checks + the README consumer, 151
+    controls; 61 of 61 mutants caught. What an app changes: `docs/consumers-0.5.0.md` (nothing required).
+  - **The floor chain.** 0.5.0 stays at macOS 27: FormatoKit's bundled libhdf5 dylibs are built for macOS 26, so FormatoKit
+    cannot declare 15. FormatoKit 0.2.1 rebuilds them for 15 (`.macOS(.v15)`, `.iOS(.v18)`); then SpectroKit **0.5.1** re-pins to
+    it and lowers its floor (no source change needed: measured at a 15 floor). The FormatoKit 0.1.x Velox dtype / title change
+    is a registered re-pin at 0.5.1.
+- Status, the gate's counts and the open items (EDX Q1-Q5 and the Mg fix, EELS slice 3, the README lane's API gaps, the
+  parity lane's claims-versus-tests notes): `docs/status.md`.
 - Earlier on `main`: EELS slice 2 (C K by the ratio method, refuted and fixed), the real-data check of the owner's EELS scans
   (R1, R2 bit for bit; C K vs GMS Pearson 0.985), the EDX stage gates and the Mg Gate D, CI (enabling Actions is the
   owner's), the rank test, the proposer about 7x faster.
 - Registrations: `docs/eels-slice-1-registration.md`, `docs/eels-slice-2-registration.md`,
-  `docs/edx-stage-gates-registration.md`.
+  `docs/edx-stage-gates-registration.md`, `docs/generality-0.5.0-registration.md`; the real-data check's is
+  `../_archive/SpectroKit/docs/eels-real-data-check-registration.md`.
 
 ## Read first
 
@@ -72,5 +73,5 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
 - **Names** (the suite's standard): apps are `mac` + technique, libraries are domain + `Kit`, modules carry the library's
   prefix: `SpectroCore`, `SpectroEDX`, `SpectroEELS`.
 - **Public since 0.1.0.** Pushing, tagging and making things public are the owner's. One session per repo; `main` only; commit by
-  explicit paths. The public DM4 API is access only; the moved test names (190 since 0.4.0) and the golden files change only on purpose.
+  explicit paths. The public DM4 API is access only; the 302 original test names (337 with 0.5.0's) and the golden files change only on purpose.
 - **Suite board**: this repo's row is `lanes/spectrokit`; how a session opens and closes it is in `../CLAUDE.md`.

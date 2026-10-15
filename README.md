@@ -202,9 +202,11 @@ of this README and nothing else, and `check-readme.py` fails if the README and `
 
 ## Documentation
 
-- [`docs/consumers-0.4.0.md`](docs/consumers-0.4.0.md): what a package that imports SpectroKit changes from 0.1.0 and 0.2.0 to
-  0.4.0, in particular where the readers went.
-- [`docs/`](docs): the registrations (what was decided before the code, and what the tests must show) and the history.
+- [`docs/consumers-0.5.0.md`](docs/consumers-0.5.0.md): what 0.5.0 adds (every suite policy a parameter with today's value as
+  the default) and changes; [`docs/consumers-0.4.0.md`](docs/consumers-0.4.0.md): where the readers went (FormatoKit).
+- [`docs/status.md`](docs/status.md): the state, the gate's counts and the open items; [`docs/parity.md`](docs/parity.md):
+  SpectroKit against exSpy's documented API, row by row.
+- [`docs/`](docs): the registrations (what was decided before the code, and what the tests must show).
 - [`NOTICE`](NOTICE): the licences and credits in full.
 
 ## Licence and credits

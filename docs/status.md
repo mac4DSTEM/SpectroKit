@@ -1,0 +1,75 @@
+# SpectroKit: status
+
+Updated 2026-10-15, at the 0.5.0 closeout. The source of truth for the state of the repo; the suite board shows it.
+
+## Version and modules
+
+**0.5.0**, ready for the owner's tag (0.4.0 is the last tag). Swift 6.2 tools, macOS 27 floor (lowered at 0.5.1, below).
+
+| Module | What it does |
+|---|---|
+| `SpectroCore` | The spectrum image (dense, sparse), its opening through FormatoKit's readers, `EnergyAxis`, counting statistics, least-squares solvers (C target `CSpectroLAPACK`), `SmoothingKernel`. |
+| `SpectroEDX` | X-ray quantification: the line table, windows, the EDS model and fit, the element proposer, Cliff-Lorimer with computed k-factors, the absorption correction, export, the six EPQ / FFAST / Krause tables. |
+| `SpectroEELS` | The t/lambda thickness by the log-ratio method; the C K areal density by the ratio method with the dft GOS tables. |
+
+The file readers are FormatoKit's (a dependency pinned `exact: "0.0.3"`). 0.5.0 makes the suite's policies public parameters,
+each default 0.4.0's value (`docs/generality-0.5.0-registration.md`).
+
+## The gate at 0.5.0
+
+- `tools/test.sh` (release, Swift Testing): **337 test names** (the 302 of 0.4.0 plus 35), **2 known issues** (the
+  `EnergyAxisRefinement` finding, E3), 0 warnings; the golden byte-identical to 0.4.0's but for the 13 CSV-hash lines moved on
+  purpose by the export's neutral default title.
+- `tools/consumer-check/run.sh`: **189 checks** plus the README consumer (built from the README's code, drift-checked against
+  `Examples/QuantifyEDX`), **151 negative controls** all caught.
+- The new tests were each broken once: 61 mutants, 61 caught.
+
+## Validation
+
+All EDX quantification and EELS thickness / areal density say `validation: "none"`. Agreement with exSpy is not truth; nothing
+is validated until it recovers a planted value and a sample of known composition. zeta stays `package`.
+
+## Where things are
+
+- `docs/parity.md`: SpectroKit against exSpy 7185a4d1, row by row (BIT / TOL / DEV / PART / NOPIN / NO / NP), and the claims the
+  source makes that the tests do not show.
+- Registrations kept here: `docs/eels-slice-1-registration.md`, `docs/eels-slice-2-registration.md`,
+  `docs/edx-stage-gates-registration.md`, `docs/generality-0.5.0-registration.md`.
+- Consumer notes: `docs/consumers-0.3.0.md`, `docs/consumers-0.4.0.md`, `docs/consumers-0.5.0.md`.
+- History, the real-data check and its registration, the 0.2.0 handoff: `../_archive/SpectroKit/docs/history.md` (and its
+  neighbours in that folder).
+- `References/` is a link to the suite's `../References/SpectroKit` (2026-10-15); gitignored.
+
+## Open items
+
+**The owner's**
+- EDX Q1-Q5 (`docs/edx-stage-gates-registration.md` section 12), and the Mg fix, which waits on them: no EDX fix is registered
+  until Q5 is answered.
+- Enabling CI (Actions) and the tag for 0.5.0.
+
+**Planned**
+- EELS slice 3 (not started; `docs/parity.md` lists what a full EELS model would need).
+- **0.5.1: the macOS 15 floor.** 0.5.0 stays at macOS 27 because FormatoKit's bundled libhdf5 dylibs are built for macOS 26.
+  FormatoKit 0.2.1 rebuilds them for 15 and declares `.macOS(.v15)`, `.iOS(.v18)`; SpectroKit 0.5.1 re-pins to it and lowers
+  its floor. SpectroKit needs no source change at 15 (measured: release build and 302 tests green against a 15 floor, no
+  availability branch; iOS 18 simulator builds of the three modules). The FormatoKit 0.1.x Velox dtype / title change comes in
+  with that re-pin and is registered there.
+
+**API gaps found by the README lane** (each is a fix that needs its own registration)
+- `SpectrumDetectorSegment.init` is `package`.
+- `ElementCandidate`'s `lists`, `possible` and `sumPeaks` are `package`.
+- `EDSFitResult.degreesOfFreedom`, `PooledQuantification.referenceElement` and `FitSettings`' range fields are `package`.
+- There is no `[UInt64]` overload of `ElementProposer.propose`: `counts.map(Double.init)` on a `[UInt64]` silently selects the
+  wrong initialiser, so the README writes `counts.map { Double($0) }`.
+- There is no `PooledQuantificationInput` builder from a `LoadedSpectrumImage`.
+
+**Where the source claims more than the tests show** (from `docs/parity.md`; reword or add a test)
+- `NumpySum.swift` says I_0 and I_t are bit for bit, while `ThicknessPinsTests` bounds them at 1e-12.
+- `MassAbsorption.swift` says all 90 FFAST lists equal exSpy's; no test compares them (about 10 coefficients are pinned).
+- The 947-row line table is checked on about 12 rows and the row count.
+- The slice-2 registration's "bit-identical (0.0)" for n and the background, against tests bounding them at 1e-12 / 1e-10.
+- `ElementWindows`' default line choice differs from exSpy's `add_lines` (`XRayLines.defaultLines` equals exSpy's and is
+  `package`).
+- The cross-section route of `ZetaFactor` has hand-recorded pins only.
+
+**DocC**: two parameters undocumented: `axis` in `ElementProposer.swift`, `cancelled` in `EdgeQuantification.swift`.
