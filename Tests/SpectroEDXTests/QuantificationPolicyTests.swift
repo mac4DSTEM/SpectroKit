@@ -109,8 +109,7 @@ struct QuantificationPolicyTests {
         let odd = QuantificationPolicy(fit: FitPolicy(fitFromKeV: 1, escapePeaks: false), abundance: AbundancePolicy(fallbackReference: nil))
         #expect(try JSONDecoder().decode(QuantificationPolicy.self, from: JSONEncoder().encode(odd)) == odd)
         #expect(odd.canonicalJSON == (try JSONDecoder().decode(QuantificationPolicy.self, from: Data(odd.canonicalJSON.utf8))).canonicalJSON)
-        #expect(odd.footerLine == "policy (non-default): abundance.detector.aluminiumNm = 10, abundance.detector.deadLayerMicrons = 0, abundance.detector.goldNm = 0, abundance.detector.siliconMicrons = 450, fit.escapePeaks = false, fit.fitFromKeV = 1"
-                || odd.footerLine?.hasPrefix("policy (non-default): ") == true)
+        #expect(odd.footerLine == "policy (non-default): abundance.fallbackReference = nil, fit.escapePeaks = false, fit.fitFromKeV = 1")
         // A policy that cannot run is refused with the reason, not trapped.
         #expect(throws: QuantificationRefusal.self) { try Self.run(c, policy: Self.fit(FitPolicy(continuumOrders: [9]))) }
     }

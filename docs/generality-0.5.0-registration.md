@@ -407,3 +407,24 @@ first version of `ProposerPolicyTests` (E7 bin width at two sites, E9 at two sit
   not name but which moves for the same cause) were copied; the before and after values are in the commit message. Every other
   golden line is byte-identical.
 - The consumer-check README and `controls.py` name the new symbols (13 type declarations and two members as controls).
+
+### 2026-10-15, Gate B fixes (the refuter's findings on the frozen code, `3bc197c`)
+
+Tier 2 for findings 1 and 2 (names and notes, no number moves), tier 3 for 3 to 5. The default path is untouched: the 337 names
+plus the new ones, the golden byte-identical (no re-record), `consumer-check` unchanged (no public API added except
+`ProposerPolicy.noteLine`, a computed property).
+
+| # | finding | fix | test | mutants |
+|---|---|---|---|---|
+| 1 | `QuantificationPolicy.footerLine` listed only keys present after encoding, so a field set to nil (`AbundancePolicy(fallbackReference: nil)`) was not named (an empty body), and arrays printed as multi-line NSArray text, Bools as 0/1 | the footer compares the encoded policy with the default's field by field, a key present on one side only is a difference whose absent side reads `nil`; arrays `[5, 4]`, Bools `true`/`false`, a struct `{k: v, ...}` (`PolicyDifference`, package) | `PolicyNamingTests.testFooterNamesANilFieldAndWritesArraysAndBoolsOnOneLine`; the loose `\|\|` expectation in `QuantificationPolicyTests` is now the exact line | M1 absent key read as unchanged, M2 array elements joined over lines (the first form, `"\(array)"`, survived: it is equivalent, a Swift array prints `[5, 4]` too), M3 Bool as 0/1: 3 of 3 caught |
+| 2a | the Detection note printed `α = β = %.2f` from `currie.alpha` only | `α = β = X` when the rates are equal, `α = X, β = Y` otherwise; X is two decimals when those give the rate back (today's text: `0.05`, and `0.10` for 0.1), else the shortest digits that do (`0.005`) | `testDetectionNoteGivesBothCurieRatesAndTheDefaultTextIsUnchanged` (default text character for character) | M4 only alpha printed, M5 digits always two decimals: 2 of 2 caught |
+| 2b | the proposer named almost none of its policy | `ProposerPolicy.noteLine` (`policy (non-default): field = value, ...`, declaration order, sets sorted, `currie = alpha a beta b`); `ElementProposer` inserts it as the fourth note when it is not nil; the default adds nothing | `testNonDefaultProposerPolicyIsNamedOnceAndTheDefaultAddsNothing` (every field class; the full line for a policy that changes eleven fields) | M6 note not added, M7 `flank.minimumBins` ignored, M8 `context.gridElements` ignored, M9 `pool` ignored: 4 of 4 caught |
+| 2c | `WindowRules`, `UnlistedLineRules`, `SmoothingKernel` | **Decision: documented, not named.** None of their results carries notes or a footer: `ElementWindows`, the window maps and a smoothed map are numbers; `UnlistedLineCheck`'s stored fields are what the golden walks by reflection, so storing its rules would move the golden. The doc comments of the three types say the caller records a non-default value with the result it shows | none (wording) | none |
+| 3 | `flankScaling = false`, `flank.minimumChannelsPerBin = 40`, `flank.minimumBins = 11` throw `ProposerError.rankDeficient` on a 4096-channel summed spectrum | said in those fields' doc comments, no behaviour change | none | none |
+| 4 | G4 doc comments missing | added for the four `DetectorLayers` fields, `QuantificationPolicy.fit` and `.abundance`, `ProposerPolicy.flank` and `.context`, each with its default and origin as section 2 states | none | none |
+| 5 | "the suite", "host app", "ADR 064" in `Package.swift` and `CSpectroLAPACK.h` | reworded neutrally | none | none |
+
+**Left, and why.** (a) `SDDEfficiency.sourceName` says "not the owner's Super-X calibration" in an output string: a test
+(`SpectroscopyComputedKTests`) pins that needle, so it stays; changing it is its own tier-2 change with the test. (b) Other ADR 054 /
+064 numbers and "the owner" remain in comments of files the finding did not name (`PooledQuantification.swift`, `Continuum.swift`,
+`SpectrumQuantities.swift`, `FitRange.swift`, `WindowIntensity.swift` and others); no output string among them was found.

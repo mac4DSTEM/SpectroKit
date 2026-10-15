@@ -170,6 +170,13 @@ public nonisolated struct ElementProposer: Sendable {
         return out
     }
 
+    /// The proposer's choices as a value (what `init(policy:)` took, with any package-level change since).
+    package var policy: ProposerPolicy {
+        ProposerPolicy(currie: currie, pool: pool, excluded: excluded, maxPasses: maxPasses, maxForwardRounds: maxForwardRounds,
+                       minimumLineEnergyKeV: minimumLineEnergyKeV, flankScaling: flankScaling, flank: flank,
+                       rangeMarginFWHM: rangeMarginFWHM, sumPeakToleranceKeV: sumPeakToleranceKeV, context: context)
+    }
+
     /// The proposer with every choice named (`ProposerPolicy.default` is what the other initialiser builds).
     public init(policy: ProposerPolicy) {
         self.init(currie: policy.currie, pool: policy.pool, maxPasses: policy.maxPasses, maxForwardRounds: policy.maxForwardRounds,
@@ -187,6 +194,13 @@ public nonisolated struct ElementProposer: Sendable {
     ///     detector window cuts the continuum steeply (carbon, nitrogen, calcium and scandium were false there at 0.28-0.40 keV).
     public init(currie: Currie = .standard, pool: [String]? = nil, maxPasses: Int = 5, maxForwardRounds: Int = 24, minimumLineEnergyKeV: Double = 0.45) {
         self.currie = currie; self.pool = pool; self.maxPasses = maxPasses; self.maxForwardRounds = maxForwardRounds; self.minimumLineEnergyKeV = minimumLineEnergyKeV
+    }
+
+    /// "α = β = 0.05" when the two rates are equal, "α = 0.005, β = 0.2" otherwise; two decimals when they give the rate back
+    /// exactly (today's text), else the shortest digits that do.
+    private static func rateText(_ c: Currie) -> String {
+        func r(_ x: Double) -> String { let t = String(format: "%.2f", x); return Double(t) == x ? t : "\(x)" }
+        return c.alpha == c.beta ? "\u{03B1} = \u{03B2} = \(r(c.alpha))" : "\u{03B1} = \(r(c.alpha)), \u{03B2} = \(r(c.beta))"
     }
 
     private struct Stat { var net: Double, sigma: Double, sigmaZero: Double, lc: Double, ld: Double, misfit: Double
@@ -492,9 +506,10 @@ public nonisolated struct ElementProposer: Sendable {
 
         var notes = [
             String(format: "Lines below %.2f keV are not tested (a measured limit of the continuum model, not a property of the method).", minimumLineEnergyKeV),
-            String(format: "Detection: fitted net \u{2265} Currie L_D (\u{03B1} = \u{03B2} = %.2f, a convention; L_C and L_D are properties of this spectrum), \u{03C3}\u{2080} from the fit's own variance with the candidate absent.", currie.alpha),
+            "Detection: fitted net \u{2265} Currie L_D (\(Self.rateText(currie)), a convention; L_C and L_D are properties of this spectrum), \u{03C3}\u{2080} from the fit's own variance with the candidate absent.",
             "Fit: \(fit.result.methodLabel); \(fit.result.backgroundLabel); \(fit.result.escapeLabel); \(fit.result.referenceShapesLabel); \(poolGroups.count) candidate line groups: \(passes) joint fit\(passes == 1 ? "" : "s") pruned at L_C, then \(trials) single-candidate tests of the pruned ones against the settled model.",
         ]
+        if let p = policy.noteLine { notes.insert(p, at: 3) }
         let near = candidates.filter { $0.significance >= 0.5 }
         let inflated = near.filter { $0.misfit > 1.005 }
         notes.append(inflated.isEmpty

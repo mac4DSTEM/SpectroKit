@@ -18,9 +18,11 @@ public nonisolated struct FlankMisfitGeometry: Sendable, Equatable, Codable {
     public var binWidthFWHM: Double
     /// Bins on each side. Default 5 (so the flanks reach 6.5 FWHM).
     public var binsPerSide: Int
-    /// A bin with fewer channels than this is left out. Default 3.
+    /// A bin with fewer channels than this is left out. Default 3. At 40 on a summed spectrum of 4096 channels the
+    /// proposer throws `ProposerError.rankDeficient` (measured by the Gate B refuter); a larger value needs wider bins.
     public var minimumChannelsPerBin: Int
-    /// With fewer bins than this the factor is 1 (nothing to judge by). Default 3.
+    /// With fewer bins than this the factor is 1 (nothing to judge by). Default 3. At 11 on a 4096-channel summed spectrum the
+    /// proposer throws `ProposerError.rankDeficient`.
     public var minimumBins: Int
 
     public init(innerFWHM: Double = 1.5, binWidthFWHM: Double = 1, binsPerSide: Int = 5, minimumChannelsPerBin: Int = 3, minimumBins: Int = 3) {
@@ -63,14 +65,19 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
     /// A candidate group is tested only if its alpha line is at or above this energy, keV. Default 0.45, measured on one synthetic
     /// generator (carbon, nitrogen, calcium and scandium were false there at 0.28-0.40 keV).
     public var minimumLineEnergyKeV: Double
-    /// Scale each candidate's null standard deviation by the flank-misfit factor. Default true.
+    /// Scale each candidate's null standard deviation by the flank-misfit factor. Default true (the library's choice). False makes
+    /// every misfit exactly 1 and, on a 4096-channel summed spectrum, the proposer throws `ProposerError.rankDeficient`.
     public var flankScaling: Bool
+    /// How the flank misfit is measured. Default `FlankMisfitGeometry.default` (flanks 1.5-6.5 FWHM from the line, 5 bins a side of
+    /// 1 FWHM, at least 3 channels a bin and 3 bins; the library's choice).
     public var flank: FlankMisfitGeometry
     /// A candidate's alpha line must lie this many FWHM inside the fitted range at each end, so its column has support. Default 0.5.
     public var rangeMarginFWHM: Double
     /// A candidate's alpha line counts as on a pile-up peak's energy within this many keV. Default 0.06, about half the Mn K alpha
     /// width of one detector.
     public var sumPeakToleranceKeV: Double
+    /// Which elements get the grid, implantation and quantify-by-default treatment. Default `ElementContext.default` (Cu, Cu, Ga:
+    /// the elements of the sample preparation the library was first used with).
     public var context: ElementContext
 
     public init(currie: Currie = .standard, pool: [String]? = nil, excluded: Set<String> = ElementProposer.defaultExcluded,
@@ -87,9 +94,39 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
     public static let defaultSumPeakToleranceKeV = 0.06
 
     public static let `default` = ProposerPolicy()
+
+    /// The note for a non-default policy: every field that differs from the default, `path = value`, in declaration order
+    /// (`currie` as `alpha 0.005 beta 0.2`, sets sorted, arrays as `[Al, Si]`). nil for the default. `ElementProposer` adds it
+    /// to the notes of every proposal it makes, so a result never travels without the choices that made it.
+    public var noteLine: String? {
+        var d: [String] = []
+        func add(_ name: String, _ mine: String, _ base: String) { if mine != base { d.append("\(name) = \(mine)") } }
+        func list(_ a: [String]?) -> String { a.map { "[" + $0.joined(separator: ", ") + "]" } ?? "nil" }
+        let b = ProposerPolicy.default
+        add("currie", "alpha \(currie.alpha) beta \(currie.beta)", "alpha \(b.currie.alpha) beta \(b.currie.beta)")
+        add("pool", list(pool), list(b.pool))
+        add("excluded", list(excluded.sorted()), list(b.excluded.sorted()))
+        add("maxPasses", "\(maxPasses)", "\(b.maxPasses)")
+        add("maxForwardRounds", "\(maxForwardRounds)", "\(b.maxForwardRounds)")
+        add("minimumLineEnergyKeV", "\(minimumLineEnergyKeV)", "\(b.minimumLineEnergyKeV)")
+        add("flankScaling", "\(flankScaling)", "\(b.flankScaling)")
+        add("flank.innerFWHM", "\(flank.innerFWHM)", "\(b.flank.innerFWHM)")
+        add("flank.binWidthFWHM", "\(flank.binWidthFWHM)", "\(b.flank.binWidthFWHM)")
+        add("flank.binsPerSide", "\(flank.binsPerSide)", "\(b.flank.binsPerSide)")
+        add("flank.minimumChannelsPerBin", "\(flank.minimumChannelsPerBin)", "\(b.flank.minimumChannelsPerBin)")
+        add("flank.minimumBins", "\(flank.minimumBins)", "\(b.flank.minimumBins)")
+        add("rangeMarginFWHM", "\(rangeMarginFWHM)", "\(b.rangeMarginFWHM)")
+        add("sumPeakToleranceKeV", "\(sumPeakToleranceKeV)", "\(b.sumPeakToleranceKeV)")
+        add("context.quantifyByDefault", list(context.quantifyByDefault.sorted()), list(b.context.quantifyByDefault.sorted()))
+        add("context.gridElements", list(context.gridElements.sorted()), list(b.context.gridElements.sorted()))
+        add("context.implantedElements", list(context.implantedElements.sorted()), list(b.context.implantedElements.sorted()))
+        return d.isEmpty ? nil : "policy (non-default): " + d.joined(separator: ", ")
+    }
 }
 
-/// The unlisted-line check's geometry and bar.
+/// The unlisted-line check's geometry and bar. `UnlistedLineCheck` does not store the rules it ran with (its stored fields are the
+/// result a reader walks), so a caller that runs `UnlistedLineChecker.check(..., rules:)` with a non-default value records it
+/// with the result itself, for example by printing `String(describing:)` of this value beside the check's `line`.
 public nonisolated struct UnlistedLineRules: Sendable, Equatable, Codable {
     /// A candidate within this many FWHM (at its own energy) of a listed group's alpha line is an unexplained excess beside that
     /// line, not an element. Default 2, a geometry convention rather than a measured bar.

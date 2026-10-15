@@ -15,9 +15,16 @@ import SpectroCore
 /// The four layers of the silicon-drift-detector efficiency model (`eps(E)`): gold, aluminium, a silicon dead layer, and the
 /// active silicon. The default is the generic SDD model's, not any one detector's calibration.
 public nonisolated struct DetectorLayers: Sendable, Equatable, Codable {
+    /// Gold contact layer, nm. Default 0 (EPQ `getDefaultSDDProperties`). More gold absorbs low-energy X-rays more.
     public var goldNm: Double
+    /// Aluminium layer, nm. Default 10 (EPQ `getDefaultSDDProperties`). The Al K edge (1.560 keV) lies between Mg K alpha (1.254) and
+    /// Si K alpha (1.740 keV), so a thicker layer absorbs Si K alpha more and lowers the computed k_Mg / k_Si (measured, registered Q4).
     public var aluminiumNm: Double
+    /// Silicon dead layer in front of the active volume, micrometres. Default 0 (EPQ `getDefaultSDDProperties`). The Si K edge
+    /// (1.839 keV) lies above both Mg and Si K alpha, so a thicker one raises the computed k_Mg / k_Si (measured, registered Q4).
     public var deadLayerMicrons: Double
+    /// Active silicon thickness, micrometres. Default 450 (EPQ `getDefaultSDDProperties`). A thinner one lets
+    /// more high-energy X-rays pass undetected, lowering the efficiency there.
     public var siliconMicrons: Double
 
     public init(goldNm: Double = 0, aluminiumNm: Double = 10, deadLayerMicrons: Double = 0, siliconMicrons: Double = 450) {
@@ -147,7 +154,10 @@ public nonisolated enum SingleLineRule: String, Sendable, Codable {
 
 /// The policy of a pooled quantification: `PooledQuantificationInput.policy`.
 public nonisolated struct QuantificationPolicy: Sendable, Equatable, Codable {
+    /// The spectrum fit's choices. Default `FitPolicy.default` (each field's default and origin are on `FitPolicy`).
     public var fit: FitPolicy
+    /// The step from nets to composition and its uncertainty terms. Default `AbundancePolicy.default` (each field's default and
+    /// origin are on `AbundancePolicy`).
     public var abundance: AbundancePolicy
 
     public init(fit: FitPolicy = .default, abundance: AbundancePolicy = .default) {
@@ -168,21 +178,39 @@ public nonisolated struct QuantificationPolicy: Sendable, Equatable, Codable {
         return String(decoding: try! e.encode(self), as: UTF8.self)
     }
 
-    /// The footer line for a non-default policy: every field that differs from the default, `path = value`. nil for the default.
+    /// The footer line for a non-default policy: every field that differs from the default, `path = value`, sorted by path. A field
+    /// that is nil (`fallbackReference`, `continuumEfficiency`) while the default has a value is named as `path = nil`; an array is
+    /// written `[5, 4]`, a Bool `true` or `false`. nil for the default.
     public var footerLine: String? {
         guard !isDefault else { return nil }
-        func flat(_ v: Any, _ path: String, _ out: inout [String: String]) {
-            if let d = v as? [String: Any] { for (k, x) in d { flat(x, path.isEmpty ? k : path + "." + k, &out) } }
-            else { out[path] = "\(v)" }
+        let diffs = PolicyDifference.paths(try! JSONSerialization.jsonObject(with: JSONEncoder().encode(self)),
+                                           try! JSONSerialization.jsonObject(with: JSONEncoder().encode(QuantificationPolicy.default)))
+        return "policy (non-default): " + diffs.map { "\($0.path) = \($0.value)" }.joined(separator: ", ")
+    }
+}
+
+/// The fields at which two encoded policies differ, one line each: used by the footer lines of `QuantificationPolicy` and
+/// `ProposerPolicy`. An optional that is nil encodes as an absent key, so a key present on one side only is a difference whose
+/// absent side reads `nil`.
+package nonisolated enum PolicyDifference {
+    package static func paths(_ mine: Any?, _ base: Any?, _ path: String = "") -> [(path: String, value: String)] {
+        if let a = mine as? [String: Any], let b = base as? [String: Any] {
+            return Set(a.keys).union(b.keys).sorted().flatMap { k in
+                paths(a[k], b[k], path.isEmpty ? k : path + "." + k)
+            }
         }
-        func fields(_ p: QuantificationPolicy) -> [String: String] {
-            var out: [String: String] = [:]
-            let obj = try! JSONSerialization.jsonObject(with: JSONEncoder().encode(p))
-            flat(obj, "", &out)
-            return out
+        let r = render(mine)
+        return r == render(base) ? [] : [(path, r)]
+    }
+
+    package static func render(_ v: Any?) -> String {
+        switch v {
+        case nil: return "nil"
+        case let d as [String: Any]: return "{" + d.keys.sorted().map { "\($0): \(render(d[$0]))" }.joined(separator: ", ") + "}"
+        case let a as [Any]: return "[" + a.map { render($0) }.joined(separator: ", ") + "]"
+        case let n as NSNumber:
+            return String(cString: n.objCType) == "c" ? (n.boolValue ? "true" : "false") : "\(n)"
+        default: return "\(v!)"
         }
-        let mine = fields(self), base = fields(.default)
-        let diffs = mine.keys.sorted().filter { mine[$0] != base[$0] }.map { "\($0) = \(mine[$0]!)" }
-        return "policy (non-default): " + diffs.joined(separator: ", ")
     }
 }
