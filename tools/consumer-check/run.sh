@@ -67,7 +67,7 @@ PY
 mkdir -p .build
 log=.build/consumer-check-build.log
 if ! swift build -c debug >$log 2>&1; then
-  grep -E "error" $log | head -20 >&2
+  { grep -E "error" $log | head -20 >&2; } || true
   die "BUILD FAILED (full log: $here/$log)"
 fi
 # Zero warnings, except the three Swift Build prints for FormatoKit's signed dylibs (it cannot strip a signed binary). The lines
@@ -75,17 +75,18 @@ fi
 build_warnings $log || die "unexpected warning(s) in the build (full log: $here/$log)"
 
 # 2. A consumer must not build the test-only targets: not SpectroKit's or FormatoKit's test targets, not the barrier's child process.
-bin=$(swift build -c debug --show-bin-path)
+bin=$(swift build -c debug --show-bin-path) || die "swift build --show-bin-path failed"
+[[ -d $bin ]] || die "the build's bin path does not exist: $bin"
 # (.build/checkouts holds FormatoKit's sources, test directories included: not built, so not searched.)
 leaked=$(find $bin .build -path .build/checkouts -prune -o \( -iname '*ExitProbe*' -o -iname '*SpectroKitTests*' \
          -o -iname '*SpectroCoreTests*' -o -iname '*SpectroGoldenTests*' -o -iname '*SpectroEDXTests*' \
-         -o -iname '*SpectroEELSTests*' -o -iname 'Formato*Tests*' \) -print 2>/dev/null | head -5)
+         -o -iname '*SpectroEELSTests*' -o -iname 'Formato*Tests*' \) -print 2>/dev/null | head -5 || true)
 [[ -z $leaked ]] || die "test-only target built for a consumer: $leaked"
 if grep -qE "ExitProbe|SpectroKitTests|SpectroCoreTests|SpectroGoldenTests|SpectroEDXTests|SpectroEELSTests|Formato[A-Za-z0-9]*Tests" $log; then
   die "the build log names a test-only target"
 fi
 built=$({ find .build/out/Intermediates.noindex -mindepth 3 -maxdepth 3 -type d -name '*.build' 2>/dev/null   # Swift Build
-          find .build/debug -maxdepth 1 -type d -name '*.build' 2>/dev/null; } | sed 's|.*/||; s|\.build$||; s|-[a-z]$||' | sort -u | tr '\n' ' ')
+          find .build/debug -maxdepth 1 -type d -name '*.build' 2>/dev/null; true; } | sed 's|.*/||; s|\.build$||; s|-[a-z]$||' | sort -u | tr '\n' ' ')
 print "consumer-check: targets built: ${built}"
 
 # SpectroEELS's GOS tables are its Bundle.module resources: the bundle must sit next to the consumer binary, with the three
@@ -118,7 +119,7 @@ cat $out
 (( rc == 0 )) || die "FAILED (exit $rc)"
 if grep -q "quit barrier passed its bound" $out; then die "the quit barrier fired"; fi
 
-summary=$(grep "^consumer-check summary:" $out)
+summary=$(grep "^consumer-check summary:" $out) || die "the run printed no summary line"
 checks=${${summary#consumer-check summary: }%% checks*}
 head=$(git -C $root --no-optional-locks rev-parse --short HEAD 2>/dev/null || print unknown)
 print "consumer-check: all passed — $checks checks through SpectroCore's and SpectroEELS's public API only, Debug build, no warnings" \
@@ -135,7 +136,7 @@ cd $readme
 mkdir -p .build
 rlog=.build/readme-consumer-build.log
 if ! swift build -c debug >$rlog 2>&1; then
-  grep -E "error" $rlog | head -20 >&2
+  { grep -E "error" $rlog | head -20 >&2; } || true
   die "README CONSUMER BUILD FAILED (full log: $readme/$rlog)"
 fi
 build_warnings $rlog || die "unexpected warning(s) in the README consumer's build (full log: $readme/$rlog)"
