@@ -75,7 +75,7 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
     /// (`DetectorEfficiency`), not the owner's Super-X calibration.
     package var efficiency: (any DetectorEfficiency)?
 
-    package static let alKEdge = 1.5596
+    package static let alKEdge = FitPolicy.alKEdgeKeV
 
     package init(beamEnergy: Double, edges: [Double] = [ContinuumForm.alKEdge], orders: [Int] = [9, 5],
                  nonNegative: Bool = true, efficiency: (any DetectorEfficiency)? = nil) {

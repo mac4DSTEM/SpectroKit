@@ -39,27 +39,35 @@ public nonisolated struct FitSettings: Sendable, Equatable {
     /// 20 keV is the width the continuum's orders (9, 5) were measured on (`Continuum.swift`; every EDS fixture before WP3c ends at
     /// 19.997-20.03 keV; the 80 keV realistic-L fixture was added to test this rule): a property of those spectra, stated, not of the method. Fitting the same form to the end of an 80 keV
     /// axis biased a weak line by -8 % (Ti, realistic-L synthetic, z -2.28); every limit from 11 to 60 keV was unbiased (E1).
-    /// A longer range is the user's, under Expert (`QuantificationMethod.fitToKeV`).
-    package static let defaultUpperLimitKeV = 20.0
+    /// A longer range is the user's, under Expert (`QuantificationMethod.fitToKeV`). The value is `FitPolicy.defaultUpperLimitKeV`.
+    package static var defaultUpperLimitKeV: Double { FitPolicy.default.defaultUpperLimitKeV }
 
-    /// The default upper end for `axis` and `beamEnergy`: min(axis end, beam energy, `defaultUpperLimitKeV`). For an axis that
+    /// The default upper end for `axis` and `beamEnergy`: min(axis end, beam energy, `upperLimitKeV`). For an axis that
     /// ends at or below 20 keV this is exactly the old min(axis end, beam energy), so those fits are unchanged bit for bit.
-    package static func defaultFitTo(axis: EnergyAxis, beamEnergy: Double) -> Double {
-        min(axis.highValue, beamEnergy, defaultUpperLimitKeV)
+    package static func defaultFitTo(axis: EnergyAxis, beamEnergy: Double, upperLimitKeV: Double = FitPolicy.default.defaultUpperLimitKeV) -> Double {
+        min(axis.highValue, beamEnergy, upperLimitKeV)
     }
 
-    /// The app's default: continuum with the Al K step, 0.2 keV to `defaultFitTo` (20 keV, or the beam energy or the axis end
+    /// The default fit: continuum with the Al K step, `policy.fitFromKeV` (0.2 keV) to `defaultFitTo` (20 keV, or the beam energy or the axis end
     /// when lower), escape peaks on, no reference shapes, unweighted least squares. The 0.2 keV start keeps the
     /// zero-energy noise peak out (a stated choice, not a measurement).
     /// `efficiency`: the detector model of the continuum (`SDDEfficiency` for the registered default, see
     /// `ContinuumForm.weakLineBiasNote`); nil gives the Kramers-only form, which IS the default: the registered selection (report2) had no tie
     /// clause, 397 (with eps) vs 402 (without) counts at se ~33 is unresolved, so the no-filler rule decides: eps would add a generic EPQ SDD
     /// model to every footer for zero measured gain. eps stays an option.
+    /// `policy` (default `FitPolicy.default`): the start and upper limit of the range, the continuum's orders, edges and basis, and the
+    /// escape columns. Its `continuumEfficiency` is realised by the caller through `efficiency` (it needs the mass-absorption table).
+    /// A policy whose `problem` is not nil traps here (the continuum form's preconditions); `PooledQuantifier` refuses it instead.
     public static func standard(elements: [String], axis: EnergyAxis, resolutionMnKaEV: Double,
-                                 beamEnergy: Double, efficiency: (any DetectorEfficiency)? = nil) -> FitSettings {
+                                 beamEnergy: Double, efficiency: (any DetectorEfficiency)? = nil,
+                                 policy: FitPolicy = .default) -> FitSettings {
         FitSettings(elements: elements, resolutionMnKaEV: resolutionMnKaEV, beamEnergy: beamEnergy,
-                    fitFrom: 0.2, fitTo: defaultFitTo(axis: axis, beamEnergy: beamEnergy),
-                    background: .continuum(ContinuumForm(beamEnergy: beamEnergy, efficiency: efficiency)))
+                    fitFrom: policy.fitFromKeV,
+                    fitTo: defaultFitTo(axis: axis, beamEnergy: beamEnergy, upperLimitKeV: policy.defaultUpperLimitKeV),
+                    background: .continuum(ContinuumForm(beamEnergy: beamEnergy, edges: policy.continuumEdges,
+                                                         orders: policy.continuumOrders, nonNegative: policy.continuumNonNegative,
+                                                         efficiency: efficiency)),
+                    escapePeaks: policy.escapePeaks)
     }
 }
 
@@ -135,7 +143,8 @@ public nonisolated enum EDSFitError: Error, Equatable {
 package nonisolated enum EDSFit {
 
     package static func run(counts: [Double], axis: EnergyAxis, settings: FitSettings,
-                            channels explicit: Range<Int>? = nil, computeCovariance: Bool = true) throws -> EDSFitResult {
+                            channels explicit: Range<Int>? = nil, computeCovariance: Bool = true,
+                            escapeRatioWarning: Double = FitPolicy.default.escapeRatioWarning) throws -> EDSFitResult {
         guard counts.count == axis.size else { throw EDSFitError.lengthMismatch }
         let channels = explicit ?? axis.fitChannels(from: settings.fitFrom, to: settings.fitTo)
         guard !channels.isEmpty else { throw EDSFitError.noChannels }
@@ -144,7 +153,8 @@ package nonisolated enum EDSFit {
         try validate(settings.referenceShapes, axis: axis, model: model)
         let design = LinearDesign.build(model: model, axis: axis, channels: channels, background: settings.background,
                                         shapes: settings.referenceShapes, counts: counts)
-        return fit(design: design, model: model, counts: counts, settings: settings, computeCovariance: computeCovariance)
+        return fit(design: design, model: model, counts: counts, settings: settings, computeCovariance: computeCovariance,
+                   escapeRatioWarning: escapeRatioWarning)
     }
 
     /// The reference-shape preconditions, as errors rather than traps in `LinearDesign.build`.
@@ -162,7 +172,8 @@ package nonisolated enum EDSFit {
 
     /// Fits a prebuilt design (the refinement builds many).
     package static func fit(design: LinearDesign, model: EDSLineModel, counts: [Double], settings: FitSettings,
-                            computeCovariance: Bool = true) -> EDSFitResult {
+                            computeCovariance: Bool = true,
+                            escapeRatioWarning: Double = FitPolicy.default.escapeRatioWarning) -> EDSFitResult {
         let channels = design.channels
         let y = channels.map { counts[$0] }
         let n = y.count
@@ -304,8 +315,9 @@ package nonisolated enum EDSFit {
         for gi in 0..<g {
             if let e = esc[gi], values[gi] > 0 {
                 escRatios[gi] = e / values[gi]
-                if e / values[gi] > 0.05 {
-                    warnings.append("\(model.groups[gi].id): Si-escape/parent ratio \(String(format: "%.1f", 100 * e / values[gi])) % exceeds 5 %: an unmodelled line near the escape energy is likely (the 5 % flag is a sanity bound; the SDD Si escape is about 1 % at Cu K\u{03B1})")
+                if e / values[gi] > escapeRatioWarning {
+                    let flag = String(format: "%g", 100 * escapeRatioWarning)
+                    warnings.append("\(model.groups[gi].id): Si-escape/parent ratio \(String(format: "%.1f", 100 * e / values[gi])) % exceeds \(flag) %: an unmodelled line near the escape energy is likely (the \(flag) % flag is a sanity bound; the SDD Si escape is about 1 % at Cu K\u{03B1})")
                 }
             }
         }

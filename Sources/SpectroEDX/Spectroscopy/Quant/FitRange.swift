@@ -35,7 +35,7 @@ public nonisolated struct FitRangeChoice: Sendable, Equatable {
         case typed
     }
 
-    package var fromKeV = 0.2
+    package var fromKeV: Double
     public var toKeV: Double
     package var source: Source
     /// The FILE's axis end (what the footer names) and the beam energy.
@@ -50,7 +50,9 @@ public nonisolated struct FitRangeChoice: Sendable, Equatable {
     /// fit runs to the used axis end exactly as before WP3c (so a 19.997 keV file whose refined axis ends at 20.002 keV fits the
     /// same channels as it always did); past it, the fit stops at 20 keV. Deciding on the refined axis instead put a 20.002 keV
     /// refined end "past the default" and ran a second fit on every 20 keV file (P3.log, lane C, refuted and fixed).
-    public init(method: QuantificationMethod, fileAxis: EnergyAxis, usedAxis: EnergyAxis, beamEnergy: Double) {
+    public init(method: QuantificationMethod, fileAxis: EnergyAxis, usedAxis: EnergyAxis, beamEnergy: Double,
+                policy: FitPolicy = .default) {
+        fromKeV = policy.fitFromKeV
         axisEndKeV = fileAxis.highValue
         beamEnergyKeV = beamEnergy
         let reach = min(usedAxis.highValue, beamEnergy)
@@ -59,9 +61,10 @@ public nonisolated struct FitRangeChoice: Sendable, Equatable {
             typedKeV = t; toKeV = min(t, reach); source = .typed
         } else if method.background == .wholeRangePolynomial6 {
             toKeV = reach; source = .polynomialWholeRange
-        } else if FitSettings.defaultFitTo(axis: fileAxis, beamEnergy: beamEnergy) < min(fileAxis.highValue, beamEnergy),
-                  FitSettings.defaultUpperLimitKeV < reach {
-            toKeV = FitSettings.defaultUpperLimitKeV; source = .defaultLimit
+        } else if FitSettings.defaultFitTo(axis: fileAxis, beamEnergy: beamEnergy, upperLimitKeV: policy.defaultUpperLimitKeV)
+                    < min(fileAxis.highValue, beamEnergy),
+                  policy.defaultUpperLimitKeV < reach {
+            toKeV = policy.defaultUpperLimitKeV; source = .defaultLimit
         } else {
             toKeV = reach; source = .defaultReach
         }
@@ -136,26 +139,33 @@ public nonisolated enum FitRangeSensitivityCheck {
     /// The range of the one extra fit, or nil when no statement applies: a typed range (the user chose it), the polynomial
     /// parity path (it already fits the whole axis), or a default that already reaches the axis end or the beam energy (every
     /// axis ending at or below 20 keV: no second fit runs).
-    package static func alternative(for q: PooledQuantification) -> Double? {
+    ///
+    /// `requested` (default nil: the whole reach, the axis end or the beam energy) names another upper end, keV, clamped to the reach;
+    /// nil is returned when it does not lie above the fit already reported.
+    package static func alternative(for q: PooledQuantification, requested: Double? = nil) -> Double? {
         guard q.fitRange.source == .defaultLimit else { return nil }
-        return q.fitRange.reachKeV
+        guard let requested else { return q.fitRange.reachKeV }
+        let to = min(requested, q.fitRange.reachKeV)
+        return to > q.fitRange.toKeV ? to : nil
     }
 
     /// The extra fit: `input` is the reported fit's input, `q` its result. Nil when `alternative` is nil. No tables: only nets
     /// are read. The refit reuses `q`'s axis refinement, as the unlisted-line check's refit does.
-    public static func run(input: PooledQuantificationInput, quantification q: PooledQuantification) -> FitRangeSensitivity? {
+    public static func run(input: PooledQuantificationInput, quantification q: PooledQuantification,
+                            alternativeToKeV: Double? = nil) -> FitRangeSensitivity? {
         // The closure never answers true, so the throwing core cannot throw.
-        try! run(input: input, quantification: q, cancelled: { false }, progress: nil)
+        try! run(input: input, quantification: q, alternativeToKeV: alternativeToKeV, cancelled: { false }, progress: nil)
     }
 
     /// The same extra fit, cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` is thrown (never folded into `failure`),
     /// nothing is returned. `progress` is monotone in 0...1 and ends at 1.
     public static func run(input: PooledQuantificationInput, quantification q: PooledQuantification,
+                            alternativeToKeV: Double? = nil,
                             cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                             progress: (@Sendable (Double) -> Void)? = nil) throws -> FitRangeSensitivity? {
         try SpectroCancellation.check(cancelled)
         progress?(0)
-        guard let to = alternative(for: q) else { progress?(1); return nil }
+        guard let to = alternative(for: q, requested: alternativeToKeV) else { progress?(1); return nil }
         var refit = input
         refit.method.fitToKeV = to
         refit.refinement = q.refinement

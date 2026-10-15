@@ -33,6 +33,12 @@ package nonisolated struct SDDEfficiency: DetectorEfficiency {
         self.deadLayerMicrons = deadLayerMicrons; self.siliconMicrons = siliconMicrons
     }
 
+    /// The four layers as a value (`DetectorLayers`, the public form of the same four numbers).
+    package init(table: MassAbsorptionTable, layers: DetectorLayers) {
+        self.init(table: table, goldNm: layers.goldNm, aluminiumNm: layers.aluminiumNm,
+                  deadLayerMicrons: layers.deadLayerMicrons, siliconMicrons: layers.siliconMicrons)
+    }
+
     package var sourceName: String {
         "EPQ getDefaultSDDProperties (Au \(goldNm) nm, Al \(aluminiumNm) nm, Si dead layer \(deadLayerMicrons) \u{00B5}m, Si \(siliconMicrons) \u{00B5}m); "
             + "generic SDD model, not the owner's Super-X calibration; FFAST MACs"

@@ -21,14 +21,30 @@
 import Foundation
 import SpectroCore
 
-package nonisolated struct AxisRefinementSettings: Sendable, Equatable {
-    package var refineOffset = true
-    package var refineGain = true
-    package var refineResolution = true
-    package var maxIterations = 600
-    /// Stop when the simplex's RSS spread is below this fraction of the RSS.
-    package var tolerance = 1e-12
-    package init() {}
+/// Which of the energy axis's offset, gain and the detector width the refinement adjusts, and how long it searches. Defaults are the
+/// library's choice (all three, 600 simplex iterations, tolerance 1e-12, widths between 20 and 500 eV).
+public nonisolated struct AxisRefinementSettings: Sendable, Equatable, Codable {
+    /// Adjust the offset. Default true; false keeps the file's.
+    public var refineOffset = true
+    /// Adjust the gain (relative channel width). Default true.
+    public var refineGain = true
+    /// Adjust the detector width (FWHM at Mn K alpha). Default true.
+    public var refineResolution = true
+    /// The simplex iteration cap. Default 600.
+    public var maxIterations = 600
+    /// Stop when the simplex's RSS spread is below this fraction of the RSS. Default 1e-12.
+    public var tolerance = 1e-12
+    /// A trial width at or below this, eV, is rejected (the residual is taken as infinite). Default 20.
+    public var minimumResolutionEV = 20.0
+    /// A trial width at or above this, eV, is rejected. Default 500.
+    public var maximumResolutionEV = 500.0
+
+    public init(refineOffset: Bool = true, refineGain: Bool = true, refineResolution: Bool = true, maxIterations: Int = 600,
+                tolerance: Double = 1e-12, minimumResolutionEV: Double = 20, maximumResolutionEV: Double = 500) {
+        self.refineOffset = refineOffset; self.refineGain = refineGain; self.refineResolution = refineResolution
+        self.maxIterations = maxIterations; self.tolerance = tolerance
+        self.minimumResolutionEV = minimumResolutionEV; self.maximumResolutionEV = maximumResolutionEV
+    }
 }
 
 public nonisolated struct AxisRefinementResult: Sendable, Equatable {
@@ -73,7 +89,7 @@ package nonisolated enum EnergyAxisRefinement {
             let d = (options.refineOffset ? u[0] : 0) * 1e-3
             let g = (options.refineGain ? u[1] : 0) * 1e-4
             let r = fileResolutionMnKaEV + (options.refineResolution ? u[2] : 0)
-            guard r > 20, r < 500 else { return .infinity }
+            guard r > options.minimumResolutionEV, r < options.maximumResolutionEV else { return .infinity }
             let axis = EnergyAxis(offset: fileAxis.offset + d, scale: fileAxis.scale * (1 + g), size: fileAxis.size)
             let model = EDSLineModel.build(elements: settings.elements, axis: axis, beamEnergy: settings.beamEnergy,
                                            resolutionMnKaEV: r, escapePeaks: settings.escapePeaks)

@@ -27,6 +27,14 @@ package nonisolated struct MassAbsorptionTable: Sendable {
     }
     private let curves: [Int: Curve]   // by Z
 
+    /// The FFAST table shipped with the library, loaded once; nil when the resource is missing. The continuum's detector efficiency
+    /// (`FitPolicy.continuumEfficiency`) reads it without the caller supplying `QuantificationTables`.
+    package static let bundled: MassAbsorptionTable? = {
+        guard let url = Bundle.module.url(forResource: "FFastMAC", withExtension: "csv", subdirectory: "Spectroscopy")
+            ?? Bundle.module.url(forResource: "FFastMAC", withExtension: "csv") else { return nil }
+        return try? MassAbsorptionTable(contentsOf: url)
+    }()
+
     /// Parse the EPQ csv text. `stripSentinel: false` exists only so the test can
     /// show what the sentinel does; production code never passes it.
     package init(csv: String, stripSentinel: Bool = true) {

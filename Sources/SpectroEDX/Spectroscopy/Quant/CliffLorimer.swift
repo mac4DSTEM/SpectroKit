@@ -26,7 +26,8 @@ package nonisolated enum CliffLorimer {
     /// here, the constant is named so the DEVIATION review can find it.
     package static let minIntensity = 0.1
 
-    package enum SingleLinePolicy: Sendable { case refuse, exspyHundredPercent }
+    /// `SingleLineRule`, the public form (`AbundancePolicy.singleLine`).
+    package typealias SingleLinePolicy = SingleLineRule
 
     /// Weight fractions (sum 1) in the order of `intensities`.
     /// `absorption` multiplies each intensity before the ratio (factor >= 1).

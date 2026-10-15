@@ -83,13 +83,16 @@ public nonisolated struct PooledQuantificationInput: Sendable {
     /// A refinement already computed for the same spectrum, elements and background (the controller caches it:
     /// it is the slow step and does not depend on the estimator, k or absorption).
     public var refinement: AxisRefinementResult?
+    /// The choices the library made about the fit and the step to composition (`QuantificationPolicy.default` is what it has always
+    /// done). A non-default policy is named in the result's footer. It is not part of `method`, whose hash it leaves alone.
+    public var policy: QuantificationPolicy
 
     public init(counts: [UInt64], axis: EnergyAxis, method: QuantificationMethod, metadata: SpectrumImageMetadata,
                  regionName: String, pixelCount: Int, resolutionMnKaEV: Double = 130,
-                 refinement: AxisRefinementResult? = nil) {
+                 refinement: AxisRefinementResult? = nil, policy: QuantificationPolicy = .default) {
         self.counts = counts; self.axis = axis; self.method = method; self.metadata = metadata
         self.regionName = regionName; self.pixelCount = pixelCount
-        self.resolutionMnKaEV = resolutionMnKaEV; self.refinement = refinement
+        self.resolutionMnKaEV = resolutionMnKaEV; self.refinement = refinement; self.policy = policy
     }
 }
 
@@ -188,6 +191,8 @@ public nonisolated enum PooledQuantifier {
         try SpectroCancellation.check(cancelled)
         progress?(0)
         var method = input.method
+        let policy = input.policy
+        if let why = policy.problem { throw QuantificationRefusal(why) }
         let active = method.elements.filter { $0.role != .off }.map(\.symbol)
         guard !active.isEmpty else { throw QuantificationRefusal("No element is switched on: pick elements in Elements & maps.") }
         guard let beam = method.beamEnergyKeV ?? input.metadata.beamEnergyKeV, beam > 0 else {
@@ -198,22 +203,34 @@ public nonisolated enum PooledQuantifier {
         guard counts.contains(where: { $0 > 0 }) else { throw QuantificationRefusal("This region holds no counts.") }
 
         // WP3c: the fitted range's upper end, typed (Expert) or the default, on the axis the fit runs on.
-        if let t = method.fitToKeV, !(t.isFinite && t > 0.2) {
-            throw QuantificationRefusal("The typed fit range end (\(t) keV) must be above the 0.2 keV start.")
+        if let t = method.fitToKeV, !(t.isFinite && t > policy.fit.fitFromKeV) {
+            throw QuantificationRefusal("The typed fit range end (\(t) keV) must be above the \(policy.fit.fitFromKeV) keV start.")
         }
-        func range(_ axis: EnergyAxis) -> FitRangeChoice { FitRangeChoice(method: method, fileAxis: input.axis, usedAxis: axis, beamEnergy: beam) }
+        func range(_ axis: EnergyAxis) -> FitRangeChoice {
+            FitRangeChoice(method: method, fileAxis: input.axis, usedAxis: axis, beamEnergy: beam, policy: policy.fit)
+        }
+        // The continuum's detector efficiency, when the policy asks for one (the library's FFAST table when none was supplied).
+        var continuumEfficiency: (any DetectorEfficiency)?
+        if let layers = policy.fit.continuumEfficiency {
+            guard let table = tables?.mac ?? MassAbsorptionTable.bundled else {
+                throw QuantificationRefusal("The continuum's detector efficiency needs the mass-absorption table, which is not available in this build.")
+            }
+            continuumEfficiency = SDDEfficiency(table: table, layers: layers)
+        }
 
         func settings(axis: EnergyAxis) -> FitSettings {
             var s: FitSettings
             switch method.background {
             case .empiricalWithAlEdge:
-                s = FitSettings.standard(elements: active, axis: axis, resolutionMnKaEV: input.resolutionMnKaEV, beamEnergy: beam)
+                s = FitSettings.standard(elements: active, axis: axis, resolutionMnKaEV: input.resolutionMnKaEV, beamEnergy: beam,
+                                         efficiency: continuumEfficiency, policy: policy.fit)
             case .wholeRangePolynomial6:
-                let order = min(max(method.polynomialOrder ?? 6, 0), 8)
+                let order = min(max(method.polynomialOrder ?? 6, 0), policy.fit.maximumPolynomialOrder)
                 s = FitSettings(elements: active, resolutionMnKaEV: input.resolutionMnKaEV, beamEnergy: beam,
-                                fitFrom: 0.2, fitTo: min(axis.highValue, beam), background: .polynomial(order: order))
+                                fitFrom: policy.fit.fitFromKeV, fitTo: min(axis.highValue, beam), background: .polynomial(order: order),
+                                escapePeaks: policy.fit.escapePeaks)
             }
-            s.method = method.estimator == .leastSquares ? .leastSquares : .poissonML(IRLSSettings())
+            s.method = method.estimator == .leastSquares ? .leastSquares : .poissonML(policy.fit.irls)
             s.fitTo = range(axis).toKeV
             return s
         }
@@ -229,7 +246,7 @@ public nonisolated enum PooledQuantifier {
             if refinement == nil {
                 do { refinement = try EnergyAxisRefinement.refine(counts: counts, fileAxis: input.axis,
                                                                   fileResolutionMnKaEV: input.resolutionMnKaEV, settings: settings(axis: input.axis),
-                                                                  cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(f * 0.8) } })
+                                                                  options: policy.fit.axisRefinement, cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(f * 0.8) } })
                 }
                 catch let c as SpectroCancelled { throw c }
                 catch { warnings.append("axis refinement failed (\(error)); the file's axis is used") }
@@ -245,7 +262,7 @@ public nonisolated enum PooledQuantifier {
         let fit: EDSFitResult
         try SpectroCancellation.check(cancelled)
         progress?(0.85)
-        do { fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings) }
+        do { fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings, escapeRatioWarning: policy.fit.escapeRatioWarning) }
         catch { throw QuantificationRefusal("The fit could not run: \(error).") }
         // The fit appends the weak-line bias note to every continuum fit; it is a statement about a weak line beside Al K-alpha
         // (measured at Mg K-alpha on synthetic data), so it is kept only when that situation is in this result.
@@ -305,7 +322,8 @@ public nonisolated enum PooledQuantifier {
         let valid = rows.indices.filter { rows[$0].failure == nil && rows[$0].net > 0 }
         var referenceIndex: Int?
         if let r = method.kReference, let i = rows.indices.first(where: { rows[$0].element == r && valid.contains($0) }) { referenceIndex = i }
-        else if let al = rows.indices.first(where: { rows[$0].element == "Al" && valid.contains($0) }) { referenceIndex = al }
+        else if let fallback = policy.abundance.fallbackReference,
+                let al = rows.indices.first(where: { rows[$0].element == fallback && valid.contains($0) }) { referenceIndex = al }
         else { referenceIndex = valid.max { rows[$0].net < rows[$1].net } }
         if let ri = referenceIndex, let gr = groupIndex[ri] {
             for i in rows.indices where rows[i].failure == nil {
@@ -330,7 +348,7 @@ public nonisolated enum PooledQuantifier {
         let referenceName = referenceIndex.map { rows[$0].element }
         do {
             try abundance(rows: &rows, groupIndex: groupIndex, fit: fit, quantified: quantified, method: &method,
-                          plan: absorptionPlan, tables: tables, beam: beam, referenceElement: referenceName,
+                          plan: absorptionPlan, tables: tables, beam: beam, referenceElement: referenceName, policy: policy.abundance,
                           kSetOut: &kSet, warnings: &warnings)
         } catch let e as QuantificationRefusal {
             abundanceRefusal = e.reason
@@ -351,6 +369,7 @@ public nonisolated enum PooledQuantifier {
         }
         if let b = BeamEnergy.provenance(typedKeV: input.method.beamEnergyKeV, metadata: input.metadata) { footer.append(b) }
         footer.append("\(fitRange.footerText) \u{00B7} \(input.pixelCount) px pooled (\(input.regionName))")
+        if let p = policy.footerLine { footer.append(p) }
         // WP3b F3's wording item (D5: list x range x estimator moved Ti by ~ +-20 % against a counting sigma of ~4 %).
         footer.append(sigmaScopeLine)
         footer.append(sigmaFitLine(label: qualityLabel, value: quality))   // the fit's own misfit, stated beside the scope (no bar, no colour)
@@ -477,7 +496,7 @@ public nonisolated enum PooledQuantifier {
     private static func abundance(
         rows: inout [PooledQuantification.Row], groupIndex: [Int?], fit: EDSFitResult, quantified: [String],
         method: inout QuantificationMethod, plan: AbsorptionPlan, tables: QuantificationTables?, beam: Double,
-        referenceElement: String?, kSetOut: inout KFactorSet?, warnings: inout [String]
+        referenceElement: String?, policy: AbundancePolicy, kSetOut: inout KFactorSet?, warnings: inout [String]
     ) throws {
         guard quantified.count >= 2 else { throw QuantificationRefusal("at% needs at least two quantified elements.") }
         if let bad = rows.first(where: { $0.failure != nil }) { throw QuantificationRefusal("\(bad.element): \(bad.failure!); every quantified element needs a fitted line.") }
@@ -502,7 +521,7 @@ public nonisolated enum PooledQuantifier {
                 }
                 lines.append(l)
             }
-            let computer = ComputedKFactor(cross: tables.cross, yield: tables.krause, efficiency: SDDEfficiency(table: tables.mac), beamEnergyKeV: beam)
+            let computer = ComputedKFactor(cross: tables.cross, yield: tables.krause, efficiency: SDDEfficiency(table: tables.mac, layers: policy.detector), beamEnergyKeV: beam)
             let refIdx = lines.firstIndex { $0.element == ref } ?? 0
             let base = try computer.kFactorSet(lines: lines, reference: refIdx, date: QuantificationMethod.computedKTableIdentity)
             let sig = base.elements.map { $0 == base.reference ? 0 : method.sigmaK }
@@ -533,10 +552,10 @@ public nonisolated enum PooledQuantifier {
             let wt: [Double]
             if let g, let t, let tables {
                 let setup = AbsorptionSetup(elements: q, lineEnergiesKeV: energies, geometry: g, table: tables.mac)
-                let opts = AbsorptionIterationOptions(convergence: 1e-7, maxIterations: 200)
-                wt = try AbsorptionCorrection.cliffLorimer(intensities: pos, kFactors: k, setup: setup, thicknessNm: t, options: opts).composition
+                let opts = AbsorptionIterationOptions(convergence: policy.absorptionConvergencePercent, maxIterations: policy.absorptionMaxIterations)
+                wt = try AbsorptionCorrection.cliffLorimer(intensities: pos, kFactors: k, setup: setup, thicknessNm: t, options: opts, singleLine: policy.singleLine).composition
             } else {
-                wt = try CliffLorimer.weightFractions(intensities: pos, kFactors: k).map { $0 * 100 }
+                wt = try CliffLorimer.weightFractions(intensities: pos, kFactors: k, singleLine: policy.singleLine).map { $0 * 100 }
             }
             return (wt, try CompositionConversion.weightToAtomic(wt, elements: q))
         }
@@ -568,7 +587,7 @@ public nonisolated enum PooledQuantifier {
         var jAt = [[Double]](repeating: [Double](repeating: 0, count: n), count: n)   // [output i][input j]
         var jWt = jAt
         for j in 0..<n {
-            let h = max(0.01 * max(I0[j], 1), 1e-9)
+            let h = max(policy.derivativeRelativeStep * max(I0[j], 1), 1e-9)
             var lo = I0, hi = I0
             lo[j] = max(I0[j] - h, 0); hi[j] = I0[j] + h
             guard let a = f(hi, kVals), let b = f(lo, kVals), hi[j] > lo[j] else { continue }

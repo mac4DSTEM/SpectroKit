@@ -23,13 +23,15 @@
 
 import Foundation
 
-package nonisolated struct IRLSSettings: Sendable, Equatable {
-    package var maxIterations: Int = 200
-    /// Stop when (D_old - D_new) / max(D_old, 1) falls below this.
-    package var tolerance: Double = 1e-9
-    /// mu is clamped below this (counts per channel).
-    package var muFloor: Double = 1e-6
-    package init(maxIterations: Int = 200, tolerance: Double = 1e-9, muFloor: Double = 1e-6) {
+/// The iteration of the Poisson maximum-likelihood fit. Defaults (200, 1e-9, 1e-6) are the session's choice, recorded in every result.
+public nonisolated struct IRLSSettings: Sendable, Equatable, Codable {
+    /// The iteration cap. Default 200.
+    public var maxIterations: Int = 200
+    /// Stop when (D_old - D_new) / max(D_old, 1) falls below this. Default 1e-9.
+    public var tolerance: Double = 1e-9
+    /// mu is clamped below this (counts per channel). Default 1e-6.
+    public var muFloor: Double = 1e-6
+    public init(maxIterations: Int = 200, tolerance: Double = 1e-9, muFloor: Double = 1e-6) {
         self.maxIterations = maxIterations; self.tolerance = tolerance; self.muFloor = muFloor
     }
 }
