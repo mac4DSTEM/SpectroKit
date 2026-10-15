@@ -8,7 +8,7 @@ import SpectroEDX
 /// v5.0 lane U: the first drive's wiring, text and presentation findings (docs/archive/v5/room-drive-2026-10-06.md, 3-13).
 /// Each test names the mutation that must turn it red.
 /// The app labels a voltage supplied by the same run's 4D cube this way (Core/Data/GMSFourDRegistration.swift, which stays in
-/// mac4DSTEM); the library sees only `.supplied(label:)`, so these moving tests name the value, not the app's constant.
+/// the app); the library sees only `.supplied(label:)`, so these moving tests name the value, not the app's constant.
 private let suppliedCube = BeamEnergySource.supplied(label: "the 4D cube, same run")
 
 @MainActor

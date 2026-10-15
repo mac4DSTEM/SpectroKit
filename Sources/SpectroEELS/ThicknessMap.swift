@@ -96,7 +96,7 @@ public nonisolated enum ZeroLossSource: Sendable, Equatable {
 /// **`sigmaCounting` is the counting error at a given threshold, nothing more.** It leaves out the threshold's variability,
 /// which, with the estimated rule on noisy data, made the standard deviation of t/λ 1.0 to 3.2 times larger on the registered
 /// planted images (the estimated threshold is set by one global `tol`, which the noisiest pixel decides). Noisy data want a fixed threshold.
-/// The stored counts are also not electron counts unless the detector's conversion has been applied; mac4DSTEM must carry the
+/// The stored counts are also not electron counts unless the detector's conversion has been applied; a consumer must carry the
 /// λ source and its own uncertainty separately.
 public nonisolated struct ThicknessMap: Sendable {
     public let nx: Int

@@ -23,7 +23,7 @@ final class FinalPolishDSpectro {
 
     init() throws {
         directory = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("mac4dstem-finalpolish-d-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("spectrokit-finalpolish-d-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 

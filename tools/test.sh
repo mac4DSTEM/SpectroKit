@@ -6,7 +6,7 @@
 # build is not an option: it also optimises the test targets. The tests use `package` access, not @testable.
 #
 # libhdf5 (0.4.0 on): the Velox reader is FormatoKit's, and FormatoKit ships libhdf5 2.1.1 inside FormatoHDF5 (the binaries
-# mac4DSTEM vendors at 5ba712a0, the ones the golden was recorded with), found after MAC4DSTEM_HDF5_PATH and before the bare
+# the first host app vendors at 5ba712a0, the ones the golden was recorded with), found after MAC4DSTEM_HDF5_PATH and before the bare
 # name. So the gate sets nothing: it runs as a consumer's `swift test` does. MAC4DSTEM_HDF5_PATH, when set, still overrides
 # (CI or a check on another libhdf5, as Homebrew's 2.2.0 was for 0.3.0).
 #

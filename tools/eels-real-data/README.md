@@ -1,7 +1,7 @@
 # tools/eels-real-data: the registered real-data check of EELS slice 1
 
-Runs `docs/eels-real-data-check-registration.md` on the owner's EELS scans, read from `$MACEM_DATA` (default `../data` from
-the repository root) and never copied here. Everything written into the repository is numbers only (no spectra):
+Runs `docs/eels-real-data-check-registration.md` on EELS scans read from a data folder the caller names (the files are arguments to the tool)
+and never copied here. Everything written into the repository is numbers only (no spectra):
 `docs/eels-real-data/`. The large per-pixel arrays go to a scratch directory and are not committed. Not part of the gate.
 
 | piece | runs in | does |

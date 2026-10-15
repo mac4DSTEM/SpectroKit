@@ -1,6 +1,6 @@
 // swift-tools-version: 6.2
 // SpectroKit's real-data check of EELS slice 1 (docs/eels-real-data-check-registration.md): a SEPARATE package that depends on
-// SpectroKit by path and reads the owner's EELS scans from $MACEM_DATA through the public API only. It writes numbers, never
+// SpectroKit by path and reads EELS scans from a data folder the caller names through the public API only. It writes numbers, never
 // spectra; the logs go under docs/eels-real-data/. Not part of the gate (tools/test.sh); see README.md.
 import Foundation
 import PackageDescription

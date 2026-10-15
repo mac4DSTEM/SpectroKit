@@ -10,19 +10,19 @@
 //  a result is a new line and fails the comparison until the baseline is re-recorded on purpose.
 //
 //  Record (from a copy of the commit to be baselined, with only this file added):
-//    TEST_RUNNER_SPECTRO_GOLDEN_DIR=<dir> xcodebuild test ... -only-testing:mac4DSTEMTests/SpectroGoldenTests CODE_SIGNING_ALLOWED=NO
-//  then copy <dir>/*.txt to mac4DSTEMTests/Fixtures/spectro-golden/. Without the variable `testOutputsAreByteIdenticalToTheBaseline` compares.
+//    TEST_RUNNER_SPECTRO_GOLDEN_DIR=<dir> xcodebuild test ... -only-testing:<AppTests>/SpectroGoldenTests CODE_SIGNING_ALLOWED=NO
+//  then copy <dir>/*.txt to the app's Fixtures/spectro-golden/. Without the variable `testOutputsAreByteIdenticalToTheBaseline` compares.
 //
-//  SpectroKit S2: the same file, run against the extracted library and compared with mac4DSTEM's committed baseline
+//  SpectroKit S2: the same file, run against the extracted library and compared with the first host app's committed baseline
 //  (Tests/SpectroCoreTests/Fixtures/spectro-golden, copied at 5ba712a0, unchanged). Six of its seven scenarios: the seventh,
-//  `demo-spectrum-fixture`, opens the app's `DemoSpectrumImageSource` (4D demo data), which stays in mac4DSTEM and is compared
+//  `demo-spectrum-fixture`, opens the app's `DemoSpectrumImageSource` (4D demo data), which stays in the app and is compared
 //  there. `Q` is a copy of the statics of `SpectroscopyQuantifySpectro` (another test target). Record with
 //  `SPECTRO_GOLDEN_DIR=<dir> swift test --filter SpectroGoldenTests.testRecordBaseline`.
 //
-//  SpectroKit 0.2.0: `velox-tiny.txt` re-recorded on purpose for the six new Velox metadata fields (macTEM's five and
+//  SpectroKit 0.2.0: `velox-tiny.txt` re-recorded on purpose for the six new Velox metadata fields (a consumer's five and
 //  `stemMagnification`) and the per-detector `exposureTimeSeconds` the metadata's exposure is read from. The new file is the
 //  old one plus 13 lines (that field on 5 detectors and 2 stream segments, and the metadata's six new fields; all nil on
-//  this fixture) and nothing removed or changed (`diff` old new: 0 lines `<`). Every other file is still mac4DSTEM's
+//  this fixture) and nothing removed or changed (`diff` old new: 0 lines `<`). Every other file is still the first host app's
 //  71929a01 baseline, unchanged.
 //
 
@@ -139,7 +139,7 @@ enum GoldenDump {
 
 // MARK: - Scenarios
 
-/// The statics of `SpectroscopyQuantifySpectro` (= mac4DSTEM's `SpectroscopyQuantifyTests`) that the scenarios use, verbatim
+/// The statics of `SpectroscopyQuantifySpectro` (= the host app's `SpectroscopyQuantifyTests`) that the scenarios use, verbatim
 /// apart from the paths.
 @MainActor
 enum GoldenQ {
@@ -311,7 +311,7 @@ enum SpectroGolden {
             try quantify("region-locked-axis", region, tables: nil, into: &out, unlisted: false)
         }
 
-        // "demo-spectrum-fixture" (the app's DemoSpectrumImageSource) stays in mac4DSTEM.
+        // "demo-spectrum-fixture" (the app's DemoSpectrumImageSource) stays in the app.
 
         // eds-realistic-l-sim: 80 keV axis, the range-sensitivity statement applies.
         try add("eds-realistic-l-sim") { out in
@@ -415,7 +415,7 @@ struct SpectroGoldenTests {
     @Test(.disabled(if: ProcessInfo.processInfo.environment["SPECTRO_GOLDEN_DIR"] != nil, "recording run"))
     func testOutputsAreByteIdenticalToTheBaseline() async throws {
         let scenarios = try await SpectroGolden.scenarios()
-        #expect(scenarios.count == 6)   // mac4DSTEM's 7 minus demo-spectrum-fixture
+        #expect(scenarios.count == 6)   // the app's 7 minus demo-spectrum-fixture
         for s in scenarios {
             let url = SpectroGolden.baselineDirectory.appendingPathComponent(s.name + ".txt")
             let recorded = try String(contentsOf: url, encoding: .utf8)
