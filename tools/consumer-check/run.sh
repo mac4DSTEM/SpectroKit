@@ -8,6 +8,10 @@
 # FormatoKit_FormatoHDF5.bundle (libhdf5) sit next to the binary, every check passed, no test-only target was built, and the
 # process exited normally with the quit barrier installed (the Velox open installs FormatoKit's).
 #
+# Then (readme/, a second package) the README's own code: check-readme.py fails if README.md and the programs built from its marked
+# code blocks (Examples/QuantifyEDX, readme/Sources/readme-consumer) differ; the second consumer is built in Debug with no
+# warning but those notices and run on its planted spectrum: Mg, Al and Si proposed and quantified, t/lambda 0.5 within 0.01.
+#
 #   run.sh [--controls]
 #
 #   (no flag)   build, run the checks, print "consumer-check: all passed — N checks ..." and exit 0.
@@ -35,16 +39,9 @@ cd $here
 # No setup: FormatoKit's shipped libhdf5 must be found without a path in the environment.
 unset MAC4DSTEM_HDF5_PATH
 
-# 1. Build, DEBUG. The log is kept: it shows what a consumer builds.
-mkdir -p .build
-log=.build/consumer-check-build.log
-if ! swift build -c debug >$log 2>&1; then
-  grep -E "error" $log | head -20 >&2
-  die "BUILD FAILED (full log: $here/$log)"
-fi
-# Zero warnings, except the three Swift Build prints for FormatoKit's signed dylibs (it cannot strip a signed binary). The lines
-# may arrive glued together, so the log is stripped of colour codes and split on "warning:" before each is matched.
-python3 -I -B - $log <<'PY' || die "unexpected warning(s) in the build (full log: $here/$log)"
+# Zero warnings in a build log, except the three FormatoKit prints for its signed dylibs. Used for both consumers below.
+build_warnings() {
+python3 -I -B - $1 <<'PY'
 import re, sys
 text = re.sub(r"\x1b\[[0-9;]*m", "", open(sys.argv[1], encoding="utf-8", errors="replace").read())
 allowed = re.compile(r"^warning: not stripping binary because it is signed: .*"
@@ -64,6 +61,18 @@ if other or len(seen) > 3 or len(set(seen)) != len(seen):
     sys.exit(1)
 print("consumer-check: build warnings: %d, all FormatoKit's signed-dylib notices (%s)" % (len(seen), ", ".join(seen) or "none"))
 PY
+}
+
+# 1. Build, DEBUG. The log is kept: it shows what a consumer builds.
+mkdir -p .build
+log=.build/consumer-check-build.log
+if ! swift build -c debug >$log 2>&1; then
+  grep -E "error" $log | head -20 >&2
+  die "BUILD FAILED (full log: $here/$log)"
+fi
+# Zero warnings, except the three Swift Build prints for FormatoKit's signed dylibs (it cannot strip a signed binary). The lines
+# may arrive glued together, so the log is stripped of colour codes and split on "warning:" before each is matched.
+build_warnings $log || die "unexpected warning(s) in the build (full log: $here/$log)"
 
 # 2. A consumer must not build the test-only targets: not SpectroKit's or FormatoKit's test targets, not the barrier's child process.
 bin=$(swift build -c debug --show-bin-path)
@@ -115,6 +124,48 @@ head=$(git -C $root --no-optional-locks rev-parse --short HEAD 2>/dev/null || pr
 print "consumer-check: all passed — $checks checks through SpectroCore's and SpectroEELS's public API only, Debug build, no warnings" \
       "but FormatoKit's signed-dylib notices, no test-only target built, exit 0 with the quit barrier installed (SpectroKit $head," \
       "FormatoKit's shipped libhdf5, no setup)"
+
+# 3b. The README consumer (tools/consumer-check/readme): a second package, built from the README's code blocks and nothing else.
+# (i) The README and the two programs made from it must not differ (check-readme.py; `--write` regenerates them from the README).
+# (ii) Debug build, zero warnings (the same filter). (iii) Run with no argument, the planted spectrum: exit 0, Mg, Al and Si
+# proposed and each given an at.% line, the validation note printed, and the EELS t/lambda within 0.01 of the planted 0.5.
+readme=$here/readme
+python3 -I -B $readme/check-readme.py $root || die "the README's code and the programs built from it differ (python3 -I -B $readme/check-readme.py --write $root rewrites them from the README)"
+cd $readme
+mkdir -p .build
+rlog=.build/readme-consumer-build.log
+if ! swift build -c debug >$rlog 2>&1; then
+  grep -E "error" $rlog | head -20 >&2
+  die "README CONSUMER BUILD FAILED (full log: $readme/$rlog)"
+fi
+build_warnings $rlog || die "unexpected warning(s) in the README consumer's build (full log: $readme/$rlog)"
+rbin=$(swift build -c debug --show-bin-path)
+rout=.build/readme-consumer-run.log
+set +e
+$rbin/readme-consumer >$rout 2>&1
+rrc=$?
+set -e
+cat $rout
+(( rrc == 0 )) || die "README CONSUMER FAILED (exit $rrc, full log: $readme/$rout)"
+python3 -I -B - $rout <<'PY' || die "the README consumer printed no sane planted result (full log: $readme/$rout)"
+import re, sys
+text = open(sys.argv[1], encoding="utf-8").read()
+m = re.search(r"^proposed elements: (.*)$", text, re.M)
+proposed = set(m.group(1).split()) if m else set()
+if proposed != {"Mg", "Al", "Si"}:
+    sys.exit("proposed elements %s, planted Mg Al Si" % sorted(proposed))
+for el in ("Mg", "Al", "Si"):
+    if not re.search(r"^%s [0-9.]+ at\.%% \+- [0-9.]+$" % el, text, re.M):
+        sys.exit("no at.%% line with a sigma for %s" % el)
+if not re.search(r"^validation: none ", text, re.M):
+    sys.exit("no 'validation: none' line")
+t = re.search(r"^t/lambda = ([0-9.eE+-]+) \+- ([0-9.eE+-]+) \(planted 0\.5, validation: none\)$", text, re.M)
+if not t or abs(float(t.group(1)) - 0.5) > 0.01 or not 0 < float(t.group(2)) < 0.01:
+    sys.exit("t/lambda line missing or not 0.5 within 0.01")
+print("consumer-check: README consumer: Mg Al Si proposed with at.%% and sigma, validation none, t/lambda %s +- %s" % (t.group(1)[:6], t.group(2)[:6]))
+PY
+cd $here
+
 (( controls )) || exit 0
 
 # 4. Negative controls. The repository is never edited: controls.py works in an rsync'd copy under .build.
