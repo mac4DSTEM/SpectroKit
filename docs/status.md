@@ -17,12 +17,16 @@ each default 0.4.0's value (`docs/generality-0.5.0-registration.md`).
 
 ## The gate at 0.5.0
 
-- `tools/test.sh` (release, Swift Testing): **337 test names** (the 302 of 0.4.0 plus 35), **2 known issues** (the
+- `tools/test.sh` (release, Swift Testing): **340 test names** (the 302 of 0.4.0, 35 for the policies, 3 for the Gate B fixes), **2 known issues** (the
   `EnergyAxisRefinement` finding, E3), 0 warnings; the golden byte-identical to 0.4.0's but for the 13 CSV-hash lines moved on
   purpose by the export's neutral default title.
 - `tools/consumer-check/run.sh`: **189 checks** plus the README consumer (built from the README's code, drift-checked against
   `Examples/QuantifyEDX`), **151 negative controls** all caught.
-- The new tests were each broken once: 61 mutants, 61 caught.
+- The new tests were each broken once: 61 mutants, 61 caught; the Gate B fixes 8 of 9 (the ninth equivalent, replaced and caught).
+- Gate B (one refuter on `3bc197c`): no blocker; the default path byte-identical against 0.4.0 over 9 dump files and
+  34 891 lines (fixtures, the public Velox files, the owner's 1.7 GB EDX SI, two EELS SIs); 0.4.0 call sites compile
+  unchanged. Its two should-fix items (a nil or array policy field not named in the footer; the proposer's notes) are
+  fixed (registration section 11).
 
 ## Validation
 
@@ -73,3 +77,8 @@ is validated until it recovers a planted value and a sample of known composition
 - The cross-section route of `ZetaFactor` has hand-recorded pins only.
 
 **DocC**: two parameters undocumented: `axis` in `ElementProposer.swift`, `cancelled` in `EdgeQuantification.swift`.
+
+**Wording left from the generality pass**: `SDDEfficiency.sourceName` says "not the owner's Super-X calibration" (pinned by
+`SpectroscopyComputedKTests`; neutral wording needs that test's string changed too); suite-internal ADR numbers (054, 064) and
+"the owner" remain in comments of `PooledQuantification`, `Continuum`, `SpectrumQuantities`, `FitRange`, `WindowIntensity`.
+WindowRules, UnlistedLineRules and SmoothingKernel produce no notes or footer: a caller records a non-default value itself.
