@@ -5,10 +5,14 @@
 //        image?" the open path asks before it picks a reader. No AppState, no UI.
 //
 //  Joining Velox: `VeloxEventStore` conforms to `CSRSpectrumStore` (below) and `SparseSpectrumImage(store)`
-//  validates the CSR contract and shares the arrays copy-on-write; nothing is densified.
+//  validates the CSR contract and shares the arrays copy-on-write; nothing is densified. The readers are FormatoKit's since
+//  0.4.0 (`FormatoEMD`, `FormatoDM`).
 //
 
 import Foundation
+import FormatoCore
+import FormatoDM
+import FormatoEMD
 
 extension VeloxEventStore: CSRSpectrumStore {
     package nonisolated var ny: Int { geometry.ny }

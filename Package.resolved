@@ -1,0 +1,15 @@
+{
+  "originHash" : "8e2b02b7b3ca751434a22d13a9924cf12ea1d1942fc71c4731913fcade2449b7",
+  "pins" : [
+    {
+      "identity" : "formatokit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mac4DSTEM/FormatoKit",
+      "state" : {
+        "revision" : "e111fc6f6b9d68bac288b3537651efcd2c65d5c7",
+        "version" : "0.0.2"
+      }
+    }
+  ],
+  "version" : 3
+}

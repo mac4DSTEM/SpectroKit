@@ -22,6 +22,7 @@
 
 import CryptoKit
 import Foundation
+import FormatoDM
 import SpectroCore
 import SpectroEELS
 

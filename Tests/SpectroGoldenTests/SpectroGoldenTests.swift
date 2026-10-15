@@ -30,6 +30,7 @@ import XCTest
 import Foundation
 import SpectroCore
 import SpectroEDX
+import FormatoEMD
 
 // MARK: - The dump
 

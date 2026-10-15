@@ -228,7 +228,7 @@ public nonisolated enum EELSEdgeQuantification {
         pixels.reserveCapacity(np)
         try coreLoss.counts.withUnsafeBufferPointer { buf in
             for p in 0 ..< np {
-                if p % 4096 == 0, cancelled() { throw SpectroCancelled() }
+                if p % 4096 == 0 { try SpectroCancellation.check(cancelled) }
                 let spectrum = UnsafeBufferPointer(rebasing: buf[(p * nch) ..< ((p + 1) * nch)])
                 pixels.append(pixel(spectrum, window: window, channels: channels, energies: energies, scale: scale,
                                     sigma: sigma, lowLossRaw: lowLossRaw[p], dose: coreLossToLowLossDose))

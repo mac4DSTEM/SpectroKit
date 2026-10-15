@@ -14,6 +14,7 @@ import Foundation
 import XCTest
 import SpectroCore
 import SpectroEDX
+import FormatoEMD
 
 final class CountsGateTests: XCTestCase {
 
@@ -102,14 +103,17 @@ final class CountsGateTests: XCTestCase {
         XCTAssertEqual(image.sum(mask: nil).reduce(0, +), 3_562_739)
         // The reader reports the streams in name order; rsciio's test names the totals in its own order.
         let v = try VeloxEMDReader(path: path).readSpectrumImage()
-        XCTAssertEqual(v.streamCount, 4)
+        XCTAssertEqual(v.streams.count, 4)   // 0.4.0: `streamCount` is package in FormatoKit 0.0.2; the reader sets it to the streams' count
         let published = Set([865_236, 913_682, 867_647, 916_174])
         let entry = countsPins.d("files").d(label)
         let perStream = entry.l("streams").map { $0.i("events") }
         XCTAssertEqual(Set(perStream), published)
         XCTAssertEqual(v.eventStore.totalCounts, 3_562_739)
         XCTAssertEqual(v.eventStore.frameRange, 0..<2)
-        XCTAssertTrue(v.streamsAgreeOnCoverageForGate)
+        // 0.4.0: the reader's own flag `streamsAgreeOnCoverage` is package in FormatoKit 0.0.2 (docs/consumers-0.4.0.md
+        // "Deviations"). Its public consequence is asserted instead: both frames complete on every pixel, no partial frame.
+        XCTAssertEqual(v.eventStore.completeFrames, 2)
+        XCTAssertEqual(v.eventStore.partialFramePixels, 0)
     }
 
     // MARK: C1 / C2 planted streams
@@ -176,7 +180,7 @@ final class CountsGateTests: XCTestCase {
                     for (p, t) in (s["pixel_totals"] as! [NSNumber]).enumerated() { expPix[p] += UInt64(t.intValue) }
                 }
                 XCTAssertEqual(store.summedSpectrum(), expSum, "\(name) frames \(key): channel sums")
-                let pix = (0..<store.pixelCount).map { p in
+                let pix = (0..<store.geometry.pixelsPerFrame).map { p in   // 0.4.0: `pixelCount` (package) is this
                     (store.rowOffsets[p]..<store.rowOffsets[p + 1]).reduce(UInt64(0)) { $0 + UInt64(store.counts[$1]) } }
                 XCTAssertEqual(pix, expPix, "\(name) frames \(key): pixel totals")
             }
@@ -302,9 +306,4 @@ final class CountsGateTests: XCTestCase {
         XCTAssertFalse(img.metadata.detectors.isEmpty)
         for d in img.metadata.detectors { XCTAssertEqual(d.liveTime ?? 0, 0, "LiveTime 0 stored, passed through as stored"); XCTAssertEqual(d.realTime ?? 0, 0) }
     }
-}
-
-extension VeloxSpectrumImage {
-    /// True when the streams of a multi-detector file ended in the same place (the reader's own flag).
-    var streamsAgreeOnCoverageForGate: Bool { eventStore.streamsAgreeOnCoverage }
 }

@@ -16,6 +16,7 @@ import Foundation
 import XCTest
 import SpectroCore
 import SpectroEDX
+import FormatoEMD
 
 final class AxisGateTests: XCTestCase {
 
@@ -28,16 +29,25 @@ final class AxisGateTests: XCTestCase {
     }
 
     /// Swift's reading per stream (by stream id) and the file-level axis (first stream) and the agreement flag.
-    private func swiftAxes(_ path: String) throws -> (perStream: [String: Cal?], first: Cal?, agrees: Bool) {
+    ///
+    /// 0.4.0 (FormatoKit 0.0.2, docs/consumers-0.4.0.md "Deviations"): `VeloxStreamInfo.id` and
+    /// `VeloxSpectrumImage.energyCalibrationAgrees` are `package` in FormatoKit, out of reach from here. The reader lists the
+    /// streams in name order (HDF5's name index), so the stream ids are the pinned ids sorted, paired with `streams` in order
+    /// (the counts must match); the flag is the reader's rule recomputed from the public segments (one distinct
+    /// dispersion|offset over every segment of every stream, FormatoEMD VeloxEMDReader.swift's `calibrations.count <= 1`).
+    /// Both go back to the reader's own members when FormatoKit makes them public.
+    private func swiftAxes(_ path: String, ids: [String]) throws -> (perStream: [String: Cal?], first: Cal?, agrees: Bool) {
         let v = try VeloxEMDReader(path: path).readSpectrumImage()
+        XCTAssertEqual(v.streams.count, Set(ids).count, "\(path): one pinned id per stream")
         var per: [String: Cal?] = [:]
-        for s in v.streams {
+        for (id, s) in zip(Set(ids).sorted(), v.streams) {
             if let seg = s.segments.first, let d = seg.dispersionEV, let o = seg.offsetEnergyEV {
-                per[s.id] = Cal(dispersionKeV: d / 1000, offsetKeV: o / 1000)
-            } else { per[s.id] = .some(nil) }
+                per[id] = Cal(dispersionKeV: d / 1000, offsetKeV: o / 1000)
+            } else { per[id] = .some(nil) }
         }
         let first = v.metadata.energyAxis.map { Cal(dispersionKeV: $0.scaleKeV, offsetKeV: $0.offsetKeV) }
-        return (per, first, v.energyCalibrationAgrees)
+        let calibrations = Set(v.streams.flatMap(\.segments).map { "\($0.dispersionEV ?? .nan)|\($0.offsetEnergyEV ?? .nan)" })
+        return (per, first, calibrations.count <= 1)
     }
 
     // MARK: E1
@@ -52,7 +62,7 @@ final class AxisGateTests: XCTestCase {
             let expected = pinned(list)
             let path: String
             do { path = try EDXFixtures.publicVelox(label: label) } catch is XCTSkip { continue }
-            let got = try swiftAxes(path)
+            let got = try swiftAxes(path, ids: expected.map(\.stream))
             for (id, cal) in expected {
                 let g = try XCTUnwrap(got.perStream[id], "\(label): stream \(id)")
                 XCTAssertEqual(g?.dispersionKeV.bitPattern, cal.dispersionKeV.bitPattern, "\(label) \(id) dispersion")
@@ -82,7 +92,7 @@ final class AxisGateTests: XCTestCase {
         for name in ["1stream-1frame", "1stream-3frames", "4streams-2frames", "axis-decoy", "unterminated"] {
             let expected = pinned(rule.d("planted")[name]!)
             let truth = EDXFixtures.streamTruth.d("cases").d(name)
-            let got = try swiftAxes(plantedPath(name))
+            let got = try swiftAxes(plantedPath(name), ids: expected.map(\.stream))
             for (id, cal) in expected {
                 let g = try XCTUnwrap(got.perStream[id], "\(name) \(id)")
                 XCTAssertEqual(g?.dispersionKeV.bitPattern, cal.dispersionKeV.bitPattern, "\(name) \(id) dispersion")
@@ -92,7 +102,7 @@ final class AxisGateTests: XCTestCase {
             XCTAssertEqual(got.agrees, truth["expect_calibration_agrees"] as? Bool, "\(name): energyCalibrationAgrees")
         }
         // 4 detectors: the summed spectrum mixes scales, so the flag is false (offsets differ by 4 eV)
-        let four = try swiftAxes(plantedPath("4streams-2frames"))
+        let four = try swiftAxes(plantedPath("4streams-2frames"), ids: pinned(rule.d("planted")["4streams-2frames"]!).map(\.stream))
         XCTAssertFalse(four.agrees)
     }
 
@@ -103,7 +113,7 @@ final class AxisGateTests: XCTestCase {
     func testE1DetectorKeysOutOfIndexOrderFollowTheFileOrder() throws {
         let expected = pinned(rule.d("planted")["axis-order"]!)
         XCTAssertEqual(expected[0].cal, Cal(dispersionKeV: 0.02, offsetKeV: -1.9), "rsciio's rule takes Detector-10")
-        let got = try swiftAxes(plantedPath("axis-order"))
+        let got = try swiftAxes(plantedPath("axis-order"), ids: expected.map(\.stream))
         XCTExpectFailure("registered finding (amendment 1 item 5): VeloxEMDReader sorts Detector-<n> by index, so on a file with keys Detector-0, Detector-10, Detector-2 it takes Detector-2's axis; rsciio takes the first in file order, Detector-10") {
             XCTAssertEqual(got.first?.offsetKeV, expected[0].cal.offsetKeV)
             XCTAssertEqual(got.first?.dispersionKeV, expected[0].cal.dispersionKeV)

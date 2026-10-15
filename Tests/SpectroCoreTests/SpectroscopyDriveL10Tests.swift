@@ -1,5 +1,6 @@
 import XCTest
 import SpectroCore
+import FormatoEMD
 
 /// Lane L10 (the owner's drive findings, build 2): Velox's own element selection, read from the file (`VeloxEMDReader.storedElementSelection`).
 /// The files are 600 to 700 byte synthetic Velox EMDs (a Version dataset and one quantification-settings group of variable-length JSON

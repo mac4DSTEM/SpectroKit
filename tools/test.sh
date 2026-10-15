@@ -1,47 +1,55 @@
 #!/bin/zsh
-# SpectroKit test gate: `swift test -c release` with a libhdf5 from outside the library.
+# SpectroKit test gate: `swift test -c release`.
 #
 # Release: the manifest carries no Debug `-O` (a versioned dependency cannot carry unsafe flags) and Debug at -Onone is
-# 20-50x slower on every hot path (SpectroGoldenTests 26 s vs 1349 s; S3 timings in CLAUDE.md). `-Xswiftc -O` on a Debug
-# build is not an option: it also optimises the test targets, and swift-frontend crashes on DM4ExperimentTests+Spectro
-# ("swifterror value can only be loaded and stored from"). The tests use `package` access, not @testable.
+# 20-50x slower on every hot path (SpectroGoldenTests 26 s vs 1349 s; S3 timings in docs/history.md). `-Xswiftc -O` on a Debug
+# build is not an option: it also optimises the test targets. The tests use `package` access, not @testable.
 #
-# libhdf5: the Velox reader dlopens the host's libhdf5 at run time (MAC4DSTEM_HDF5_PATH, the host app's Frameworks, the
-# loader path); a package test has no host bundle, and the library ships none. In order:
-#   1. MAC4DSTEM_HDF5_PATH if already set;
-#   2. mac4DSTEM's vendored copy (HDF5 2.1.1 + libsz + libaec, the exact binaries the app ships), read-only by `git show`
-#      at the extraction commit into .build/hdf5, when ../mac4DSTEM is checked out beside this repo;
-#   3. Homebrew's hdf5 (`brew install hdf5`; same soname 320), for CI and machines without mac4DSTEM.
+# libhdf5 (0.4.0 on): the Velox reader is FormatoKit's, and FormatoKit ships libhdf5 2.1.1 inside FormatoHDF5 (the binaries
+# mac4DSTEM vendors at 5ba712a0, the ones the golden was recorded with), found after MAC4DSTEM_HDF5_PATH and before the bare
+# name. So the gate sets nothing: it runs as a consumer's `swift test` does. MAC4DSTEM_HDF5_PATH, when set, still overrides
+# (CI or a check on another libhdf5, as Homebrew's 2.2.0 was for 0.3.0).
 #
-# Stamp: a full run (no arguments) that passes, on a tree whose tracked Sources/, Tests/, Package.swift and Package.resolved are
-# clean, writes .build/last-green (HEAD sha, UTC time, libhdf5 path). Any argument or a dirty tree writes nothing and says why on
-# stderr. The stamp is local (.build/ is ignored); tools/last-green.sh prints it and whether HEAD still equals it.
+# Warnings: none allowed, except the three Swift Build prints once per fresh build for the dylibs FormatoKit ships signed
+# ("not stripping binary because it is signed", FormatoKit's registration step 1 A2 and its own gate's rule).
+#
+# Names: XCTest's lines are in the log; Swift Testing's results go to .build/test-results/xunit-swift-testing.xml (the xUnit
+# file SwiftPM writes beside xunit.xml). tools/test-names.py <log> <that file> lists every test the run passed or skipped.
+#
+# Lock: the suite's machine-wide rule (../CLAUDE.md): a `drive` file means a session drives an app on screen, so no test run.
+# SpectroKit's `swift test` takes no slot of its own.
+#
+# Stamp: a full run (no arguments) that passes without a warning, on a tree whose Sources/, Tests/, Package.swift and
+# Package.resolved are clean, untracked files included (CuboKit's rule: a new file nobody committed ran but is in no commit),
+# writes .build/last-green (HEAD sha, UTC time, libhdf5). Any argument or a dirty tree writes nothing and says why on stderr.
+# tools/last-green.sh prints the stamp and whether HEAD still equals it.
 # Never run `swift build --build-tests -c release` (fails on this toolchain); this script is the gate.
 set -euo pipefail
 cd "${0:A:h}/.."
-if [[ -z ${MAC4DSTEM_HDF5_PATH:-} ]]; then
-  src=../mac4DSTEM pin=5ba712a0 dir=.build/hdf5
-  if git -C $src --no-optional-locks cat-file -e ${pin}:libhdf5.dylib 2>/dev/null; then
-    mkdir -p $dir
-    for f in libhdf5.dylib libsz.2.dylib libaec.0.dylib; do
-      [[ -s $dir/$f ]] || git -C $src --no-optional-locks show ${pin}:$f > $dir/$f
-    done
-    export MAC4DSTEM_HDF5_PATH=$PWD/$dir/libhdf5.dylib
-  elif command -v brew >/dev/null && [[ -e $(brew --prefix hdf5 2>/dev/null)/lib/libhdf5.dylib ]]; then
-    export MAC4DSTEM_HDF5_PATH=$(brew --prefix hdf5)/lib/libhdf5.dylib
-  else
-    print -u2 "tools/test.sh: no libhdf5 (set MAC4DSTEM_HDF5_PATH, check out ../mac4DSTEM, or brew install hdf5)"; exit 1
-  fi
+locks=/private/tmp/claude-501/-Users-paullobpreis-GitHub-mac4DSTEM-Organization-mac4DSTEM/locks
+if [[ -e $locks/drive ]]; then
+  print -u2 "tools/test.sh: a session is driving an app on screen ($locks/drive): no test run now"
+  exit 75
 fi
-print -u2 "tools/test.sh: libhdf5 = $MAC4DSTEM_HDF5_PATH"
-swift test -c release "$@"
+hdf5=${MAC4DSTEM_HDF5_PATH:-"the copy FormatoKit ships (FormatoKit_FormatoHDF5.bundle)"}
+print -u2 "tools/test.sh: libhdf5 = $hdf5"
+mkdir -p .build/test-results
+rm -f .build/test-results/xunit*.xml(N)
+log=.build/test-results/test.log
+set +e
+swift test -c release --xunit-output .build/test-results/xunit.xml "$@" 2>&1 | tee $log
+rc=${pipestatus[1]}
+set -e
+(( rc == 0 )) || { print -u2 "tools/test.sh: swift test failed (exit $rc)"; exit $rc }
+other=$(sed 's/\x1b\[[0-9;]*m//g' $log | grep "warning:" | grep -vE "warning: not stripping binary because it is signed: .*(/Sources/FormatoHDF5/Resources/hdf5|/FormatoKit_FormatoHDF5\.bundle/Contents/Resources/hdf5)/(libhdf5\.dylib|libsz\.2\.dylib|libaec\.0\.dylib)" || true)
+if [[ -n $other ]]; then print -u2 "tools/test.sh: green, but the build warned:"; print -u2 -r -- "$other"; exit 1; fi
 if (( $# > 0 )); then
   print -u2 "tools/test.sh: green, but arguments were given (not a full run): no stamp"
-elif [[ -n $(git status --porcelain --untracked-files=no -- Sources Tests Package.swift Package.resolved) ]]; then
-  print -u2 "tools/test.sh: green, but Sources/Tests/Package files are not clean: no stamp"
+elif [[ -n $(git status --porcelain --untracked-files=all -- Sources Tests Package.swift Package.resolved) ]]; then
+  print -u2 "tools/test.sh: green, but Sources/Tests/Package files are not clean (untracked files included): no stamp"
 else
   print -r -- "commit $(git rev-parse HEAD)
 time $(date -u +%Y-%m-%dT%H:%M:%SZ)
-libhdf5 $MAC4DSTEM_HDF5_PATH" > .build/last-green
+libhdf5 $hdf5" > .build/last-green
   print -u2 "tools/test.sh: stamped .build/last-green at $(git rev-parse --short HEAD)"
 fi

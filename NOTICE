@@ -39,17 +39,9 @@ with eXSpy is not validation.
 The element table in Sources/SpectroEDX/Spectroscopy/Quant/QuantElementData.swift
 (atomic weights and densities) comes from eXSpy's elements data (GPL-3.0-or-later).
 
-The Velox EMD reader follows rosettasciio's (https://github.com/hyperspy/rosettasciio,
-commit 049e7d70, GPL-3.0-or-later) reading of the format and is compared with it.
-
-The DM4 EELS spectrum-image reader (DM4Experiment.readEELSSpectrumImage) takes E0, the convergence and the
-collection semi-angle from the tags rosettasciio's digitalmicrograph reader maps (rsciio/digitalmicrograph/_api.py,
-commit 049e7d70) and is compared with rosettasciio's reading of the same files (tools/eels-reader/truth.py).
-Tests/SpectroKitTests/Fixtures/rsciio-EELS_SI.dm4 is rosettasciio's public test file
-rsciio/tests/data/digitalmicrograph/3D/EELS_SI.dm4 (sha256 f9b8203f384cc355437594b649d4ea3a12cddeb231ebb65508a841a379fa171a,
-commit 049e7d70), copied byte for byte as a test fixture under rosettasciio's GPL-3.0-or-later; who recorded its
-data is not stated by rosettasciio. The two .truth.json files beside it are rosettasciio's readings of
-rsciio-EELS_SI.dm4 and of eels-planted.dm4 (written by tools/eels-reader/make_planted.py, no third-party data).
+The file readers (the Velox EMD reader, the DM4 reader with its EDS and EELS spectrum images, the HDF5 lock) moved
+to FormatoKit (https://github.com/mac4DSTEM/FormatoKit, GPL-3.0-or-later) at SpectroKit 0.4.0, with their notices,
+their rosettasciio comparison and their fixtures. SpectroKit depends on FormatoKit 0.0.2.
 
 Tests/SpectroEDXTests/Fixtures/public/ holds three of rosettasciio's public Velox test files, copied byte for byte under
 rosettasciio's GPL-3.0-or-later (commit 049e7d70, rsciio/tests/data/emd/, from fei_emd_files.zip, velox_emd_v11_elementSelection.zip
@@ -152,12 +144,12 @@ unclear by mac4DSTEM's v5.0 research and are carried here as a recorded risk.
 
 
 ================================================================================
-HDF5 (not distributed)
+HDF5 (through FormatoKit)
 ================================================================================
 
-The Velox reader calls HDF5 (https://www.hdfgroup.org/, copyright The HDF Group and
-the Board of Trustees of the University of Illinois, BSD-style license) through
-dlopen at run time. SpectroKit neither links nor ships libhdf5: the host application
-supplies it (mac4DSTEM embeds HDF5 2.1.1 with libaec/libsz in its bundle) and carries
-its notice. The license texts are kept in Licenses/ for hosts and for the library's
-own tests: Licenses/HDF5-LICENSE.txt, Licenses/libaec-LICENSE.txt.
+The Velox reader SpectroCore's spectrum-image opener calls is FormatoKit's FormatoEMD, which calls HDF5
+(https://www.hdfgroup.org/, copyright The HDF Group and the Board of Trustees of the University of Illinois,
+BSD-style license) through dlopen. Since SpectroKit 0.4.0 the libhdf5 a consumer gets is the one FormatoKit ships
+inside FormatoHDF5 (HDF5 2.1.1 with libaec and libsz), unless the host supplies its own first; FormatoKit's NOTICE
+carries those binaries' notice and checksums. SpectroKit itself neither links nor ships libhdf5. The license texts
+stay in Licenses/ for hosts: Licenses/HDF5-LICENSE.txt, Licenses/libaec-LICENSE.txt.

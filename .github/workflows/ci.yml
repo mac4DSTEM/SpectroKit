@@ -1,10 +1,11 @@
-# SpectroKit CI: the gate (tools/test.sh = `swift test -c release`) and the consumer check, on Homebrew's libhdf5.
+# SpectroKit CI: the gate (tools/test.sh = `swift test -c release`) and the consumer check.
 #
 # Written 2026-10-14; enabling it (Actions on the repository) is the owner's. The package needs macOS 27 and a Swift 6.2
 # toolchain (Package.swift: `.macOS("27.0")`, tools 6.2): the runner image must carry an Xcode with the macOS 27 SDK.
 # `macos-latest` is used, with the newest Xcode selected; if the image lags, pin `runs-on` to the first image that has it.
-# Without ../mac4DSTEM beside the checkout, tools/test.sh takes Homebrew's hdf5 (soname 320), as it does on any machine
-# without mac4DSTEM (S3 checked Homebrew 2.2.0: the 258 names and the golden byte-identical).
+# Since 0.4.0 the readers are FormatoKit's, a package dependency fetched from github.com/mac4DSTEM/FormatoKit, which ships
+# libhdf5 inside FormatoHDF5: no libhdf5 step. While FormatoKit is private, the runner cannot fetch it without a token: either
+# FormatoKit is public, or a read token (secret FORMATOKIT_TOKEN) is set and the "FormatoKit access" step below uses it.
 # Never `swift build --build-tests -c release` (fails on this toolchain's Swift Build backend); tools/test.sh is the gate.
 name: CI
 
@@ -29,16 +30,23 @@ jobs:
           xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
           sudo xcode-select -s "$xcode"
           swift --version
-      - name: Homebrew libhdf5
+      - name: FormatoKit access (only while it is private)
+        env:
+          FORMATOKIT_TOKEN: ${{ secrets.FORMATOKIT_TOKEN }}
         run: |
-          brew install hdf5
-          echo "MAC4DSTEM_HDF5_PATH=$(brew --prefix hdf5)/lib/libhdf5.dylib" >> "$GITHUB_ENV"
+          if [ -n "$FORMATOKIT_TOKEN" ]; then
+            git config --global url."https://x-access-token:${FORMATOKIT_TOKEN}@github.com/mac4DSTEM/FormatoKit".insteadOf "https://github.com/mac4DSTEM/FormatoKit"
+          fi
       - name: Hook proof (no sleep or poll loops)
         run: tools/hooks/test-no-sleep-poll.sh
       - name: Gate (tools/test.sh, release)
         run: tools/test.sh 2>&1 | tee test.log
       - name: No warnings
         run: |
-          if grep -q "warning:" test.log; then grep "warning:" test.log | head -20; exit 1; fi
+          # tools/test.sh already fails on any warning but the three FormatoKit's signed dylibs cause; this step is kept as
+          # a second look at the log.
+          if sed 's/warning:/\nwarning:/g' test.log | grep "warning:" | grep -v "not stripping binary because it is signed" | grep -q .; then
+            sed 's/warning:/\nwarning:/g' test.log | grep "warning:" | head -20; exit 1
+          fi
       - name: Consumer check with its negative controls
         run: tools/consumer-check/run.sh --controls
