@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """consumer-check negative controls (run through `run.sh --controls`; Python 3 standard library only).
 
-The consumer package (tools/consumer-check) compiles only while every symbol SpectroKit 0.2.0 made public is public.
+The consumer package (tools/consumer-check) compiles only while every symbol it uses (SpectroEELS, and SpectroCore's spectrum-image opening) is public.
 This proves it: for each such symbol, ONE declaration is reverted from `public` to `package` in a COPY of the repository
 (rsync into <root>/.build/consumer-check/mutants/<name>, never the working tree), the consumer is built against the
 copy (its Package.swift takes the dependency by path), and the build must FAIL with a compiler error that names that
@@ -11,10 +11,10 @@ symbol. A control is caught only when
   * the build exits non-zero, and the compiler's diagnostic is the expected one:
       "access": the consumer is refused, `error: '<member>' is inaccessible due to 'package' protection level`, and
                 the note beside it points at the edited declaration (`SpectroCore.<Owner>.<member>: note: ... declared here`),
-                so two declarations with one name (VeloxMetadata and VeloxDetectorInfo `exposureTimeSeconds`) are told apart;
-      "overload": the reverted declaration is one of two overloads (readImage(path:index:) / readImage(data:index:)), so
-                the compiler resolves the call to the public sibling and says so, naming the reverted labels:
-                `error: incorrect argument label in call (have 'path:index:', expected 'data:index:')`, at a call of readImage;
+                so two declarations with one name are told apart;
+      "overload": the reverted declaration is one of two overloads, so the compiler resolves the call to the public sibling and
+                says so, naming the reverted labels: `error: incorrect argument label in call (have 'a:b:', expected 'c:d:')`
+                (no control uses it since 0.4.0 moved the readers, which had the overloads, to FormatoKit);
       "type":   the library itself refuses the edit, because public members are typed with the now-package struct:
                 `error: ... cannot be declared public because ... uses a package type`, at a source line that names the type.
 
@@ -36,10 +36,11 @@ MUTANTS = os.path.join(ROOT, ".build", "consumer-check", "mutants")
 COPY = os.path.join(MUTANTS, NAME)
 LOGS = os.path.join(MUTANTS, "logs")
 CONSUMER = os.path.join(COPY, "tools", "consumer-check")
-DATA = "Sources/SpectroCore/Data/"
-DM4 = DATA + "DM4Experiment.swift"
-VELOX = DATA + "VeloxEMDReader.swift"
-HDF5 = DATA + "HDF5Types.swift"
+CORE = "Sources/SpectroCore/Spectroscopy/"
+OPENER = CORE + "SpectrumImageOpening.swift"
+SOURCE = CORE + "SpectrumImageSource.swift"
+AXIS = CORE + "EnergyAxis.swift"
+CANCEL = CORE + "SpectroCancellation.swift"
 EELS = "Sources/SpectroEELS/"
 LOWLOSS = EELS + "LowLossSpectrumImage.swift"
 THICKNESS = EELS + "EELSThickness.swift"
@@ -47,6 +48,7 @@ THICKNESSMAP = EELS + "ThicknessMap.swift"
 MFP = EELS + "MeanFreePath.swift"
 EDGE = EELS + "EdgeQuantification.swift"
 GOS = EELS + "GOSTable.swift"
+LIBRARY_WITNESS = "must be declared public because it matches a requirement in public protocol"
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
@@ -59,7 +61,7 @@ def access(symbol, rel, old, owner, member, note=None, module="SpectroCore"):
 
 def decl(symbol, rel, old, word):
     """A control on a whole type that the consumer names: the type becomes `package`. Caught by either diagnostic: the consumer is
-    refused (`error: cannot find '<Type>' in scope` or `'<Type>' is inaccessible due to 'package' protection level`), or, when a
+    refused (`error: cannot find '<Type>' in scope`, also `cannot find type`, or `'<Type>' is inaccessible due to 'package' protection level`), or, when a
     public signature of the library itself mentions the type, the library no longer compiles (`... cannot be declared public
     because ... uses a package type`, the code frame under it naming the type)."""
     return dict(kind="decl", symbol=symbol, rel=rel, old=old, word=word)
@@ -89,74 +91,52 @@ def struct(symbol, rel, old, word):
     return dict(kind="type", symbol=symbol, rel=rel, old=old, word=word)
 
 
-# Everything SpectroKit 0.2.0 made public (git diff 0.1.0..): the DM4 API macTEM reads, the six VeloxMetadata fields and
-# VeloxDetectorInfo's, and the barrier's bound. Each `old` occurs exactly once in its file (checked at run time).
+# What a consumer reads across the package boundary: SpectroCore's spectrum-image opening (0.4.0: through FormatoKit, whose
+# types are never named) and the whole SpectroEELS product. Each `old` occurs exactly once in its file (checked at run time).
 CONTROLS = [
-    # DM4Experiment (macTEM's ask 1)
-    overload("DM4Experiment.readImage(path:index:)", DM4, "public static func readImage(path: String, index: Int)",
-             "path:index:", "data:index:", "readImage"),
-    access("DM4Experiment.tagTree", DM4, "public static func tagTree(data: Data)", "DM4Experiment", "tagTree",
-           "tagTree(data:)"),
-    overload("DM4Experiment.readImage(data:index:)", DM4, "public static func readImage(data: Data, index: Int)",
-             "data:index:", "path:index:", "readImage"),
-    struct("DM4Image", DM4, "public nonisolated struct DM4Image: Sendable, Equatable {", "DM4Image"),
-    access("DM4Image.object", DM4, "public let object: DM4ImageObject\n    public let width: Int", "DM4Image", "object"),
-    access("DM4Image.width", DM4, "public let width: Int\n    public let height: Int", "DM4Image", "width"),
-    access("DM4Image.height", DM4, "public let height: Int", "DM4Image", "height"),
-    access("DM4Image.pixels", DM4, "public let pixels: [Float]", "DM4Image", "pixels"),
-    access("DM4Image.xAxis", DM4, "public let xAxis: DM4Axis?", "DM4Image", "xAxis"),
-    access("DM4Image.yAxis", DM4, "public let yAxis: DM4Axis?", "DM4Image", "yAxis"),
-    struct("DM4Axis", DM4, "public nonisolated struct DM4Axis: Sendable, Equatable {", "DM4Axis"),
-    access("DM4Axis.origin", DM4, "public let origin: Double", "DM4Axis", "origin"),
-    access("DM4Axis.scale", DM4, "public let scale: Double", "DM4Axis", "scale"),
-    access("DM4Axis.units", DM4, "public let units: String", "DM4Axis", "units"),
-    access("DM4ImageObject.name", DM4, "public let name: String", "DM4ImageObject", "name"),
-    access("DM4ImageObject.dimensions", DM4, "public let dimensions: [Int]", "DM4ImageObject", "dimensions"),
-    access("DM4ImageObject.axes", DM4, "public let axes: [DM4Axis?]", "DM4ImageObject", "axes"),
-    access("DM4ImageObject.metaDataFormat", DM4, "public let metaDataFormat: String?", "DM4ImageObject",
-           "metaDataFormat"),
-    access("DM4ImageObject.imageTagNumbers", DM4, "public let imageTagNumbers: [String: Double]", "DM4ImageObject",
-           "imageTagNumbers"),
-    access("DM4ImageObject.imageTagStrings", DM4, "public let imageTagStrings: [String: String]", "DM4ImageObject",
-           "imageTagStrings"),
-    # VeloxMetadata and VeloxDetectorInfo (macTEM's ask 2 and the owner's StemMagnification)
-    access("VeloxMetadata.nominalMagnification", VELOX, "public let nominalMagnification: Double?", "VeloxMetadata",
-           "nominalMagnification"),
-    access("VeloxMetadata.stemMagnification", VELOX, "public let stemMagnification: Double?", "VeloxMetadata",
-           "stemMagnification"),
-    access("VeloxMetadata.cameraLengthMeters", VELOX, "public let cameraLengthMeters: Double?", "VeloxMetadata",
-           "cameraLengthMeters"),
-    access("VeloxMetadata.operatingMode", VELOX, "public let operatingMode: String?", "VeloxMetadata", "operatingMode"),
-    access("VeloxMetadata.projectorMode", VELOX, "public let projectorMode: String?", "VeloxMetadata", "projectorMode"),
-    access("VeloxMetadata.exposureTimeSeconds", VELOX,
-           "public let exposureTimeSeconds: Double?\n\n    public var superXDetectors", "VeloxMetadata",
-           "exposureTimeSeconds"),
-    access("VeloxDetectorInfo.exposureTimeSeconds", VELOX,
-           "public let exposureTimeSeconds: Double?\n\n    public var azimuthDegrees", "VeloxDetectorInfo",
-           "exposureTimeSeconds"),
-    # EELS slice 1b: the DM4 EELS spectrum-image reader
-    overload("DM4Experiment.readEELSSpectrumImage(path:index:)", DM4,
-             "public static func readEELSSpectrumImage(path: String, index: Int)", "path:index:", "data:index:",
-             "readEELSSpectrumImage"),
-    overload("DM4Experiment.readEELSSpectrumImage(data:index:)", DM4,
-             "public static func readEELSSpectrumImage(data: Data, index: Int)", "data:index:", "path:index:",
-             "readEELSSpectrumImage"),
-    struct("DM4EELSSpectrumImage", DM4, "public nonisolated struct DM4EELSSpectrumImage: Sendable, Equatable {",
-           "DM4EELSSpectrumImage"),
-    access("DM4EELSSpectrumImage.object", DM4, "public let object: DM4ImageObject\n    /// `ImageData.Dimensions` entry 1",
-           "DM4EELSSpectrumImage", "object"),
-    access("DM4EELSSpectrumImage.nx", DM4, "public let nx: Int\n    /// `ImageData.Dimensions` entry 2", "DM4EELSSpectrumImage", "nx"),
-    access("DM4EELSSpectrumImage.ny", DM4, "public let ny: Int\n    /// `ImageData.Dimensions` entry 3", "DM4EELSSpectrumImage", "ny"),
-    access("DM4EELSSpectrumImage.channels", DM4, "public let channels: Int\n    /// Row-major `(y, x, channel)`",
-           "DM4EELSSpectrumImage", "channels"),
-    access("DM4EELSSpectrumImage.counts", DM4, "public let counts: [Float]", "DM4EELSSpectrumImage", "counts"),
-    access("DM4EELSSpectrumImage.energyAxis", DM4, "public let energyAxis: DM4Axis", "DM4EELSSpectrumImage", "energyAxis"),
-    access("DM4EELSSpectrumImage.beamEnergyKeV", DM4, "public let beamEnergyKeV: Double?", "DM4EELSSpectrumImage",
-           "beamEnergyKeV"),
-    access("DM4EELSSpectrumImage.convergenceSemiAngleMrad", DM4, "public let convergenceSemiAngleMrad: Double?",
-           "DM4EELSSpectrumImage", "convergenceSemiAngleMrad"),
-    access("DM4EELSSpectrumImage.collectionSemiAngleMrad", DM4, "public let collectionSemiAngleMrad: Double?",
-           "DM4EELSSpectrumImage", "collectionSemiAngleMrad"),
+    # SpectroCore's spectrum-image opening (since 0.4.0 through FormatoKit)
+    decl("SpectrumImageOpener", OPENER, "public nonisolated enum SpectrumImageOpener {", "SpectrumImageOpener"),
+    access("SpectrumImageOpener.kind", OPENER, "public static func kind(ofFileAt path: String)", "SpectrumImageOpener", "kind",
+           "kind(ofFileAt:)"),
+    access("SpectrumImageOpener.open", OPENER, "public static func open(path: String, kind: SpectrumFileKind,", "SpectrumImageOpener", "open",
+           "open(path:kind:cancelled:progress:)"),
+    access("SpectrumImageOpener.openGMSEDS", OPENER, "public static func openGMSEDS(path: String,", "SpectrumImageOpener", "openGMSEDS",
+           "openGMSEDS(path:cancelled:progress:)"),
+    decl("SpectrumFileKind", OPENER, "public nonisolated enum SpectrumFileKind: Equatable, Sendable {", "SpectrumFileKind"),
+    decl("SpectrumImageOpenError", OPENER, "public nonisolated enum SpectrumImageOpenError: LocalizedError, Equatable {", "SpectrumImageOpenError"),
+    decl("SpectroCancelled", CANCEL, "public typealias SpectroCancelled = FormatoCancelled", "SpectroCancelled"),
+    decl("LoadedSpectrumImage", SOURCE, "public nonisolated final class LoadedSpectrumImage: SpectrumImageSource {", "LoadedSpectrumImage"),
+    library("LoadedSpectrumImage.ny", SOURCE, "public var ny: Int { image.ny }",
+            LIBRARY_WITNESS, "SpectrumImageSource.swift"),
+    library("LoadedSpectrumImage.nx", SOURCE, "public var nx: Int { image.nx }",
+            LIBRARY_WITNESS, "SpectrumImageSource.swift"),
+    library("LoadedSpectrumImage.channels", SOURCE, "public var channels: Int { image.channels }",
+            LIBRARY_WITNESS, "SpectrumImageSource.swift"),
+    library("LoadedSpectrumImage.metadata", SOURCE, "public let metadata: SpectrumImageMetadata\n    public let energyAxis",
+            LIBRARY_WITNESS, "SpectrumImageSource.swift"),
+    library("LoadedSpectrumImage.energyAxis", SOURCE, "public let energyAxis: EnergyAxis",
+            LIBRARY_WITNESS, "SpectrumImageSource.swift"),
+    library("LoadedSpectrumImage.scanImage", SOURCE, "public let scanImage: [Float]?",
+            LIBRARY_WITNESS, "SpectrumImageSource.swift"),
+    decl("SpectrumImageMetadata", SOURCE, "public nonisolated struct SpectrumImageMetadata: Equatable, Sendable {", "SpectrumImageMetadata"),
+    access("SpectrumImageMetadata.scanWidth", SOURCE, "public var scanWidth: Int", "SpectrumImageMetadata", "scanWidth"),
+    access("SpectrumImageMetadata.scanHeight", SOURCE, "public var scanHeight: Int", "SpectrumImageMetadata", "scanHeight"),
+    access("SpectrumImageMetadata.channelCount", SOURCE, "public var channelCount: Int", "SpectrumImageMetadata", "channelCount"),
+    access("SpectrumImageMetadata.scanPixelSize", SOURCE, "public var scanPixelSize: Double?", "SpectrumImageMetadata", "scanPixelSize"),
+    access("SpectrumImageMetadata.scanPixelUnit", SOURCE, "public var scanPixelUnit: String?", "SpectrumImageMetadata", "scanPixelUnit"),
+    access("SpectrumImageMetadata.origin", SOURCE, "public var origin: SpectrumImageOrigin?", "SpectrumImageMetadata", "origin"),
+    access("SpectrumImageMetadata.frames", SOURCE, "public var frames: Int?", "SpectrumImageMetadata", "frames"),
+    access("SpectrumImageMetadata.detectors", SOURCE, "public var detectors: [SpectrumDetectorSegment] = []", "SpectrumImageMetadata", "detectors"),
+    access("SpectrumImageMetadata.beamEnergyKeV", SOURCE, "public var beamEnergyKeV: Double?", "SpectrumImageMetadata", "beamEnergyKeV"),
+    decl("SpectrumImageOrigin", SOURCE, "public nonisolated enum SpectrumImageOrigin: String, Equatable, Sendable {", "SpectrumImageOrigin"),
+    decl("SpectrumDetectorSegment", SOURCE, "public nonisolated struct SpectrumDetectorSegment: Equatable, Sendable {", "SpectrumDetectorSegment"),
+    access("SpectrumDetectorSegment.name", SOURCE, "public var name: String", "SpectrumDetectorSegment", "name"),
+    access("SpectrumDetectorSegment.solidAngle", SOURCE, "public var solidAngle: Double?", "SpectrumDetectorSegment", "solidAngle"),
+    decl("EnergyAxis", AXIS, "public nonisolated struct EnergyAxis: Equatable, Sendable {", "EnergyAxis"),
+    access("EnergyAxis.offset", AXIS, "public let offset: Double", "EnergyAxis", "offset"),
+    access("EnergyAxis.scale", AXIS, "public let scale: Double", "EnergyAxis", "scale"),
+    access("EnergyAxis.size", AXIS, "public let size: Int", "EnergyAxis", "size"),
+    access("EnergyAxis.energy(ofChannel:)", AXIS, "public func energy(ofChannel i: Int)", "EnergyAxis", "energy", "energy(ofChannel:)"),
     # SpectroEELS (EELS slice 1): the thickness map
     decl("EELSThickness", THICKNESS, "public nonisolated enum EELSThickness {", "EELSThickness"),
     access("EELSThickness.methodName", THICKNESS, "public static let methodName", "EELSThickness", "methodName", module="SpectroEELS"),
@@ -285,9 +265,6 @@ CONTROLS = [
     access('CoreLossEdge.bundled', GOS, 'public static let bundled', 'CoreLossEdge', 'bundled', module="SpectroEELS"),
     library("CoreLossEdge.description", GOS, "public var description: String",
             "property 'description' must be declared public because it matches a requirement in public protocol 'CustomStringConvertible'", "GOSTable.swift"),
-    # The bounded quit barrier (macTEM's ask 3)
-    access("HDF5Serial.exitBarrierBound", HDF5, "public static var exitBarrierBound: TimeInterval {", "HDF5Serial",
-           "exitBarrierBound"),
 ]
 
 
@@ -344,7 +321,7 @@ def judge(control, status, text):
     if control["kind"] == "decl":
         word = control["word"]
         refused = re.search(rf"^(\S+\.swift:\d+:\d+): error: ('{re.escape(word)}' is inaccessible due to 'package' protection level"
-                            rf"|cannot find '{re.escape(word)}' in scope)$", text, re.M)
+                            rf"|cannot find (?:type )?'{re.escape(word)}' in scope)$", text, re.M)
         if refused:
             return True, short(refused.group(0)), None
         # else the library's own public signature mentions the type: the code frame under the error names it

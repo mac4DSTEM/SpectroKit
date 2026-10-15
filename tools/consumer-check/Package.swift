@@ -1,7 +1,8 @@
 // swift-tools-version: 6.2
-// SpectroKit consumer check: a SEPARATE package that depends on SpectroKit by path and touches every symbol macTEM reads
-// across the package boundary (macTEM's asks of 2026-10-13/14, SpectroKit 0.2.0). `package` access does not cross a package
-// boundary, so this compiles only if each of those symbols is `public`. See README.md.
+// SpectroKit consumer check: a SEPARATE package that depends on SpectroKit by path and touches the symbols a consumer reads
+// across the package boundary (SpectroEELS, and SpectroCore's spectrum-image opening). `package` access does not cross a
+// package boundary, so this compiles only if each of those symbols is `public`. FormatoKit (the file readers, 0.4.0) is
+// resolved through SpectroKit only; no FormatoKit product is named here. See README.md.
 import Foundation
 import PackageDescription
 
