@@ -4,7 +4,7 @@ Updated 2026-10-15, at the 0.5.0 closeout. The source of truth for the state of 
 
 ## Version and modules
 
-**0.5.0**, ready for the owner's tag (0.4.0 is the last tag). Swift 6.2 tools, macOS 27 floor (lowered at 0.5.1, below).
+**0.5.1**, ready for the owner's tag (0.5.0 is the last tag). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `exact: "0.2.1"`.
 
 | Module | What it does |
 |---|---|
@@ -12,7 +12,7 @@ Updated 2026-10-15, at the 0.5.0 closeout. The source of truth for the state of 
 | `SpectroEDX` | X-ray quantification: the line table, windows, the EDS model and fit, the element proposer, Cliff-Lorimer with computed k-factors, the absorption correction, export, the six EPQ / FFAST / Krause tables. |
 | `SpectroEELS` | The t/lambda thickness by the log-ratio method; the C K areal density by the ratio method with the dft GOS tables. |
 
-The file readers are FormatoKit's (a dependency pinned `exact: "0.0.3"`). 0.5.0 makes the suite's policies public parameters,
+The file readers are FormatoKit's (a dependency pinned `exact: "0.2.1"` since 0.5.1; 0.0.3 before). 0.5.0 makes the suite's policies public parameters,
 each default 0.4.0's value (`docs/generality-0.5.0-registration.md`).
 
 ## The gate at 0.5.0
@@ -53,11 +53,15 @@ is validated until it recovers a planted value and a sample of known composition
 
 **Planned**
 - EELS slice 3 (not started; `docs/parity.md` lists what a full EELS model would need).
-- **0.5.1: the macOS 15 floor.** 0.5.0 stays at macOS 27 because FormatoKit's bundled libhdf5 dylibs are built for macOS 26.
-  FormatoKit 0.2.1 rebuilds them for 15 and declares `.macOS(.v15)`, `.iOS(.v18)`; SpectroKit 0.5.1 re-pins to it and lowers
-  its floor. SpectroKit needs no source change at 15 (measured: release build and 302 tests green against a 15 floor, no
-  availability branch; iOS 18 simulator builds of the three modules). The FormatoKit 0.1.x Velox dtype / title change comes in
-  with that re-pin and is registered there.
+- Nothing planned for 0.5.2 yet; the API gaps below and the owner's EDX Q1-Q5 come next.
+
+**0.5.1 (2026-10-15, ready for the owner's tag): the macOS 15 / iOS 18 floor.** FormatoKit `exact: "0.2.1"`; no source change
+in `Sources/`. Proof: the gate (tools/test.sh) green (337 names, 2 known issues, 0 warnings), consumer-check green with 151 of
+151 controls, the owner's EDX SI default path byte-identical to 0.5.0 (14 043 dump lines: open, summed spectrum, proposer,
+pooled quantification), iOS 18 simulator builds of SpectroCore, SpectroEDX and SpectroEELS. CI: a `test-macos15` job (Xcode
+26.0); the consumer-check silent exit fixed. `Test.cancel` removed from three tests (missing in Xcode 26.0). `CHANGELOG.md`.
+Three EDX tests (E1 axis rule, C1 loop, C1 four-detector file) read RosettaSciIO's public Velox files from `References/` and return without
+checking when it is absent (CI has none): they pass vacuously there; the gate on this Mac checks them.
 
 **API gaps found by the README lane** (each is a fix that needs its own registration)
 - `SpectrumDetectorSegment.init` is `package`.

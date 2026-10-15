@@ -91,7 +91,7 @@ enum EDXFixtures {
     /// Small public files are copied into Fixtures/public (NOTICE); the others are read from the gitignored
     /// References/rosettasciio checkout (zip member, extracted once per process) and the test is skipped when it is absent:
     /// `FixtureAbsent` (XCTSkip before the Swift Testing migration) is caught by the loops that go on, and turned into
-    /// `Test.cancel` (the skip) by `publicVeloxOrCancel` where the test needs the one file.
+    /// a printed note and an early return by `publicVeloxIfPresent` where the test needs the one file.
     static func publicVelox(label: String) throws -> String {
         let parts = label.split(separator: "/", maxSplits: 1).map(String.init)
         let member = parts[1]
@@ -120,9 +120,10 @@ enum EDXFixtures {
     }
     private static let extractLock = NSMutex()
 
-    /// `publicVelox`, cancelling (skipping) the test when the file is absent, as XCTSkip did.
-    static func publicVeloxOrCancel(label: String) throws -> String {
-        do { return try publicVelox(label: label) } catch let absent as FixtureAbsent { try Test.cancel(Comment(rawValue: absent.reason)) }
+    /// `publicVelox`, or nil (a note printed) when the file is absent: the test returns without checking. `Test.cancel` (a real
+    /// skip) is missing from Xcode 26.0's Swift Testing, the toolchain of the macOS 15 CI job.
+    static func publicVeloxIfPresent(label: String) throws -> String? {
+        do { return try publicVelox(label: label) } catch let absent as FixtureAbsent { print("skipped, nothing checked: \(absent.reason)"); return nil }
     }
 }
 

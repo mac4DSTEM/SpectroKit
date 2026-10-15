@@ -1,11 +1,9 @@
 # SpectroKit CI: the gate (tools/test.sh = `swift test -c release`) and the consumer check.
 #
-# Written 2026-10-14; enabling it (Actions on the repository) is the owner's. The package needs macOS 27 and a Swift 6.2
-# toolchain (Package.swift: `.macOS("27.0")`, tools 6.2): the runner image must carry an Xcode with the macOS 27 SDK.
-# Pinned (0.5.0): the `macos-26` image (the run of 2026-10-15 used it: Swift 6.3.3), with its newest Xcode, printed by the
-# job. The floor stays macOS 27 in 0.5.0; when 0.5.1 lowers it to macOS 15 (after FormatoKit 0.2.1's dylibs built for 15),
-# the `test-macos15` job below is enabled, with its Xcode pinned the same way (a macos-15 image's default Xcode may carry a
-# Swift older than the manifests' tools-version 6.2).
+# Written 2026-10-14; enabling it (Actions on the repository) is the owner's. The package declares macOS 15 / iOS 18 and a
+# Swift 6.2 toolchain (Package.swift: `.macOS(.v15)`, tools 6.2).
+# Two jobs (0.5.1): `test` on the `macos-26` image (Swift 6.3.3, newest Xcode, printed by the job) and `test-macos15` on macos-15
+# with Xcode 26.0, the floor the package now declares (macOS 15, iOS 18; FormatoKit 0.2.1's dylibs are built for 15).
 # Since 0.4.0 the readers are FormatoKit's, a package dependency fetched from github.com/mac4DSTEM/FormatoKit, which ships
 # libhdf5 inside FormatoHDF5: no libhdf5 step. FormatoKit is public (2026-10-15), so the runner fetches it with no token.
 # Never `swift build --build-tests -c release` (fails on this toolchain's Swift Build backend); tools/test.sh is the gate.
@@ -46,10 +44,17 @@ jobs:
           fi
       - name: Consumer check with its negative controls
         run: tools/consumer-check/run.sh --controls
-  # 0.5.1 (macOS 15 floor): enable, with the Xcode whose Swift is >= 6.2 on that image.
-  # test-macos15:
-  #   runs-on: macos-15
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - run: sudo xcode-select -s /Applications/Xcode_<version>.app && swift --version
-  #     - run: tools/test.sh
+  # 0.5.1: the macOS 15 floor. Xcode 26.0 (Swift 6.2) pinned the way FormatoKit's CI pins it; a macos-15 image's default Xcode may
+  # carry an older Swift than the manifests' tools-version 6.2. No Test.cancel anywhere (missing on this toolchain).
+  test-macos15:
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 26.0 (Swift 6.2)
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.0.app
+          swift --version
+          swift --version | grep -E "Swift version 6\.([2-9]|[1-9][0-9])" || { echo "Swift 6.2 or newer needed"; exit 1; }
+      - name: Gate (tools/test.sh, release)
+        run: tools/test.sh

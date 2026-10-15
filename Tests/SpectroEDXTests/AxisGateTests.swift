@@ -68,7 +68,7 @@ struct AxisGateTests {
             #expect(image.energyAxis.scale.bitPattern == expected[0].cal.dispersionKeV.bitPattern, "\(label): opener")
             checked += 1
         }
-        if checked == 0 { try Test.cancel("no public Velox file available") }
+        if checked == 0 { print("EDX E1: no public Velox file available (References absent): nothing checked"); return }
         gateNote("EDX E1: \(checked) public files, every stream's axis equal to rsciio's rule bit for bit")
     }
 

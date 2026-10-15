@@ -1,13 +1,13 @@
 {
-  "originHash" : "f27b4390083b94b39345041716727c6a7488c3bb32c6e4d19b44d7d4b06284a2",
+  "originHash" : "83c9bc81d4132697f71a85735f4be1dbee8a3e3eedb976fa58f9f1aa0f63d552",
   "pins" : [
     {
       "identity" : "formatokit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/mac4DSTEM/FormatoKit",
       "state" : {
-        "revision" : "8d647bdce245cff459d23eff418f87a4a4dc89bf",
-        "version" : "0.0.3"
+        "revision" : "327885bf29fd552c1ca835b898a04b0a5c7e264a",
+        "version" : "0.2.1"
       }
     }
   ],

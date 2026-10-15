@@ -93,13 +93,13 @@ struct CountsGateTests {
             checked += 1
         }
         if !skipped.isEmpty { print("EDX C1: \(checked) public files checked, \(skipped.count) skipped (References absent): \(skipped)") }
-        if checked == 0 { try Test.cancel("no public Velox file available (References/rosettasciio absent)") }
+        if checked == 0 { print("EDX C1: no public Velox file available (References/rosettasciio absent): nothing checked") }
     }
 
     /// The published constants on the 4-detector file, per stream and in all, from the decode itself.
     @Test func testC1FourDetectorFileMatchesTheTestConstantsOfRosettaSciIO() throws {
         let label = "fei_emd_files.zip/fei_SI_EDS-HAADF-4detectors_2frames.emd"
-        let path = try EDXFixtures.publicVeloxOrCancel(label: label)
+        guard let path = try EDXFixtures.publicVeloxIfPresent(label: label) else { return }
         let image = try open(path)
         #expect(image.sum(mask: nil).reduce(0, +) == 3_562_739)
         // The reader reports the streams in name order; rsciio's test names the totals in its own order.

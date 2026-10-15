@@ -14,7 +14,7 @@ let spectroKit = URL(fileURLWithPath: Context.packageDirectory).deletingLastPath
 
 let package = Package(
     name: "ReadmeConsumer",
-    platforms: [.macOS("27.0")],
+    platforms: [.macOS(.v15)],
     dependencies: [
         .package(path: "../../.."),
     ],

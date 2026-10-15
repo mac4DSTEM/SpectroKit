@@ -23,7 +23,7 @@ output in the tests. Agreement with exSpy is not the same as being right: see [V
 
 ## Installation
 
-Requirements: macOS 27 (Apple silicon) and Swift 6.2 tools. In your `Package.swift`:
+Requirements: macOS 15 (Apple silicon) and Swift 6.2 tools. In your `Package.swift`:
 
 ```swift
 // swift-tools-version: 6.2
@@ -31,9 +31,9 @@ import PackageDescription
 
 let package = Package(
     name: "MyTool",
-    platforms: [.macOS("27.0")],
+    platforms: [.macOS(.v15)],
     dependencies: [
-        .package(url: "https://github.com/mac4DSTEM/SpectroKit", from: "0.5.0"),
+        .package(url: "https://github.com/mac4DSTEM/SpectroKit", from: "0.5.1"),
     ],
     targets: [
         .executableTarget(name: "MyTool", dependencies: [

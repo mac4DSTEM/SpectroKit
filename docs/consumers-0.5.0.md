@@ -1,5 +1,7 @@
 # SpectroKit 0.5.0: what the consumers change
 
+> Update: the macOS 15 floor and the FormatoKit 0.2.1 pin described below as pending shipped in 0.5.1 (`CHANGELOG.md`).
+
 Written 2026-10-15 by SpectroKit's 0.5.0 session, for mac4DSTEM's and macTEM's sessions. Both apps are on **0.4.0** (this
 file is the record, so the apps are named). Nothing here was done in their repositories.
 

@@ -4,26 +4,17 @@ SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS a
 mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. Modules: `SpectroCore` (spectrum image and its opening, `EnergyAxis`, statistics,
 least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantification, the six tables), `SpectroEELS`
 (thickness t/λ, the C K areal density). Since 0.4.0 the file readers are FormatoKit's (`FormatoDM`, `FormatoEMD`,
-`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.0.3"`. The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `../_archive/SpectroKit/docs/history.md`.
+`FormatoHDF5`; `../FormatoKit`), a package dependency pinned `exact: "0.2.1"` (0.5.1; 0.0.3 before). The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `../_archive/SpectroKit/docs/history.md`.
 
 ## State (2026-10-15)
 
-- 0.1.0, 0.2.0 (`edb6ba8`), 0.3.0 (`6ab9ec2`) and 0.4.0 tagged and pushed (0.4.0: the readers are FormatoKit 0.0.3's; the
+- 0.1.0, 0.2.0 (`edb6ba8`), 0.3.0 (`6ab9ec2`) and 0.4.0 tagged and pushed (0.4.0: the readers are FormatoKit's; the
   302 staying tests are Swift Testing).
-- **0.5.0 is ready for the owner's tag** (2026-10-15; the commit is named on the board row). Source-compatible with 0.4.0:
-  - The generality pass: the suite's policies are public parameters, each default 0.4.0's value, the default path bit for bit
-    (`docs/generality-0.5.0-registration.md`): `WindowRules`, `QuantificationPolicy` (`FitPolicy`, `AbundancePolicy`),
-    `ProposerPolicy`, `UnlistedLineRules`, `SmoothingKernel`, the EELS default window offsets, and the package members made
-    public; a non-default policy is named in the footer. The one behaviour change: `SpectroscopyExport.csv`'s default title is
-    the neutral "Spectroscopy quantification" (13 golden CSV-hash lines re-recorded on purpose).
-  - A stand-alone README and `Examples/QuantifyEDX` (built and drift-checked by `tools/consumer-check`), a DocC catalogue per
-    module, `docs/parity.md`, no app or suite name in sources, CI pinned to the macos-26 image.
-  - Gate: 337 test names (302 + 35), 2 known issues (E3), 0 warnings; consumer-check 189 checks + the README consumer, 151
-    controls; 61 of 61 mutants caught. What an app changes: `docs/consumers-0.5.0.md` (nothing required).
-  - **The floor chain.** 0.5.0 stays at macOS 27: FormatoKit's bundled libhdf5 dylibs are built for macOS 26, so FormatoKit
-    cannot declare 15. FormatoKit 0.2.1 rebuilds them for 15 (`.macOS(.v15)`, `.iOS(.v18)`); then SpectroKit **0.5.1** re-pins to
-    it and lowers its floor (no source change needed: measured at a 15 floor). The FormatoKit 0.1.x Velox dtype / title change
-    is a registered re-pin at 0.5.1.
+- 0.5.0 (`c953e64`) tagged and pushed (the generality pass: the suite's policies are public parameters, defaults 0.4.0's;
+  `docs/consumers-0.5.0.md`).
+- **0.5.1 is ready for the owner's tag** (2026-10-15; the commit is named on the board row): macOS 15 / iOS 18 floor, FormatoKit
+  `exact: "0.2.1"`, a `test-macos15` CI job (Xcode 26.0; no `Test.cancel`), the consumer-check fix; no number moves (the owner's
+  EDX SI default path byte-identical to 0.5.0). `CHANGELOG.md`.
 - Status, the gate's counts and the open items (EDX Q1-Q5 and the Mg fix, EELS slice 3, the README lane's API gaps, the
   parity lane's claims-versus-tests notes): `docs/status.md`.
 - Earlier on `main`: EELS slice 2 (C K by the ratio method, refuted and fixed), the real-data check of the owner's EELS scans
