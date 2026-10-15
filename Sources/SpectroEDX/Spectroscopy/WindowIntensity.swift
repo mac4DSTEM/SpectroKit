@@ -253,14 +253,15 @@ nonisolated extension WindowIntensity {
     /// neighbouring lines, so Mg's right background window can end up on Si Kα's low flank, biasing
     /// Mg low when Si is strong (and Al/Si are corrected by windows straddling two peaks).
     package static func conflicts(
-        lines: [SpectralLine], background: [[Double]], candidates: [SpectralLine], integrationWidth: Double = 2.0
+        lines: [SpectralLine], background: [[Double]], candidates: [SpectralLine], integrationWidth: Double = 2.0,
+        flankFWHM: Double = 2
     ) -> [[WindowConflict]] {
         lines.indices.map { i in
             var out: [WindowConflict] = []
             let bw = background[i]
             for (side, lo, hi) in [(WindowConflict.Side.left, bw[0], bw[1]), (.right, bw[2], bw[3])] {
                 for c in candidates where c.id != lines[i].id {
-                    let flank = max(2 * c.fwhm, integrationWidth * c.fwhm / 2)
+                    let flank = max(flankFWHM * c.fwhm, integrationWidth * c.fwhm / 2)
                     let a = max(lo, c.energy - flank), b = min(hi, c.energy + flank)
                     guard a <= b else { continue }
                     let half = integrationWidth * c.fwhm / 2

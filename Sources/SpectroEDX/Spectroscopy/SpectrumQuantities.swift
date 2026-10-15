@@ -154,18 +154,19 @@ public nonisolated enum ElementWindows {
     /// near it; it sets the window widths through eXSpy's width law and nothing else.
     public static let defaultResolutionMnKaEV = 130.0
 
-    /// The family Velox quantifies an element with by default: K while the element's Kα is at most `veloxKFamilyLimitKeV`,
-    /// otherwise L (M only when the table has no L alpha; the person may still pick M).
+    /// The family an element is quantified with by default: K while the element's Kα is at most `WindowRules.kFamilyLimitKeV`
+    /// (20 keV by default), otherwise L (M only when the table has no L alpha; the person may still pick M).
     ///
     /// DEVIATION from eXSpy (`_get_lines_from_elements`, `XRayLines.defaultLines`: "the first alpha line below the beam energy / 2"):
-    /// at 200 kV on an 80 keV axis that picks Kα for Hf (55.8 keV) where Velox uses Lα. Velox's own table (the owner's
-    /// SI 1339 file, 200 kV, `docs/archive/v5/velox-family-table-200kV-2026-10-07.json`) gives K for Z <= 44 (Ru Kα 19.28 keV)
-    /// and L for Z >= 45 (Rh Kα 20.22 keV), never M; the 20 keV limit is the boundary that table shows, measured on 200 kV
-    /// files only. It changes which line a map or marker uses by default, never the fit, which takes whole families.
-    package static let veloxKFamilyLimitKeV = 20.0
+    /// at 200 kV on an 80 keV axis that picks Kα for Hf (55.8 keV) where the instrument vendor's software uses Lα. That software's
+    /// own table (one instrument's 200 kV file, `docs/archive/v5/velox-family-table-200kV-2026-10-07.json`) gives K for Z <= 44
+    /// (Ru Kα 19.28 keV) and L for Z >= 45 (Rh Kα 20.22 keV), never M; the 20 keV limit is the boundary that table shows, measured
+    /// on 200 kV files only. It changes which line a map or marker uses by default, never the fit, which takes whole families.
+    public static func defaultFamily(of symbol: String) -> XRayFamily { defaultFamily(of: symbol, rules: .default) }
 
-    public static func defaultFamily(of symbol: String) -> XRayFamily {
-        if let ka = XRayLines.line("\(symbol)_Ka"), ka.energy <= veloxKFamilyLimitKeV { return .K }
+    /// `defaultFamily(of:)` with the rules' K-family limit.
+    public static func defaultFamily(of symbol: String, rules: WindowRules) -> XRayFamily {
+        if let ka = XRayLines.line("\(symbol)_Ka"), ka.energy <= rules.kFamilyLimitKeV { return .K }
         if XRayLines.line("\(symbol)_La") != nil { return .L }
         if XRayLines.line("\(symbol)_Ma") != nil { return .M }
         return .K
@@ -175,9 +176,10 @@ public nonisolated enum ElementWindows {
     /// that family's alpha line; either only when it lies inside the axis (and below the beam energy). When the default
     /// family's alpha does not (a 10 keV axis for Ru), eXSpy's pick (`defaultLines`) stands in, so an element that has a line
     /// on the axis keeps one.
-    package static func lineID(of symbol: String, family: XRayFamily?, axis: EnergyAxis, beamEnergyKeV: Double?) -> String? {
+    package static func lineID(of symbol: String, family: XRayFamily?, axis: EnergyAxis, beamEnergyKeV: Double?,
+                               rules: WindowRules = .default) -> String? {
         guard !XRayLines.notRealLines.contains(symbol) else { return nil }   // H and He "Ka" are ionisation energies (`XRayLines.notRealLines`)
-        let id = "\(symbol)_\((family ?? defaultFamily(of: symbol)).rawValue)a"
+        let id = "\(symbol)_\((family ?? defaultFamily(of: symbol, rules: rules)).rawValue)a"
         if let hit = XRayLines.linesInRange([id], axis: axis, beamEnergy: beamEnergyKeV).first { return hit }
         return family == nil ? XRayLines.defaultLines(elements: [symbol], axis: axis, beamEnergy: beamEnergyKeV).first : nil
     }
@@ -197,10 +199,10 @@ public nonisolated enum ElementWindows {
     /// table line of the same elements that a background window then lies on (REPORT only, the counts are eXSpy's).
     package static func build(
         elements: [(symbol: String, family: XRayFamily?)], axis: EnergyAxis,
-        resolutionMnKaEV: Double = defaultResolutionMnKaEV, beamEnergyKeV: Double?
+        resolutionMnKaEV: Double = defaultResolutionMnKaEV, beamEnergyKeV: Double?, rules: WindowRules = .default
     ) -> [LineWindow] {
         build(picks: elements.map { Pick(symbol: $0.symbol, family: $0.family) }, axis: axis,
-              resolutionMnKaEV: resolutionMnKaEV, beamEnergyKeV: beamEnergyKeV)
+              resolutionMnKaEV: resolutionMnKaEV, beamEnergyKeV: beamEnergyKeV, rules: rules)
     }
 
     /// As `build(elements:)`, with the lines the person checked: one window per checked line that lies on the axis, in energy
@@ -209,15 +211,18 @@ public nonisolated enum ElementWindows {
     /// element closer than a window (Al Kα 1.487 and Kβ 1.557 keV) would overlap; the later window's signal is clipped to start
     /// where the earlier one ends and its background scale shrinks with it (`clipOverlaps`), so a summed map counts every
     /// channel once — the sum of the clipped nets is the net over the union of the signal channels.
+    ///
+    /// `rules` (default `WindowRules.default`) sets the integration and background window widths, the default family, the clipping
+    /// and what the conflict report considers; a non-default rule is the caller's choice and changes the counts.
     public static func build(
         picks: [Pick], axis: EnergyAxis,
-        resolutionMnKaEV: Double = defaultResolutionMnKaEV, beamEnergyKeV: Double?
+        resolutionMnKaEV: Double = defaultResolutionMnKaEV, beamEnergyKeV: Double?, rules: WindowRules = .default
     ) -> [LineWindow] {
         struct Entry { let symbol: String; let line: SpectralLine? }
         let entries: [Entry] = picks.flatMap { p -> [Entry] in
             var ids: [String] = []
             if p.lines.isEmpty {
-                ids = lineID(of: p.symbol, family: p.family, axis: axis, beamEnergyKeV: beamEnergyKeV).map { [$0] } ?? []
+                ids = lineID(of: p.symbol, family: p.family, axis: axis, beamEnergyKeV: beamEnergyKeV, rules: rules).map { [$0] } ?? []
             } else {
                 let inRange = XRayLines.linesInRange(p.lines, axis: axis, beamEnergy: beamEnergyKeV)
                 ids = inRange.sorted { (XRayLines.line($0)?.energy ?? 0, $0) < (XRayLines.line($1)?.energy ?? 0, $1) }
@@ -226,11 +231,14 @@ public nonisolated enum ElementWindows {
             return lines.isEmpty ? [Entry(symbol: p.symbol, line: nil)] : lines.map { Entry(symbol: p.symbol, line: $0) }
         }
         let lines = entries.compactMap(\.line)
-        let integration = WindowIntensity.integrationWindows(lines: lines)
-        let background = BackgroundWindows.estimate(lines: lines)
+        let integration = WindowIntensity.integrationWindows(lines: lines, windowsWidth: rules.integrationWindowsWidth)
+        let background = BackgroundWindows.estimate(lines: lines, lineWidth: rules.backgroundLineWidth,
+                                                    windowsWidth: rules.backgroundWindowsWidth)
         let candidates = WindowIntensity.candidateLines(
-            elements: picks.map(\.symbol).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }, resolutionMnKaEV: resolutionMnKaEV, axis: axis)
-        let conflicts = WindowIntensity.conflicts(lines: lines, background: background, candidates: candidates)
+            elements: picks.map(\.symbol).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }, resolutionMnKaEV: resolutionMnKaEV, axis: axis,
+            minWeight: rules.conflictMinimumWeight)
+        let conflicts = WindowIntensity.conflicts(lines: lines, background: background, candidates: candidates,
+                                                  integrationWidth: rules.integrationWindowsWidth, flankFWHM: rules.conflictFlankFWHM)
         var out: [LineWindow] = []
         var next = 0
         for pick in entries {
@@ -249,7 +257,7 @@ public nonisolated enum ElementWindows {
                                       failure: "A window of \(line.id) lies outside the energy axis", conflicts: conflicts[next]))
             }
         }
-        return clipOverlaps(out)
+        return rules.clipOverlappingWindows ? clipOverlaps(out) : out
     }
 
     /// Where two windows of ONE element overlap in signal channels, the later (higher-energy) one starts where the earlier

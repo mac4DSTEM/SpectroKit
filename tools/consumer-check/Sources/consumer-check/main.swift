@@ -24,4 +24,5 @@ var report = Report()
 report.section("SpectroCore through FormatoKit") { try spectroCoreOpeningChecks(&$0, fixtures) }
 report.section("SpectroEELS thickness map") { try spectroEELSChecks(&$0, eelsFixtures) }
 report.section("SpectroEELS areal density (slice 2)") { try edgeQuantificationChecks(&$0, eelsFixtures) }
+report.section("SpectroEDX windows (WindowRules)") { windowRulesChecks(&$0) }
 exit(report.finish())

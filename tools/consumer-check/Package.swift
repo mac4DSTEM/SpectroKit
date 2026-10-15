@@ -21,6 +21,7 @@ let package = Package(
         .executableTarget(name: "consumer-check", dependencies: [
             .product(name: "SpectroCore", package: spectroKit),
             .product(name: "SpectroEELS", package: spectroKit),
+            .product(name: "SpectroEDX", package: spectroKit),
         ]),
     ],
     swiftLanguageModes: [.v6]
