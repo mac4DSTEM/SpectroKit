@@ -569,7 +569,12 @@ struct SpectroscopyFitTests {
         let alCol = EDSLineModel.column(of: model.groups.first { $0.id == "Al_Ka" }!.lines, energies: energies, scale: axis.scale)
         let mgCol = EDSLineModel.column(of: model.groups.first { $0.id == "Mg_Ka" }!.lines, energies: energies, scale: axis.scale)
         // Planted: Al 200 000, Mg 8 000, tail f * Al, a flat-ish continuum.
-        var e = (0..<axis.size).map { 200_000 * alCol[$0] + 8_000 * mgCol[$0] + 200_000 * f * tail[$0] }
+        var e = (0..<axis.size).map { (i: Int) -> Double in
+            let al: Double = 200_000 * alCol[i]
+            let mg: Double = 8_000 * mgCol[i]
+            let tl: Double = 200_000 * f * tail[i]
+            return al + mg + tl
+        }
         let bg = energies.map { $0 >= 0.2 ? 60.0 : 0 }
         for i in e.indices { e[i] += bg[i] }
         let counts = Self.poissonSpectrum(e, seed: 21)

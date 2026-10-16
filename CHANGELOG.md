@@ -24,6 +24,7 @@ SpectroKit follows semantic versions (0.x). Each release says what changed, and 
 - **CI: the macos-15 job failed with a type-check timeout.** `QuantificationPolicyTests.swift` had one `#expect` whose
   expression (two closures in a comparison) the Xcode 26.0 compiler could not type-check in reasonable time. The sums and the
   slack are now typed `let`s; the assertion and its tolerance are unchanged. Test code only; no library number moves.
+  The planted-spectrum closure in `SpectroscopyFitTests.swift` (the tail-shape test) likewise has an explicit `(i: Int) -> Double` signature and typed lets; same arithmetic, same order, same values.
 
 ## 0.5.1 — macOS 15 / iOS 18 floor
 
