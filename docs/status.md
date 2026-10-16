@@ -4,7 +4,7 @@ Updated 2026-10-16 for the 0.5.3 release; the 0.5.0 gate below is historical. Th
 
 ## Version and modules
 
-**0.5.3**, ready for the owner's tag (0.5.0 is the last tag; 0.5.1 and 0.5.2 are superseded by it). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `exact: "0.2.1"`.
+**0.5.3**, ready for the owner's tag (0.5.2 is the last tag, with red CI; 0.5.3 supersedes it). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `exact: "0.2.1"`.
 
 | Module | What it does |
 |---|---|
