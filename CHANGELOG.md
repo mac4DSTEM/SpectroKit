@@ -2,6 +2,19 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.5.4 (2026-10-16) — CI fix
+
+0.5.3 was tagged with red CI. The Golden and unit tests passed on both jobs; the failure was the consumer check's negative
+controls on the newest-Xcode job (Swift 6.3.3): 96 of the 151 access controls reported "no note ... declared here". The
+controls require the compiler's note beside `error: '<member>' is inaccessible due to 'package' protection level`, and
+looked for Swift 6.4's module-qualified form (`SpectroCore.<Owner>.<member>:2:13: note:`) only; Swift 6.3 names the edited
+file by path. No library or test number moves.
+
+- **Consumer-check controls.** `controls.py` accepts a path-form note (Swift 6.3's format, unverified until the next CI run) as well as
+  the module-qualified one (a path ending in the edited file), still requiring the member's own name in the note and the edited file; a note in another file is refused. On a miss it prints up to 5 compiler note lines naming the member.
+  `test_judge.py` pins the three cases and runs before the controls in `run.sh --controls`.
+- **Migration.** None. Re-pin to 0.5.4 in place of 0.5.3, which was tagged with red CI.
+
 ## 0.5.3 (2026-10-16) — CI fixes
 
 0.5.2 was tagged at 9de71e9 with red CI: both jobs (macos-15 and the newest Xcode) failed in

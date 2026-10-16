@@ -174,4 +174,5 @@ cd $here
 # 4. Negative controls. The repository is never edited: controls.py works in an rsync'd copy under .build.
 PY=${CONSUMER_CHECK_PYTHON:-python3}
 command -v $PY >/dev/null || die "no $PY for --controls (set CONSUMER_CHECK_PYTHON)"
+$PY -I -B $here/test_judge.py $root
 exec $PY -I -B $here/controls.py $root

@@ -313,13 +313,19 @@ def judge(control, status, text):
         error = re.search(
             rf"^(\S+\.swift:\d+:\d+): error: '{re.escape(member)}' is inaccessible due to 'package' protection level$",
             text, re.M)
-        declared = re.search(
-            rf"^{re.escape(control['module'])}\.{re.escape(owner)}\.{re.escape(member)}\S*: note: '{re.escape(note)}' declared here$",
-            text, re.M)
+        # The note beside the error points at the edited declaration. Swift 6.4 names it by module
+        # (`SpectroCore.<Owner>.<member>:2:13: note: ...`); Swift 6.3 (the CI runner's) by file
+        # (`<path>/<edited file>.swift:<line>:<col>: note: ...`). Either form must name the edited declaration.
+        by_module = rf"{re.escape(control['module'])}\.{re.escape(owner)}\.{re.escape(member)}\S*"
+        by_file = rf"\S*/{re.escape(os.path.basename(control['rel']))}:\d+:\d+"
+        declared = re.search(rf"^(?:{by_module}|{by_file}): note: '{re.escape(note)}' declared here$", text, re.M)
         if not error:
             return False, None, f"no `error: '{member}' is inaccessible due to 'package' protection level` line"
         if not declared:
-            return False, None, f"no note `{control['module']}.{owner}.{member}...: note: '{note}' declared here` (a different declaration?)"
+            seen = [short(l) for l in text.splitlines() if member in l and "note:" in l][:5]
+            return False, None, (f"no note `{control['module']}.{owner}.{member}...: note: '{note}' declared here` nor one in "
+                                 f"{os.path.basename(control['rel'])} (a different declaration?); compiler notes naming {member}: "
+                                 + (" | ".join(seen) if seen else "(none)"))
         return True, short(error.group(0)), None
     if control["kind"] == "overload":
         for m in re.finditer(
