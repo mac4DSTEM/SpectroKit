@@ -11,7 +11,7 @@
 // fixtures are read by `#filePath` and are not resources. What one module needs from the other is `package`, never `public`.
 //
 // 0.4.0: the file readers (`DM4Experiment`, `VeloxEMDReader`, `HDF5Serial`) live in FormatoKit (a Swift port of RosettaSciIO,
-// docs/consumers-0.4.0.md), a package dependency pinned to an exact tag so a consumer's `swift build` resolves it alone. FormatoKit
+// docs/consumers-0.4.0.md), a package dependency on a FormatoKit minor range (`.upToNextMinor` since 0.6.0; exact before) so a consumer's `swift build` resolves it alone. FormatoKit
 // ships libhdf5 inside FormatoHDF5, so nothing here asks a consumer to supply one.
 import PackageDescription
 
@@ -24,7 +24,7 @@ let package = Package(
         .library(name: "SpectroEDX", targets: ["SpectroEDX"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/mac4DSTEM/FormatoKit", exact: "0.2.1"),
+        .package(url: "https://github.com/mac4DSTEM/FormatoKit", .upToNextMinor(from: "0.3.0")),
     ],
     targets: [
         // Plain-C wrappers over the four Accelerate LAPACK routines `FitLinearAlgebra` calls. ACCELERATE_NEW_LAPACK is

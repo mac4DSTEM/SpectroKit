@@ -2,6 +2,18 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.6.0 (2026-10-16) — FormatoKit as a minor range
+
+Dependency range only; no source change was needed against FormatoKit 0.3.0, and no SpectroKit API or number moves.
+
+- FormatoKit is now `.upToNextMinor(from: "0.3.0")` (was `exact: "0.2.1"`), the standard SwiftPM practice for a library, so an app
+  that pins exact kit tags resolves one FormatoKit without lockstep releases. FormatoKit 0.3.0 is additive, and its
+  FormatoTIFF target now depends on FormatoDM.
+
+### Migration
+Consumers must use FormatoKit 0.3.x (any 0.3.y satisfies the range); a consumer still on FormatoKit 0.2.x must move to 0.3.x.
+Re-pin SpectroKit to 0.6.0.
+
 ## 0.5.4 (2026-10-16) — CI fix
 
 0.5.3 was tagged with red CI. The Golden and unit tests passed on both jobs; the failure was the consumer check's negative
