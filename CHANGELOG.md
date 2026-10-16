@@ -7,7 +7,8 @@ SpectroKit follows semantic versions (0.x). Each release says what changed, and 
 - **Registration.** `GridRegistration`, `MaskTransport` (area-overlap label transport from the scan grid to the spectrum grid) and
   `PoolBuilder` (pooled counts and grouping), ported from mac4DSTEM's Registration code. Oracle: a NumPy transcription of the app
   source (`tools/registration/pins.py`, not exSpy); labels, ties and counts exact, overlaps within 2e-12 pixel areas (measured gap 0).
-  Additive; pools stay `validation: nil`/unvalidated.
+  Additive; pools stay `validation: nil`/unvalidated. Unlike the app, `MaskTransport.region` and `PoolBuilder.pool` throw
+  `MaskTransportError` on invalid input instead of trapping. Fixture includes exact, within-1e-6 and beyond-tolerance ties.
 
 - **Golden portability.** Original scalar values and array hashes are retained. CPU-dependent fitted scalars use a stated
   1e-12 relative bound; each floating-point array element uses 1e-12 of the pinned array peak. Compact companions were

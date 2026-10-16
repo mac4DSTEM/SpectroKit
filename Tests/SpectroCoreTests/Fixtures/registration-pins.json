@@ -1851,6 +1851,375 @@
         false
       ],
       "w": 4
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "footprint": [
+        2.0,
+        1.0
+      ],
+      "h": 1,
+      "inputLabels": [
+        0,
+        1,
+        0
+      ],
+      "inside": [
+        0.5,
+        1.0,
+        1.0
+      ],
+      "labels": [
+        0,
+        -1,
+        -1
+      ],
+      "matrix": [
+        1,
+        0,
+        0.5,
+        0,
+        1,
+        0
+      ],
+      "name": "exact-tie",
+      "outside": [
+        0.5,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.5,
+          0.5,
+          0.5
+        ],
+        [
+          0.0,
+          0.5,
+          0.5
+        ]
+      ],
+      "pools": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 1,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.25,
+          "partialIncluded": 3,
+          "pixelsIncluded": 3,
+          "purity": 0.5,
+          "regionArea": 1.5,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 2,
+          "pixelsIncluded": 2,
+          "purity": 0.5,
+          "regionArea": 1.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 1,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.25,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.5,
+          "retainedFraction": 0.3333333333333333
+        },
+        {
+          "edge": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 1,
+      "sw": 3,
+      "tied": [
+        false,
+        true,
+        true
+      ],
+      "w": 3
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "footprint": [
+        2.0,
+        1.0
+      ],
+      "h": 1,
+      "inputLabels": [
+        0,
+        1,
+        0
+      ],
+      "inside": [
+        0.4999999000000001,
+        1.0,
+        1.0
+      ],
+      "labels": [
+        0,
+        -1,
+        -1
+      ],
+      "matrix": [
+        1,
+        0,
+        0.5000001,
+        0,
+        1,
+        0
+      ],
+      "name": "tie-within-tolerance",
+      "outside": [
+        0.5000000999999996,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.4999999000000001,
+          0.5000000999999998,
+          0.4999999000000004
+        ],
+        [
+          0.0,
+          0.49999990000000016,
+          0.5000000999999998
+        ]
+      ],
+      "pools": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 1,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.2500000499999998,
+          "partialIncluded": 3,
+          "pixelsIncluded": 3,
+          "purity": 0.4999999666666668,
+          "regionArea": 1.4999999000000004,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 2,
+          "pixelsIncluded": 2,
+          "purity": 0.5,
+          "regionArea": 1.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 1,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.2500000499999998,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.4999999000000001,
+          "retainedFraction": 0.3333332888888859
+        },
+        {
+          "edge": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 1,
+      "sw": 3,
+      "tied": [
+        false,
+        true,
+        true
+      ],
+      "w": 3
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "footprint": [
+        2.0,
+        1.0
+      ],
+      "h": 1,
+      "inputLabels": [
+        0,
+        1,
+        0
+      ],
+      "inside": [
+        0.498,
+        1.0,
+        1.0
+      ],
+      "labels": [
+        -1,
+        0,
+        1
+      ],
+      "matrix": [
+        1,
+        0,
+        0.502,
+        0,
+        1,
+        0
+      ],
+      "name": "beyond-tolerance",
+      "outside": [
+        0.5019999999999998,
+        1.1102230246251565e-16
+      ],
+      "overlap": [
+        [
+          0.498,
+          0.502,
+          0.4980000000000002
+        ],
+        [
+          0.0,
+          0.4980000000000001,
+          0.5019999999999998
+        ]
+      ],
+      "pools": [
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          7,
+          8,
+          9
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.2509999999999999,
+          "partialIncluded": 1,
+          "pixelsIncluded": 1,
+          "purity": 0.502,
+          "regionArea": 1.4980000000000002,
+          "retainedFraction": 0.3351134846461949,
+          "touchedExcluded": 2
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 1.1102230246251565e-16,
+          "partialIncluded": 1,
+          "pixelsIncluded": 1,
+          "purity": 0.5019999999999998,
+          "regionArea": 0.9999999999999999,
+          "retainedFraction": 0.5019999999999999,
+          "touchedExcluded": 1
+        }
+      ],
+      "reports": [
+        {
+          "edge": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.2509999999999999,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.502,
+          "retainedFraction": 0.3351134846461949
+        },
+        {
+          "edge": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 1.1102230246251565e-16,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.5019999999999998,
+          "retainedFraction": 0.5019999999999999
+        }
+      ],
+      "sh": 1,
+      "sw": 3,
+      "tied": [
+        false,
+        false,
+        false
+      ],
+      "w": 3
     }
   ],
   "numpy": "2.5.4",
