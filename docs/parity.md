@@ -35,6 +35,7 @@ The macos-26 runner at `0653404` refuted cross-CPU bit parity for the Savitzkyâ€
 | Check | Status | Evidence |
 |---|---|---|
 | CI gate exit and consumer target inventory | regression tested | `CIScriptTests`: propagate a failing test through `tee`; tolerate absent build backend directories; gap-audit controls |
+| Scan-to-spectrum mask transport and pooling (`MaskTransport`, `PoolBuilder`) | regression tested | no exSpy counterpart; pinned to a NumPy transcription of the app source: `RegistrationTests.numpyTranscriptionPins`, 2e-12 bound, measured gap 0 |
 
 ## Summary
 
