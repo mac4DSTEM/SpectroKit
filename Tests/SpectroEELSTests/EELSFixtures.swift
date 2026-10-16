@@ -223,3 +223,55 @@ final class Worst: @unchecked Sendable {
         if v > value || where_.isEmpty { if v >= value { value = v; where_ = at() } }
     }
 }
+
+/// SciPy derivatives with the portable auto-SG tie policy; raw exSpy pins stay in pins.json/refuter/.
+struct PortableThresholds: Decodable {
+    struct Route: Decodable {
+        let name: String
+        let routeIndex: Int
+        let firstChannel: Int
+        let channels: Int
+        let coefficientL1: Double
+        let tol: Double
+        let minAbsDerivative: [Double]
+        let slack: [Double]
+        let inflexionIndex: [Int]
+        let thresholdChannel: [Int?]
+        let thresholdEV: [Double?]
+        let i0: [Double?]
+        let it: [Double]
+        let tOverLambda: [Double?]
+        let changedFromRawExSpy: [Int]
+    }
+    let routes: [Route]
+    static func route(_ name: String, index: Int = 0) throws -> Route {
+        let file = try EELSFixtures.decode(Self.self, "portable-thresholds.json")
+        return try #require(file.routes.first { $0.name == name && $0.routeIndex == index })
+    }
+}
+
+/// Reports the raw-reference gap without pretending relative/ULP agreement near cancellation zeros.
+final class ReferenceGap {
+    private(set) var maxULPs: UInt64 = 0
+    private(set) var maxRelative = 0.0
+    private(set) var maxAbsolute = 0.0
+    private(set) var maxScaledAbsolute = 0.0
+    private func ordered(_ value: Double) -> UInt64 {
+        let bits = value.bitPattern
+        let sign: UInt64 = 1 << 63
+        let magnitude = bits & (sign - 1)
+        return bits & sign == 0 ? sign + magnitude : sign - magnitude
+    }
+    func record(_ actual: Double, _ reference: Double, scale: Double) {
+        guard actual.isFinite, reference.isFinite else { return }
+        let a = ordered(actual), b = ordered(reference)
+        maxULPs = max(maxULPs, a >= b ? a - b : b - a)
+        let difference = abs(actual - reference)
+        maxAbsolute = max(maxAbsolute, difference)
+        if reference != 0 { maxRelative = max(maxRelative, difference / abs(reference)) }
+        maxScaledAbsolute = max(maxScaledAbsolute, scale == 0 ? difference : difference / scale)
+    }
+    func report(_ label: String) {
+        print("EELS-REPORT \(label): maximum ULPs \(maxULPs), relative \(maxRelative) (nonzero reference), absolute \(maxAbsolute), scaled absolute \(maxScaledAbsolute)")
+    }
+}

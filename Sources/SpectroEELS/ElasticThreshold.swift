@@ -110,7 +110,15 @@ package nonisolated enum ElasticThreshold {
         var tol = minAbs[0]
         for p in 1..<pixelCount { tol = max(tol, minAbs[p]) }
         if let t = userTolerance { tol = t }
-        // 4. the first channel at or below tol, per pixel
+        // A mathematically tied derivative can straddle the automatic tolerance after roundoff. For SG only, choose
+        // the first channel within a per-pixel roundoff allowance: 64 eps * max|cropped input| * sum|interior weights|.
+        // This deterministic tie policy intentionally differs from raw exSpy/LAPACK channel choices. A caller-supplied
+        // tolerance remains exact, the gradient path is unchanged, and the reported tolerance is not expanded.
+        var coefficientL1 = 0.0
+        if userTolerance == nil, case .savitzkyGolay(let sg, _) = kernel {
+            for coefficient in sg.coefficients { coefficientL1 = coefficientL1 + abs(coefficient) }
+        }
+        // 4. the first channel at or below tol plus the automatic SG tie allowance, per pixel
         var inflexion = [Int](repeating: 0, count: pixelCount)
         var threshold = [Double](repeating: .nan, count: pixelCount)
         try derivative.withUnsafeMutableBufferPointer { d in
@@ -118,8 +126,13 @@ package nonisolated enum ElasticThreshold {
                 if p % block == 0 { try SpectroCancellation.check(cancelled); progress?(0.5 + 0.5 * Double(p) / Double(pixelCount)) }
                 let row = UnsafeBufferPointer(start: counts.baseAddress! + p * nch + i1, count: length)
                 kernel.apply(row, into: d, pixel: p)
+                var maxAbsInput = 0.0
+                if coefficientL1 > 0 { for value in row { maxAbsInput = max(maxAbsInput, abs(value)) } }
+                let scaledEpsilon = (64 * Double.ulpOfOne) * maxAbsInput
+                let allowance = scaledEpsilon * coefficientL1
+                let comparisonTolerance = tol + allowance
                 var first = 0
-                for i in 0..<length where abs(d[i]) <= tol { first = i; break }
+                for i in 0..<length where abs(d[i]) <= comparisonTolerance { first = i; break }
                 inflexion[p] = first
                 if first != 0 { threshold[p] = croppedAxis[first] }
             }

@@ -17,12 +17,13 @@ import Foundation
 ///   that variability out (see `ThicknessMap`). Noisy data want `.fixed`.
 ///   `windowLength == 0` uses `numpy.gradient` instead of Savitzky–Golay (exSpy's `window_length=0`).
 ///   A pixel whose first inflexion is the search range's first channel (or that has none) has no threshold (exSpy: NaN).
-///   **The derivative is SciPy's bit for bit** (`savgol_filter(..., deriv=1, mode="interp")` as HyperSpy calls it on the whole
-///   image: LAPACK `dgelsd` coefficients, `_fit_edge` polynomial fits, SciPy's accumulation order), so the threshold channel is
-///   exSpy's, also where a channel's |derivative| equals `tol` to rounding. The edge fits are one least-squares call over the
-///   image's spectra, as in SciPy, whose bits depend on how many spectra there are: a pixel's derivative, and so (very rarely,
-///   at such a tie) its threshold, can differ in the last bits between a small image and the same pixel in a larger one, in exSpy
-///   as here. **Narrower than exSpy:** the port refuses an even `windowLength`, one below 3, a `polynomialOrder` below 1 (SciPy
+///   The Savitzky–Golay polynomial is fitted by scalar QR with a fixed operation order, independent of Accelerate and
+///   image size. With automatic tolerance, derivative magnitudes within `64 * Double.ulpOfOne * peak * coefficientL1`
+///   of `tol` are tied; the first channel wins. Here `peak` is the largest absolute cropped input count in that pixel and
+///   `coefficientL1` is the sum of absolute interior filter coefficients. This roundoff allowance intentionally differs
+///   from raw exSpy's CPU-dependent choices at ties, and can change I_0 and thickness. A supplied `tolerance` uses an exact
+///   comparison with no allowance. The gradient path is unchanged.
+///   **Narrower than exSpy:** the port refuses an even `windowLength`, one below 3, a `polynomialOrder` below 1 (SciPy
 ///   returns zeros) and one of `windowLength` or more; exSpy accepts some of these.
 /// - `.fixed(eV)`: one threshold for every pixel (exSpy `threshold=<float>`). Rounded to a channel by HyperSpy's
 ///   `value2index` (a value up to half a channel off is the same channel). **`.fixed(3)` is 3.0 eV**; exSpy treats a Python
@@ -31,7 +32,8 @@ import Foundation
 ///   A threshold outside the energy axis gives that pixel no t/λ (a nil pixel with a reason); exSpy raises for the whole map.
 ///
 /// The defaults of `.estimated` (window 10 eV, start 1 eV, Savitzky–Golay window length 5, order 3, tolerance from the data) are exSpy's
-/// `estimate_elastic_scattering_threshold` (`_eels.py:641-643`); none is the library's own choice.
+/// `estimate_elastic_scattering_threshold` (`_eels.py:641-643`). The scalar solver and automatic tie allowance are SpectroKit's
+/// documented deviations from its platform-dependent rounding.
 public nonisolated enum ThresholdRule: Sendable, Equatable {
     case estimated(window: Double = 10.0, start: Double = 1.0, windowLength: Int = 5, polynomialOrder: Int = 3,
                    tolerance: Double? = nil)

@@ -46,3 +46,54 @@ coefficient differences can therefore produce large changes in thickness; the re
 pinned coefficients are supplied isolates the coefficient solve as the main suspected cause. A more accurate scalar solver alone does not
 preserve the pinned solver's accidental tie choices. A reproducible backend needs an explicit decision about those ties;
 fixture-specific coefficient lookup would hide the issue for untested windows and scales.
+
+## Resolution and reproducibility
+
+The owner authorized a reproducible scalar backend and a documented deterministic tie policy during this investigation.
+Scalar twice-reorthogonalized QR replaces the SG coefficient/edge SVDs; centered derivative coefficients have exact parity,
+and edge dot products use explicit FMA in ascending sample order. Results no longer depend on the number of spectra in
+an edge fit. Automatic SG ties use `64 eps * peak cropped input * coefficient L1`; explicit tolerances and gradient comparisons
+retain their exact comparisons. The selected threshold channel remains an exact assertion against the new policy oracle.
+
+`tools/eels-thickness/make_portable_thresholds.py` runs pinned SciPy 1.18.1, NumPy 2.5.4 and HyperSpy 2.4.0 in
+`References/exspy-venv` under `../tools/memcap.sh`. It applies the declared tie policy to SciPy's derivatives, retaining the
+raw exSpy `7185a4d1` answers alongside it. Its committed `portable-thresholds.json` is about 42 KB: 18 routes / 138 pixels,
+with 20 deliberately changed thresholds. It records input SHA256s, raw/selected thresholds, derivative minima, slack, I0,
+It and t/lambda. Run from this repository:
+
+```sh
+../tools/memcap.sh -- References/exspy-venv/bin/python -I -B tools/eels-thickness/make_portable_thresholds.py
+```
+
+The original SG coefficient and derivative fixtures remain unchanged. Coefficients are bounded at `1e-13 * coefficient L1`,
+and derivatives at `1e-12 * input peak * coefficient L1` (the three original step-by-step cases use `1e-13` of that scale).
+Absolute scaling handles cancellation near zero; relative/ULP diagnostics are also printed, including their large values
+at a mathematically zero derivative. Supplied-coefficient interiors, all three convolution paths and NumPy gradient still
+require exact bits. The tested polynomial grid is orders 1–4, windows through 49; arbitrary high orders near the window
+length remain an ill-conditioned domain outside that fixture grid.
+
+For Golden outputs, `tools/ci-parity/expand-golden.sh` expands the original developer baseline's Double-array hashes into
+six `.arrays.f64` / `.arrays.json` companions (about 1 MB total). This is a Swift baseline expansion, not a Python oracle or
+a new numerical baseline: the recorder first requires **every original scenario byte to match**. The original text files
+are untouched; the comparison verifies companion hashes/sums/counts and every array value. Scalars use `1e-12` relative;
+arrays use `1e-12` times their pinned peak. All nonnumeric records and hashes without checked array operands remain exact.
+
+Before applying the source fix, the numerical-tie perturbation and image-size-invariance regressions failed with 18 issues.
+With the source fix the focused EELS and Golden helper run is green. The old runner did not print all derivative operands;
+the updated tests print max ULP, relative and scaled absolute errors so the owner's next CI run can fill those unavailable
+entries above. The local measurements are distinct from that missing runner evidence.
+
+## Local hand-back checks
+
+- Branch: `codex/ci-parity`, created from `main` at `0653404`; no push, tag or CI dispatch.
+- `tools/test.sh`: 346 test names, zero unexpected failures, two registered known issues. The two recorders are disabled
+  in ordinary runs. `tools/consumer-check/run.sh`: 189/189 API checks and the README consumer pass. Negative controls
+  were not rerun locally; the workflow retains them.
+- Changed numerical tests: all eight functions in the original-failure table, plus
+  `testEstimatedThresholdPinsAreExactWithSciPysCoefficients` (signed rounding perturbations) and
+  `testEdgeBitsDependOnTheImageNotOnThePixelAlone` (now asserts image-size independence). Legacy names are retained.
+- New infrastructure controls: three `CIScriptTests` functions and two portable Golden comparator functions. The
+  source regressions failed against the old backend; the shell regressions failed against the old scripts.
+- Owner confirmation: push the branch as appropriate and inspect the macos-26 job. The expanded gap reports supply
+  measurements unavailable from the original runner log. The latest macos-15 log separately reports another type-check
+  timeout at `SpectroscopyFitTests.swift:572`; this main-job fix does not change that expression.

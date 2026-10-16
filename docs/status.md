@@ -1,6 +1,6 @@
 # SpectroKit: status
 
-Updated 2026-10-15, at the 0.5.0 closeout. The source of truth for the state of the repo; the suite board shows it.
+Updated 2026-10-16 for the 0.5.2 CI portability fix; the 0.5.0 gate below is historical. The source of truth for the state of the repo; the suite board shows it.
 
 ## Version and modules
 
@@ -44,15 +44,24 @@ is validated until it recovers a planted value and a sample of known composition
   neighbours in that folder).
 - `References/` is a link to the suite's `../References/SpectroKit` (2026-10-15); gitignored.
 
-## 0.5.2 CI investigation
+## 0.5.2 CI portability fix
 
-The macos-26 run at `0653404` has 120 unexpected issues across eight tests and two registered known issues.
-[The audit](ci-parity.md) records measurable ULP/relative gaps and missing operands. The CI pipeline now propagates
-test failures; the consumer target inventory tolerates missing backend directories. Three Swift Testing regressions
-cover those shell failures and the gap-report arithmetic. No scientific fixture or assertion has changed.
+The macos-26 run at `0653404` had 120 unexpected issues across eight tests and two registered known issues.
+[The audit](ci-parity.md) records measured ULP/relative gaps and missing operands. Commit `3577715` fixes the masked
+CI gate status and the consumer target inventory's silent exit on an absent build backend directory.
 
-The threshold channel shifts are unresolved source behavior, not a tolerance fix. An exploratory scalar QR prototype
-shows that a different solver changes tied channel choices despite close agreement on coefficients. A documented deterministic tie policy needs to be decided before replacing the backend.
+The estimated-threshold source fix replaces Accelerate's Savitzky–Golay coefficients and edge fits with scalar QR,
+then applies the documented automatic SG tie allowance. The pinned Python policy fixture covers 18 routes / 138 pixel
+answers; 20 thresholds intentionally differ from raw exSpy. All original raw fixtures remain unchanged. Explicit-tolerance,
+gradient, fixed-threshold and zero-loss routes retain their comparison rules. `ThresholdRule` DocC and the changelog explain
+that previously computed estimated-threshold results may need recomputation.
+
+The portable Golden comparison verifies each floating-point array element against companions proven to reproduce the
+original baseline's hash and sum. Strings, integers, structure and CSV hashes remain exact. CI confirmation requires the
+owner's push; this session does not push or dispatch CI.
+
+Local verification: `tools/test.sh` green, 346 test names, zero unexpected issues and the two registered known issues;
+`tools/consumer-check/run.sh` green, 189 API checks plus the README consumer. The 151 negative controls remain for CI.
 
 ## Open items
 

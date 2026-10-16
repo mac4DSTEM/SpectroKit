@@ -7,7 +7,8 @@
 //        exSpy's threshold is NaN (no inflexion) and the port must say `.noInflexionFound`; R22, R26, R52, R58: random Poisson
 //        images whose estimated thresholds were wrong before.
 //
-//  Required, at EVERY pixel: the threshold energy equal to exSpy's (so the same channel; `==`), NaN <-> `.noInflexionFound`,
+//  Auto-SG uses the separately generated portable-thresholds.json numerical-tie policy; raw pins are retained.
+//  Required, at EVERY pixel: the threshold energy equal to its reference (portable for auto-SG, raw exSpy otherwise), NaN <-> `.noInflexionFound`,
 //  I_0 and I_t within 1e-12 relative, t/lambda within 1e-12 absolute; exSpy's non-finite t/lambda is a nil t/lambda.
 //
 
@@ -34,7 +35,7 @@ struct RefuterRegressionTests {
             let img = try LowLossSpectrumImage(nx: spec["cols"] as! Int, ny: spec["rows"] as! Int, channels: spec["size"] as! Int,
                                                counts: try doubles(dir.appendingPathComponent("data.f64")),
                                                energyOffsetEV: num(spec["offset"])!, energyScaleEV: num(spec["scale"])!)
-            for entry in expected {
+            for (routeIndex, entry) in expected.enumerated() {
                 let r = entry["route"] as! [String: Any], ex = entry["exspy"] as! [String: Any]
                 let kind = r["kind"] as! String
                 let tag = "\(name) \(r)"
@@ -48,12 +49,20 @@ struct RefuterRegressionTests {
                 case "fixed": rule = .fixed(num(r["value"])!)
                 default: Issue.record("route kind \(kind)"); continue
                 }
+                let portable = kind == "estimated" && ((r["windowLength"] as? Int) ?? 5) != 0 && num(r["tolerance"]) == nil
+                    ? try PortableThresholds.route(name, index: routeIndex) : nil
                 let map = try EELSThickness.logRatio(img, threshold: rule, zeroLoss: nil)
-                let it = ex["it"] as! [Any], i0 = ex["i0"] as! [Any], tl = ex["tl"] as! [Any]
+                let it: [Any] = portable?.it.map { $0 as Any } ?? (ex["it"] as! [Any])
+                let i0: [Any] = portable?.i0.map { $0.map { $0 as Any } ?? NSNull() } ?? (ex["i0"] as! [Any])
+                let tl: [Any] = portable?.tOverLambda.map { $0.map { $0 as Any } ?? NSNull() } ?? (ex["tl"] as! [Any])
+                let thresholds: [Any]? = portable?.thresholdEV.map { $0.map { $0 as Any } ?? NSNull() } ?? (ex["thrEV"] as? [Any])
                 #expect(map.pixels.count == it.count, "\(tag)")
                 for (p, px) in map.pixels.enumerated() {
                     pixelsChecked += 1
-                    if let thr = ex["thrEV"] as? [Any] {
+                    if let portable, !portable.changedFromRawExSpy.contains(p), let raw = ex["thrEV"] as? [Any] {
+                        #expect(px.thresholdEV == num(raw[p]), "\(tag) unambiguous raw exSpy threshold")
+                    }
+                    if let thr = thresholds {
                         if let e = num(thr[p]) {
                             #expect(px.thresholdEV?.bitPattern == e.bitPattern, "\(tag) pixel \(p): threshold energy")
                         } else {

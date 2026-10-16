@@ -4,9 +4,17 @@ SpectroKit follows semantic versions (0.x). Each release says what changed, and 
 
 ## Unreleased (0.5.2)
 
+- **Portable estimated EELS thresholds.** Scalar QR replaces Accelerate-dependent Savitzky–Golay coefficients and edge fits.
+  Automatic SG tolerance treats derivatives within `64 eps * peak cropped input * coefficient L1` as tied and chooses the
+  first channel. This intentionally changes 20 of 138 pinned policy pixel answers from raw exSpy, preventing small CPU
+  rounding changes from producing large thickness changes. Explicit tolerance and gradient comparisons remain exact.
+  The unchanged raw SciPy/exSpy fixtures remain as evidence; a new pinned Python policy fixture records the changed channels.
+- **Migration.** Recompute results obtained with `.estimated()` if numerical ties matter to the analysis. Record the library
+  version with those results. Fixed thresholds and the zero-loss spectrum route retain their existing values. No API change.
+
 - **CI diagnostics and shell fixes.** The main gate now propagates a failing `swift test` status through `tee`. The consumer
   target inventory tolerates either absent build backend directory under zsh `errexit`. Swift Testing regressions cover
-  both failures. The macos-26 numerical audit is in `docs/ci-parity.md`; no numerical tolerance or fixture changed.
+  both failures. The macos-26 numerical audit is in `docs/ci-parity.md`; the original raw reference fixtures are retained.
 
 - **CI: the macos-15 job failed with a type-check timeout.** `QuantificationPolicyTests.swift` had one `#expect` whose
   expression (two closures in a comparison) the Xcode 26.0 compiler could not type-check in reasonable time. The sums and the

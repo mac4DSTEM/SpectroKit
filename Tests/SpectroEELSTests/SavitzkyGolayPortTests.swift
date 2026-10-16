@@ -4,9 +4,8 @@
 //        `stepByStep`): the coefficients, the interior's fused accumulation order, the edge polynomial fits, and
 //        `numpy.gradient`. One rule per test.
 //
-//  Everything here is BIT-EXACT now (the derivative is SciPy's bit for bit, see SavitzkyGolayBitParityTests for the wider
-//  proof): the coefficients, the interior and the edge values of the pinned pixel, computed on the whole pinned image as HyperSpy
-//  does (its edge fits are one least-squares call over all the image's spectra).
+//  The portable scalar QR coefficients/edges are compared with raw SciPy SVD pins using a scaled absolute bound.
+//  Interior convolution supplied with raw coefficients and numpy.gradient remain bit exact.
 //
 
 import Foundation
@@ -54,14 +53,22 @@ struct SavitzkyGolayPortTests {
     // MARK: coefficients (savgol_coeffs)
 
     /// The five coefficients SciPy's `savgol_coeffs(5, 3, deriv=1, delta=scale)` returned (pins.json `recipe.coefficients`) against
-    /// this port's: BIT-IDENTICAL (the port solves with `dgelsd`, as `scipy.linalg.lstsq` does; SciPy's centre coefficient is
-    /// -8.3e-15, not 0).
+    /// this port's scalar QR solve; SciPy's near-zero residual is compared absolutely.
     @Test func testCoefficientsAreBitIdenticalToSciPy() throws {
         for name in caseNames {
             let c = EELSFixtures.pinCase(name)
             let pinned = c.estimated.recipe!.coefficients!
             let ours = try SavitzkyGolay.coefficients(windowLength: 5, polynomialOrder: 3, derivative: 1, delta: c.energyAxis.scale)
-            #expect(ours.map(\.bitPattern) == pinned.map(\.bitPattern), "\(name)")
+            // CPU-specific SVD cancellation at the zero centre cannot support relative or ULP parity.
+            let l1 = pinned.reduce(0.0) { $0 + abs($1) }
+            let gaps = ReferenceGap()
+            for (o, e) in zip(ours, pinned) {
+                gaps.record(o, e, scale: l1)
+                #expect(abs(o - e) <= 1e-13 * l1, "\(name) coefficient QR/SVD error")
+            }
+            gaps.report("SG coefficients \(name)")
+            #expect(ours[2] == 0)
+            #expect(ours[0] == -ours[4] && ours[1] == -ours[3])
             // the exact answer is (1, -8, 0, 8, -1) / (12 delta) in convolution order, negated: [-1, 8, 0, -8, 1] / (12 delta)
             let big = pinned.map(abs).max()!
             let exact = [-1.0, 8, 0, -8, 1].map { $0 / (12 * c.energyAxis.scale) }
@@ -98,7 +105,7 @@ struct SavitzkyGolayPortTests {
     // MARK: the whole derivative (interior + edges)
 
     /// The full cropped derivative of the pinned pixel, from the whole pinned image, with SciPy's coefficients: EVERY value
-    /// (interior and the four edge values) bit-identical to what SciPy returned.
+    /// including the four scalar-QR edge values, within a cancellation-scaled absolute bound.
     @Test func testWholeDerivativeIsBitIdenticalWithSciPysCoefficients() throws {
         for name in caseNames {
             let (row, step, scale) = try croppedRow(name)
@@ -109,11 +116,19 @@ struct SavitzkyGolayPortTests {
             #expect(d.count == row.count)
             let mismatches = (0..<row.count).filter { d[$0].bitPattern != step.derivative[$0].bitPattern }
             print("EELS-REPORT whole derivative (SciPy coefficients) \(name): \(row.count) values, \(mismatches.count) mismatches")
-            #expect(mismatches == [], "\(name)")
+            // Bound cancellation against input scale; raw reference values are retained.
+            let coeffs = EELSFixtures.pinCase(name).estimated.recipe!.coefficients!
+            let bound = 1e-13 * row.map(abs).max()! * coeffs.reduce(0.0) { $0 + abs($1) }
+            let gaps = ReferenceGap()
+            for i in row.indices {
+                gaps.record(d[i], step.derivative[i], scale: bound / 1e-13)
+                #expect(abs(d[i] - step.derivative[i]) <= bound, "\(name) index \(i)")
+            }
+            gaps.report("SG full derivative \(name)")
         }
     }
 
-    /// The same with THIS port's coefficients (no override): bit-identical too.
+    /// The same with the portable scalar coefficients, against the unchanged SciPy reference.
     @Test func testWholeDerivativeWithOwnCoefficientsIsBitIdentical() throws {
         for name in caseNames {
             let (row, step, scale) = try croppedRow(name)
@@ -122,23 +137,27 @@ struct SavitzkyGolayPortTests {
             let d = try applyImage(sg, image, pixel: step.pixel.index)
             let mismatches = (0..<row.count).filter { d[$0].bitPattern != step.derivative[$0].bitPattern }
             print("EELS-REPORT whole derivative (own coefficients) \(name): \(row.count) values, \(mismatches.count) mismatches")
-            #expect(mismatches == [], "\(name)")
+            // Bound cancellation against input scale; raw reference values are retained.
+            let coeffs = EELSFixtures.pinCase(name).estimated.recipe!.coefficients!
+            let bound = 1e-13 * row.map(abs).max()! * coeffs.reduce(0.0) { $0 + abs($1) }
+            let gaps = ReferenceGap()
+            for i in row.indices {
+                gaps.record(d[i], step.derivative[i], scale: bound / 1e-13)
+                #expect(abs(d[i] - step.derivative[i]) <= bound, "\(name) index \(i)")
+            }
+            gaps.report("SG full derivative \(name)")
         }
     }
 
-    /// The edge fits depend on the number of spectra in the image (dgelsd with different numbers of right-hand sides): a pixel
-    /// alone is NOT the same bits as the pixel in the pinned image. This is why `edgeTable` takes the whole image; if this stops
-    /// holding (another LAPACK) the image-wide call is no longer needed.
+    /// Scalar edge weights give each spectrum the same bits alone and inside any image batch.
     @Test func testEdgeBitsDependOnTheImageNotOnThePixelAlone() throws {
-        var differing = 0
         for name in caseNames {
             let (row, step, scale) = try croppedRow(name)
             let sg = try SavitzkyGolayFirstDerivative(windowLength: 5, polynomialOrder: 3, delta: scale)
             let alone = applyKernel(sg, row)
-            if (0..<row.count).contains(where: { alone[$0].bitPattern != step.derivative[$0].bitPattern }) { differing += 1 }
+            let batched = try applyImage(sg, croppedImage(name), pixel: step.pixel.index)
+            #expect(alone.map(\.bitPattern) == batched.map(\.bitPattern), "\(name) batch-independent edges")
         }
-        print("EELS-REPORT pixel alone differs from the pixel in its image in \(differing) of 3 pinned cases")
-        #expect(differing > 0)
     }
 
     /// The Savitzky-Golay first derivative of a cubic polynomial is the cubic's derivative EXACTLY (the fit reproduces it), at

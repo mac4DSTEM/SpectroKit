@@ -28,10 +28,9 @@ against planted truth, the evidence column says so.
 
 ## CI portability
 
-The macos-26 runner at `0653404` refutes cross-CPU BIT parity for the Savitzky–Golay coefficients and edge fits.
-Its rounding differences also change discrete estimated threshold channels and thickness. The affected Savitzky–Golay BIT claims below describe
-the original reference host only; [the measured CI audit](ci-parity.md) records the unresolved portability limits.
-No raw exSpy pin or numerical assertion has been relaxed.
+The macos-26 runner at `0653404` refuted cross-CPU bit parity for the Savitzky–Golay coefficients and edge fits.
+0.5.2 uses scalar QR and a documented automatic-tolerance tie rule. The raw SciPy and exSpy fixtures are retained;
+`portable-thresholds.json` adds the pinned Python policy oracle. [The CI audit](ci-parity.md) records the original gaps.
 
 | Check | Status | Evidence |
 |---|---|---|
@@ -41,9 +40,9 @@ No raw exSpy pin or numerical assertion has been relaxed.
 
 | status | EDS | EELS | shared (axes, SciPy, NumPy) | all |
 |---|---|---|---|---|
-| BIT | 4 | 1 | 5 | 10 |
-| TOL | 9 | 7 | 4 | 20 |
-| DEV | 6 | 0 | 0 | 6 |
+| BIT | 4 | 0 | 4 | 8 |
+| TOL | 9 | 7 | 5 | 21 |
+| DEV | 6 | 1 | 0 | 7 |
 | PART | 7 | 3 | 0 | 10 |
 | NOPIN | 1 | 0 | 1 | 2 |
 | NO | 15 | 16 | 1 | 32 |
@@ -51,9 +50,7 @@ No raw exSpy pin or numerical assertion has been relaxed.
 | rows | 46 | 31 | 11 | 88 |
 
 Where SpectroKit's strength is. EDS: the line table, X-ray windows and net counts, Cliff-Lorimer, the absorption iteration and
-the line model's columns reproduce exSpy to 1e-9 or better on pinned cases. EELS: the t/lambda log-ratio chain (down to a
-Savitzky-Golay derivative that is bit-identical to SciPy's) and the C, N, O K cross section from exSpy's dft GOS reproduce it
-to 1e-10 or better (measured 7e-16 for the cross section).
+the line model's columns reproduce exSpy to 1e-9 or better on pinned cases. EELS: fixed-threshold, gradient and zero-loss log-ratio routes agree with the raw pins at the bounds below; automatic SG thresholds follow the documented policy oracle and deliberately differ at numerical ties. The C, N, O K cross section from exSpy's dft GOS reproduces it to 1e-10 or better (measured 7e-16 for the cross section).
 
 ### The largest gaps, in the order an outside user would ask
 
@@ -165,9 +162,9 @@ to 1e-10 or better (measured 7e-16 for the cross section).
 |---|---|---|---|
 | `estimate_zero_loss_peak_centre` (with `mask`) | `ThicknessPixel.zlpCentre`: the energy of the first maximum, no mask, a diagnostic only | PART | SpectroEELSTests/ThicknessEdgeCaseTests `testZeroLossCentreIsTheEnergyOfTheFirstMaximum`; no exSpy output compared |
 | `align_zero_loss_peak`, `get_zero_loss_peak_mask` | none (nothing is shifted) | NO | |
-| `estimate_elastic_scattering_threshold` | `ThresholdRule.estimated` over `ElasticThreshold.estimate` (package) | BIT | ThicknessPinsTests `testEstimatedThresholdPins` (same threshold channel at every pixel of 3 images, derivative minima bit-equal), `testEstimatedGradientThresholdPins` (`window_length=0`), RefuterRegressionTests `testEveryRefuterImageMatchesExSpyAtEveryPixel` (7 images). Narrower than exSpy: an even or too-short window, a polynomial order below 1 or at least the window are refused |
-| `estimate_elastic_scattering_intensity` (threshold as float, signal or estimated; zero-loss sum) | `ThresholdRule` (`.fixed`, `.estimated`, `.perPixel`) giving `ThicknessPixel.i0`; summed in NumPy's order | TOL | `testFixedThresholdPins`, `testEstimatedThresholdPins` (I_0 1e-12 relative). Binned axes only (the Simpson path for unbinned axes is not ported); a Python `int` threshold (a channel index) cannot be expressed; `.perPixel` out of the axis gives a nil pixel where exSpy raises (docs/eels-slice-1-registration.md, sections 1 and 3) |
-| `estimate_thickness` (log ratio, `threshold` or `zlp`) | `EELSThickness.logRatio` -> `ThicknessMap` | TOL | `testEstimatedThresholdPins`, `testFixedThresholdPins`, `testZeroLossSpectrumRoutePins` (t/lambda 1e-12 absolute, 3 images); truth: PlantedTruthTests, LineScanTruthTests. Registration: docs/eels-slice-1-registration.md |
+| `estimate_elastic_scattering_threshold` | `ThresholdRule.estimated` over `ElasticThreshold.estimate` (package) | DEV | Scalar QR avoids CPU-dependent LAPACK rounding; automatic SG ties use `64 eps * peak cropped input * coefficient L1`, first channel wins. `portable-thresholds.json` pins 18 routes / 138 pixel answers; 20 differ deliberately from raw exSpy. ThicknessPinsTests / RefuterRegressionTests hold channels exactly and I0/It to 1e-12 relative, t/lambda to 1e-12 absolute. Explicit tolerance and gradient retain exact comparisons. Even/short windows and unsupported orders are refused. |
+| `estimate_elastic_scattering_intensity` (threshold as float, signal or estimated; zero-loss sum) | `ThresholdRule` (`.fixed`, `.estimated`, `.perPixel`) giving `ThicknessPixel.i0`; summed in NumPy's order | TOL | `testFixedThresholdPins`, `testEstimatedThresholdPins` (I_0 1e-12 relative; automatic SG uses the policy deviation above). Binned axes only (the Simpson path for unbinned axes is not ported); a Python `int` threshold (a channel index) cannot be expressed; `.perPixel` out of the axis gives a nil pixel where exSpy raises (docs/eels-slice-1-registration.md, sections 1 and 3) |
+| `estimate_thickness` (log ratio, `threshold` or `zlp`) | `EELSThickness.logRatio` -> `ThicknessMap` | TOL | `testEstimatedThresholdPins`, `testFixedThresholdPins`, `testZeroLossSpectrumRoutePins` (t/lambda 1e-12 absolute, 3 images; automatic SG uses the policy oracle above); truth: PlantedTruthTests, LineScanTruthTests. Registration: docs/eels-slice-1-registration.md |
 | `estimate_thickness` with `density` and `lambda` (absolute nm) | `MeanFreePathSource` (`.given`, `.iakoubovskii`, `.givenWithAngularCorrection`) | TOL | `testAbsoluteThicknessPins` (3 routes x 3 lambda sources, 1e-12 times lambda x correction) |
 | `utils.eels.iMFP_Iakoubovskii` | `InelasticMeanFreePath.iakoubovskii` | TOL | `testMeanFreePathAndAngularCorrectionPins` (20 values, 1e-13 relative) |
 | `utils.eels.iMFP_angular_correction` | `InelasticMeanFreePath.angularCorrection` | TOL | same test (180 values, 1e-13) |
@@ -209,7 +206,7 @@ to 1e-10 or better (measured 7e-16 for the cross section).
 | HyperSpy `value2index` (half-towards-zero rounding after a 1e-12 truncation) | `EnergyAxis.index(of:)` | BIT | AxisGateTests `testE2ValueToIndexEqualsHyperSpyOnTheWholeGrid` (12 573 cases, 3 that raise), `testValue2IndexMatchesHyperspy` (544) |
 | HyperSpy axis slices (`isig[a:b]`) | `EnergyAxis.channelRange` | BIT | `testE2SlicesEqualHyperSpyArraySlices` (52), `testSliceSemanticsMatchHyperspy` |
 | HyperSpy `value_range_to_indices` | `EELSAxis.valueRangeToIndices` | NOPIN | AxisRulesTests `testValueRangeToIndicesFollowsHyperSpysFourConditions`: hand-derived from the source, no HyperSpy run compared |
-| `scipy.signal.savgol_filter(deriv=1, mode="interp")` as `smooth_savitzky_golay(differential_order=1)` | `SavitzkyGolay` (package) | BIT | SavitzkyGolayBitParityTests `testCoefficientsAndDerivativeAreBitIdenticalToSciPy`, `testConvolutionPathsAreBitIdenticalToSciPy`; SavitzkyGolayPortTests `testWholeDerivativeIsBitIdenticalWithSciPysCoefficients` |
+| `scipy.signal.savgol_filter(deriv=1, mode="interp")` as `smooth_savitzky_golay(differential_order=1)` | `SavitzkyGolay` (package) | TOL | Portable scalar QR, centered coefficient symmetry, scalar edge FMA. Unchanged SciPy fixture: coefficients within 1e-13 times coefficient L1; derivatives within 1e-12 times input peak times coefficient L1 (cancellation-scaled absolute error). Supplied-coefficient interior/convolution tests remain bit exact. Edge values are bit-identical alone and in an image. Legacy test names containing “BitIdentical” are retained for continuity; their comments state the current bounds. |
 | `numpy.gradient` | `NumpyGradient` | BIT | SavitzkyGolayPortTests `testGradientIsBitExact` |
 | NumPy pairwise sum | `NumpySum` | BIT | AxisRulesTests `testPairwiseSumEqualsNumpysSum` (bit patterns, 11 lengths) |
 | `scipy.interpolate.make_interp_spline(k=3)` | `InterpolatingSpline` | TOL | `testSplineAndQLimitsEqualExSpy` (knots equal, coefficients 1e-10) |
