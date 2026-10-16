@@ -1,0 +1,2228 @@
+{
+  "cases": [
+    {
+      "classCount": 3,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "footprint": [
+        3.0,
+        2.0,
+        0.0
+      ],
+      "h": 3,
+      "inputLabels": [
+        0,
+        0,
+        1,
+        0,
+        -1,
+        1
+      ],
+      "inside": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labels": [
+        0,
+        0,
+        1,
+        -1,
+        0,
+        -1,
+        1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "name": "identity",
+      "outside": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "overlap": [
+        [
+          1.0,
+          1.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "pools": [
+        [
+          18,
+          21,
+          24
+        ],
+        [
+          26,
+          28,
+          30
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 3.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 3,
+          "purity": 1.0,
+          "regionArea": 3.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 2,
+          "purity": 1.0,
+          "regionArea": 2.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 0,
+          "footprintArea": 3.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 3,
+          "purity": 1.0,
+          "retainedFraction": 1.0
+        },
+        {
+          "edge": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 2,
+          "purity": 1.0,
+          "retainedFraction": 1.0
+        },
+        {
+          "edge": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 2,
+      "sw": 3,
+      "tied": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "w": 4
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "footprint": [
+        2.0,
+        2.0
+      ],
+      "h": 2,
+      "inputLabels": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "inside": [
+        0.5,
+        1.0,
+        0.5,
+        0.5,
+        1.0,
+        0.5
+      ],
+      "labels": [
+        0,
+        1,
+        0,
+        1,
+        0,
+        1
+      ],
+      "matrix": [
+        0.5,
+        0,
+        0.25,
+        0,
+        1,
+        0
+      ],
+      "name": "half-area-ties",
+      "outside": [
+        0.0,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.5,
+          0.0,
+          0.5,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.5,
+          0.0,
+          0.5
+        ]
+      ],
+      "pools": [
+        [
+          21,
+          24,
+          27
+        ],
+        [
+          30,
+          33,
+          36
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 2,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 2,
+          "pixelsIncluded": 3,
+          "purity": 0.6666666666666666,
+          "regionArea": 2.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 2,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 2,
+          "pixelsIncluded": 3,
+          "purity": 0.6666666666666666,
+          "regionArea": 2.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 2,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partial": 2,
+          "pixels": 3,
+          "purity": 0.6666666666666666,
+          "retainedFraction": 1.0
+        },
+        {
+          "edge": 2,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partial": 2,
+          "pixels": 3,
+          "purity": 0.6666666666666666,
+          "retainedFraction": 1.0
+        }
+      ],
+      "sh": 2,
+      "sw": 4,
+      "tied": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "w": 3
+    },
+    {
+      "classCount": 3,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "footprint": [
+        3.0,
+        2.0,
+        0.0
+      ],
+      "h": 3,
+      "inputLabels": [
+        0,
+        0,
+        1,
+        0,
+        -1,
+        1
+      ],
+      "inside": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labels": [
+        1,
+        0,
+        0,
+        -1,
+        1,
+        -1,
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "matrix": [
+        -1,
+        0,
+        2,
+        0,
+        1,
+        0
+      ],
+      "name": "mirror",
+      "outside": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.0,
+          1.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "pools": [
+        [
+          30,
+          33,
+          36
+        ],
+        [
+          14,
+          16,
+          18
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 3.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 3,
+          "purity": 1.0,
+          "regionArea": 3.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 2,
+          "purity": 1.0,
+          "regionArea": 2.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 0,
+          "footprintArea": 3.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 3,
+          "purity": 1.0,
+          "retainedFraction": 1.0
+        },
+        {
+          "edge": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 2,
+          "purity": 1.0,
+          "retainedFraction": 1.0
+        },
+        {
+          "edge": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 2,
+      "sw": 3,
+      "tied": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "w": 4
+    },
+    {
+      "classCount": 3,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "footprint": [
+        2.5200000000000005,
+        1.6800000000000002,
+        0.0
+      ],
+      "h": 3,
+      "inputLabels": [
+        0,
+        0,
+        1,
+        0,
+        -1,
+        1
+      ],
+      "inside": [
+        0.9183333333333334,
+        0.774375,
+        0.24937499999999996,
+        0.0,
+        0.8193750000000001,
+        1.0,
+        0.5333333333333334,
+        0.0,
+        0.005625000000000047,
+        0.32500000000000023,
+        0.16229166666666672,
+        0.0
+      ],
+      "labels": [
+        0,
+        0,
+        -1,
+        -1,
+        0,
+        -1,
+        1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "matrix": [
+        0.8,
+        -0.3,
+        0.1,
+        0.4,
+        0.9,
+        -0.2
+      ],
+      "name": "rotation-shear",
+      "outside": [
+        0.2522916666666666,
+        4.440892098500626e-16,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.9154166666666668,
+          0.6970833333333335,
+          0.0,
+          0.0,
+          0.5129166666666668,
+          0.14229166666666676,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.07729166666666648,
+          0.24937499999999996,
+          0.0,
+          0.0,
+          0.3999999999999997,
+          0.5333333333333334,
+          0.0,
+          0.0,
+          0.25770833333333343,
+          0.16229166666666672,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "pools": [
+        [
+          18,
+          21,
+          24
+        ],
+        [
+          19,
+          20,
+          21
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 3,
+          "footprintArea": 2.5200000000000005,
+          "outsideFraction": 0.10011574074074069,
+          "partialIncluded": 3,
+          "pixelsIncluded": 3,
+          "purity": 0.7084722222222224,
+          "regionArea": 2.2677083333333337,
+          "retainedFraction": 0.9372531005971522,
+          "touchedExcluded": 1
+        },
+        {
+          "edgeIncluded": 1,
+          "footprintArea": 1.6800000000000002,
+          "outsideFraction": 2.6433881538694203e-16,
+          "partialIncluded": 1,
+          "pixelsIncluded": 1,
+          "purity": 0.5333333333333334,
+          "regionArea": 1.6799999999999997,
+          "retainedFraction": 0.31746031746031755,
+          "touchedExcluded": 5
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 3,
+          "footprintArea": 2.5200000000000005,
+          "outsideFraction": 0.10011574074074069,
+          "partial": 3,
+          "pixels": 3,
+          "purity": 0.7084722222222224,
+          "retainedFraction": 0.9372531005971522
+        },
+        {
+          "edge": 1,
+          "footprintArea": 1.6800000000000002,
+          "outsideFraction": 2.6433881538694203e-16,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.5333333333333334,
+          "retainedFraction": 0.31746031746031755
+        },
+        {
+          "edge": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 2,
+      "sw": 3,
+      "tied": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "w": 4
+    },
+    {
+      "classCount": 3,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "footprint": [
+        3.0,
+        2.0,
+        0.0
+      ],
+      "h": 3,
+      "inputLabels": [
+        0,
+        0,
+        1,
+        0,
+        -1,
+        1
+      ],
+      "inside": [
+        0.65,
+        0.6500000000000001,
+        0.19500000000000006,
+        0.0,
+        1.0,
+        1.0,
+        0.30000000000000016,
+        0.0,
+        0.35000000000000014,
+        0.3500000000000003,
+        0.10499999999999954,
+        0.0
+      ],
+      "labels": [
+        0,
+        -1,
+        -1,
+        -1,
+        0,
+        1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "matrix": [
+        1,
+        0,
+        -0.7,
+        0,
+        1,
+        0.35
+      ],
+      "name": "cropped",
+      "outside": [
+        1.4,
+        0.0,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.65,
+          0.19500000000000003,
+          0.0,
+          0.0,
+          0.545,
+          0.10500000000000007,
+          0.0,
+          0.0,
+          0.10500000000000004,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.45500000000000007,
+          0.19500000000000006,
+          0.0,
+          0.0,
+          0.6999999999999998,
+          0.30000000000000016,
+          0.0,
+          0.0,
+          0.24500000000000033,
+          0.10499999999999954,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "pools": [
+        [
+          14,
+          16,
+          18
+        ],
+        [
+          16,
+          17,
+          18
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 1,
+          "footprintArea": 3.0,
+          "outsideFraction": 0.4666666666666666,
+          "partialIncluded": 2,
+          "pixelsIncluded": 2,
+          "purity": 0.5975,
+          "regionArea": 1.6,
+          "retainedFraction": 0.746875,
+          "touchedExcluded": 3
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 1,
+          "pixelsIncluded": 1,
+          "purity": 0.6999999999999998,
+          "regionArea": 2.0,
+          "retainedFraction": 0.3499999999999999,
+          "touchedExcluded": 5
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 1,
+          "footprintArea": 3.0,
+          "outsideFraction": 0.4666666666666666,
+          "partial": 2,
+          "pixels": 2,
+          "purity": 0.5975,
+          "retainedFraction": 0.746875
+        },
+        {
+          "edge": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.0,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.6999999999999998,
+          "retainedFraction": 0.3499999999999999
+        },
+        {
+          "edge": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 2,
+      "sw": 3,
+      "tied": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "w": 4
+    },
+    {
+      "classCount": 3,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "footprint": [
+        3.0,
+        2.0,
+        0.0
+      ],
+      "h": 3,
+      "inputLabels": [
+        0,
+        0,
+        1,
+        0,
+        -1,
+        1
+      ],
+      "inside": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labels": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "matrix": [
+        1,
+        0,
+        100000000.0,
+        0,
+        1,
+        -100000000.0
+      ],
+      "name": "far-away",
+      "outside": [
+        3.0,
+        2.0,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "pools": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 3.0,
+          "outsideFraction": 1.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 1.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 0,
+          "footprintArea": 3.0,
+          "outsideFraction": 1.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        },
+        {
+          "edge": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 1.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        },
+        {
+          "edge": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 2,
+      "sw": 3,
+      "tied": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "w": 4
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "footprint": [
+        2.0,
+        2.0
+      ],
+      "h": 2,
+      "inputLabels": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "inside": [
+        0.49999989999999994,
+        0.9999999999999999,
+        0.5000001,
+        0.49999990000000005,
+        1.0,
+        0.5000001000000001
+      ],
+      "labels": [
+        0,
+        1,
+        0,
+        1,
+        0,
+        1
+      ],
+      "matrix": [
+        0.5,
+        0,
+        0.2500001,
+        0,
+        1,
+        0
+      ],
+      "name": "near-half-boundary",
+      "outside": [
+        2.220446049250313e-16,
+        1.1102230246251565e-16
+      ],
+      "overlap": [
+        [
+          0.49999989999999994,
+          1.0000000005838672e-07,
+          0.4999999999999999,
+          0.0,
+          0.9999999,
+          9.999999983634211e-08
+        ],
+        [
+          0.0,
+          0.9999998999999998,
+          1.0000000005838672e-07,
+          0.49999990000000005,
+          1.0000000005838672e-07,
+          0.5000000000000002
+        ]
+      ],
+      "pools": [
+        [
+          21,
+          24,
+          27
+        ],
+        [
+          30,
+          33,
+          36
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 2,
+          "footprintArea": 2.0,
+          "outsideFraction": 1.1102230246251565e-16,
+          "partialIncluded": 2,
+          "pixelsIncluded": 3,
+          "purity": 0.6666666,
+          "regionArea": 1.9999999999999998,
+          "retainedFraction": 0.9999999,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 2,
+          "footprintArea": 2.0,
+          "outsideFraction": 5.551115123125783e-17,
+          "partialIncluded": 2,
+          "pixelsIncluded": 3,
+          "purity": 0.6666666,
+          "regionArea": 2.0,
+          "retainedFraction": 0.9999999,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 2,
+          "footprintArea": 2.0,
+          "outsideFraction": 1.1102230246251565e-16,
+          "partial": 2,
+          "pixels": 3,
+          "purity": 0.6666666,
+          "retainedFraction": 0.9999999
+        },
+        {
+          "edge": 2,
+          "footprintArea": 2.0,
+          "outsideFraction": 5.551115123125783e-17,
+          "partial": 2,
+          "pixels": 3,
+          "purity": 0.6666666,
+          "retainedFraction": 0.9999999
+        }
+      ],
+      "sh": 2,
+      "sw": 4,
+      "tied": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "w": 3
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footprint": [
+        0.0,
+        0.0
+      ],
+      "h": 1,
+      "inputLabels": [
+        -1,
+        -1
+      ],
+      "inside": [
+        1.0,
+        1.0
+      ],
+      "labels": [
+        -1,
+        -1
+      ],
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "name": "empty-class",
+      "outside": [
+        0.0,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "pools": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        },
+        {
+          "edge": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 1,
+      "sw": 2,
+      "tied": [
+        false,
+        false
+      ],
+      "w": 2
+    },
+    {
+      "classCount": 3,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "footprint": [
+        2.8962,
+        1.9307999999999998,
+        0.0
+      ],
+      "h": 3,
+      "inputLabels": [
+        0,
+        0,
+        1,
+        0,
+        -1,
+        1
+      ],
+      "inside": [
+        0.64225,
+        0.79225,
+        0.9412581250000003,
+        0.5567532467532466,
+        0.8616844274656503,
+        0.8167499999999999,
+        0.6667499999999998,
+        0.4141835308441555,
+        8.706709956710079e-05,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labels": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "matrix": [
+        -1.2,
+        0.23,
+        2.4,
+        0.18,
+        0.77,
+        -0.1
+      ],
+      "name": "shear-reflection",
+      "outside": [
+        0.019590097402597872,
+        0.08084350543478236,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.00039350543478260114,
+          0.7131213755175984,
+          0.8999663961038964,
+          0.5567532467532466,
+          0.0,
+          0.010535119047619057,
+          0.2816567288961038,
+          0.4141835308441555,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.6418564945652174,
+          0.06600341614906838,
+          0.0,
+          0.0,
+          0.8616844274656503,
+          0.2803250892857143,
+          0.0,
+          0.0,
+          8.706709956710079e-05,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "pools": [
+        [
+          21,
+          24,
+          27
+        ],
+        [
+          14,
+          16,
+          18
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 3,
+          "footprintArea": 2.8962,
+          "outsideFraction": 0.006764069264069426,
+          "partialIncluded": 3,
+          "pixelsIncluded": 3,
+          "purity": 0.7232803394582471,
+          "regionArea": 2.8766099025974023,
+          "retainedFraction": 0.7543049255359608,
+          "touchedExcluded": 4
+        },
+        {
+          "edgeIncluded": 2,
+          "footprintArea": 1.9307999999999998,
+          "outsideFraction": 0.04187047101449263,
+          "partialIncluded": 2,
+          "pixelsIncluded": 2,
+          "purity": 0.7517704610154339,
+          "regionArea": 1.8499564945652176,
+          "retainedFraction": 0.8127439355725143,
+          "touchedExcluded": 3
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 0,
+          "pixelsIncluded": 0,
+          "purity": 0.0,
+          "regionArea": 0.0,
+          "retainedFraction": 0.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 3,
+          "footprintArea": 2.8962,
+          "outsideFraction": 0.006764069264069426,
+          "partial": 3,
+          "pixels": 3,
+          "purity": 0.7232803394582471,
+          "retainedFraction": 0.7543049255359608
+        },
+        {
+          "edge": 2,
+          "footprintArea": 1.9307999999999998,
+          "outsideFraction": 0.04187047101449263,
+          "partial": 2,
+          "pixels": 2,
+          "purity": 0.7517704610154339,
+          "retainedFraction": 0.8127439355725143
+        },
+        {
+          "edge": 0,
+          "footprintArea": 0.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 2,
+      "sw": 3,
+      "tied": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "w": 4
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "footprint": [
+        2.0,
+        1.0
+      ],
+      "h": 1,
+      "inputLabels": [
+        0,
+        1,
+        0
+      ],
+      "inside": [
+        0.5,
+        1.0,
+        1.0
+      ],
+      "labels": [
+        0,
+        -1,
+        -1
+      ],
+      "matrix": [
+        1,
+        0,
+        0.5,
+        0,
+        1,
+        0
+      ],
+      "name": "exact-tie",
+      "outside": [
+        0.5,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.5,
+          0.5,
+          0.5
+        ],
+        [
+          0.0,
+          0.5,
+          0.5
+        ]
+      ],
+      "pools": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 1,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.25,
+          "partialIncluded": 3,
+          "pixelsIncluded": 3,
+          "purity": 0.5,
+          "regionArea": 1.5,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 2,
+          "pixelsIncluded": 2,
+          "purity": 0.5,
+          "regionArea": 1.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 1,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.25,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.5,
+          "retainedFraction": 0.3333333333333333
+        },
+        {
+          "edge": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 1,
+      "sw": 3,
+      "tied": [
+        false,
+        true,
+        true
+      ],
+      "w": 3
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "footprint": [
+        2.0,
+        1.0
+      ],
+      "h": 1,
+      "inputLabels": [
+        0,
+        1,
+        0
+      ],
+      "inside": [
+        0.4999999000000001,
+        1.0,
+        1.0
+      ],
+      "labels": [
+        0,
+        -1,
+        -1
+      ],
+      "matrix": [
+        1,
+        0,
+        0.5000001,
+        0,
+        1,
+        0
+      ],
+      "name": "tie-within-tolerance",
+      "outside": [
+        0.5000000999999996,
+        0.0
+      ],
+      "overlap": [
+        [
+          0.4999999000000001,
+          0.5000000999999998,
+          0.4999999000000004
+        ],
+        [
+          0.0,
+          0.49999990000000016,
+          0.5000000999999998
+        ]
+      ],
+      "pools": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 1,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.2500000499999998,
+          "partialIncluded": 3,
+          "pixelsIncluded": 3,
+          "purity": 0.4999999666666668,
+          "regionArea": 1.4999999000000004,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 0.0,
+          "partialIncluded": 2,
+          "pixelsIncluded": 2,
+          "purity": 0.5,
+          "regionArea": 1.0,
+          "retainedFraction": 1.0,
+          "touchedExcluded": 0
+        }
+      ],
+      "reports": [
+        {
+          "edge": 1,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.2500000499999998,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.4999999000000001,
+          "retainedFraction": 0.3333332888888859
+        },
+        {
+          "edge": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 0.0,
+          "partial": 0,
+          "pixels": 0,
+          "purity": 0.0,
+          "retainedFraction": 0.0
+        }
+      ],
+      "sh": 1,
+      "sw": 3,
+      "tied": [
+        false,
+        true,
+        true
+      ],
+      "w": 3
+    },
+    {
+      "classCount": 2,
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "footprint": [
+        2.0,
+        1.0
+      ],
+      "h": 1,
+      "inputLabels": [
+        0,
+        1,
+        0
+      ],
+      "inside": [
+        0.498,
+        1.0,
+        1.0
+      ],
+      "labels": [
+        -1,
+        0,
+        1
+      ],
+      "matrix": [
+        1,
+        0,
+        0.502,
+        0,
+        1,
+        0
+      ],
+      "name": "beyond-tolerance",
+      "outside": [
+        0.5019999999999998,
+        1.1102230246251565e-16
+      ],
+      "overlap": [
+        [
+          0.498,
+          0.502,
+          0.4980000000000002
+        ],
+        [
+          0.0,
+          0.4980000000000001,
+          0.5019999999999998
+        ]
+      ],
+      "pools": [
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          7,
+          8,
+          9
+        ]
+      ],
+      "regions": [
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.2509999999999999,
+          "partialIncluded": 1,
+          "pixelsIncluded": 1,
+          "purity": 0.502,
+          "regionArea": 1.4980000000000002,
+          "retainedFraction": 0.3351134846461949,
+          "touchedExcluded": 2
+        },
+        {
+          "edgeIncluded": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 1.1102230246251565e-16,
+          "partialIncluded": 1,
+          "pixelsIncluded": 1,
+          "purity": 0.5019999999999998,
+          "regionArea": 0.9999999999999999,
+          "retainedFraction": 0.5019999999999999,
+          "touchedExcluded": 1
+        }
+      ],
+      "reports": [
+        {
+          "edge": 0,
+          "footprintArea": 2.0,
+          "outsideFraction": 0.2509999999999999,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.502,
+          "retainedFraction": 0.3351134846461949
+        },
+        {
+          "edge": 0,
+          "footprintArea": 1.0,
+          "outsideFraction": 1.1102230246251565e-16,
+          "partial": 1,
+          "pixels": 1,
+          "purity": 0.5019999999999998,
+          "retainedFraction": 0.5019999999999999
+        }
+      ],
+      "sh": 1,
+      "sw": 3,
+      "tied": [
+        false,
+        false,
+        false
+      ],
+      "w": 3
+    }
+  ],
+  "numpy": "2.5.4",
+  "python": "3.14.7",
+  "reference": "NumPy transcription of mac4DSTEM c809679c"
+}
