@@ -9,7 +9,7 @@ SpectroKit follows semantic versions (0.x). Each release says what changed, and 
   expanded only after all six developer dumps matched the original baseline byte for byte, and a regression verifies
   their original counts, hashes and sums. Text, integer, structure and CSV hash comparisons remain exact.
 
-- **Portable estimated EELS thresholds.** Scalar QR replaces Accelerate-dependent Savitzky–Golay coefficients and edge fits.
+- **Portable estimated EELS thresholds.** The Savitzky–Golay solve stays on LAPACK's SVD, as in SciPy's `savgol_coeffs`.
   Automatic SG tolerance treats derivatives within `64 eps * peak cropped input * coefficient L1` as tied and chooses the
   first channel. This intentionally changes 20 of 138 pinned policy pixel answers from raw exSpy, preventing small CPU
   rounding changes from producing large thickness changes. Explicit tolerance and gradient comparisons remain exact.

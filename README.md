@@ -156,7 +156,7 @@ let pixel = thickness[0, 0]
 print("t/lambda = \(pixel.tOverLambda!) +- \(pixel.sigmaCounting!) (planted 0.5, validation: \(thickness.validation))")
 ```
 
-`EELSThickness.logRatio` also takes `.estimated()` (exSpy's inflexion rule with a scalar polynomial fit and deterministic numerical ties), a per-pixel threshold, a separate zero-loss
+`EELSThickness.logRatio` also takes `.estimated()` (exSpy's inflexion rule with SciPy's LAPACK polynomial fit and deterministic first-index ties), a per-pixel threshold, a separate zero-loss
 spectrum image and a mean free path (`MeanFreePathSource`) for an absolute thickness in nm; `EELSEdgeQuantification.ratioMethod`
 gives the C K areal density. Read the doc comments for what each leaves out.
 

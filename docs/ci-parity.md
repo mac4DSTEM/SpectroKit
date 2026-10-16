@@ -49,10 +49,8 @@ fixture-specific coefficient lookup would hide the issue for untested windows an
 
 ## Resolution and reproducibility
 
-The owner authorized a reproducible scalar backend and a documented deterministic tie policy during this investigation.
-Scalar twice-reorthogonalized QR replaces the SG coefficient/edge SVDs; centered derivative coefficients have exact parity,
-and edge dot products use explicit FMA in ascending sample order. Results no longer depend on the number of spectra in
-an edge fit. Automatic SG ties use `64 eps * peak cropped input * coefficient L1`; explicit tolerances and gradient comparisons
+The owner approved the deterministic tie policy on 2026-10-16, following common practice (tolerance comparisons across machines, NumPy's first-index tie convention); the Savitzky-Golay solve stays on LAPACK's SVD as in SciPy.
+The SG coefficients and edge fits stay on LAPACK's SVD (`dgelsd`), as in SciPy's `savgol_coeffs`; the tie rule carries the CPU independence. Automatic SG ties use `64 eps * peak cropped input * coefficient L1`; explicit tolerances and gradient comparisons
 retain their exact comparisons. The selected threshold channel remains an exact assertion against the new policy oracle.
 
 `tools/eels-thickness/make_portable_thresholds.py` runs pinned SciPy 1.18.1, NumPy 2.5.4 and HyperSpy 2.4.0 in

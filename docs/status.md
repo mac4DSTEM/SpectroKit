@@ -50,8 +50,8 @@ The macos-26 run at `0653404` had 120 unexpected issues across eight tests and t
 [The audit](ci-parity.md) records measured ULP/relative gaps and missing operands. Commit `3577715` fixes the masked
 CI gate status and the consumer target inventory's silent exit on an absent build backend directory.
 
-The estimated-threshold source fix replaces Accelerate's Savitzky–Golay coefficients and edge fits with scalar QR,
-then applies the documented automatic SG tie allowance. The pinned Python policy fixture covers 18 routes / 138 pixel
+The estimated-threshold source fix keeps the Savitzky–Golay coefficients and edge fits on LAPACK's SVD, as SciPy does,
+and applies the documented automatic SG tie allowance (first index wins, as numpy.argmax). The pinned Python policy fixture covers 18 routes / 138 pixel
 answers; 20 thresholds intentionally differ from raw exSpy. All original raw fixtures remain unchanged. Explicit-tolerance,
 gradient, fixed-threshold and zero-loss routes retain their comparison rules. `ThresholdRule` DocC and the changelog explain
 that previously computed estimated-threshold results may need recomputation.

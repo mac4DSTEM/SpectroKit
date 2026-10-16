@@ -17,8 +17,7 @@ import Foundation
 ///   that variability out (see `ThicknessMap`). Noisy data want `.fixed`.
 ///   `windowLength == 0` uses `numpy.gradient` instead of Savitzky–Golay (exSpy's `window_length=0`).
 ///   A pixel whose first inflexion is the search range's first channel (or that has none) has no threshold (exSpy: NaN).
-///   The Savitzky–Golay polynomial is fitted by scalar QR with a fixed operation order, independent of Accelerate and
-///   image size. With automatic tolerance, derivative magnitudes within `64 * Double.ulpOfOne * peak * coefficientL1`
+///   The Savitzky–Golay polynomial is fitted by LAPACK's SVD (`dgelsd`), as SciPy's `savgol_coeffs` does. With automatic tolerance, derivative magnitudes within `64 * Double.ulpOfOne * peak * coefficientL1`
 ///   of `tol` are tied; the first channel wins. Here `peak` is the largest absolute cropped input count in that pixel and
 ///   `coefficientL1` is the sum of absolute interior filter coefficients. This roundoff allowance intentionally differs
 ///   from raw exSpy's CPU-dependent choices at ties, and can change I_0 and thickness. A supplied `tolerance` uses an exact
@@ -32,8 +31,8 @@ import Foundation
 ///   A threshold outside the energy axis gives that pixel no t/λ (a nil pixel with a reason); exSpy raises for the whole map.
 ///
 /// The defaults of `.estimated` (window 10 eV, start 1 eV, Savitzky–Golay window length 5, order 3, tolerance from the data) are exSpy's
-/// `estimate_elastic_scattering_threshold` (`_eels.py:641-643`). The scalar solver and automatic tie allowance are SpectroKit's
-/// documented deviations from its platform-dependent rounding.
+/// `estimate_elastic_scattering_threshold` (`_eels.py:641-643`). The automatic first-index tie allowance is SpectroKit's
+/// documented deviation from exSpy's platform-dependent rounding at ties.
 public nonisolated enum ThresholdRule: Sendable, Equatable {
     case estimated(window: Double = 10.0, start: Double = 1.0, windowLength: Int = 5, polynomialOrder: Int = 3,
                    tolerance: Double? = nil)
