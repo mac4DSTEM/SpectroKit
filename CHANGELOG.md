@@ -2,7 +2,7 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
-## 0.5.3 — CI fixes
+## 0.5.3 (2026-10-16) — CI fixes
 
 0.5.2 was tagged at 9de71e9 with red CI: both jobs (macos-15 and the newest Xcode) failed in
 `SpectroGoldenTests.testOutputsAreByteIdenticalToTheBaseline`, 26 and 20 records. This release is the fix. Test code only;
@@ -14,6 +14,7 @@ no library number moves.
   above it is a defect, not a tolerance). Array elements stay at 1e-12 of the pinned peak; text, integers, structure and hashes
   stay exact. The baselines and companions are unchanged, nothing was regenerated from CI, and the deterministic tie rule is untouched.
 - The 0.5.2 type-check fixes (QuantificationPolicyTests, SpectroscopyFitTests) are listed under 0.5.2 below.
+- **Migration.** Nothing required: the registration API is additive, and the Golden scalar bound (now 1e-9 relative) is test-side only. Re-pin to 0.5.3 in place of 0.5.2, which was tagged with red CI.
 
 - **Registration.** `GridRegistration`, `MaskTransport` (area-overlap label transport from the scan grid to the spectrum grid) and
   `PoolBuilder` (pooled counts and grouping), ported from mac4DSTEM's Registration code. Oracle: a NumPy transcription of the app

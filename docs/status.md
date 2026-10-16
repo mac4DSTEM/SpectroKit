@@ -1,10 +1,10 @@
 # SpectroKit: status
 
-Updated 2026-10-16 for the 0.5.2 CI portability fix; the 0.5.0 gate below is historical. The source of truth for the state of the repo; the suite board shows it.
+Updated 2026-10-16 for the 0.5.3 release; the 0.5.0 gate below is historical. The source of truth for the state of the repo; the suite board shows it.
 
 ## Version and modules
 
-**0.5.1**, ready for the owner's tag (0.5.0 is the last tag). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `exact: "0.2.1"`.
+**0.5.3**, ready for the owner's tag (0.5.0 is the last tag; 0.5.1 and 0.5.2 are superseded by it). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `exact: "0.2.1"`.
 
 | Module | What it does |
 |---|---|
@@ -43,6 +43,10 @@ is validated until it recovers a planted value and a sample of known composition
 - History, the real-data check and its registration, the 0.2.0 handoff: `../_archive/SpectroKit/docs/history.md` (and its
   neighbours in that folder).
 - `References/` is a link to the suite's `../References/SpectroKit` (2026-10-15); gitignored.
+
+## 0.5.3 release commit (2026-10-16)
+
+0.5.3 is the CI-fix release over the red-CI 0.5.2: the Golden scalar bound is 1e-9 relative, and the registration API (`GridRegistration`, `MaskTransport`, `PoolBuilder`) is added. Ready for the owner's push and tag; `tools/test.sh` was green locally on these commits and CI on push is the gate.
 
 ## 0.5.2 CI portability fix
 
