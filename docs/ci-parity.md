@@ -86,13 +86,13 @@ entries above. The local measurements are distinct from that missing runner evid
 ## Local hand-back checks
 
 - Branch: `codex/ci-parity`, created from `main` at `0653404`; no push, tag or CI dispatch.
-- `tools/test.sh`: 346 test names, zero unexpected failures, two registered known issues. The two recorders are disabled
+- `tools/test.sh`: 347 test names, zero unexpected failures, two registered known issues. The two recorders are disabled
   in ordinary runs. `tools/consumer-check/run.sh`: 189/189 API checks and the README consumer pass. Negative controls
   were not rerun locally; the workflow retains them.
 - Changed numerical tests: all eight functions in the original-failure table, plus
   `testEstimatedThresholdPinsAreExactWithSciPysCoefficients` (signed rounding perturbations) and
   `testEdgeBitsDependOnTheImageNotOnThePixelAlone` (now asserts image-size independence). Legacy names are retained.
-- New infrastructure controls: three `CIScriptTests` functions and two portable Golden comparator functions. The
+- New infrastructure controls: three `CIScriptTests` functions and three portable Golden comparison/companion functions. The
   source regressions failed against the old backend; the shell regressions failed against the old scripts.
 - Owner confirmation: push the branch as appropriate and inspect the macos-26 job. The expanded gap reports supply
   measurements unavailable from the original runner log. The latest macos-15 log separately reports another type-check

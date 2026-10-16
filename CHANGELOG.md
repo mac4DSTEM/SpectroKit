@@ -4,6 +4,11 @@ SpectroKit follows semantic versions (0.x). Each release says what changed, and 
 
 ## Unreleased (0.5.2)
 
+- **Golden portability.** Original scalar values and array hashes are retained. CPU-dependent fitted scalars use a stated
+  1e-12 relative bound; each floating-point array element uses 1e-12 of the pinned array peak. Compact companions were
+  expanded only after all six developer dumps matched the original baseline byte for byte, and a regression verifies
+  their original counts, hashes and sums. Text, integer, structure and CSV hash comparisons remain exact.
+
 - **Portable estimated EELS thresholds.** Scalar QR replaces Accelerate-dependent Savitzky–Golay coefficients and edge fits.
   Automatic SG tolerance treats derivatives within `64 eps * peak cropped input * coefficient L1` as tied and chooses the
   first channel. This intentionally changes 20 of 138 pinned policy pixel answers from raw exSpy, preventing small CPU

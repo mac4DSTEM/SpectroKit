@@ -3,7 +3,7 @@
 //  SpectroKit slot S0, gate G-golden (docs/archive/v5/spectrokit-slot-plan-2026-10-13.md §9): "no number moves". A baseline of
 //  the Spectroscopy core's outputs, recorded at 71929a01 BEFORE the Velox reader's per-block HDF5 lock and the cancel/progress
 //  contract, and compared byte for byte afterwards. Every Double is its exact bit pattern (hex of `bitPattern`) with a readable
-//  %.17g beside it; large arrays are listed by count, a bit-exact sum and an FNV-1a hash of every element's bits. No tolerance anywhere.
+//  %.17g beside it; large arrays are listed by count, a bit-exact sum and an FNV-1a hash of every element's bits. Original baselines remain unchanged; portable comparisons below bound CPU-dependent Double roundoff.
 //
 //  Inputs are the committed fixtures only (velox-tiny.emd, demo-edx-tiny.dm4, the eds-*.json pools, the demo spectrum image
 //  of `--demo-spectrum-fixture`), so CI runs it. The dump is a reflection walk (Mirror) of the result values, so a field added to
@@ -36,7 +36,9 @@ import FormatoEMD
 
 /// Reflection walk that writes one line per scalar: `path = value`. Deterministic: dictionaries and sets are sorted, absolute
 /// paths keep their last component, numeric arrays above 8 elements are summarised by count, exact sum and bit hash.
+@MainActor
 enum GoldenDump {
+    static var arrays: [String: [Double]] = [:]
     static func fnv(_ words: some Sequence<UInt64>) -> UInt64 {
         var h: UInt64 = 0xcbf29ce484222325
         for w in words {
@@ -67,7 +69,7 @@ enum GoldenDump {
         case let i as UInt64: out.append("\(path) = \(i)"); return
         case let s as String: out.append("\(path) = \"\(normalised(s))\""); return
         case let data as Data: out.append("\(path) = Data(\(data.count), fnv \(String(fnv(data.map { UInt64($0) }), radix: 16)))"); return
-        case let a as [Double]: numeric(path, a.map { $0.bitPattern }, sumBits: a.reduce(0, +).bitPattern, &out) { hex($0) }; return
+        case let a as [Double]: arrays[path] = a; numeric(path, a.map { $0.bitPattern }, sumBits: a.reduce(0, +).bitPattern, &out) { hex($0) }; return
         case let a as [Float]: numeric(path, a.map { UInt64($0.bitPattern) }, sumBits: UInt64(a.reduce(0, +).bitPattern), &out) { hex($0) }; return
         case let a as [Int]: numeric(path, a.map { UInt64(bitPattern: Int64($0)) }, sumBits: UInt64(bitPattern: Int64(a.reduce(0, +))), &out); return
         case let a as [Int32]: numeric(path, a.map { UInt64(bitPattern: Int64($0)) }, sumBits: UInt64(bitPattern: a.reduce(0) { $0 + Int64($1) }), &out); return
@@ -271,14 +273,15 @@ enum SpectroGolden {
 
     static var times: [String] = []
 
-    static func scenarios() async throws -> [(name: String, text: String)] {
-        var all: [(String, String)] = []
+    static func scenarios() async throws -> [(name: String, text: String, arrays: [String: [Double]])] {
+        var all: [(String, String, [String: [Double]])] = []
         func add(_ name: String, _ body: (inout [String]) throws -> Void) rethrows {
+            GoldenDump.arrays = [:]
             var out: [String] = ["# SpectroGolden \(name)"]
             let t0 = Date()
             try body(&out)
             times.append("\(name) \(String(format: "%.1f", Date().timeIntervalSince(t0))) s")
-            all.append((name, out.joined(separator: "\n") + "\n"))
+            all.append((name, out.joined(separator: "\n") + "\n", GoldenDump.arrays))
         }
 
         try add("velox-tiny") { out in
@@ -397,6 +400,122 @@ enum SpectroGolden {
     }
 }
 
+/// CPU-dependent Accelerate covariance and fitted values differ by up to 43 ulps in the CI audit. Keep the original
+/// baselines, bound scalar differences by 1e-12 relative, and compare every array element at 1e-12 of its pinned peak.
+/// The latter handles near-zero cancellation without accepting an unchecked array hash or a changed string/integer.
+@MainActor
+private enum GoldenPortable {
+    struct ArrayEntry: Codable { let path: String; let offset: Int; let count: Int }
+    struct Result {
+        var failures: [String] = []
+        var compared = 0
+        var maxULP: UInt64 = 0
+        var maxRelative = 0.0
+        var maxNormalized = 0.0
+
+        mutating func measure(_ actual: Double, _ expected: Double, scale: Double) {
+            if actual.bitPattern == expected.bitPattern { return }
+            compared += 1
+            let error = abs(actual - expected)
+            let relative = expected == 0 ? (error == 0 ? 0 : .infinity) : error / abs(expected)
+            maxRelative = max(maxRelative, relative)
+            maxNormalized = max(maxNormalized, scale == 0 ? relative : error / scale)
+            func ordered(_ value: Double) -> UInt64 {
+                let bits = value.bitPattern
+                let magnitude = bits & 0x7fff_ffff_ffff_ffff
+                return bits & 0x8000_0000_0000_0000 == 0 ? 0x8000_0000_0000_0000 + magnitude : 0x8000_0000_0000_0000 - magnitude
+            }
+            let a = ordered(actual), b = ordered(expected)
+            maxULP = max(maxULP, a >= b ? a - b : b - a)
+        }
+    }
+
+    static func writeArrays(_ arrays: [String: [Double]], directory: URL, scenario: String) throws {
+        var data = Data(), entries: [ArrayEntry] = []
+        for path in arrays.keys.sorted() {
+            let values = arrays[path]!
+            entries.append(ArrayEntry(path: path, offset: data.count / 8, count: values.count))
+            for value in values {
+                var bits = value.bitPattern.littleEndian
+                withUnsafeBytes(of: &bits) { data.append(contentsOf: $0) }
+            }
+        }
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        try data.write(to: directory.appendingPathComponent(scenario + ".arrays.f64"), options: .atomic)
+        try encoder.encode(entries).write(to: directory.appendingPathComponent(scenario + ".arrays.json"), options: .atomic)
+    }
+
+    static func readArrays(directory: URL, scenario: String) throws -> [String: [Double]] {
+        let entries = try JSONDecoder().decode([ArrayEntry].self, from: Data(contentsOf: directory.appendingPathComponent(scenario + ".arrays.json")))
+        let data = try Data(contentsOf: directory.appendingPathComponent(scenario + ".arrays.f64"))
+        try #require(data.count % 8 == 0, "Invalid f64 companion length")
+        var arrays: [String: [Double]] = [:]
+        for entry in entries {
+            try #require(entry.offset >= 0 && entry.count >= 0 && entry.offset <= data.count / 8 && entry.count <= data.count / 8 - entry.offset,
+                         "Invalid f64 companion range for \(entry.path)")
+            try #require(arrays[entry.path] == nil, "Duplicate companion path \(entry.path)")
+            arrays[entry.path] = (entry.offset..<(entry.offset + entry.count)).map { index in
+                var word: UInt64 = 0
+                for byte in 0..<8 { word |= UInt64(data[index * 8 + byte]) << (byte * 8) }
+                return Double(bitPattern: word)
+            }
+        }
+        return arrays
+    }
+
+    private static func scalar(_ line: String) -> (path: String, value: Double)? {
+        guard let separator = line.range(of: " = ") else { return nil }
+        let words = line[separator.upperBound...].split(separator: " ")
+        guard words.count == 2, words[0].count == 16, let bits = UInt64(words[0], radix: 16),
+              let readable = Double(words[1]), readable.bitPattern == bits else { return nil }
+        return (String(line[..<separator.lowerBound]), Double(bitPattern: bits))
+    }
+
+    fileprivate static func summary(_ line: String) -> (path: String, count: Int, sumBits: UInt64, hash: UInt64)? {
+        guard let separator = line.range(of: ": n ") else { return nil }
+        let words = line[separator.upperBound...].split(separator: " ")
+        guard words.count == 6, let count = Int(words[0]), words[1] == "sum", words[2].count == 16,
+              let sum = UInt64(words[2], radix: 16), let readable = Double(words[3]), readable.bitPattern == sum,
+              words[4] == "fnv", let hash = UInt64(words[5], radix: 16) else { return nil }
+        return (String(line[..<separator.lowerBound]), count, sum, hash)
+    }
+
+    static func compare(actual: String, expected: String, actualArrays: [String: [Double]],
+                        expectedArrays: () throws -> [String: [Double]]) throws -> Result {
+        var result = Result()
+        let actualLines = actual.components(separatedBy: "\n"), expectedLines = expected.components(separatedBy: "\n")
+        guard actualLines.count == expectedLines.count else {
+            result.failures.append("line count changed from \(expectedLines.count) to \(actualLines.count)")
+            return result
+        }
+        for (index, pair) in zip(actualLines, expectedLines).enumerated() where pair.0 != pair.1 {
+            let (a, e) = pair
+            if let av = scalar(a), let ev = scalar(e), av.path == ev.path, av.value.isFinite, ev.value.isFinite {
+                result.measure(av.value, ev.value, scale: abs(ev.value))
+                if abs(av.value - ev.value) <= 1e-12 * abs(ev.value) { continue }
+            } else if let av = summary(a), let ev = summary(e), av.path == ev.path, av.count == ev.count,
+                      let values = actualArrays[av.path] {
+                let pins = try expectedArrays()
+                if let reference = pins[ev.path], reference.count == ev.count, values.count == av.count,
+                   GoldenDump.fnv(reference.map(\.bitPattern)) == ev.hash,
+                   reference.reduce(0, +).bitPattern == ev.sumBits,
+                   GoldenDump.fnv(values.map(\.bitPattern)) == av.hash,
+                   values.reduce(0, +).bitPattern == av.sumBits {
+                    let peak = reference.reduce(0) { max($0, abs($1)) }
+                    var valid = true
+                    for (value, pin) in zip(values, reference) {
+                        result.measure(value, pin, scale: peak)
+                        if !value.isFinite || !pin.isFinite || abs(value - pin) > 1e-12 * peak { valid = false }
+                    }
+                    if valid { continue }
+                }
+            }
+            result.failures.append("line \(index + 1): now \(a) | baseline \(e)")
+        }
+        return result
+    }
+}
+
 @MainActor
 struct SpectroGoldenTests {
     private var recordDir: String? { ProcessInfo.processInfo.environment["SPECTRO_GOLDEN_DIR"] }
@@ -410,8 +529,8 @@ struct SpectroGoldenTests {
         try SpectroGolden.times.joined(separator: "\n").write(toFile: dir + "/times.log", atomically: true, encoding: .utf8)   // not part of the baseline
     }
 
-    /// COMPARISON: recomputes every scenario and compares each against the committed baseline, byte for byte, reporting the
-    /// first differing line. Mutation: one bit of any fitted net flipped (net * (1 + 1e-15)) - red on that scenario's file.
+    /// Recomputes every scenario against the untouched baseline. CPU-dependent Double roundoff has an explicit bound;
+    /// all other records stay exact, and an array hash can differ only after every element passes its pinned bound.
     @Test(.disabled(if: ProcessInfo.processInfo.environment["SPECTRO_GOLDEN_DIR"] != nil, "recording run"))
     func testOutputsAreByteIdenticalToTheBaseline() async throws {
         let scenarios = try await SpectroGolden.scenarios()
@@ -420,9 +539,97 @@ struct SpectroGoldenTests {
             let url = SpectroGolden.baselineDirectory.appendingPathComponent(s.name + ".txt")
             let recorded = try String(contentsOf: url, encoding: .utf8)
             if s.text == recorded { continue }
-            let a = s.text.split(separator: "\n", omittingEmptySubsequences: false), b = recorded.split(separator: "\n", omittingEmptySubsequences: false)
-            let i = (0..<min(a.count, b.count)).first { a[$0] != b[$0] } ?? min(a.count, b.count)
-            Issue.record("\(s.name) moved at line \(i + 1): now \(i < a.count ? String(a[i]) : "<end>") | baseline \(i < b.count ? String(b[i]) : "<end>")")
+            var companion: [String: [Double]]?
+            let result = try GoldenPortable.compare(actual: s.text, expected: recorded, actualArrays: s.arrays) {
+                if let companion { return companion }
+                let loaded = try GoldenPortable.readArrays(directory: SpectroGolden.baselineDirectory, scenario: s.name)
+                companion = loaded
+                return loaded
+            }
+            for failure in result.failures { Issue.record("\(s.name): \(failure)") }
+            if result.compared > 0 {
+                print("Golden portable \(s.name): \(result.compared) differing Double values; max ULP \(result.maxULP), relative \(result.maxRelative), peak-normalized \(result.maxNormalized)")
+            }
         }
     }
+
+    /// Expands the original hashed arrays without changing any baseline value. Every raw scenario must first match exactly.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["SPECTRO_GOLDEN_ARRAYS_DIR"] != nil, "set SPECTRO_GOLDEN_ARRAYS_DIR to expand original arrays"))
+    func testRecordPortableArrays() async throws {
+        let directory = URL(fileURLWithPath: try #require(ProcessInfo.processInfo.environment["SPECTRO_GOLDEN_ARRAYS_DIR"]))
+        let scenarios = try await SpectroGolden.scenarios()
+        // Validate every scenario before writing anything: this is expansion, never a numerical rebaseline.
+        for scenario in scenarios {
+            let raw = try Data(contentsOf: SpectroGolden.baselineDirectory.appendingPathComponent(scenario.name + ".txt"))
+            try #require(Data(scenario.text.utf8) == raw, "Refusing to expand arrays: \(scenario.name) differs from original raw baseline")
+        }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for scenario in scenarios { try GoldenPortable.writeArrays(scenario.arrays, directory: directory, scenario: scenario.name) }
+    }
+
+    @Test func testPortableGoldenCompanionsReproduceOriginalSummaries() throws {
+        let directory = SpectroGolden.baselineDirectory
+        let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            .filter { $0.lastPathComponent.hasSuffix(".arrays.json") }
+        #expect(files.count == 6)
+        for file in files {
+            let name = String(file.lastPathComponent.dropLast(".arrays.json".count))
+            let arrays = try GoldenPortable.readArrays(directory: directory, scenario: name)
+            let raw = try String(contentsOf: directory.appendingPathComponent(name + ".txt"), encoding: .utf8)
+            let summaries = raw.components(separatedBy: "\n").compactMap(GoldenPortable.summary)
+            for (path, values) in arrays {
+                let summary = try #require(summaries.first { $0.path == path }, "\(name) \(path)")
+                #expect(values.count == summary.count)
+                #expect(GoldenDump.fnv(values.map(\.bitPattern)) == summary.hash, "\(name) \(path)")
+                #expect(values.reduce(0, +).bitPattern == summary.sumBits, "\(name) \(path)")
+            }
+        }
+    }
+
+    @Test func testPortableGoldenScalarBoundsAndStructure() throws {
+        let reference = 2.0
+        let within = Double(bitPattern: reference.bitPattern + 43)
+        let scalar = { (value: Double) in "field = " + GoldenDump.hex(value) + "\n" }
+        let accepted = try GoldenPortable.compare(actual: scalar(within), expected: scalar(reference), actualArrays: [:]) { [:] }
+        #expect(accepted.failures.isEmpty)
+        #expect(accepted.maxULP == 43)
+        let inconsistent = try GoldenPortable.compare(actual: "field = 4000000000000000 9999\n", expected: scalar(reference), actualArrays: [:]) { [:] }
+        #expect(!inconsistent.failures.isEmpty)
+        var crossingZero = GoldenPortable.Result()
+        crossingZero.measure(-Double.leastNonzeroMagnitude, Double.leastNonzeroMagnitude, scale: 1)
+        #expect(crossingZero.maxULP == 2)
+        let rejected = try GoldenPortable.compare(actual: scalar(reference * (1 + 1e-8)), expected: scalar(reference), actualArrays: [:]) { [:] }
+        #expect(!rejected.failures.isEmpty)
+        for (actual, expected) in [("field = 2", "field = 1"), ("field = \"new\"", "field = \"old\""),
+                                   ("csv-fnv = abcd", "csv-fnv = abce"), ("new = " + GoldenDump.hex(reference), "old = " + GoldenDump.hex(reference)),
+                                   ("field: n 9 sum-bits 1 fnv abcd", "field: n 9 sum-bits 1 fnv abce"), ("extra\nline", "extra")] {
+            let result = try GoldenPortable.compare(actual: actual, expected: expected, actualArrays: [:]) { [:] }
+            #expect(!result.failures.isEmpty)
+        }
+        let zero = try GoldenPortable.compare(actual: scalar(Double.leastNonzeroMagnitude), expected: scalar(0), actualArrays: [:]) { [:] }
+        #expect(!zero.failures.isEmpty)
+    }
+
+    @Test func testPortableGoldenArraysRequireOriginalHashAndEveryElement() throws {
+        let reference = [Double](repeating: 2, count: 9)
+        var actual = reference
+        actual[3] = Double(bitPattern: reference[3].bitPattern + 43)
+        func summary(_ values: [Double]) -> String {
+            "array: n \(values.count) sum \(GoldenDump.hex(values.reduce(0, +))) fnv \(String(GoldenDump.fnv(values.map(\.bitPattern)), radix: 16))\n"
+        }
+        let accepted = try GoldenPortable.compare(actual: summary(actual), expected: summary(reference), actualArrays: ["array": actual]) { ["array": reference] }
+        #expect(accepted.failures.isEmpty)
+        #expect(accepted.maxULP == 43)
+        actual[8] = reference[8] * (1 + 1e-8)
+        let tooFar = try GoldenPortable.compare(actual: summary(actual), expected: summary(reference), actualArrays: ["array": actual]) { ["array": reference] }
+        #expect(!tooFar.failures.isEmpty)
+        let corruptPin = try GoldenPortable.compare(actual: summary(actual), expected: summary(reference), actualArrays: ["array": actual]) { ["array": actual] }
+        #expect(!corruptPin.failures.isEmpty)
+        let missingPin = try GoldenPortable.compare(actual: summary(actual), expected: summary(reference), actualArrays: ["array": actual]) { [:] }
+        #expect(!missingPin.failures.isEmpty)
+        let inconsistentSum = summary(reference).replacingOccurrences(of: " 18 fnv ", with: " 9999 fnv ")
+        let malformed = try GoldenPortable.compare(actual: inconsistentSum, expected: summary(reference), actualArrays: ["array": reference]) { ["array": reference] }
+        #expect(!malformed.failures.isEmpty)
+    }
+
 }

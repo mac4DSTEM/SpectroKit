@@ -60,7 +60,7 @@ The portable Golden comparison verifies each floating-point array element agains
 original baseline's hash and sum. Strings, integers, structure and CSV hashes remain exact. CI confirmation requires the
 owner's push; this session does not push or dispatch CI.
 
-Local verification: `tools/test.sh` green, 346 test names, zero unexpected issues and the two registered known issues;
+Local verification: `tools/test.sh` green, 347 test names, zero unexpected issues and the two registered known issues;
 `tools/consumer-check/run.sh` green, 189 API checks plus the README consumer. The 151 negative controls remain for CI.
 
 ## Open items
