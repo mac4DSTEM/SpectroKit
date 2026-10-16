@@ -34,6 +34,7 @@ jobs:
       - name: Hook proof (no sleep or poll loops)
         run: tools/hooks/test-no-sleep-poll.sh
       - name: Gate (tools/test.sh, release)
+        shell: bash
         run: tools/test.sh 2>&1 | tee test.log
       - name: No warnings
         run: |

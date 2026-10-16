@@ -44,6 +44,16 @@ is validated until it recovers a planted value and a sample of known composition
   neighbours in that folder).
 - `References/` is a link to the suite's `../References/SpectroKit` (2026-10-15); gitignored.
 
+## 0.5.2 CI investigation
+
+The macos-26 run at `0653404` has 120 unexpected issues across eight tests and two registered known issues.
+[The audit](ci-parity.md) records measurable ULP/relative gaps and missing operands. The CI pipeline now propagates
+test failures; the consumer target inventory tolerates missing backend directories. Three Swift Testing regressions
+cover those shell failures and the gap-report arithmetic. No scientific fixture or assertion has changed.
+
+The threshold channel shifts are unresolved source behavior, not a tolerance fix. An exploratory scalar QR prototype
+shows that a different solver changes tied channel choices despite close agreement on coefficients. A documented deterministic tie policy needs to be decided before replacing the backend.
+
 ## Open items
 
 **The owner's**
@@ -53,7 +63,7 @@ is validated until it recovers a planted value and a sample of known composition
 
 **Planned**
 - EELS slice 3 (not started; `docs/parity.md` lists what a full EELS model would need).
-- Nothing planned for 0.5.2 yet; the API gaps below and the owner's EDX Q1-Q5 come next.
+- 0.5.2: resolve the macos-26 numerical portability failures (the CI investigation above); the API gaps below and the owner's EDX Q1-Q5 follow.
 
 **0.5.1 (2026-10-15, ready for the owner's tag): the macOS 15 / iOS 18 floor.** FormatoKit `exact: "0.2.1"`; no source change
 in `Sources/`. Proof: the gate (tools/test.sh) green (337 names, 2 known issues, 0 warnings), consumer-check green with 151 of

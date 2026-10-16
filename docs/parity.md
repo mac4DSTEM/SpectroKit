@@ -26,6 +26,17 @@ against planted truth, the evidence column says so.
 
 "package" in the SpectroKit column means the code exists and is tested but is not public API: a consumer cannot call it.
 
+## CI portability
+
+The macos-26 runner at `0653404` refutes cross-CPU BIT parity for the Savitzky–Golay coefficients and edge fits.
+Its rounding differences also change discrete estimated threshold channels and thickness. The affected Savitzky–Golay BIT claims below describe
+the original reference host only; [the measured CI audit](ci-parity.md) records the unresolved portability limits.
+No raw exSpy pin or numerical assertion has been relaxed.
+
+| Check | Status | Evidence |
+|---|---|---|
+| CI gate exit and consumer target inventory | regression tested | `CIScriptTests`: propagate a failing test through `tee`; tolerate absent build backend directories; gap-audit controls |
+
 ## Summary
 
 | status | EDS | EELS | shared (axes, SciPy, NumPy) | all |

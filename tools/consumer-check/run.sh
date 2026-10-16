@@ -85,8 +85,10 @@ leaked=$(find $bin .build -path .build/checkouts -prune -o \( -iname '*ExitProbe
 if grep -qE "ExitProbe|SpectroKitTests|SpectroCoreTests|SpectroGoldenTests|SpectroEDXTests|SpectroEELSTests|Formato[A-Za-z0-9]*Tests" $log; then
   die "the build log names a test-only target"
 fi
-built=$({ find .build/out/Intermediates.noindex -mindepth 3 -maxdepth 3 -type d -name '*.build' 2>/dev/null   # Swift Build
-          find .build/debug -maxdepth 1 -type d -name '*.build' 2>/dev/null; true; } | sed 's|.*/||; s|\.build$||; s|-[a-z]$||' | sort -u | tr '\n' ' ')
+# Each optional backend directory may be absent. Guard each find: a trailing true in the group does not stop zsh -e
+# from exiting at the first failed find, before that true is reached.
+built=$({ find .build/out/Intermediates.noindex -mindepth 3 -maxdepth 3 -type d -name '*.build' 2>/dev/null || true   # Swift Build
+          find .build/debug -maxdepth 1 -type d -name '*.build' 2>/dev/null || true; } | sed 's|.*/||; s|\.build$||; s|-[a-z]$||' | sort -u | tr '\n' ' ')
 print "consumer-check: targets built: ${built}"
 
 # SpectroEELS's GOS tables are its Bundle.module resources: the bundle must sit next to the consumer binary, with the three

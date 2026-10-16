@@ -4,6 +4,10 @@ SpectroKit follows semantic versions (0.x). Each release says what changed, and 
 
 ## Unreleased (0.5.2)
 
+- **CI diagnostics and shell fixes.** The main gate now propagates a failing `swift test` status through `tee`. The consumer
+  target inventory tolerates either absent build backend directory under zsh `errexit`. Swift Testing regressions cover
+  both failures. The macos-26 numerical audit is in `docs/ci-parity.md`; no numerical tolerance or fixture changed.
+
 - **CI: the macos-15 job failed with a type-check timeout.** `QuantificationPolicyTests.swift` had one `#expect` whose
   expression (two closures in a comparison) the Xcode 26.0 compiler could not type-check in reasonable time. The sums and the
   slack are now typed `let`s; the assertion and its tolerance are unchanged. Test code only; no library number moves.
