@@ -181,7 +181,10 @@ struct QuantificationPolicyTests {
         // Free-sign monomials span the same space as the Bernstein basis: the residual cannot be larger.
         let free = try Self.run(c, policy: Self.fit(FitPolicy(continuumNonNegative: false)))
         #expect(free.fit.backgroundLabel.contains("poly") && base.fit.backgroundLabel.contains("Bernstein"))
-        #expect(free.fit.residual.reduce(0) { $0 + $1 * $1 } <= base.fit.residual.reduce(0) { $0 + $1 * $1 } * (1 + 1e-9))
+        let freeSS: Double = free.fit.residual.reduce(0.0) { $0 + $1 * $1 }
+        let baseSS: Double = base.fit.residual.reduce(0.0) { $0 + $1 * $1 }
+        let slack: Double = 1 + 1e-9
+        #expect(freeSS <= baseSS * slack)
     }
 
     @Test func testContinuumEfficiencyIsFittedAndNamed() throws {

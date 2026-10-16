@@ -2,6 +2,12 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## Unreleased (0.5.2)
+
+- **CI: the macos-15 job failed with a type-check timeout.** `QuantificationPolicyTests.swift` had one `#expect` whose
+  expression (two closures in a comparison) the Xcode 26.0 compiler could not type-check in reasonable time. The sums and the
+  slack are now typed `let`s; the assertion and its tolerance are unchanged. Test code only; no library number moves.
+
 ## 0.5.1 — macOS 15 / iOS 18 floor
 
 - **Platforms.** `Package.swift` declares `.macOS(.v15)` and `.iOS(.v18)` (0.5.0: macOS 27). SpectroKit needed no source
