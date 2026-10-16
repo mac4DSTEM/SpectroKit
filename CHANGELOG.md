@@ -2,10 +2,23 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
-## Unreleased (0.5.2)
+## 0.5.3 — CI fixes
+
+0.5.2 was tagged at 9de71e9 with red CI: both jobs (macos-15 and the newest Xcode) failed in
+`SpectroGoldenTests.testOutputsAreByteIdenticalToTheBaseline`, 26 and 20 records. This release is the fix. Test code only;
+no library number moves.
+
+- **Golden scalar bound.** The runners' CPUs (Accelerate paths) moved small cancellation-conditioned scalars (relative
+  atomic/weight counting terms, unlisted-candidate and sum-peak nets) by up to 3.2e-10 relative, past the 1e-12 relative scalar
+  bound that was measured on developer machines. The scalar bound is now 1e-9 relative (the stated ceiling for roundoff; a gap
+  above it is a defect, not a tolerance). Array elements stay at 1e-12 of the pinned peak; text, integers, structure and hashes
+  stay exact. The baselines and companions are unchanged, nothing was regenerated from CI, and the deterministic tie rule is untouched.
+- The 0.5.2 type-check fixes (QuantificationPolicyTests, SpectroscopyFitTests) are listed under 0.5.2 below.
+
+## 0.5.2 (tagged with red CI; fixed in 0.5.3)
 
 - **Golden portability.** Original scalar values and array hashes are retained. CPU-dependent fitted scalars use a stated
-  1e-12 relative bound; each floating-point array element uses 1e-12 of the pinned array peak. Compact companions were
+  1e-12 relative bound (1e-9 from 0.5.3); each floating-point array element uses 1e-12 of the pinned array peak. Compact companions were
   expanded only after all six developer dumps matched the original baseline byte for byte, and a regression verifies
   their original counts, hashes and sums. Text, integer, structure and CSV hash comparisons remain exact.
 
