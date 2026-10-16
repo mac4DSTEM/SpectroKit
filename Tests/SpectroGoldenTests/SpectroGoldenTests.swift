@@ -400,11 +400,16 @@ enum SpectroGolden {
     }
 }
 
-/// CPU-dependent Accelerate covariance and fitted values differ by up to 43 ulps in the CI audit. Keep the original
-/// baselines, bound scalar differences by 1e-12 relative, and compare every array element at 1e-12 of its pinned peak.
+/// CPU-dependent Accelerate covariance and fitted values differ by up to 43 ulps in the macos-26 CI audit. Keep the original
+/// baselines, bound scalar differences by `scalarRelativeBound`, and compare every array element at 1e-12 of its pinned peak.
 /// The latter handles near-zero cancellation without accepting an unchecked array hash or a changed string/integer.
+/// The scalar bound is 1e-9, not 1e-12: on the CI runners (two macOS images, different CPUs) the small cancellation-conditioned
+/// scalars (relative atomic/weight counting terms, unlisted-candidate and sum-peak nets) moved by up to 3.2e-10 relative
+/// from inputs that differ by tens of ulps. A real defect moves these by far more; 1e-9 is the ceiling of what is called
+/// roundoff here.
 @MainActor
 private enum GoldenPortable {
+    static let scalarRelativeBound = 1e-9
     struct ArrayEntry: Codable { let path: String; let offset: Int; let count: Int }
     struct Result {
         var failures: [String] = []
@@ -492,7 +497,7 @@ private enum GoldenPortable {
             let (a, e) = pair
             if let av = scalar(a), let ev = scalar(e), av.path == ev.path, av.value.isFinite, ev.value.isFinite {
                 result.measure(av.value, ev.value, scale: abs(ev.value))
-                if abs(av.value - ev.value) <= 1e-12 * abs(ev.value) { continue }
+                if abs(av.value - ev.value) <= scalarRelativeBound * abs(ev.value) { continue }
             } else if let av = summary(a), let ev = summary(e), av.path == ev.path, av.count == ev.count,
                       let values = actualArrays[av.path] {
                 let pins = try expectedArrays()

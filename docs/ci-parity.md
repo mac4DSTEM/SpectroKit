@@ -73,7 +73,7 @@ length remain an ill-conditioned domain outside that fixture grid.
 For Golden outputs, `tools/ci-parity/expand-golden.sh` expands the original developer baseline's Double-array hashes into
 six `.arrays.f64` / `.arrays.json` companions (about 1 MB total). This is a Swift baseline expansion, not a Python oracle or
 a new numerical baseline: the recorder first requires **every original scenario byte to match**. The original text files
-are untouched; the comparison verifies companion hashes/sums/counts and every array value. Scalars use `1e-12` relative;
+are untouched; the comparison verifies companion hashes/sums/counts and every array value. Scalars use `1e-12` relative (`1e-9` from 0.5.3, after the CI runners moved conditioned scalars by up to 3.2e-10);
 arrays use `1e-12` times their pinned peak. All nonnumeric records and hashes without checked array operands remain exact.
 
 Before applying the source fix, the numerical-tie perturbation and image-size-invariance regressions failed with 18 issues.
