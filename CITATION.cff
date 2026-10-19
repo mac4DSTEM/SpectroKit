@@ -4,7 +4,7 @@ title: "SpectroKit"
 type: software
 authors:
   - name: "mac4DSTEM contributors"
-license: GPL-3.0-or-later
+license: GPL-3.0
 repository-code: "https://github.com/mac4DSTEM/SpectroKit"
 abstract: "A Swift library for EDS and EELS spectroscopy on macOS and iOS: X-ray quantification and EELS thickness, a port of exSpy checked against exSpy and HyperSpy."
 keywords:
