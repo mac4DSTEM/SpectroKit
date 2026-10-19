@@ -66,7 +66,9 @@ PY
 # 1. Build, DEBUG. The log is kept: it shows what a consumer builds.
 mkdir -p .build
 log=.build/consumer-check-build.log
-if ! swift build -c debug >$log 2>&1; then
+# --disable-dependency-cache: SwiftPM's shared repository cache can print a 'skipping cache' warning on a CI runner,
+# which the warning count would take for the kit's own (DiffractoKit 0.4.1's CI).
+if ! swift build --disable-dependency-cache -c debug >$log 2>&1; then
   { grep -E "error" $log | head -20 >&2; } || true
   die "BUILD FAILED (full log: $here/$log)"
 fi
@@ -75,7 +77,7 @@ fi
 build_warnings $log || die "unexpected warning(s) in the build (full log: $here/$log)"
 
 # 2. A consumer must not build the test-only targets: not SpectroKit's or FormatoKit's test targets, not the barrier's child process.
-bin=$(swift build -c debug --show-bin-path) || die "swift build --show-bin-path failed"
+bin=$(swift build --disable-dependency-cache -c debug --show-bin-path) || die "swift build --show-bin-path failed"
 [[ -d $bin ]] || die "the build's bin path does not exist: $bin"
 # (.build/checkouts holds FormatoKit's sources, test directories included: not built, so not searched.)
 leaked=$(find $bin .build -path .build/checkouts -prune -o \( -iname '*ExitProbe*' -o -iname '*SpectroKitTests*' \
@@ -137,12 +139,12 @@ python3 -I -B $readme/check-readme.py $root || die "the README's code and the pr
 cd $readme
 mkdir -p .build
 rlog=.build/readme-consumer-build.log
-if ! swift build -c debug >$rlog 2>&1; then
+if ! swift build --disable-dependency-cache -c debug >$rlog 2>&1; then
   { grep -E "error" $rlog | head -20 >&2; } || true
   die "README CONSUMER BUILD FAILED (full log: $readme/$rlog)"
 fi
 build_warnings $rlog || die "unexpected warning(s) in the README consumer's build (full log: $readme/$rlog)"
-rbin=$(swift build -c debug --show-bin-path)
+rbin=$(swift build --disable-dependency-cache -c debug --show-bin-path)
 rout=.build/readme-consumer-run.log
 set +e
 $rbin/readme-consumer >$rout 2>&1
