@@ -2,6 +2,16 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.6.1 (unreleased) — FormatoKit range 0.3.x and 0.4.x
+
+Dependency range only; no source change, and no SpectroKit API or number moves.
+
+- FormatoKit is now `"0.3.0"..<"0.5.0"` (was `.upToNextMinor(from: "0.3.0")`). FormatoKit 0.4.0 only repackages libhdf5 as XCFrameworks, so
+  an app that embeds FormatoKit 0.4.0 can still resolve SpectroKit.
+
+### Migration
+None. An app that pins FormatoKit 0.4.0 exact must use SpectroKit 0.6.1 or later; re-pin SpectroKit to 0.6.1.
+
 ## 0.6.0 (2026-10-16) — FormatoKit as a minor range
 
 Dependency range only; no source change was needed against FormatoKit 0.3.0, and no SpectroKit API or number moves.
