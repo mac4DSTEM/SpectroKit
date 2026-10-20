@@ -2,6 +2,20 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.7.0 (2026-10-20) — FormatoKit 0.4.x and 0.5.x
+
+Dependency range only; no source change, and no SpectroKit API or number moves.
+
+- FormatoKit is now `"0.4.0"..<"0.6.0"` (was `"0.3.0"..<"0.5.0"`): 0.3.x is dropped, 0.5.x added. FormatoKit 0.5.0 adds `HDF5Reader`,
+  `HDF5AppendWriter`, `TIFFAppImage` and new `HDF5FileError` cases (source-breaking only for an exhaustive switch over `HDF5FileError`;
+  SpectroKit has none).
+- Test fixture: `velox-tiny.txt` of the golden test regenerated. FormatoKit 0.3.1 and later add four optional `VeloxMetadata` fields (`stageXMeters`,
+  `stageYMeters`, `stageZMeters`, `instrumentClass`) that the golden dumps; additive lines only, 251 to 255 lines, no SpectroKit number moves.
+  Tested against FormatoKit 0.4.0 and 0.5.0.
+
+### Migration
+Consumers on FormatoKit 0.3.x stay on SpectroKit 0.6.0. An app pinning FormatoKit 0.4.0 or 0.5.0 exact uses SpectroKit 0.7.0; re-pin SpectroKit to 0.7.0.
+
 ## 0.6.1 (2026-10-20) — FormatoKit range 0.3.x and 0.4.x
 
 Dependency range only; no source change, and no SpectroKit API or number moves.
@@ -10,6 +24,8 @@ Dependency range only; no source change, and no SpectroKit API or number moves.
   an app that embeds FormatoKit 0.4.0 can still resolve SpectroKit.
 
 Tests only: `LineTableParityTests` pins all 947 rows of the X-ray line table against exSpy 7185a4d1's own loader (was about 12 rows); no deviation found.
+
+Correction (found 2026-10-20): the golden test `testOutputsAreByteIdenticalToTheBaseline` (the 0.6.1 fixture) fails against FormatoKit 0.3.1, 0.4.0 and 0.5.0 (measured: it passes against 0.3.0, fails against 0.3.1 and 0.4.0 with "velox-tiny: line count changed from 251 to 255", the new optional Velox metadata fields; 0.5.0 likewise). Fixed at 0.7.0, which needs FormatoKit 0.4.0 or later.
 
 ### Migration
 None. An app that pins FormatoKit 0.4.0 exact must use SpectroKit 0.6.1 or later; re-pin SpectroKit to 0.6.1.
