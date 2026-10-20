@@ -84,7 +84,7 @@ struct AxisRulesTests {
 
     // MARK: I_0 and I_t sums
 
-    /// NumPy's pairwise sum, bit for bit, on arrays where it differs from a left-to-right sum (expected values from NumPy 2.5.4:
+    /// NumPy's pairwise sum, asserted bit for bit today (D12 allows a tolerance; the summation order is the point), on arrays where it differs from a left-to-right sum (expected values from NumPy 2.5.4:
     /// `np.array([((i * 7919) % 10007) / 7.0 for i in range(n)]).sum()`).
     @Test func testPairwiseSumEqualsNumpysSum() {
         let expected: [(Int, Double)] = [

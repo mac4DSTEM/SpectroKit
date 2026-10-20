@@ -2,7 +2,7 @@
 //  AxisGateTests.swift
 //  Role: EDX stage gate G-E (docs/edx-stage-gates-registration.md section 3 and amendment 1): the energy axis.
 //
-//  E1: `VeloxEnergyAxis` / the opener's `EnergyAxis` equal RosettaSciIO's `_get_dispersion_offset` bit for bit on every public
+//  E1: `VeloxEnergyAxis` / the opener's `EnergyAxis` equal RosettaSciIO's `_get_dispersion_offset` exactly (a reader rule) on every public
 //      Velox file and on planted headers (decoy detector, differing offsets, detector keys out of index order);
 //      `energyCalibrationAgrees` is false when the summed segments' calibrations differ.
 //  E2: `EnergyAxis.index(of:)` / `channelRange` equal HyperSpy 2.4.0's `value2index` / `_get_array_slices` on the Velox axis
@@ -44,7 +44,7 @@ struct AxisGateTests {
     // MARK: E1
 
     /// E1 on every public file RosettaSciIO's test data holds with a stream: the axis of every stream, and of the file (the first
-    /// stream), equal rsciio's rule bit for bit; the calibration flag equals "all streams equal".
+    /// stream), equal rsciio's rule exactly (a reader rule); the calibration flag equals "all streams equal".
     @Test func testE1PublicFilesAxisEqualsRosettaSciIOsRule() throws {
         let files = rule.d("files")
         let skipLabels: Set<String> = []

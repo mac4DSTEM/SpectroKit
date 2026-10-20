@@ -2,7 +2,7 @@
 //  SpectroGoldenTests.swift
 //  SpectroKit slot S0, gate G-golden (docs/archive/v5/spectrokit-slot-plan-2026-10-13.md §9): "no number moves". A baseline of
 //  the Spectroscopy core's outputs, recorded at 71929a01 BEFORE the Velox reader's per-block HDF5 lock and the cancel/progress
-//  contract, and compared byte for byte afterwards. Every Double is its exact bit pattern (hex of `bitPattern`) with a readable
+//  contract, and compared byte for byte afterwards (a quick check that nothing moved, D12; a mismatch is verified against the Python reference within tolerance). Every Double is its exact bit pattern (hex of `bitPattern`) with a readable
 //  %.17g beside it; large arrays are listed by count, a bit-exact sum and an FNV-1a hash of every element's bits. Original baselines remain unchanged; portable comparisons below bound CPU-dependent Double roundoff.
 //
 //  Inputs are the committed fixtures only (velox-tiny.emd, demo-edx-tiny.dm4, the eds-*.json pools, the demo spectrum image

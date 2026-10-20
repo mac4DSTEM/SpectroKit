@@ -258,7 +258,7 @@ struct SpectroscopyCoreTests {
         return try SparseSpectrumImage(ny: ny, nx: nx, channels: channels, rowOffsets: offsets, channelIndex: idx, counts: cnt)
     }
 
-    /// Window maps (incl. background-subtracted) from the sparse image equal those of the densified one bit for bit,
+    /// Window maps (incl. background-subtracted) from the sparse image equal those of the densified one (asserted bit for bit today; D12 would allow a tolerance),
     /// and equal a naive per-pixel reference. Mutation: in `SparseSpectrumImage.windowSums` use `c <= his[r]` -> red.
     @Test func testSparseAndDenseWindowMapsAreBitIdentical() throws {
         let sparse = try randomSparse(ny: 9, nx: 11, channels: 400, seed: 42)

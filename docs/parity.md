@@ -16,7 +16,7 @@ against planted truth, the evidence column says so.
 
 | code | meaning |
 |---|---|
-| BIT | ported, bit-identical to the pin (or equal in every case compared) |
+| BIT | ported, bit-identical to the pin (or equal in every case compared); a measured fact, not a requirement (D12, `CLAUDE.md`) |
 | TOL | ported within a registered tolerance (the bound is stated; the measured value is often far smaller) |
 | DEV | ported with a registered deviation (named in the code or a registration; the evidence says where) |
 | PART | partial: part of the item exists, part does not |
@@ -222,7 +222,7 @@ Opening a file is not SpectroKit's job. The readers, and parity with RosettaSciI
 `.dm3` / `.dm4`, `FormatoEMD` for Velox `.emd`); SpectroKit depends on it at an exact tag. `SpectrumImageOpener` in
 `SpectroCore` calls them for a Velox EDS stream and a GMS `.dm4` EDS spectrum image. What SpectroKit still tests at that seam,
 with RosettaSciIO's rules as the reference: counts (CountsGateTests, 8 public files and planted streams equal an independent
-decode), the energy axis (AxisGateTests `testE1*`, equal to RosettaSciIO's rule bit for bit on 8 public files and the planted
+decode), the energy axis (AxisGateTests `testE1*`, exactly equal to RosettaSciIO's rule on 8 public files and the planted
 headers), and the opener (SpectrumImageOpeningTests `testTheDM4EDSDecodeMatchesTheTruthPerRecipe`). RosettaSciIO's own Velox EDS
 loader was never run as an oracle (its `sparse` dependency is not installed in the reference environment).
 
@@ -238,14 +238,14 @@ ratio method on exSpy's GOS), which exSpy does not have as a function.
 ## Where the source claims more than the tests show
 
 - `NumpySum.swift` header: I_0 and I_t "bit for bit" against exSpy, citing `ThicknessPinsTests`. Those tests hold I_0 and I_t to
-  1e-12 relative, not to the bit. The summation order itself is bit-tested (`testPairwiseSumEqualsNumpysSum`).
+  1e-12 relative, which D12 allows; the header should say so. The summation order itself is bit-tested (`testPairwiseSumEqualsNumpysSum`).
 - `MassAbsorption.swift` header: all 90 FFAST lists "equal exSpy `ffast_mac.py` value for value", measured 2026-10-05. No test
   compares the table with exSpy's; the tests pin about 10 coefficients and mixtures.
 - `XRayLineData.swift` / `XRayLines.swift`: the 947-row table is "verbatim" (a source hash is recorded). The tests assert about
   12 lines and the row count, not every row.
 - docs/eels-slice-2-registration.md (amendment of 2026-10-14): background fit, window sums and n "bit-identical to HyperSpy's
-  (0.0)". The tests bound these at 1e-12 and 1e-10 relative; only window indices, energies and the low-loss intensity are
-  asserted equal. The measured zero is true of the run, not of the test.
+  (0.0)". The tests bound these at 1e-12 and 1e-10 relative, which D12 allows; only window indices, energies and the low-loss
+  intensity are asserted equal. The measured zero is true of the run, not of the test.
 - `ElementWindows` (public) picks the default line by a Velox-style family rule; `XRayLines.defaultLines`, which equals exSpy's
   choice, is package. The public window path therefore does not reproduce `add_lines()` for heavy elements (Hf at 200 kV on an 80 keV axis picks
   L, exSpy picks K).

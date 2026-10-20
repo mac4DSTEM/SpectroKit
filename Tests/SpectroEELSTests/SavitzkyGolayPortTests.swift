@@ -87,9 +87,9 @@ struct SavitzkyGolayPortTests {
         }
     }
 
-    // MARK: the interior, bit for bit
+    // MARK: the interior (asserted bit for bit today; D12 allows a tolerance)
 
-    /// With SciPy's own coefficients the fused accumulation reproduces SciPy's interior derivative values BIT FOR BIT
+    /// With SciPy's own coefficients the fused accumulation reproduces SciPy's interior derivative values bit for bit today
     /// (every interior value of the three pinned rows).
     @Test func testInteriorIsBitExactWithSciPysCoefficients() throws {
         for name in caseNames {
@@ -182,7 +182,7 @@ struct SavitzkyGolayPortTests {
 
     // MARK: numpy.gradient
 
-    /// `window_length = 0`: the derivative is `numpy.gradient(cropped, cropped_axis)` and is reproduced BIT FOR BIT, on the
+    /// `window_length = 0`: the derivative is `numpy.gradient(cropped, cropped_axis)` and is asserted bit for bit today (D12 allows a tolerance), on the
     /// planted axis (non-uniform spacing by ulps: the a/b/c branch) and on the line scan's (uniform: the scalar branch).
     @Test func testGradientIsBitExact() throws {
         for name in caseNames {

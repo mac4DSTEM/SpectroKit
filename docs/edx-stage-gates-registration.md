@@ -78,7 +78,7 @@ venv and is the owner's (section 12, Q3). Until then the Velox stream reference 
 
 - **E1 the file's axis.** `VeloxEnergyAxis` (`VeloxEMDReader.swift:550-558`) equals rsciio's `_get_dispersion_offset`
   (`_emd_velox.py:866-876`: first detector, in file order, whose name CONTAINS `BinaryResult.Detector`; dispersion and offset in eV
-  stored, divided by 1000) bit for bit (`Double` bits) on every public Velox file and on planted headers with a decoy detector;
+  stored, divided by 1000) exactly (`Double` bits; a reader and metadata rule, tested exact under D12) on every public Velox file and on planted headers with a decoy detector;
   `energyCalibrationAgrees` is false when the summed segments' calibrations differ (planted: 4 detectors, offsets
   −1000, −1000, −996, −1000 eV). Owner's file header (section 9): Dispersion 20, OffsetEnergy −1932.21348 eV, 4096 bins:
   channel k is `−1.93221348 + 0.020 k` keV, so channel 0 is below zero (the zero-energy peak sits near channel 96.6).

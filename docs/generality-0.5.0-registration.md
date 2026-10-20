@@ -200,7 +200,7 @@ integers involved; this is a claim of G1, not an assumption). (5) A non-default 
 
 ## 4. Claims and gates
 
-**(G1) The default path changes nothing, bit for bit.** With every new argument absent or `.default`:
+**(G1) The default path changes nothing.** (D12: bit for bit is the quick check here; a failure is verified against the Python reference within tolerance and does not block.) With every new argument absent or `.default`:
 `tools/test.sh` passes with the same 302 test names (the new tests are additional names; no existing name removed or renamed),
 the golden files are **byte-identical** (`SpectroGoldenTests`, no regeneration), every pin and fixture reproduces to its
 registered tolerance (the `SpectroEDXTests` and `SpectroEELSTests` gates unchanged), and `tools/consumer-check` is green on
@@ -208,7 +208,7 @@ its existing 152 checks / 136 negative controls (0.4.0, `62466ad`; its call site
 them) plus the checks added for the new API. In addition, for each family a new test calls the new entry point with an
 explicit `.default` and compares with the old call: equal arrays (bitwise on `Double`), equal footers, equal
 `PooledQuantification` rows. `QuantificationMethod.canonicalJSON` and `.hash` of a set of recorded methods are unchanged.
-*Refuted if* any of these differs by one bit.
+*Refuted if* any of these differs beyond the written tolerance against the Python reference (D12); a one-bit difference in the quick check starts that verification.
 
 **(G2) Each new parameter moves the number the way the prediction below says.** Section 5 states, before code, for each
 parameter whose status is B or C (and for A items that gain a new default function) the direction or exact value of the
@@ -218,7 +218,7 @@ put back; and, where the parameter feeds several places, one site reverted), rec
 does not hold is recorded as refuted, with the number, and the parameter's doc comment says what it does instead.
 
 **(G3) One Gate B refuter** on the frozen commit (a second only on a named doubt): a session that did not write the code,
-given the code and this registration, hunts for (a) any default path that is not bit-identical (arithmetic reordered when a
+given the code and this registration, hunts for (a) any default path that moved (bit-identical is the quick check, D12; arithmetic reordered when a
 literal became a field), (b) a literal left behind (a second copy of a constant that the policy no longer reaches), (c) a
 parameter that is accepted and silently ignored, (d) a non-default policy that is not named in the footer, (e) API that breaks
 a 0.4.0 call site.

@@ -95,10 +95,10 @@ checking when it is absent (CI has none): they pass vacuously there; the gate on
 - There is no `PooledQuantificationInput` builder from a `LoadedSpectrumImage`.
 
 **Where the source claims more than the tests show** (from `docs/parity.md`; reword or add a test)
-- `NumpySum.swift` says I_0 and I_t are bit for bit, while `ThicknessPinsTests` bounds them at 1e-12.
+- `NumpySum.swift` says I_0 and I_t are bit for bit, while `ThicknessPinsTests` bounds them at 1e-12 (allowed by D12; reword the header).
 - `MassAbsorption.swift` says all 90 FFAST lists equal exSpy's; no test compares them (about 10 coefficients are pinned).
 - The 947-row line table is checked on about 12 rows and the row count.
-- The slice-2 registration's "bit-identical (0.0)" for n and the background, against tests bounding them at 1e-12 / 1e-10.
+- The slice-2 registration's "bit-identical (0.0)" for n and the background, against tests bounding them at 1e-12 / 1e-10 (allowed by D12).
 - `ElementWindows`' default line choice differs from exSpy's `add_lines` (`XRayLines.defaultLines` equals exSpy's and is
   `package`).
 - The cross-section route of `ZetaFactor` has hand-recorded pins only.

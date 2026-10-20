@@ -76,7 +76,7 @@ struct ThicknessEdgeCaseTests {
     }
 
     /// exSpy crops `isig[min:max]` by INTEGER channels, so the cropped axis starts at that channel's energy, not at `start`: a start
-    /// of 1.02 eV (rounds to channel 220, as 1.0 does) gives the same range and the same threshold energies, bit for bit.
+    /// of 1.02 eV (rounds to channel 220, as 1.0 does) gives the same range and the same threshold energies (asserted with ==).
     @Test func testTheThresholdEnergyComesFromTheCroppedChannelNotFromStart() throws {
         let planted = try EELSFixtures.image("planted-noiseless")
         let a = try EELSThickness.logRatio(planted, threshold: .estimated(start: 1.0))

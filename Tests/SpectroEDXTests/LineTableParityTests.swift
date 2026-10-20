@@ -1,6 +1,6 @@
 //
 //  LineTableParityTests.swift
-//  Role: the whole X-ray line table against exSpy: all 947 rows (Z, element, line, energy, weight), in order, bit for bit.
+//  Role: the whole X-ray line table against exSpy: all 947 rows (Z, element, line, energy, weight), in order, exact (table data).
 //        Fixture `xray-lines-exspy-7185a4d1.json` from `tools/edx-lines/pins.py`, which runs exSpy's own loader
 //        (`exspy.material.elements`, exSpy 7185a4d1, HyperSpy 2.4.0). Before this the table was compared on about 12 rows.
 //

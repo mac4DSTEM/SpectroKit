@@ -55,6 +55,11 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
   exSpy is not installed there: build its signal classes directly, as `tools/eels-thickness/pins.py` does. exSpy's GOS tables
   are in `~/Library/Caches/pooch`, by md5: `7fee8891c147a4f769668403b54c529b` (dft, `Segger_Guzzinati_Kohl_1.5.0.gosh`) and
   `01a855d3750d2c063955248358dbee8d` (`Dirac_GOS_compact.gosh`).
+- **Numerical testing policy (D12, Paul 2026-10-19).** Readers, I/O, indices and metadata are tested exact. Numerics are
+  compared against the pinned Python reference within a tolerance written per function (`assert_allclose` style: about 1e-7
+  relative for float64, 1e-5 for float32), never widened to hide a bug. During an app-to-kit switch, bit for bit is only a quick
+  check that nothing moved by accident; if it fails, verify against the Python reference within tolerance and do not block. A
+  moved pinned number gets its own commit with the reason. Elsewhere in the repo, "D12" refers to this rule.
 - **Validation.** Agreement with exSpy is not truth. All EDX quantification and EELS thickness stay `validation:"none"`;
   nothing is called validated until it recovers a planted value and a sample of known composition. Validation on real data is
   re-registered against a SpectroKit tag. ζ stays `package` (`ZetaFactor`, `AbsorptionCorrection.zeta`).
