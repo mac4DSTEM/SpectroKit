@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use SpectroKit in your work, please cite it as below, and please also cite exSpy and HyperSpy, whose methods it reproduces."
+title: "SpectroKit"
+type: software
+authors:
+  - name: "mac4DSTEM contributors"
+license: GPL-3.0
+repository-code: "https://github.com/mac4DSTEM/SpectroKit"
+abstract: "A Swift library for EDS and EELS spectroscopy on macOS and iOS: X-ray quantification and EELS thickness, a port of exSpy checked against exSpy and HyperSpy."
+keywords:
+  - EDS
+  - EELS
+  - electron microscopy
+  - spectroscopy
+  - Swift
+references:
+  - type: software
+    title: "exSpy"
+    authors:
+      - name: "The exSpy developers"
+    repository-code: "https://github.com/hyperspy/exspy"
+    license: GPL-3.0-or-later
+    notes: "The EDS and EELS extension of HyperSpy; the reference implementation SpectroKit is compared against."
+  - type: software
+    title: "HyperSpy"
+    authors:
+      - name: "The HyperSpy developers"
+    url: "https://hyperspy.org"
+    repository-code: "https://github.com/hyperspy/hyperspy"
+    license: GPL-3.0-or-later
+    notes: "The multi-dimensional data analysis library exSpy builds on; also a reference implementation."

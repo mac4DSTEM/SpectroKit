@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest a missing feature or an exSpy or HyperSpy capability to port
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need to do
+      description: The task you are trying to accomplish, in your own words.
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference implementation
+      description: If this exists in exSpy or HyperSpy, name the function or class and link its documentation. See docs/parity.md for what is already covered.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have tried

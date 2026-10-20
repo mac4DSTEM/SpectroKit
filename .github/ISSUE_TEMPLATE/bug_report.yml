@@ -1,0 +1,37 @@
+name: Bug report
+description: Something crashes, fails to build, or gives a wrong number
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead. For a wrong number, give both values and, if you compared with exSpy or HyperSpy, their versions.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A minimal code snippet, and a minimal or synthetic spectrum if the problem depends on data. Please do not attach data you are not allowed to share.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: SpectroKit version
+      placeholder: "0.6.0"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: macOS or iOS version, Xcode version
+      placeholder: "macOS 26.0, Xcode 26.0"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output or logs
+      render: shell
