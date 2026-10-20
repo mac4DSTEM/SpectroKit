@@ -1,10 +1,10 @@
 # SpectroKit: status
 
-Updated 2026-10-16 for the 0.6.0 release; the 0.5.0 gate below is historical. The source of truth for the state of the repo; the suite board shows it.
+Updated 2026-10-20 for the 0.6.1 release; the 0.5.0 gate below is historical. The source of truth for the state of the repo; the suite board shows it.
 
 ## Version and modules
 
-**0.6.0**, ready for the owner's tag (0.5.4 is the last tag). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `.upToNextMinor(from: "0.3.0")`.
+**0.6.1** (released 2026-10-20). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `"0.3.0"..<"0.5.0"` (0.3.x and 0.4.x). The X-ray line table is pinned on all 947 rows to exSpy 7185a4d1 (`LineTableParityTests`).
 
 | Module | What it does |
 |---|---|
@@ -12,7 +12,7 @@ Updated 2026-10-16 for the 0.6.0 release; the 0.5.0 gate below is historical. Th
 | `SpectroEDX` | X-ray quantification: the line table, windows, the EDS model and fit, the element proposer, Cliff-Lorimer with computed k-factors, the absorption correction, export, the six EPQ / FFAST / Krause tables. |
 | `SpectroEELS` | The t/lambda thickness by the log-ratio method; the C K areal density by the ratio method with the dft GOS tables. |
 
-The file readers are FormatoKit's (a dependency: `exact: "0.2.1"` from 0.5.1, `.upToNextMinor(from: "0.3.0")` from 0.6.0; 0.0.3 before). 0.5.0 makes the suite's policies public parameters,
+The file readers are FormatoKit's (a dependency: `exact: "0.2.1"` from 0.5.1, `.upToNextMinor(from: "0.3.0")` from 0.6.0, `"0.3.0"..<"0.5.0"` from 0.6.1; 0.0.3 before). 0.5.0 makes the suite's policies public parameters,
 each default 0.4.0's value (`docs/generality-0.5.0-registration.md`).
 
 ## The gate at 0.5.0

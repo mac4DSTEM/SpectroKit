@@ -2,7 +2,7 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
-## 0.6.1 (unreleased) — FormatoKit range 0.3.x and 0.4.x
+## 0.6.1 (2026-10-20) — FormatoKit range 0.3.x and 0.4.x
 
 Dependency range only; no source change, and no SpectroKit API or number moves.
 

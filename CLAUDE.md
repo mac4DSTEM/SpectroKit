@@ -4,7 +4,7 @@ SpectroKit: the macEM suite's spectroscopy library, a Swift port of exSpy (EDS a
 mac4DSTEM and macTEM. GPL-3.0, crediting exSpy. Modules: `SpectroCore` (spectrum image and its opening, `EnergyAxis`, statistics,
 least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantification, the six tables), `SpectroEELS`
 (thickness t/λ, the C K areal density). Since 0.4.0 the file readers are FormatoKit's (`FormatoDM`, `FormatoEMD`,
-`FormatoHDF5`; `../FormatoKit`), a package dependency on `.upToNextMinor(from: "0.3.0")` (0.6.0; `exact: "0.2.1"` at 0.5.1; 0.0.3 before). The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `../_archive/SpectroKit/docs/history.md`.
+`FormatoHDF5`; `../FormatoKit`), a package dependency on `"0.3.0"..<"0.5.0"` (0.6.1; `.upToNextMinor(from: "0.3.0")` at 0.6.0; `exact: "0.2.1"` at 0.5.1; 0.0.3 before). The slot narrative, 0.2.0 details, measurements and the post-0.2.0 work are in `../_archive/SpectroKit/docs/history.md`.
 
 ## State (2026-10-15)
 
