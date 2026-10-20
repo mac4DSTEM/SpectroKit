@@ -9,6 +9,8 @@ Dependency range only; no source change, and no SpectroKit API or number moves.
 - FormatoKit is now `"0.3.0"..<"0.5.0"` (was `.upToNextMinor(from: "0.3.0")`). FormatoKit 0.4.0 only repackages libhdf5 as XCFrameworks, so
   an app that embeds FormatoKit 0.4.0 can still resolve SpectroKit.
 
+Tests only: `LineTableParityTests` pins all 947 rows of the X-ray line table against exSpy 7185a4d1's own loader (was about 12 rows); no deviation found.
+
 ### Migration
 None. An app that pins FormatoKit 0.4.0 exact must use SpectroKit 0.6.1 or later; re-pin SpectroKit to 0.6.1.
 
