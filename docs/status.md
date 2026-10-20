@@ -1,5 +1,7 @@
 # SpectroKit: status
 
+**Hand-off 2026-10-20:** done: 0.6.1 released 2026-10-20 (FormatoKit `"0.3.0"..<"0.5.0"`, all 947 line-table rows pinned to exSpy 7185a4d1), D12 wording (1d76e23); next: convert the tests that assert numerics exactly against a Python reference to written per-function tolerances (a code change, one per release).
+
 Updated 2026-10-20 for the 0.6.1 release; the 0.5.0 gate below is historical. The source of truth for the state of the repo; the suite board shows it.
 
 ## Version and modules
