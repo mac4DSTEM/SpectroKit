@@ -31,7 +31,7 @@ if [[ -e $locks/drive ]]; then
   print -u2 "tools/test.sh: a session is driving an app on screen ($locks/drive): no test run now"
   exit 75
 fi
-hdf5=${MAC4DSTEM_HDF5_PATH:-"the copy FormatoKit ships (FormatoKit_FormatoHDF5.bundle)"}
+hdf5=${MAC4DSTEM_HDF5_PATH:-"the copy FormatoKit ships (FormatoLibHDF5.xcframework)"}
 print -u2 "tools/test.sh: libhdf5 = $hdf5"
 mkdir -p .build/test-results
 rm -f .build/test-results/xunit*.xml(N)
@@ -41,7 +41,7 @@ swift test -c release --xunit-output .build/test-results/xunit.xml "$@" 2>&1 | t
 rc=${pipestatus[1]}
 set -e
 (( rc == 0 )) || { print -u2 "tools/test.sh: swift test failed (exit $rc)"; exit $rc }
-other=$(sed 's/\x1b\[[0-9;]*m//g' $log | grep "warning:" | grep -vE "warning: not stripping binary because it is signed: .*(/Sources/FormatoHDF5/Resources/hdf5|/FormatoKit_FormatoHDF5\.bundle/Contents/Resources/hdf5)/(libhdf5\.dylib|libsz\.2\.dylib|libaec\.0\.dylib)" || true)
+other=$(sed 's/\x1b\[[0-9;]*m//g' $log | grep "warning:" | grep -vE "warning: not stripping binary because it is signed: .*/FormatoLib(HDF5|SZ|AEC)/FormatoLib(HDF5|SZ|AEC)\.xcframework/" || true)
 if [[ -n $other ]]; then print -u2 "tools/test.sh: green, but the build warned:"; print -u2 -r -- "$other"; exit 1; fi
 if (( $# > 0 )); then
   print -u2 "tools/test.sh: green, but arguments were given (not a full run): no stamp"

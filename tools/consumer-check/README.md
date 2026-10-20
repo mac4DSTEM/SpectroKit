@@ -76,8 +76,8 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
 - **Public.** The target compiles only while each symbol above is `public`. `run.sh --controls` shows it for every one: see
   Negative controls.
 - **Debug, no unsafe flags, no setup.** `run.sh` builds in Debug, as a consumer's Debug build does, with zero warnings except the
-  three Swift Build prints for FormatoKit's signed dylibs (`not stripping binary because it is signed`: `libhdf5.dylib`,
-  `libsz.2.dylib`, `libaec.0.dylib`, each at most once; colour codes stripped, the log split on `warning:` because the lines can
+  Swift Build's prints for FormatoKit's signed xcframeworks (`not stripping binary because it is signed`: `FormatoLibHDF5`,
+  `FormatoLibSZ`, `FormatoLibAEC`, only those three names, possibly repeated or absent on a warm build; colour codes stripped, the log split on `warning:` because the lines can
   arrive glued together). It fails if a test-only target (`ExitProbe`, `SpectroKitTests`, `SpectroCoreTests`,
   `SpectroGoldenTests`, `SpectroEDXTests`, `SpectroEELSTests`, any FormatoKit `Formato*Tests`) was built; `.build/checkouts`,
   which holds FormatoKit's sources, is not searched.
@@ -86,8 +86,8 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
   works is FormatoKit's test.
 - **The resource bundles.** The GOS tables are SpectroEELS's `Bundle.module` resources: `run.sh` fails unless
   `SpectroKit_SpectroEELS.bundle` sits next to the consumer binary with `dft-C-K1.json`, `dft-N-K1.json` and `dft-O-K1.json`
-  inside. libhdf5 is FormatoKit's: `run.sh` fails unless `FormatoKit_FormatoHDF5.bundle` sits next to the binary with
-  `libhdf5.dylib`, `libsz.2.dylib` and `libaec.0.dylib`.
+  inside. libhdf5 is FormatoKit's: `run.sh` fails unless the binary loads `@rpath/FormatoLibHDF5.framework` (`otool -L`) and the
+  `FormatoLibHDF5`, `FormatoLibSZ` and `FormatoLibAEC` frameworks sit next to it.
 
 ## Negative controls (`run.sh --controls`)
 

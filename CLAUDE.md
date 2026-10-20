@@ -38,7 +38,7 @@ least-squares solvers; C target `CSpectroLAPACK`), `SpectroEDX` (X-ray quantific
 - **The gate is `tools/test.sh`** (`swift test -c release "$@"`). Never run `swift build --build-tests -c release` (fails on
   this toolchain). Debug is -Onone and 20-50x slower on hot paths and the manifest carries no Debug `-O` (a versioned
   dependency cannot carry unsafe flags), so a consumer builds SpectroKit optimised itself.
-- **libhdf5** (0.4.0 on): FormatoKit ships 2.1.1 inside FormatoHDF5; the gate sets nothing (`MAC4DSTEM_HDF5_PATH`, when set,
+- **libhdf5** (0.4.0 on): FormatoKit ships 2.1.1 as three binary xcframeworks (FormatoLibHDF5, FormatoLibSZ, FormatoLibAEC); the gate sets nothing (`MAC4DSTEM_HDF5_PATH`, when set,
   still overrides). Swift Build's three "not stripping binary because it is signed" lines are the only warnings allowed.
 - **Green stamp**: a full, passing `tools/test.sh` run on a clean tree (no untracked file under Sources or Tests either) writes
   `.build/last-green` (commit, UTC time, libhdf5); `tools/last-green.sh` prints it and says whether HEAD equals it.

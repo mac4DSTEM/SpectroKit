@@ -2,10 +2,10 @@
 # SpectroKit consumer check: build tools/consumer-check (a separate package that depends on SpectroKit by path) in DEBUG and
 # run it against the committed fixtures. Debug is what a consumer's Debug build does with a dependency that may carry no
 # unsafe flags (SpectroKit's manifest has none). Nothing is set up first: the file readers are FormatoKit's (0.4.0) and
-# FormatoKit ships libhdf5 inside its FormatoHDF5 resource bundle, so MAC4DSTEM_HDF5_PATH is unset before the run.
-# Exit 0 only if the build has no warning but the three FormatoKit prints for its signed dylibs (libhdf5, libsz, libaec:
-# "not stripping binary because it is signed"), SpectroKit_SpectroEELS.bundle (the GOS tables) and
-# FormatoKit_FormatoHDF5.bundle (libhdf5) sit next to the binary, every check passed, no test-only target was built, and the
+# FormatoKit ships libhdf5 as three binary xcframeworks (FormatoLibHDF5, FormatoLibSZ, FormatoLibAEC), so MAC4DSTEM_HDF5_PATH is
+# unset before the run. Exit 0 only if the build has no warning but FormatoKit's prints for those signed xcframeworks
+# ("not stripping binary because it is signed"), SpectroKit_SpectroEELS.bundle (the GOS tables) and the three frameworks
+# (loaded via @rpath, checked with otool -L) sit next to the binary, every check passed, no test-only target was built, and the
 # process exited normally with the quit barrier installed (the Velox open installs FormatoKit's).
 #
 # Then (readme/, a second package) the README's own code: check-readme.py fails if README.md and the programs built from its marked
@@ -39,27 +39,26 @@ cd $here
 # No setup: FormatoKit's shipped libhdf5 must be found without a path in the environment.
 unset MAC4DSTEM_HDF5_PATH
 
-# Zero warnings in a build log, except the three FormatoKit prints for its signed dylibs. Used for both consumers below.
+# Zero warnings in a build log, except the three FormatoKit prints for its signed dylibs. Used for both consumers below. (The three prints may be absent on a warm build.)
 build_warnings() {
 python3 -I -B - $1 <<'PY'
 import re, sys
 text = re.sub(r"\x1b\[[0-9;]*m", "", open(sys.argv[1], encoding="utf-8", errors="replace").read())
 allowed = re.compile(r"^warning: not stripping binary because it is signed: .*"
-                     r"(/Sources/FormatoHDF5/Resources/hdf5|/FormatoKit_FormatoHDF5\.bundle/Contents/Resources/hdf5)/"
-                     r"(libhdf5\.dylib|libsz\.2\.dylib|libaec\.0\.dylib)")
+                     r"/FormatoLib(HDF5|SZ|AEC)/FormatoLib(?:HDF5|SZ|AEC)\.xcframework/")
 seen, other = [], []
 for fragment in text.split("warning:")[1:]:
     fragment = "warning:" + fragment
     m = allowed.match(fragment)
     if m:
-        seen.append(m.group(2))
+        seen.append(m.group(1))
     else:
         other.append(fragment.splitlines()[0][:300])
-if other or len(seen) > 3 or len(set(seen)) != len(seen):
-    for line in other[:10] or ["more than one warning for a dylib: " + ", ".join(seen)]:
+if other or len(set(seen)) > 3:
+    for line in other[:10] or ["more than the three FormatoLib xcframework names: " + ", ".join(sorted(set(seen)))]:
         print(line, file=sys.stderr)
     sys.exit(1)
-print("consumer-check: build warnings: %d, all FormatoKit's signed-dylib notices (%s)" % (len(seen), ", ".join(seen) or "none"))
+print("consumer-check: build warnings: %d, all FormatoKit's signed-dylib notices (%s)" % (len(seen), ", ".join(sorted(set(seen))) or "none"))
 PY
 }
 
@@ -103,15 +102,15 @@ for el in C N O; do
 done
 print "consumer-check: SpectroKit_SpectroEELS.bundle next to the binary, with the C, N and O K GOS tables"
 
-# FormatoKit ships libhdf5 (with libsz and libaec) in FormatoHDF5's resource bundle: it must sit next to the binary, or the
-# Velox open finds no library at run time.
-hdf5bundle=$bin/FormatoKit_FormatoHDF5.bundle
-[[ -d $hdf5bundle ]] || die "FormatoKit_FormatoHDF5.bundle was not produced next to the consumer binary ($bin)"
-for lib in libhdf5.dylib libsz.2.dylib libaec.0.dylib; do
-  [[ -n $(find $hdf5bundle -type f -name $lib -size +10k 2>/dev/null | head -1) ]] \
-    || die "FormatoKit_FormatoHDF5.bundle has no $lib"
+# FormatoKit (0.4.0 on) ships libhdf5, libsz and libaec as binary xcframeworks: the consumer binary must load
+# FormatoLibHDF5 through @rpath, and each framework must sit next to the binary, or the Velox open finds no library at run time.
+otool -L $bin/consumer-check | grep -q "@rpath/FormatoLibHDF5.framework/" \
+  || die "the consumer binary does not load @rpath/FormatoLibHDF5.framework (otool -L)"
+for fw in FormatoLibHDF5 FormatoLibSZ FormatoLibAEC; do
+  [[ -f $bin/$fw.framework/Versions/A/$fw || -f $bin/$fw.framework/$fw ]] \
+    || die "$fw.framework was not produced next to the consumer binary ($bin)"
 done
-print "consumer-check: FormatoKit_FormatoHDF5.bundle next to the binary, with libhdf5, libsz and libaec (no MAC4DSTEM_HDF5_PATH)"
+print "consumer-check: the binary loads @rpath/FormatoLibHDF5.framework; FormatoLibHDF5, FormatoLibSZ and FormatoLibAEC frameworks next to it (no MAC4DSTEM_HDF5_PATH)"
 
 # 3. Run. Exit status: the checks' (0 / 1), then the process's own end through `exit` (FormatoKit's barrier handler: not 70).
 out=.build/consumer-check-run.log
