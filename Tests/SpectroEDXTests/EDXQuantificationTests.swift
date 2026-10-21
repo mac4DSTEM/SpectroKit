@@ -6,10 +6,12 @@ import SpectroEDX
 /// The public per-pixel EDX quantification against eXSpy 0.3.2 / HyperSpy 2.4.0 (`tools/edx-quant-maps/pins.py`, fixture
 /// `Fixtures/edx-quant-maps-exspy.json`): `EDSTEMSpectrum.quantification` on a 3 x 4 intensity image per method.
 ///
-/// Tolerances are exSpy's own (`exspy/tests/signals/test_eds_tem.py`): `assert_allclose(..., atol=1e-3)` on percent without the
-/// absorption correction; with it, exSpy stops at its 0.5 percentage-point criterion over the whole image and this port per pixel,
-/// so the bound is twice the criterion (1.0 percentage point). Mass thickness and atoms: `assert_allclose` default rtol 1e-7
-/// without absorption, 1e-2 with it.
+/// Tolerances are exSpy's own (`exspy/tests/signals/test_eds_tem.py`): `assert_allclose(..., atol=1e-3)` on percent, with and
+/// without the absorption correction (exSpy's absorption tests use 1e-3 too; this port's per-pixel iteration agrees with the
+/// image-wide one to better than 1e-9 on these cases). Mass thickness and atoms: `assert_allclose` default rtol 1e-7; with the
+/// absorption correction 1e-5, because exSpy's cross-section atoms come from the iteration before its last composition update
+/// (4e-6 apart on pixel 0 of the cross-section runs) and states no tolerance of its own for them. exSpy
+/// returns no mass thickness for `cross_section`; the pin is its own `get_abs_corr_cross_section` total-mass formula on its atoms.
 struct EDXQuantificationTests {
     struct Run: Decodable {
         let method: String; let units: String; let absorption: Bool
@@ -62,25 +64,25 @@ struct EDXQuantificationTests {
                 let q = try EDXQuantification.quantifyMaps(intensityMaps: maps, rows: c.rows, columns: c.cols,
                                                            setup: Self.setup(c, r), navigationMask: mask)
                 let got = r.units == "weight" ? q.weightPercent : q.atomicPercent
-                let tol = r.tight ? 1e-5 : (r.absorption ? 1.0 : 1e-3)   // tight: both converge to the fixed point, so the physics is compared
+                let tol = r.tight ? 1e-5 : 1e-3   // tight: both converge to the fixed point, so the physics is compared
                 for e in 0..<c.elements.count {
                     let want = Self.flat(expected[e])
                     for p in 0..<want.count {
                         #expect(isEqual(got[e][p], want[p], accuracy: tol), "\(c.name) \(r.method) \(r.units) abs=\(r.absorption) el \(e) px \(p): \(got[e][p]) vs \(want[p])")
                     }
                 }
-                if r.method != "cross_section", let mt = r.massThickness {
+                if let mt = r.massThickness {   // CL with absorption, zeta; cross section: exSpy's own total_mass formula on its atoms
                     let want = Self.flat(mt)
                     for p in 0..<want.count {
-                        let rel = r.tight ? 1e-5 : (r.absorption ? 1e-2 : 1e-7)
-                        #expect(isEqual(q.massThickness![p], want[p], accuracy: rel * abs(want[p])), "mass thickness px \(p)")
+                        let rel = r.tight || r.absorption ? 1e-5 : 1e-7
+                        #expect(isEqual(q.massThickness![p], want[p], accuracy: rel * abs(want[p])), "\(c.name) \(r.method) \(r.units) abs=\(r.absorption) mass thickness px \(p): \(q.massThickness![p]) vs \(want[p])")
                     }
                 }
                 if r.method == "cross_section", let at = r.atoms {
                     for e in 0..<c.elements.count {
                         let want = Self.flat(at[e])
                         for p in 0..<want.count {
-                            let rel = r.tight ? 1e-5 : (r.absorption ? 1e-2 : 1e-7)
+                            let rel = r.tight || r.absorption ? 1e-5 : 1e-7
                             #expect(isEqual(q.atoms![e][p], want[p], accuracy: rel * abs(want[p])), "atoms el \(e) px \(p)")
                         }
                     }
@@ -104,6 +106,7 @@ struct EDXQuantificationTests {
         let one = try EDXQuantification.quantify(intensities: maps.map { $0[5] }, setup: Self.setup(c, r, singleLine: .refuse))
         #expect(one.weightPercent[0] == q.weightPercent[0][5] && one.atomicPercent[1] == q.atomicPercent[1][5])
         #expect(abs(one.weightPercent.reduce(0, +) - 100) < 1e-9)
+        #expect(one.validation == "none" && q.validation == "none")   // the badge is carried by both entry points
     }
 
     @Test func liveTimeNormalisedDoseScalesMassThicknessAndNotTheComposition() throws {

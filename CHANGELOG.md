@@ -2,6 +2,22 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.8.1 (2026-10-21) — quantification pins at exSpy's tolerance
+
+Tests, fixtures and documentation only; no source change and no number moves.
+
+- The absorption runs of `everyRunMatchesExspy` were pinned at 1.0 percentage point; they are now pinned at exSpy's own atol 1e-3 (the per-pixel iteration agrees with
+  exSpy's image-wide one to better than 1e-9 on the 36 runs), which makes the 0.8.0 sentence "at exSpy's test tolerances" true. Mass thickness and atoms with
+  absorption were rtol 1e-2 and are now rtol 1e-5 (exSpy's cross-section atoms come from the iteration before its last composition update, 4e-6 apart on pixel 0).
+- Cross-section mass thickness is now pinned: exSpy returns none, so `tools/edx-quant-maps/pins.py` records exSpy's own `get_abs_corr_cross_section` total-mass
+  formula on exSpy's atoms (the fixture gained that field; nothing else in it changed).
+- Every quantification result still says `validation: "none"` (no standard of known composition has been measured, `docs/open-items.md` 7); a test asserts it on
+  both `quantify` and `quantifyMaps`.
+- Added `docs/status.md`.
+
+### Migration
+None.
+
 ## 0.8.0 (2026-10-21) — public EDX quantification, parity audit, benchmarks
 
 Additive public API; no existing number moves.

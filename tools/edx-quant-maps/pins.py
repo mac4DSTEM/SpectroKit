@@ -12,6 +12,8 @@ import numpy as np
 warnings.filterwarnings("ignore")
 import hyperspy.api as hs
 import exspy
+import scipy.constants
+from exspy._misc.elements import elements as elements_db
 from exspy.signals import EDSTEMSpectrum
 
 ROWS, COLS = 3, 4
@@ -87,6 +89,10 @@ for name, elements, lines, factors in [
                 else:
                     comp, atoms = res
                     rec["atoms"] = [arr(a).tolist() for a in atoms]
+                    # exSpy returns no mass thickness for cross_section; it computes the same quantity inside
+                    # get_abs_corr_cross_section (total_mass, kg/m^2) from the atom maps: that formula, on exSpy's own atoms.
+                    aw = [elements_db[e]["General_properties"]["atomic_weight"] for e in elements]
+                    rec["massThickness"] = sum(arr(a) * w / scipy.constants.Avogadro / 1e3 / 0.25 / 1e-18 for a, w in zip(atoms, aw)).tolist()
                 rec["composition"] = [arr(c).tolist() for c in comp]
                 runs.append(rec)
     cases.append({"name": name, "elements": elements, "lines": lines, "intensities": [d.tolist() for d in data],
