@@ -23,8 +23,9 @@ lands. Implementation order, each step its own commit with a test that fails bef
    for its API, so it is designed and ordered last.
 
 Out of scope (ROADMAP): fine-structure fitting, Kramers-Kronig, `rebin`, EDS calibration, hydrogenic and Dirac GOS.
-Dependencies: one new package dependency, ImagoKit `"0.6.0"..<"1.0.0"` for `ImagoFFT.FFT1D` (DiffractoKit precedent;
-sections 4 and 11 say why). Readers unchanged.
+Dependencies: one new package dependency, ImagoKit `"0.6.0"..<"1.0.0"` for `ImagoCore.FFT2DDouble` used as a 1-D plan
+(`nx: size, ny: 1`; vDSP for 2^n × {1,3,5,15}, Bluestein for the rest; DiffractoKit precedent; sections 4 and 11 say why).
+`ImagoFFT.FFT1DDouble` is power-of-two only and does not fit `next_fast_len` sizes. Readers unchanged.
 
 ## 1. Shared types (SpectroEELS)
 
@@ -160,8 +161,9 @@ Faithful details: Fourier-log takes `size = next_fast_len(zlp + self - 1, real=T
 keeps the first `self` channels, `addZeroLoss` adds the ZLP over its channels, `crop` removes the last `taperedChannels`.
 Fourier-ratio takes `size = next_fast_len(ll + cl - 1)` (complex rule: `optimal_fft_size(size)` without `real`), Gaussian on
 `linspace(ll.offset, ll.offset + ll.scale (size-1), size)`, result `irfft(z · jk / jl) · I0` cropped to the core-loss size.
-The FFT runs on `ImagoFFT.FFT1D` (vDSP for 2^n × {1,3,5,15}, Bluestein otherwise) so every `next_fast_len` size is
-exact in length; `irfft` of a half spectrum follows NumPy's Hermitian rule (imaginary parts of bins 0 and N/2 dropped).
+The FFT runs on `ImagoCore.FFT2DDouble(nx: size, ny: 1)` (vDSP for 2^n × {1,3,5,15}, Bluestein otherwise) so every
+`next_fast_len` size is exact in length (if the `ny: 1` plan proves awkward, an any-length `FFT1DDouble` is a one-task
+ImagoKit change, not a SpectroKit copy); `irfft` of a half spectrum follows NumPy's Hermitian rule (imaginary parts of bins 0 and N/2 dropped).
 
 Tolerances: upstream has none (`TestFourierRatioDeconvolution::test_running` only runs). D17 fallback: `assert_allclose`
 defaults are rtol 1e-7 with atol 0, which a deconvolved channel near zero can never meet across two FFT libraries. Kit
@@ -327,13 +329,13 @@ per step on the CPU in float64 with the pixel loop parallel over chunks (the pat
 at most 8 threads). A Metal float32 path would spend its dispatch and copy on work smaller than the copy; D16's "where
 size pays" does not hold for anything in this task, so no kernel, no `.metal` option, and the result records
 `backend: "cpu"` only. Richardson-Lucy at 15 iterations is the heaviest (about 1 s at the study size); if a spectrum
-image ten times larger arrives, the FFT-based convolution on `FFT1D` is the first step, Metal the second. The FFT comes
-from ImagoKit (`FFT1D`, vDSP for 2^n × {1,3,5,15}, Bluestein for the other `next_fast_len` sizes); writing a second
+image ten times larger arrives, the FFT-based convolution on the same plan is the first step, Metal the second. The FFT comes
+from ImagoKit (`FFT2DDouble`, vDSP for 2^n × {1,3,5,15}, Bluestein for the other `next_fast_len` sizes); writing a second
 Bluestein in SpectroKit was the alternative and is not worth a copy.
 
 ## 12. Decisions a reviewer should see
 
-1. ImagoKit becomes a dependency of SpectroKit (FFT only). Reverse by vendoring `FFT1D`; nothing else changes.
+1. ImagoKit becomes a dependency of SpectroKit (FFT only). Reverse by vendoring the Bluestein plan; nothing else changes.
 2. Deconvolution tolerance: rtol 1e-7 plus atol 1e-7 × max|result| where exSpy tests nothing numerically (D17 fallback
    with an atol, because allclose's atol 0 is unattainable across FFT libraries for near-zero channels).
 3. The model fit is an exact minimiser (variable projection + NNLS), not HyperSpy's LM; pinned at rtol 1e-3, truth at
