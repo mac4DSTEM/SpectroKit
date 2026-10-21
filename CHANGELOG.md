@@ -2,6 +2,19 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.8.2 (2026-10-21) — the pooled fit's k, line energies and take-off angle are public
+
+Additive public API; no number moves. An app can now build a per-pixel `EDXQuantificationSetup` (`quantify`, `quantifyMaps`) from the very k-factors, line energies and detector geometry the pooled fit used, computed k and absorption included.
+
+- `PooledQuantification.kFactors: [PooledKFactor]?` (element, k relative to the fit's reference, relative sigma) in the rows' order, for computed and typed k; nil when no at% was computed. `kFactorSourceDescription` names the source.
+- `PooledQuantification.Row.lineEnergyKeV`: the energy of the fitted line, the `EDXAbsorptionSetting.lineEnergiesKeV` entry.
+- `EDXQuantification.takeOffDegrees(metadata:)`: the solid-angle-weighted mean take-off angle of the file's detector segments (shadow fractions applied), for `EDXAbsorptionSetting.takeOffDegrees`; throws the pooled fit's own reason (no tilt, a segment without geometry, GMS).
+- Deviation to know: the pooled fit averages the transmission over the four segments, the per-pixel call takes one angle, so a map with absorption differs slightly from the pooled number. Both stay `validation: "none"`.
+- Tests: `EDXQuantificationInputsTests` (the k reproduces the fit's own wt% through `quantify`, typed and computed; the line energy; the weighted take-off; the refusals).
+
+### Migration
+None; nothing is removed or renamed. An app that held the k or the geometry itself can read them from the fit now.
+
 ## 0.8.1 (2026-10-21) — quantification pins at exSpy's tolerance
 
 Tests, fixtures and documentation only; no source change and no number moves.

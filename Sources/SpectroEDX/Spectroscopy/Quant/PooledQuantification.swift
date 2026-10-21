@@ -446,7 +446,7 @@ public nonisolated enum PooledQuantifier {
 
     // MARK: Absorption preconditions
 
-    private static func geometry(_ method: QuantificationMethod, _ meta: SpectrumImageMetadata) -> Result<FourDetectorGeometry, QuantificationRefusal> {
+    package static func geometry(_ method: QuantificationMethod, _ meta: SpectrumImageMetadata) -> Result<FourDetectorGeometry, QuantificationRefusal> {
         if meta.origin == .gmsDM4 {
             return .failure(.init("GMS files: the stage tilt and the four detector segments are not read yet (open item), so the absorption geometry is unknown"))
         }

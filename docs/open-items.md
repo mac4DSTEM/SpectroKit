@@ -14,6 +14,5 @@ Slowest against Python first (diagnose before changing a number, `../CLAUDE.md`)
    Its own large session; the 0.8.0 session did not start it.
 5. **EDS calibration and operations**: `rebin`, `get_calibration_from`, `calibrate_xray_lines`, public window parameters (`line_width`, `windows_width`,
    `integration_window_factor`), free/fix of line parameters, `vacuum_mask` threshold and closing (a mask is an input now).
-6. **App-side `@testable` reach**: `PooledQuantificationInput` keeps `axis`, `method`, `metadata`, `regionName`, `pixelCount` as `package`; the apps that need the pooled path still
-   reach them. The neutral per-pixel API (`EDXQuantification`) does not.
+6. **App-side `@testable` reach**: the computed or typed k (`PooledQuantification.kFactors`), the line energy (`Row.lineEnergyKeV`) and the take-off angle (`EDXQuantification.takeOffDegrees`) are public since 0.8.2. `PooledQuantificationInput.axis`, `.method`, `.metadata`, `.regionName` and `.pixelCount` are still `package` (their init is public; reading them back is the open part).
 7. **Validation**: every quantification stays `validation: "none"` until a standard of known composition is measured.
