@@ -1,12 +1,14 @@
 # SpectroKit: status
 
+**Hand-off 2026-10-21:** done: 0.7.1 widens FormatoKit to `"0.4.0"..<"1.0.0"` (dependency range only, tested against FormatoKit 0.7.0); next: as below.
+
 **Hand-off 2026-10-20:** done: 0.7.0 released 2026-10-20 (FormatoKit `"0.4.0"..<"0.6.0"`, the Velox golden fixture regenerated for the 0.3.1+ metadata fields, test.sh and consumer-check follow the xcframework packaging); 0.6.1 had all 947 line-table rows pinned to exSpy 7185a4d1, D12 wording (1d76e23); next: convert the tests that assert numerics exactly against a Python reference to written per-function tolerances (a code change, one per release).
 
 Updated 2026-10-20 for the 0.7.0 release; the 0.5.0 gate below is historical. The source of truth for the state of the repo; the suite board shows it.
 
 ## Version and modules
 
-**0.7.0** (released 2026-10-20). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `"0.4.0"..<"0.6.0"` (0.4.x and 0.5.x). The X-ray line table is pinned on all 947 rows to exSpy 7185a4d1 (`LineTableParityTests`).
+**0.7.1** (2026-10-21; 0.7.0 released 2026-10-20). Swift 6.2 tools, macOS 15 / iOS 18 floor, FormatoKit `"0.4.0"..<"1.0.0"`. The X-ray line table is pinned on all 947 rows to exSpy 7185a4d1 (`LineTableParityTests`).
 
 | Module | What it does |
 |---|---|
@@ -14,7 +16,7 @@ Updated 2026-10-20 for the 0.7.0 release; the 0.5.0 gate below is historical. Th
 | `SpectroEDX` | X-ray quantification: the line table, windows, the EDS model and fit, the element proposer, Cliff-Lorimer with computed k-factors, the absorption correction, export, the six EPQ / FFAST / Krause tables. |
 | `SpectroEELS` | The t/lambda thickness by the log-ratio method; the C K areal density by the ratio method with the dft GOS tables. |
 
-The file readers are FormatoKit's (a dependency: `exact: "0.2.1"` from 0.5.1, `.upToNextMinor(from: "0.3.0")` from 0.6.0, `"0.3.0"..<"0.5.0"` from 0.6.1, `"0.4.0"..<"0.6.0"` from 0.7.0; 0.0.3 before). 0.5.0 makes the suite's policies public parameters,
+The file readers are FormatoKit's (a dependency: `exact: "0.2.1"` from 0.5.1, `.upToNextMinor(from: "0.3.0")` from 0.6.0, `"0.3.0"..<"0.5.0"` from 0.6.1, `"0.4.0"..<"0.6.0"` from 0.7.0, `"0.4.0"..<"1.0.0"` from 0.7.1; 0.0.3 before). 0.5.0 makes the suite's policies public parameters,
 each default 0.4.0's value (`docs/generality-0.5.0-registration.md`).
 
 ## The gate at 0.5.0

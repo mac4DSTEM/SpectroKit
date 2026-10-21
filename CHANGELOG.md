@@ -2,6 +2,16 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.7.1 (2026-10-21) — FormatoKit range widened to 0.4.0 up to 1.0.0
+
+Dependency range only; no source change, and no SpectroKit API or number moves.
+
+- FormatoKit is now `"0.4.0"..<"1.0.0"` (was `"0.4.0"..<"0.6.0"`), so an app can pin FormatoKit 0.6.x or 0.7.0 beside SpectroKit. FormatoKit is the only dependency.
+  Tested against FormatoKit 0.7.0.
+
+### Migration
+None. An app pinning FormatoKit 0.6.0 or later re-pins SpectroKit to 0.7.1.
+
 ## 0.7.0 (2026-10-20) — FormatoKit 0.4.x and 0.5.x
 
 Dependency range only; no source change, and no SpectroKit API or number moves.
