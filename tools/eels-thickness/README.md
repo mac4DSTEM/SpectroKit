@@ -11,8 +11,8 @@ Nothing here makes a thickness validated: `validation: "none"` stays until a sam
 ## Run
 
 ```
-python3 tools/eels-thickness/make_planted.py          # NumPy only (the suite uses References/exspy-venv/bin/python -I)
-References/exspy-venv/bin/python -I tools/eels-thickness/pins.py
+python3 tools/eels-thickness/make_planted.py          # NumPy only (the suite uses ../References/python/hyperspy/bin/python -I)
+../References/python/hyperspy/bin/python -I tools/eels-thickness/pins.py
 ```
 
 Both take `--out`/`--fixtures` to write elsewhere (the reproducibility check does). `pins.py` needs the pinned exSpy checkout
@@ -103,7 +103,7 @@ Agreement required of the port (registration section 4): the same threshold chan
 ≤ 1e-12; t/λ absolute ≤ 1e-12; λ and the correction relative ≤ 1e-13. A difference is a failure of the port, never a tolerance
 to widen.
 
-### The rules the port needs (HyperSpy 2.4.0, `References/exspy-venv/lib/python3.14/site-packages/hyperspy/…`)
+### The rules the port needs (HyperSpy 2.4.0, `../References/python/hyperspy/lib/python3.14/site-packages/hyperspy/…`)
 
 **value → channel** (`axes.py:1283-1349`, `UniformDataAxis.value2index`, the default `rounding=round`):
 `q = (value − offset)/scale`; `index = (1/1e12) · trunc(q · 1e12)` (`axes.py:1315-1318`: a *multiply* by 1e-12 of the

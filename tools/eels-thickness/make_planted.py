@@ -11,7 +11,7 @@ Writes, into the fixture directory (default Tests/SpectroEELSTests/Fixtures/, or
                                   and its bias against tau (the method's own bias), plus the sum-based value for the record
 
 Run:  python3 tools/eels-thickness/make_planted.py [--out DIR]      (any Python with NumPy; the suite uses
-      References/exspy-venv/bin/python -I)
+      ../References/python/hyperspy/bin/python -I)
 
 THE MODEL
 ---------

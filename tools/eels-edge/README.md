@@ -12,10 +12,10 @@ Written before the Swift code, as the EELS slice 2 design note (archived in the 
 ## Run (order matters)
 
 ```
-References/exspy-venv/bin/python -I -B tools/eels-edge/extract_gos.py
-References/exspy-venv/bin/python -I -B tools/eels-edge/pins.py --sigma-only
-References/exspy-venv/bin/python -I -B tools/eels-edge/make_planted.py      # any Python with NumPy
-References/exspy-venv/bin/python -I -B tools/eels-edge/pins.py
+../References/python/hyperspy/bin/python -I -B tools/eels-edge/extract_gos.py
+../References/python/hyperspy/bin/python -I -B tools/eels-edge/pins.py --sigma-only
+../References/python/hyperspy/bin/python -I -B tools/eels-edge/make_planted.py      # any Python with NumPy
+../References/python/hyperspy/bin/python -I -B tools/eels-edge/pins.py
 ```
 All take `--out`/`--fixtures` to write elsewhere. Every output is byte-identical on a second run (checked by sha256, see the
 lead's report). `pins.py` records the script's own sha256, both GOS md5s, commits and versions.

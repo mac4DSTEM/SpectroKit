@@ -1,7 +1,7 @@
 """Savitzky-Golay bit-parity fixture: SciPy's own answers, for the port to match bit for bit.
 
-Run (byte-reproducible; SciPy 1.18.1 / NumPy 2.5.4 from References/exspy-venv):
-    References/exspy-venv/bin/python -I -B tools/eels-thickness/make_sg_parity.py OUTDIR [big]
+Run (byte-reproducible; SciPy 1.18.1 / NumPy 2.5.4 from ../References/python/hyperspy):
+    ../References/python/hyperspy/bin/python -I -B tools/eels-thickness/make_sg_parity.py OUTDIR [big]
 writes OUTDIR/sg-parity.json and OUTDIR/sg-parity.f64 (little-endian doubles). Without "big": the committed fixture (< 2 MB).
 With "big": the one-off evidence run (a few hundred MB, not committed; the tests read it from $SG_PARITY_BIG_DIR).
 

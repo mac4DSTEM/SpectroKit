@@ -1,12 +1,12 @@
 # tools/edx-stages: generators and pins for the EDX stage gates
 
-Contract: the EDX stage-gates design note (archived in the suite's private folder) (23fa2af). Reference venv `References/exspy-venv` (HyperSpy 2.4.0, NumPy 2.5.4,
+Contract: the EDX stage-gates design note (archived in the suite's private folder) (23fa2af). Reference venv `../References/python/hyperspy` (HyperSpy 2.4.0, NumPy 2.5.4,
 SciPy 1.18.1, h5py 3.16.0), run `-I -B`. Fixtures: `Tests/SpectroEDXTests/Fixtures/` (15 MB).
 
 ## Run order (all deterministic; two full runs wrote identical bytes, sha256 compared)
-1. `References/exspy-venv/bin/python -I -B tools/edx-stages/make_planted.py` (NumPy only; 0.4 s) -> `edx-planted*.{json,f64,i16}`, `edx-calibration*`.
-2. `References/python-venv/bin/python -I -B tools/edx-stages/make_velox_streams.py` (h5py) -> `velox-stream-*.emd`, `velox-streams-truth.json`.
-3. `References/exspy-venv/bin/python -I -B tools/edx-stages/pins.py` (about 110 s) -> `pins.json`, `edx-axis-e2.f64`, `edx-pins-intensity.f64`.
+1. `../References/python/hyperspy/bin/python -I -B tools/edx-stages/make_planted.py` (NumPy only; 0.4 s) -> `edx-planted*.{json,f64,i16}`, `edx-calibration*`.
+2. `../References/python/hyperspy/bin/python -I -B tools/edx-stages/make_velox_streams.py` (h5py) -> `velox-stream-*.emd`, `velox-streams-truth.json`.
+3. `../References/python/hyperspy/bin/python -I -B tools/edx-stages/pins.py` (about 110 s) -> `pins.json`, `edx-axis-e2.f64`, `edx-pins-intensity.f64`.
 4. `... tools/edx-stages/findings.py` printed the numbers below (not a fixture writer; archived 2026-10-15 to `../_archive/SpectroKit/tools/edx-stages/findings.py`).
 Docstrings of each script define every parameter; this file lists readings made and findings.
 

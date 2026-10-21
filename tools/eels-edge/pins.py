@@ -6,9 +6,9 @@ Agreement with exSpy is agreement, not truth: the truth is make_planted.py and e
 Run (HyperSpy 2.4.0 venv; the pinned exSpy checkout is NOT installed, it is put first on sys.path and EELSCLEdge is built
 directly, as tools/eels-thickness/pins.py does; pyEELSMODEL at its pin is put second):
 
-    References/exspy-venv/bin/python -I -B tools/eels-edge/pins.py --sigma-only     # phase A: the planted cross section
+    ../References/python/hyperspy/bin/python -I -B tools/eels-edge/pins.py --sigma-only     # phase A: the planted cross section
     (python3 tools/eels-edge/make_planted.py)                                       # reads phase A's fixture
-    References/exspy-venv/bin/python -I -B tools/eels-edge/pins.py                  # phase B: everything else
+    ../References/python/hyperspy/bin/python -I -B tools/eels-edge/pins.py                  # phase B: everything else
 
 Options: --exspy DIR  --pyeels DIR  --gos-dft FILE  --gos-dirac FILE  --gosh-dir DIR  --fixtures DIR  --out DIR
 
