@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroCore
 
 /// v5.0 WP3 lane T: the counting-statistics layer (Garwood, Currie, named sigma

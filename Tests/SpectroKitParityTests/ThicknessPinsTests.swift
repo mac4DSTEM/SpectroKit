@@ -12,6 +12,7 @@
 
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroEELS
 import SpectroCore
 

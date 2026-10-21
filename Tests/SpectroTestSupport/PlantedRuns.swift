@@ -9,19 +9,23 @@ import SpectroCore
 import SpectroEDX
 
 /// What one proposer run says about Mg.
-struct MgRun: Sendable {
-    var net: Double, sigma: Double, sigmaZero: Double, lc: Double, ld: Double, misfit: Double
-    var proposed: Bool
-    var other: [String]       // other elements proposed (full pool)
-    var present: Bool         // Mg had a candidate at all
+package struct MgRun: Sendable {
+    package var net: Double, sigma: Double, sigmaZero: Double, lc: Double, ld: Double, misfit: Double
+    package var proposed: Bool
+    package var other: [String]       // other elements proposed (full pool)
+    package var present: Bool         // Mg had a candidate at all
+    package init(net: Double, sigma: Double, sigmaZero: Double, lc: Double, ld: Double, misfit: Double, proposed: Bool, other: [String], present: Bool) {
+        self.net = net; self.sigma = sigma; self.sigmaZero = sigmaZero; self.lc = lc; self.ld = ld; self.misfit = misfit
+        self.proposed = proposed; self.other = other; self.present = present
+    }
 }
 
-enum PlantedRuns {
-    static let axis = EDXFixtures.axis
+package enum PlantedRuns {
+    package static let axis = EDXFixtures.axis
 
     /// The design of the single-candidate test (registration P2): `pool: ["Mg"]`, `settings.elements = [Al, Si]`.
     /// Sets the Mn Ka resolution of the model (130 eV unless a Gate D experiment scans it) and the fit range.
-    static func run(_ counts: [Double], pool: [String]? = ["Mg"], current: [String] = ["Al", "Si"], resolution: Double = 130,
+    package static func run(_ counts: [Double], pool: [String]? = ["Mg"], current: [String] = ["Al", "Si"], resolution: Double = 130,
                     axis: EnergyAxis = PlantedRuns.axis, reference: ReferenceShapes = .none) -> MgRun {
         var settings = FitSettings.standard(elements: current, axis: axis, resolutionMnKaEV: resolution, beamEnergy: 200)
         settings.referenceShapes = reference
@@ -35,7 +39,7 @@ enum PlantedRuns {
     }
 
     /// Single-candidate runs on the noise-free mean and on `reals` realisations (all when nil) of a cell.
-    static func cellRuns(_ id: String, reals: Int? = nil, resolution: Double = 130) -> (mean: MgRun, reals: [MgRun]) {
+    package static func cellRuns(_ id: String, reals: Int? = nil, resolution: Double = 130) -> (mean: MgRun, reals: [MgRun]) {
         let c = EDXFixtures.cellByID[id]!
         let n = min(reals ?? c.nReal, c.nReal)
         let mean = run(EDXFixtures.meanSpectrum(c), resolution: resolution)
@@ -44,7 +48,7 @@ enum PlantedRuns {
     }
 }
 
-extension Array where Element == MgRun {
+package extension Array where Element == MgRun {
     var pProposed: Double { isEmpty ? .nan : Double(filter(\.proposed).count) / Double(count) }
     var meanNet: Double { map(\.net).reduce(0, +) / Double(count) }
     var meanSigma: Double { map(\.sigma).reduce(0, +) / Double(count) }
@@ -55,14 +59,14 @@ extension Array where Element == MgRun {
 }
 
 /// Runs cached for the process (the gates and the Gate D experiments read the same spectra; every run happens once).
-final class RunStore: @unchecked Sendable {
-    static let shared = RunStore()
+package final class RunStore: @unchecked Sendable {
+    package static let shared = RunStore()
     private let lock = NSLock()
     private var singles: [String: (mean: MgRun, reals: [MgRun])] = [:]
     private var fulls: [String: (mean: MgRun, reals: [MgRun])] = [:]
 
     /// Single-candidate design (`pool: ["Mg"]`, elements Al, Si) on the cell's noise-free mean and ALL its realisations.
-    func single(_ id: String) -> (mean: MgRun, reals: [MgRun]) {
+    package func single(_ id: String) -> (mean: MgRun, reals: [MgRun]) {
         lock.lock(); if let r = singles[id] { lock.unlock(); return r }; lock.unlock()
         let r = PlantedRuns.cellRuns(id)
         lock.lock(); singles[id] = r; lock.unlock()
@@ -70,7 +74,7 @@ final class RunStore: @unchecked Sendable {
     }
 
     /// The shipped full pool (default pool, elements Al, Si current) on the mean and the first `reals` realisations.
-    func full(_ id: String, reals: Int = 10) -> (mean: MgRun, reals: [MgRun]) {
+    package func full(_ id: String, reals: Int = 10) -> (mean: MgRun, reals: [MgRun]) {
         let key = "\(id)#\(reals)"
         lock.lock(); if let r = fulls[key] { lock.unlock(); return r }; lock.unlock()
         let c = EDXFixtures.cellByID[id]!

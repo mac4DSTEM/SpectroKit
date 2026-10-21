@@ -2,6 +2,7 @@
 // the rest stay in SpectroscopyFitRangeTests.swift. Helpers are duplicated, not shared, across the split.
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 

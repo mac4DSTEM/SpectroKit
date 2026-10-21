@@ -5,7 +5,7 @@
 //        side fails. One copy per test target (a test target cannot share another's sources).
 //
 
-func isEqual<T: FloatingPoint>(_ a: T, _ b: T, accuracy: T) -> Bool {
+package func isEqual<T: FloatingPoint>(_ a: T, _ b: T, accuracy: T) -> Bool {
     if a == b { return true }
     let difference = a.magnitude > b.magnitude ? a - b : b - a
     return difference.magnitude <= accuracy.magnitude

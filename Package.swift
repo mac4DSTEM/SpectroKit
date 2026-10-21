@@ -86,7 +86,7 @@ let package = Package(
         .testTarget(
             name: "SpectroCoreTests",
             dependencies: [
-                "SpectroCore", "SpectroEDX",
+                "SpectroCore", "SpectroEDX", "SpectroTestSupport",
                 .product(name: "FormatoDM", package: "FormatoKit"), .product(name: "FormatoEMD", package: "FormatoKit"),
             ],
             exclude: ["Fixtures"],
@@ -100,7 +100,7 @@ let package = Package(
         // metadata fields, the DM4 EELS reader and the quit barrier moved to FormatoKit with their readers.
         .testTarget(
             name: "SpectroKitTests",
-            dependencies: ["SpectroCore"],
+            dependencies: ["SpectroCore", "SpectroTestSupport"],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),
@@ -110,7 +110,7 @@ let package = Package(
         // EELS slice 1's tests: pins against exSpy, truth against planted spectra (Fixtures/, tools/eels-thickness/).
         .testTarget(
             name: "SpectroEELSTests",
-            dependencies: ["SpectroEELS", "SpectroCore"],
+            dependencies: ["SpectroEELS", "SpectroCore", "SpectroTestSupport"],
             exclude: ["Fixtures"],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
@@ -123,7 +123,7 @@ let package = Package(
         // miss. Its own target (registration Q6), so SpectroCoreTests stays the moved names (190 since 0.4.0).
         .testTarget(
             name: "SpectroEDXTests",
-            dependencies: ["SpectroEDX", "SpectroCore", .product(name: "FormatoEMD", package: "FormatoKit")],
+            dependencies: ["SpectroEDX", "SpectroCore", "SpectroTestSupport", .product(name: "FormatoEMD", package: "FormatoKit")],
             exclude: ["Fixtures"],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
@@ -131,11 +131,27 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
-        // G-golden: the source application's byte-for-byte baseline (recorded at its 71929a01) for the scenarios the library reaches.
-        // Its own target so the moved-name count stays exact (190 since 0.4.0).
+        // Helpers and fixture loaders the fast and the parity targets share (EDXFixtures, EELSFixtures, PlantedRuns, SeededPoisson,
+        // isEqual). `package` access; the fixtures stay beside the target that owns them (FixtureDirs).
+        .target(
+            name: "SpectroTestSupport",
+            dependencies: ["SpectroCore", "SpectroEDX", "SpectroEELS"],
+            path: "Tests/SpectroTestSupport",
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+                .enableUpcomingFeature("MemberImportVisibility"),
+            ]
+        ),
+        // The pinned comparisons: the source application's byte-for-byte golden baseline (G-golden, recorded at its 71929a01), the
+        // exSpy/HyperSpy/pyEELSMODEL pins and the minute-long EDX gate runs (PeakGate, Gate D). `swift test -c release --parallel
+        // --skip SpectroKitParityTests` is the per-session gate; the plain `swift test -c release --parallel` runs both.
         .testTarget(
-            name: "SpectroGoldenTests",
-            dependencies: ["SpectroCore", "SpectroEDX", .product(name: "FormatoEMD", package: "FormatoKit")],
+            name: "SpectroKitParityTests",
+            dependencies: [
+                "SpectroCore", "SpectroEDX", "SpectroEELS", "SpectroTestSupport",
+                .product(name: "FormatoEMD", package: "FormatoKit"),
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),

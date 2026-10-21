@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
@@ -50,7 +51,7 @@ struct EDSQuantPinsTests {
     }
     struct Pins: Decodable { let minIntensity: Double; let cases: [Case] }
 
-    private static let fixturesDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+    private static let fixturesDir = FixtureDirs.tests.appendingPathComponent("SpectroCoreTests")
     private static let pins: Pins = {
         let data = try! Data(contentsOf: fixturesDir.appendingPathComponent("Fixtures/eds-quant-pins-exspy-7185a4d1.json"))
         return try! JSONDecoder().decode(Pins.self, from: data)

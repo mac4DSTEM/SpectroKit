@@ -8,6 +8,7 @@
 
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroCore
 
 struct RankThresholdTests {

@@ -73,10 +73,10 @@ bin=$(swift build --disable-dependency-cache -c debug --show-bin-path) || die "s
 [[ -d $bin ]] || die "the build's bin path does not exist: $bin"
 # (.build/checkouts holds FormatoKit's sources, test directories included: not built, so not searched.)
 leaked=$(find $bin .build -path .build/checkouts -prune -o \( -iname '*ExitProbe*' -o -iname '*SpectroKitTests*' \
-         -o -iname '*SpectroCoreTests*' -o -iname '*SpectroGoldenTests*' -o -iname '*SpectroEDXTests*' \
+         -o -iname '*SpectroCoreTests*' -o -iname '*SpectroGoldenTests*' -o -iname '*SpectroKitParityTests*' -o -iname '*SpectroTestSupport*' -o -iname '*SpectroEDXTests*' \
          -o -iname '*SpectroEELSTests*' -o -iname 'Formato*Tests*' \) -print 2>/dev/null | head -5 || true)
 [[ -z $leaked ]] || die "test-only target built for a consumer: $leaked"
-if grep -qE "ExitProbe|SpectroKitTests|SpectroCoreTests|SpectroGoldenTests|SpectroEDXTests|SpectroEELSTests|Formato[A-Za-z0-9]*Tests" $log; then
+if grep -qE "ExitProbe|SpectroKitTests|SpectroCoreTests|SpectroGoldenTests|SpectroKitParityTests|SpectroTestSupport|SpectroEDXTests|SpectroEELSTests|Formato[A-Za-z0-9]*Tests" $log; then
   die "the build log names a test-only target"
 fi
 # Each optional backend directory may be absent. Guard each find: a trailing true in the group does not stop zsh -e

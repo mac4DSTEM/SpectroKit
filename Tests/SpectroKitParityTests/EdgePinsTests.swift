@@ -10,48 +10,9 @@
 
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroCore
 import SpectroEELS
-
-/// edge-pins.json and edge-planted.json as plain dictionaries (the file is large and deep; only what is asserted is read).
-enum EdgeFixtures {
-    nonisolated(unsafe) static let pins: [String: Any] = load("edge-pins.json")   // read-only after first load
-    nonisolated(unsafe) static let planted: [String: Any] = load("edge-planted.json")
-
-    static func load(_ name: String) -> [String: Any] {
-        do {
-            let data = try Data(contentsOf: EELSFixtures.url(name))
-            return try JSONSerialization.jsonObject(with: data) as! [String: Any]
-        } catch { fatalError("\(name): \(error)") }
-    }
-
-    static func edge(_ element: String) -> CoreLossEdge {
-        CoreLossEdge.bundled.first { $0.element == element }!
-    }
-
-    /// A planted core-loss image (3 x 5 pixels, 150 eV + 0.25 eV x 2000).
-    static func core(_ file: String) throws -> CoreLossSpectrumImage {
-        let ax = planted["coreLossAxis"] as! [String: Any]
-        return try CoreLossSpectrumImage(nx: 5, ny: 3, channels: ax["size"] as! Int, counts: EELSFixtures.doubles(file),
-                                         energyOffsetEV: ax["offset"] as! Double, energyScaleEV: ax["scale"] as! Double)
-    }
-
-    /// A planted low-loss image (slice 1's axis, -10 eV + 0.05 eV x 3400).
-    static func low(_ file: String) throws -> LowLossSpectrumImage {
-        let ax = planted["lowLossAxis"] as! [String: Any]
-        return try LowLossSpectrumImage(nx: 5, ny: 3, channels: ax["size"] as! Int, counts: EELSFixtures.doubles(file),
-                                        energyOffsetEV: ax["offset"] as! Double, energyScaleEV: ax["scale"] as! Double)
-    }
-
-    static let plantedMicroscope = EELSMicroscope(beamEnergyKeV: 200, convergenceMrad: 10, collectionMrad: 20)
-}
-
-extension Dictionary where Key == String, Value == Any {
-    func d(_ k: String) -> [String: Any] { self[k] as! [String: Any] }
-    func a(_ k: String) -> [Double] { (self[k] as! [Any]).map { ($0 as? NSNumber)?.doubleValue ?? .nan } }
-    func x(_ k: String) -> Double { (self[k] as! NSNumber).doubleValue }
-    func i(_ k: String) -> Int { (self[k] as! NSNumber).intValue }
-}
 
 struct EdgePinsTests {
 

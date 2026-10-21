@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SpectroTestSupport
 @testable import SpectroCore
 
 /// `MapSmoothing`: count conservation, identity for none and for a flat map, a symmetric spread, no loss at the border.

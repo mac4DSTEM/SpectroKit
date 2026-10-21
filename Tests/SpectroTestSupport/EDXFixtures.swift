@@ -11,13 +11,13 @@ import Testing
 import SpectroCore
 import SpectroEDX
 
-enum EDXFixtures {
-    static let dir: URL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
-    static let repoRoot: URL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+package enum EDXFixtures {
+    package static let dir: URL = FixtureDirs.fixtures(of: "SpectroEDXTests")
+    package static let repoRoot: URL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
 
-    static func url(_ name: String) -> URL { dir.appendingPathComponent(name) }
+    package static func url(_ name: String) -> URL { dir.appendingPathComponent(name) }
 
-    static func jsonObject(_ name: String) -> [String: Any] {
+    package static func jsonObject(_ name: String) -> [String: Any] {
         do {
             var data = try Data(contentsOf: url(name))
             // Python's json.dump wrote a bare NaN (a line on its own: find_peaks1D_ohaver widths); JSON has none, so it reads as null.
@@ -31,31 +31,31 @@ enum EDXFixtures {
     }
 
     // Read-only after first load.
-    nonisolated(unsafe) static let pins: [String: Any] = jsonObject("pins.json")
-    nonisolated(unsafe) static let planted: [String: Any] = jsonObject("edx-planted.json")
-    nonisolated(unsafe) static let plantedTruth: [String: Any] = jsonObject("edx-planted-truth.json")
-    nonisolated(unsafe) static let calibration: [String: Any] = jsonObject("edx-calibration.json")
-    nonisolated(unsafe) static let streamTruth: [String: Any] = jsonObject("velox-streams-truth.json")
+    package nonisolated(unsafe) static let pins: [String: Any] = jsonObject("pins.json")
+    package nonisolated(unsafe) static let planted: [String: Any] = jsonObject("edx-planted.json")
+    package nonisolated(unsafe) static let plantedTruth: [String: Any] = jsonObject("edx-planted-truth.json")
+    package nonisolated(unsafe) static let calibration: [String: Any] = jsonObject("edx-calibration.json")
+    package nonisolated(unsafe) static let streamTruth: [String: Any] = jsonObject("velox-streams-truth.json")
 
-    static func data<T>(_ name: String, as: T.Type) -> [T] {
+    package static func data<T>(_ name: String, as: T.Type) -> [T] {
         let d = try! Data(contentsOf: url(name))
         return d.withUnsafeBytes { Array($0.bindMemory(to: T.self)) }   // little-endian host (arm64)
     }
 
     /// The planted window: 1056 channels from channel 96 of 4096; E_k = -1.93221348 + 0.02 k keV.
-    static let k0 = 96, nwin = 1056, nch = 4096
-    static let axis = EnergyAxis(offset: -1.93221348, scale: 0.02, size: 4096)
-    static let means: [Double] = data("edx-planted-means.f64", as: Double.self)
-    static let resid: [Int16] = data("edx-planted-resid.i16", as: Int16.self)
+    package static let k0 = 96, nwin = 1056, nch = 4096
+    package static let axis = EnergyAxis(offset: -1.93221348, scale: 0.02, size: 4096)
+    package static let means: [Double] = data("edx-planted-means.f64", as: Double.self)
+    package static let resid: [Int16] = data("edx-planted-resid.i16", as: Int16.self)
 
-    struct Cell: Sendable {
-        let id: String, set: String, family: String
-        let nAl: Double, rho: Double
-        let meanRow: Int, residRow0: Int, nReal: Int
-        let truth: [String: Double]
+    package struct Cell: Sendable {
+        package let id: String, set: String, family: String
+        package let nAl: Double, rho: Double
+        package let meanRow: Int, residRow0: Int, nReal: Int
+        package let truth: [String: Double]
     }
 
-    static let cells: [Cell] = {
+    package static let cells: [Cell] = {
         let tr = plantedTruth
         return (planted["cells"] as! [[String: Any]]).map { c in
             let id = c["id"] as! String
@@ -66,17 +66,17 @@ enum EDXFixtures {
                         truth: areas.mapValues { Double($0)! })
         }
     }()
-    static let cellByID: [String: Cell] = Dictionary(uniqueKeysWithValues: cells.map { ($0.id, $0) })
+    package static let cellByID: [String: Cell] = Dictionary(uniqueKeysWithValues: cells.map { ($0.id, $0) })
 
     /// The noise-free mean of a cell as a full 4096-channel spectrum (zero outside the stored window).
-    static func meanSpectrum(_ c: Cell) -> [Double] {
+    package static func meanSpectrum(_ c: Cell) -> [Double] {
         var out = [Double](repeating: 0, count: nch)
         for j in 0..<nwin { out[k0 + j] = means[c.meanRow * nwin + j] }
         return out
     }
 
     /// Realisation `j` (0-based): rint(mean) + residual, round half to even, in a 4096-channel spectrum.
-    static func realisation(_ c: Cell, _ j: Int) -> [Double] {
+    package static func realisation(_ c: Cell, _ j: Int) -> [Double] {
         var out = [Double](repeating: 0, count: nch)
         for k in 0..<nwin {
             out[k0 + k] = means[c.meanRow * nwin + k].rounded(.toNearestOrEven) + Double(resid[(c.residRow0 + j) * nwin + k])
@@ -84,7 +84,7 @@ enum EDXFixtures {
         return out
     }
 
-    static func sha256(_ bytes: Data) -> String { SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined() }
+    package static func sha256(_ bytes: Data) -> String { SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined() }
 
     // MARK: RosettaSciIO's public Velox files
 
@@ -92,7 +92,7 @@ enum EDXFixtures {
     /// References/rosettasciio checkout (zip member, extracted once per process) and the test is skipped when it is absent:
     /// `FixtureAbsent` (XCTSkip before the Swift Testing migration) is caught by the loops that go on, and turned into
     /// a printed note and an early return by `publicVeloxIfPresent` where the test needs the one file.
-    static func publicVelox(label: String) throws -> String {
+    package static func publicVelox(label: String) throws -> String {
         let parts = label.split(separator: "/", maxSplits: 1).map(String.init)
         let member = parts[1]
         let copy = dir.appendingPathComponent("public").appendingPathComponent(member)
@@ -122,26 +122,27 @@ enum EDXFixtures {
 
     /// `publicVelox`, or nil (a note printed) when the file is absent: the test returns without checking. `Test.cancel` (a real
     /// skip) is missing from Xcode 26.0's Swift Testing, the toolchain of the macOS 15 CI job.
-    static func publicVeloxIfPresent(label: String) throws -> String? {
+    package static func publicVeloxIfPresent(label: String) throws -> String? {
         do { return try publicVelox(label: label) } catch let absent as FixtureAbsent { print("skipped, nothing checked: \(absent.reason)"); return nil }
     }
 }
 
 /// A fixture the test reads is not on this machine (the References checkout): the test skips, it does not fail.
-struct FixtureAbsent: Error { let reason: String }
+package struct FixtureAbsent: Error { let reason: String }
 
 /// A lock around a dictionary cache (strings to strings), for the extracted public files.
-final class NSMutex: @unchecked Sendable {
+package final class NSMutex: @unchecked Sendable {
     private let lock = NSLock()
     private var cache: [String: String] = [:]
-    func withLock<T>(_ body: (inout [String: String]) throws -> T) rethrows -> T {
+    package func withLock<T>(_ body: (inout [String: String]) throws -> T) rethrows -> T {
         lock.lock(); defer { lock.unlock() }
         return try body(&cache)
     }
 }
 
-extension Dictionary where Key == String, Value == Any {
+package extension Dictionary where Key == String, Value == Any {
     func d(_ k: String) -> [String: Any] { self[k] as! [String: Any] }
+    func a(_ k: String) -> [Double] { (self[k] as! [Any]).map { ($0 as? NSNumber)?.doubleValue ?? .nan } }
     func l(_ k: String) -> [[String: Any]] { self[k] as! [[String: Any]] }
     func x(_ k: String) -> Double { (self[k] as! NSNumber).doubleValue }
     func i(_ k: String) -> Int { (self[k] as! NSNumber).intValue }
@@ -150,16 +151,16 @@ extension Dictionary where Key == String, Value == Any {
 
 // MARK: parallel helper (at most 8 workers: suite CLAUDE.md, heavy CPU work)
 
-final class ResultBox<T: Sendable>: @unchecked Sendable {
+package final class ResultBox<T: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
     private var items: [T?]
-    init(_ n: Int) { items = [T?](repeating: nil, count: n) }
-    func set(_ i: Int, _ v: T) { lock.lock(); items[i] = v; lock.unlock() }
-    var values: [T] { items.map { $0! } }
+    package init(_ n: Int) { items = [T?](repeating: nil, count: n) }
+    package func set(_ i: Int, _ v: T) { lock.lock(); items[i] = v; lock.unlock() }
+    package var values: [T] { items.map { $0! } }
 }
 
 /// `body(0..<n)` on at most 8 threads; results in order.
-func parallelMap<T: Sendable>(_ n: Int, _ body: @Sendable (Int) -> T) -> [T] {
+package func parallelMap<T: Sendable>(_ n: Int, _ body: @Sendable (Int) -> T) -> [T] {
     let box = ResultBox<T>(n)
     let workers = min(8, max(n, 1))
     DispatchQueue.concurrentPerform(iterations: workers) { w in
@@ -170,7 +171,7 @@ func parallelMap<T: Sendable>(_ n: Int, _ body: @Sendable (Int) -> T) -> [T] {
 }
 
 /// Lines of `EDX_GATE_LOG` (if set) and stdout: the numbers the gates and the Gate D experiments report.
-func gateNote(_ s: String) {
+package func gateNote(_ s: String) {
     print(s)
     guard let path = ProcessInfo.processInfo.environment["EDX_GATE_LOG"] else { return }
     if let h = FileHandle(forWritingAtPath: path) { h.seekToEndOfFile(); h.write((s + "\n").data(using: .utf8)!); try? h.close() }

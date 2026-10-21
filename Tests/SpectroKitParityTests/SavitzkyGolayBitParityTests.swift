@@ -11,6 +11,7 @@
 
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroEELS
 import SpectroCore
 
@@ -32,7 +33,7 @@ struct SavitzkyGolayBitParityTests {
     }
 
     private var fixtureDir: URL {
-        URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+        FixtureDirs.fixtures(of: "SpectroEELSTests")
     }
 
     private func dirs() -> [URL] {

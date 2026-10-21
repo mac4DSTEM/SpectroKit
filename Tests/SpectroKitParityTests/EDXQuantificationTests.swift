@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
@@ -33,7 +34,7 @@ struct EDXQuantificationTests {
     struct Pins: Decodable { let cases: [Case] }
 
     private static let pins: Pins = {
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/edx-quant-maps-exspy.json")
+        let url = EDXFixtures.url("edx-quant-maps-exspy.json")
         return try! JSONDecoder().decode(Pins.self, from: Data(contentsOf: url))
     }()
 

@@ -19,9 +19,9 @@
 
 import Foundation
 
-struct SplitMix64 {
-    var state: UInt64
-    mutating func next() -> UInt64 {
+package struct SplitMix64 {
+    package var state: UInt64
+    package mutating func next() -> UInt64 {
         state &+= 0x9E37_79B9_7F4A_7C15
         var z = state
         z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
@@ -30,17 +30,17 @@ struct SplitMix64 {
     }
 }
 
-struct Xoshiro256StarStar {
+package struct Xoshiro256StarStar {
     private var s0: UInt64, s1: UInt64, s2: UInt64, s3: UInt64
 
-    init(seed: UInt64) {
+    package init(seed: UInt64) {
         var sm = SplitMix64(state: seed)
         s0 = sm.next(); s1 = sm.next(); s2 = sm.next(); s3 = sm.next()
     }
 
     private static func rotl(_ x: UInt64, _ k: UInt64) -> UInt64 { (x << k) | (x >> (64 - k)) }
 
-    mutating func next() -> UInt64 {
+    package mutating func next() -> UInt64 {
         let result = Self.rotl(s1 &* 5, 7) &* 9
         let t = s1 << 17
         s2 ^= s0; s3 ^= s1; s1 ^= s2; s0 ^= s3
@@ -50,10 +50,10 @@ struct Xoshiro256StarStar {
     }
 
     /// Uniform on the open interval (0, 1).
-    mutating func uniform() -> Double { (Double(next() >> 11) + 0.5) * 0x1.0p-53 }
+    package mutating func uniform() -> Double { (Double(next() >> 11) + 0.5) * 0x1.0p-53 }
 
     /// A Poisson variate with mean `lambda` (0 for lambda <= 0).
-    mutating func poisson(_ lambda: Double) -> Double {
+    package mutating func poisson(_ lambda: Double) -> Double {
         if !(lambda > 0) { return 0 }
         if lambda < 10 {
             let limit = exp(-lambda)
@@ -79,7 +79,7 @@ struct Xoshiro256StarStar {
     }
 
     /// ln k! : the exact sum of logs for k < 20, Stirling's series (three correction terms, error below 5e-13 from k = 20) above.
-    static func logFactorial(_ k: Double) -> Double {
+    package static func logFactorial(_ k: Double) -> Double {
         if k < 20 {
             var s = 0.0
             if k >= 2 { for i in 2...Int(k) { s += log(Double(i)) } }
