@@ -1,6 +1,6 @@
 # tools/eels-edge: truth and pins for EELS slice 2 (power-law background, C K areal density)
 
-Written before the Swift code, as `docs/eels-slice-2-registration.md` sections 3.3, 4 and 5 fix them. Four scripts:
+Written before the Swift code, as the EELS slice 2 design note (archived in the suite's private folder) sections 3.3, 4 and 5 fix them. Four scripts:
 
 | script | needs | writes |
 |---|---|---|

@@ -132,15 +132,16 @@ no existing number moves.
 The suite's policies became public parameters (`WindowRules`, `QuantificationPolicy`, `ProposerPolicy`, `UnlistedLineRules`,
 `SmoothingKernel`, the EELS default window offsets), each default 0.4.0's value, the default path bit for bit; a stand-alone
 README and `Examples/QuantifyEDX`; a DocC catalogue per module; `docs/parity.md`. One behaviour change:
-`SpectroscopyExport.csv`'s default title is "Spectroscopy quantification". Migration: nothing required
-(`docs/consumers-0.5.0.md`).
+`SpectroscopyExport.csv`'s default title is "Spectroscopy quantification". Migration: nothing required.
 
 ## 0.4.0
 
 The file readers moved to FormatoKit (`FormatoDM`, `FormatoEMD`, `FormatoHDF5`), pinned `exact: "0.0.3"`; libhdf5 ships inside
-FormatoHDF5 (`docs/consumers-0.4.0.md`).
+FormatoHDF5.
 
 ## 0.3.0, 0.2.0, 0.1.0
 
 EELS thickness (t/λ) and the C K ratio method; the EDX quantification stage gates; the first extraction from the source
-application (`docs/consumers-0.3.0.md`, `../_archive/SpectroKit/docs/history.md`).
+application (`../_archive/SpectroKit/docs/history.md`).
+
+Consumer notes for 0.0.1 to 0.5.0 are archived.

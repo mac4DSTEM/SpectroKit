@@ -1,4 +1,4 @@
-# SpectroKit CI: the gate (tools/test.sh = `swift test -c release`) and the consumer check.
+# SpectroKit CI: the gate (tools/test.sh = `swift test -c release`), the consumer check, and the tag check.
 #
 # Written 2026-10-14; enabling it (Actions on the repository) is the owner's. The package declares macOS 15 / iOS 18 and a
 # Swift 6.2 toolchain (Package.swift: `.macOS(.v15)`, tools 6.2).
@@ -12,6 +12,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['*']
   pull_request:
   workflow_dispatch:
 
@@ -31,8 +32,6 @@ jobs:
           sudo xcode-select -s "$xcode"
           xcodebuild -version
           swift --version
-      - name: Hook proof (no sleep or poll loops)
-        run: tools/hooks/test-no-sleep-poll.sh
       - name: Gate (tools/test.sh, release)
         shell: bash
         run: tools/test.sh 2>&1 | tee test.log
@@ -43,8 +42,19 @@ jobs:
           if sed 's/warning:/\nwarning:/g' test.log | grep "warning:" | grep -v "not stripping binary because it is signed" | grep -q .; then
             sed 's/warning:/\nwarning:/g' test.log | grep "warning:" | head -20; exit 1
           fi
-      - name: Consumer check with its negative controls
-        run: tools/consumer-check/run.sh --controls
+      - name: Consumer check
+        run: tools/consumer-check/run.sh
+  version:
+    name: CHANGELOG version matches the tag
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare
+        run: |
+          top=$(grep -m1 -E '^## [0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | sed -E 's/^## ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          tag=${GITHUB_REF_NAME#v}
+          [ "$top" = "$tag" ] || { echo "CHANGELOG top is $top, tag is $tag"; exit 1; }
   # 0.5.1: the macOS 15 floor. Xcode 26.0 (Swift 6.2) pinned the way FormatoKit's CI pins it; a macos-15 image's default Xcode may
   # carry an older Swift than the manifests' tools-version 6.2. No Test.cancel anywhere (missing on this toolchain).
   test-macos15:

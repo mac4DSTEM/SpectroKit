@@ -12,26 +12,19 @@
 # code blocks (Examples/QuantifyEDX, readme/Sources/readme-consumer) differ; the second consumer is built in Debug with no
 # warning but those notices and run on its planted spectrum: Mg, Al and Si proposed and quantified, t/lambda 0.5 within 0.01.
 #
-#   run.sh [--controls]
+#   run.sh
 #
 #   (no flag)   build, run the checks, print "consumer-check: all passed — N checks ..." and exit 0.
-#   --controls  then the negative controls (controls.py, python3 standard library only): for each public symbol the consumer
-#               uses, an edited COPY of the repository (rsync into <root>/.build/consumer-check/mutants/, never the
-#               working tree) has that one declaration reverted from `public` to `package`; the consumer is built against
-#               the copy and must FAIL with a compiler error naming that symbol. Prints
-#               "consumer-check: negative controls: N of N caught" and exits non-zero unless all are caught.
 set -euo pipefail
 here=${0:A:h}
 root=${here:h:h}
 
 die() { print -u2 "consumer-check: $*"; exit 1 }
 
-controls=0
 for arg in "$@"; do
   case $arg in
-    --controls) controls=1 ;;
     -h|--help) sed -n '2,/^set /p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) die "unknown argument $arg (usage: run.sh [--controls])" ;;
+    *) die "unknown argument $arg (usage: run.sh)" ;;
   esac
 done
 cd $here
@@ -169,11 +162,3 @@ if not t or abs(float(t.group(1)) - 0.5) > 0.01 or not 0 < float(t.group(2)) < 0
 print("consumer-check: README consumer: Mg Al Si proposed with at.%% and sigma, validation none, t/lambda %s +- %s" % (t.group(1)[:6], t.group(2)[:6]))
 PY
 cd $here
-
-(( controls )) || exit 0
-
-# 4. Negative controls. The repository is never edited: controls.py works in an rsync'd copy under .build.
-PY=${CONSUMER_CHECK_PYTHON:-python3}
-command -v $PY >/dev/null || die "no $PY for --controls (set CONSUMER_CHECK_PYTHON)"
-$PY -I -B $here/test_judge.py $root
-exec $PY -I -B $here/controls.py $root

@@ -63,7 +63,7 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
   `EELSMicroscope` (init, three fields); `LowLossIntensity`; `CoreLossEdge` (`.element .subshell .onsetEV`,
   `.carbonK .nitrogenK .oxygenK`, `.bundled`, `description`, `Equatable`); `ArealDensityMap` (fifteen fields);
   `ArealDensityPixel` (eight fields); `EdgeUnavailable` (four cases); `EELSEdgeError`. Section: `EdgeQuantificationChecks`.
-- **SpectroEDX policies and SpectroCore kernels (0.5.0, 37 checks).** The parameters of docs/generality-0.5.0-registration.md used
+- **SpectroEDX policies and SpectroCore kernels (0.5.0, 37 checks).** The 0.5.0 policy parameters (design note, archived in the suite's private folder) used
   from outside the package, each with its default (no change against the call that names none) and one non-default value that
   moves the result as predicted: `WindowRules` through `ElementWindows.build(rules:)` and `defaultFamily(of:rules:)` (9, section
   `windowRulesChecks`); `QuantificationPolicy` (`FitPolicy`, `AbundancePolicy`, `DetectorLayers`, `SingleLineRule`, `IRLSSettings`,
@@ -72,9 +72,8 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
   `FlankMisfitGeometry`, `ElementContext`), `ElementProposer(policy:)`, the public `ProposalRules` fields and `UnlistedLineRules`
   with `UnlistedLineChecker.neighbour` (10, `proposerPolicyChecks`); `SmoothingKernel` with `MapSmoothing.apply(kernel:)` and
   `defaultBackgroundWindow(onsetEV:belowOnsetEV:gapEV:)` (5, `kernelAndWindowChecks`). The consumer now depends on the
-  `SpectroEDX` product too. The negative controls (`--controls`, 151 of 151 since 0.5.0) cover the types they are passed in (13), `PooledQuantificationInput.policy` and `MapSmoothing.smoothingKernel`.
-- **Public.** The target compiles only while each symbol above is `public`. `run.sh --controls` shows it for every one: see
-  Negative controls.
+  `SpectroEDX` product too.
+- **Public.** The target compiles only while each symbol above is `public`: a symbol made `package` stops the build.
 - **Debug, no unsafe flags, no setup.** `run.sh` builds in Debug, as a consumer's Debug build does, with zero warnings except the
   Swift Build's prints for FormatoKit's signed xcframeworks (`not stripping binary because it is signed`: `FormatoLibHDF5`,
   `FormatoLibSZ`, `FormatoLibAEC`, only those three names, possibly repeated or absent on a warm build; colour codes stripped, the log split on `warning:` because the lines can
@@ -89,44 +88,14 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
   inside. libhdf5 is FormatoKit's: `run.sh` fails unless the binary loads `@rpath/FormatoLibHDF5.framework` (`otool -L`) and the
   `FormatoLibHDF5`, `FormatoLibSZ` and `FormatoLibAEC` frameworks sit next to it.
 
-## Negative controls (`run.sh --controls`)
-
-For each public symbol the consumer uses (33 of SpectroCore's opening: `SpectrumImageOpener` and its `kind`, `open`,
-`openGMSEDS`; `SpectrumFileKind`; `SpectrumImageOpenError`; `SpectroCancelled`; `LoadedSpectrumImage` and its six members;
-`SpectrumImageMetadata` and nine fields; `SpectrumImageOrigin`; `SpectrumDetectorSegment`, `.name`, `.solidAngle`; `EnergyAxis`,
-`.offset`, `.scale`, `.size`, `.energy(ofChannel:)`; and 103 of `SpectroEELS`: every public type, field, method and initialiser
-listed above; enum cases are covered by their type's control, a case cannot be made `package` alone), `controls.py` reverts that
-one declaration from `public` to `package` in an rsync'd **copy** of the repository (`<root>/.build/consumer-check/mutants/`,
-the working tree is never edited; the edit must apply exactly once, else the control fails loudly), builds the consumer against
-the copy, and requires the build to fail with the compiler error that names the symbol. First the unedited copy must build (the
-baseline), so a failure is the edit's. A control is caught by one of these diagnostics:
-
-- **access** (most): `error: 'tagTree' is inaccessible due to 'package' protection level` at the consumer's use, with the note
-  `SpectroCore.<Owner>.<member>:2:13: note: '<member>' declared here` pointing at the edited declaration;
-- **decl** (the types): the type itself becomes `package`; caught by `cannot find '<Type>' in scope` in the consumer, or, when a
-  public signature of the library names the type, by `cannot be declared public because ... uses a package type` with the type
-  in the code frame under it;
-- **library** (`CoreLossEdge.carbonK`, `CoreLossEdge.description`, and `LoadedSpectrumImage`'s `nx`, `ny`, `channels`, `metadata`,
-  `energyAxis`, `scanImage`): the library refuses the edit itself, since `carbonK` is `ratioMethod`'s public default argument and
-  the others witness a public protocol requirement (`must be declared public because it matches a requirement in public
-  protocol`); caught by that error in the edited file;
-- **used** (the two `LowLossSpectrumImage` initialisers, the two `CoreLossSpectrumImage` ones with the error required in
-  `EdgeQuantificationChecks.swift`, and `EELSMicroscope.init`): the access error has no stable name, so the consumer's build must
-  fail with an error in the consumer's own sources that names the type the other initialiser takes (`cannot convert value of
-  type '[Double]' to expected argument type '[Float]'`, and the reverse).
-
-It prints `consumer-check: negative controls: N of N caught` (136 of 136 expected) and exits non-zero unless all are caught.
-The build logs of the last run are in `<root>/.build/consumer-check/mutants/logs/`. Before 0.4.0 there were 143: the 28 of the
-DM4 and Velox readers and the barrier's bound and the 12 of the DM4 EELS reader moved to FormatoKit with them.
-
 ## What it cannot prove
 
 - `EELSEdgeError.noBundledCrossSection`: no public way reaches it. `CoreLossEdge`'s initialiser is internal, so a consumer holds only
-  C K, N K and O K, all bundled. (The declaration is still controlled with the type `EELSEdgeError`.)
+  C K, N K and O K, all bundled.
 - `.crossSectionFailed`: reached by a microscope outside the cross section's domain (E0 of about 2 keV and below, a convergence
   semi-angle of 1e6 mrad). Found here as a trap inside the library (`Index out of range`); fixed in SpectroEELS (a NaN q limit
   is refused) and tested there (`EdgeEdgeCaseTests.testCrossSectionOutsideItsDomainThrows`), not repeated here.
-- `LoadedSpectrumImage.sum(mask:)` and `windowSums(_:)` are used but have no control: each has a second public overload (with
+- `LoadedSpectrumImage.sum(mask:)` and `windowSums(_:)` are used but a `package` revert would not show: each has a second public overload (with
   `cancelled:` and `progress:`), so reverting one makes the call resolve to the other and the build still succeeds.
 - That the readers are right: that is FormatoKit's. The values here show that SpectroCore reaches them through the shipped
   libhdf5 and the DM4 reader and gets the numbers its own tests assert.
@@ -138,7 +107,6 @@ DM4 and Velox readers and the barrier's bound and the 12 of the DM4 EELS reader 
 
 ```
 tools/consumer-check/run.sh              # build (Debug), run the checks
-tools/consumer-check/run.sh --controls   # then the negative controls (python3, standard library only)
 ```
 
 Prints one `PASS`/`FAIL` line per check, then `consumer-check: all passed — N checks ...` and exits 0 only if everything

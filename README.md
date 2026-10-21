@@ -189,10 +189,22 @@ All EDX quantification and all EELS thickness report `validation: "none"`. What 
 
 Each result carries its sigma and the terms in it; read what a sigma leaves out (the doc comments say) before using one.
 
+## Known limits
+
+- Public API gaps: `SpectrumDetectorSegment.init`, `ElementCandidate`'s `lists`, `possible` and `sumPeaks`,
+  `EDSFitResult.degreesOfFreedom`, `PooledQuantification.referenceElement` and `FitSettings`' range fields are `package`;
+  there is no `[UInt64]` overload of `ElementProposer.propose` and no `PooledQuantificationInput` builder from a `LoadedSpectrumImage`.
+- `ElementWindows` (public) picks its default line by a Velox-style family rule, not exSpy's `add_lines()` (that is `package`).
+- The cross-section route of `ZetaFactor` has hand-recorded pins only; zeta stays `package`.
+- The FFAST tables (90 lists) are pinned on about 10 coefficients, not value for value; the 947-row line table is pinned on all rows.
+- Three EDX tests read RosettaSciIO's public Velox files from `References/` and return without checking when absent (CI has none).
+- Two parameters are undocumented in DocC: `axis` in `ElementProposer`, `cancelled` in `EdgeQuantification`.
+- `docs/parity.md` lists the claims in source headers that the tests do not show.
+
 ## Tests
 
 ```sh
-tools/test.sh                         # the gate: swift test -c release
+swift test -c release                 # the gate (tools/test.sh adds a no-warnings check)
 tools/consumer-check/run.sh           # builds the code in this README, and a second consumer, in Debug: both without a warning
 ```
 
@@ -202,11 +214,11 @@ of this README and nothing else, and `check-readme.py` fails if the README and `
 
 ## Documentation
 
-- [`docs/consumers-0.5.0.md`](docs/consumers-0.5.0.md): what 0.5.0 adds (every suite policy a parameter with today's value as
-  the default) and changes; [`docs/consumers-0.4.0.md`](docs/consumers-0.4.0.md): where the readers went (FormatoKit).
-- [`docs/status.md`](docs/status.md): the state, the gate's counts and the open items; [`docs/parity.md`](docs/parity.md):
-  SpectroKit against exSpy's documented API, row by row.
-- [`docs/`](docs): the registrations (what was decided before the code, and what the tests must show).
+- [`docs/parity.md`](docs/parity.md): SpectroKit against exSpy's documented API, row by row. Numbers are held to the Python
+  reference within its own tolerance; `docs/parity.md` lists each function, its state and its tolerance.
+- [`docs/ci-parity.md`](docs/ci-parity.md): the audit of the cross-CPU differences found on the first CI run.
+- [`CHANGELOG.md`](CHANGELOG.md): each release, with a Migration paragraph where a consumer must change something. Consumer
+  notes for 0.0.1 to 0.5.0 are archived.
 - [`NOTICE`](NOTICE): the licences and credits in full.
 
 ## Licence and credits

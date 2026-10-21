@@ -1,6 +1,6 @@
 # tools/edx-stages: generators and pins for the EDX stage gates
 
-Contract: `docs/edx-stage-gates-registration.md` (23fa2af). Reference venv `References/exspy-venv` (HyperSpy 2.4.0, NumPy 2.5.4,
+Contract: the EDX stage-gates design note (archived in the suite's private folder) (23fa2af). Reference venv `References/exspy-venv` (HyperSpy 2.4.0, NumPy 2.5.4,
 SciPy 1.18.1, h5py 3.16.0), run `-I -B`. Fixtures: `Tests/SpectroEDXTests/Fixtures/` (15 MB).
 
 ## Run order (all deterministic; two full runs wrote identical bytes, sha256 compared)

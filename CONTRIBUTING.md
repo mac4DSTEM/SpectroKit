@@ -21,8 +21,8 @@ Tests use [Swift Testing](https://github.com/swiftlang/swift-testing) (`import T
 ## How the numbers are checked
 
 SpectroKit's results are compared with the Python libraries it is ported from, using fixtures generated from pinned versions
-of exSpy and HyperSpy. If a test against such a fixture fails, treat it as a bug in the port. Please do not loosen a tolerance
-to make it pass. If you believe the Python reference itself is wrong, open an issue and show the evidence.
+of exSpy and HyperSpy. A test's tolerance is the one the Python package's own tests use for that function; a result outside it is a bug. A change
+that moves a fixture says why in the pull request and in the CHANGELOG. If you believe the Python reference itself is wrong, open an issue and show the evidence.
 
 Where a result must differ from the reference, mark it in the code with a `DEVIATION` comment and say why.
 
