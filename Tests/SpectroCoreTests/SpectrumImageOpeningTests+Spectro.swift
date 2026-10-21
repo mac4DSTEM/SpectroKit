@@ -83,7 +83,7 @@ struct SpectrumImageOpeningSpectro {
         #expect(m.scanPixelUnit == "nm")
         #expect(m.detectors.first?.elevationDegrees == elevation)
         #expect(image.scanImage?.count == 24, "the scan-grid HAADF of the same run sits on the EDS grid")
-        #expect(!m.sameScanAs4DCube, "no cube was named")
+        #expect(!m.sameScanAsCube, "no cube was named")
     }
 
     /// Only an EDS object is decoded, and a missing one is named.

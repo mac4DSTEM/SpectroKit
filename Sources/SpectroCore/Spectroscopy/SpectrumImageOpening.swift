@@ -134,7 +134,7 @@ public nonisolated enum SpectrumImageOpener {
     // MARK: GMS
 
     /// The EDS spectrum image of a GMS DM4, or nil when the file has none. Pure: it never registers the image to another
-    /// object of the file (`sameScanAs4DCube` stays false); a caller that knows one does so from `DM4Experiment.list`
+    /// object of the file (`sameScanAsCube` stays false); a caller that knows one does so from `DM4Experiment.list`
     /// (the app does, in `Core/Data/GMSFourDRegistration.swift`).
     public static func openGMSEDS(path: String,
                                    cancelled: @Sendable () -> Bool = SpectroCancellation.task,

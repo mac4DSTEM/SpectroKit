@@ -21,7 +21,7 @@ demo.metadata.betaTiltDegrees = nil
 demo.metadata.beamEnergyKeV = nil
 demo.metadata.beamEnergySource = .file
 demo.metadata.instrument = nil
-demo.metadata.sameScanAs4DCube = false
+demo.metadata.sameScanAsCube = false
 demo.metadata.registrationNote = nil
 demo.scanImage = nil
 demo.sumWhole: n 1024 sum-bits 10e2 fnv 3c0caeb7ae1781b9

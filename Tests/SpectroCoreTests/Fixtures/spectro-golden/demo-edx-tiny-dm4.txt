@@ -27,7 +27,7 @@ openGMSEDS.metadata.betaTiltDegrees = nil
 openGMSEDS.metadata.beamEnergyKeV = 4069000000000000 200
 openGMSEDS.metadata.beamEnergySource = .file
 openGMSEDS.metadata.instrument = nil
-openGMSEDS.metadata.sameScanAs4DCube = false
+openGMSEDS.metadata.sameScanAsCube = false
 openGMSEDS.metadata.registrationNote = nil
 openGMSEDS.scanImage: n 24 sum 00000000468fee00 5.8489353584545329e-315 fnv 2fc6513272a47c44
 openGMSEDS.sumWhole: n 512 sum-bits 2c2 fnv 3bc6aa5b510eedeb

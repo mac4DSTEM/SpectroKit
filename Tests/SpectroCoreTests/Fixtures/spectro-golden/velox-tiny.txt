@@ -211,7 +211,7 @@ openVelox.metadata.betaTiltDegrees = 3fe255ab960267a9 0.57295779513082323
 openVelox.metadata.beamEnergyKeV = 4069000000000000 200
 openVelox.metadata.beamEnergySource = .file
 openVelox.metadata.instrument = "Talos"
-openVelox.metadata.sameScanAs4DCube = false
+openVelox.metadata.sameScanAsCube = false
 openVelox.metadata.registrationNote = nil
 openVelox.scanImage: n 6 sum 0000000043670000 5.5870113179177511e-315 fnv fc30055aeae59979
 openVelox.scanImage[0] = 0000000041300000 5.4034218993573707e-315
