@@ -30,6 +30,13 @@ public nonisolated struct LineConflict: Equatable, Sendable {
     public let question: String
     /// What can settle it.
     package let remedy: String
+
+    /// Public memberwise initialiser (0.8.0): a consumer can build a conflict, for example to test a view of one.
+    public init(id: String, kind: Kind, element: String, line: String?, energiesKeV: [Double], requires: [String],
+                question: String, remedy: String) {
+        self.id = id; self.kind = kind; self.element = element; self.line = line
+        self.energiesKeV = energiesKeV; self.requires = requires; self.question = question; self.remedy = remedy
+    }
 }
 
 /// A detected line that can be a parent of a pile-up peak: its element and its alpha-line energy.
