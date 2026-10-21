@@ -195,7 +195,7 @@ Each result carries its sigma and the terms in it; read what a sigma leaves out 
   `EDSFitResult.degreesOfFreedom`, `PooledQuantification.referenceElement` and `FitSettings`' range fields are `package`;
   there is no `[UInt64]` overload of `ElementProposer.propose` and no `PooledQuantificationInput` builder from a `LoadedSpectrumImage`.
 - `ElementWindows` (public) picks its default line by a Velox-style family rule, not exSpy's `add_lines()` (that is `package`).
-- The cross-section route of `ZetaFactor` has hand-recorded pins only; zeta stays `package`.
+- Quantification over a spectrum image is public (`EDXQuantification`); the vacuum mask, `rebin`, `get_calibration_from`, `calibrate_xray_lines` and the EELS model fit are not ported (`docs/open-items.md`).
 - The FFAST tables (90 lists) are pinned on about 10 coefficients, not value for value; the 947-row line table is pinned on all rows.
 - Three EDX tests read RosettaSciIO's public Velox files from `References/` and return without checking when absent (CI has none).
 - Two parameters are undocumented in DocC: `axis` in `ElementProposer`, `cancelled` in `EdgeQuantification`.

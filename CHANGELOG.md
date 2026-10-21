@@ -2,6 +2,24 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.8.0 (2026-10-21) — public EDX quantification, parity audit, benchmarks
+
+Additive public API; no existing number moves.
+
+- `EDXQuantification.quantify` and `.quantifyMaps` (SpectroEDX): Cliff-Lorimer with typed k-factors, zeta-factor and ionisation cross-section quantification, each with
+  or without the absorption iteration, on one spectrum's line intensities or per pixel over a spectrum image: `navigationMask`, weight and atomic percent maps, mass
+  thickness, atoms, per-pixel live-time dose, parallel over pixels. Neutral input types (`EDXQuantificationSetup`, `EDXQuantificationMethod`, `EDXAbsorptionSetting`);
+  no region name or file path. Also public: `EDXQuantification.takeOffAngle`, `.weightToAtomic`, `.atomicToWeight`, `.zetaFactors(fromCrossSectionsBarn:)`,
+  `.crossSectionsBarn(fromZetaFactors:)`, and `LineConflict.init`. Pinned against 36 runs of exSpy 0.3.2's own `quantification` at exSpy's test tolerances
+  (`tools/edx-quant-maps`). Results say `validation: "none"`.
+- `SpectrumImageMetadata.sameScanAs4DCube` is renamed `sameScanAsCube`; the old name stays as a deprecated alias. The golden baselines moved with the rename (own commit).
+- `docs/parity.md` rewritten from the exSpy 0.3.2 source (state, priority, upstream tolerance per row), `docs/benchmarks.md` and `tools/benchmarks` added, `docs/open-items.md` added.
+- Dependency range unchanged (FormatoKit `0.4.0..<1.0.0`); FormatoKit is not bumped by this release.
+
+### Migration
+None required. Replace `sameScanAs4DCube` with `sameScanAsCube` to drop the deprecation warning. An app that reached `CliffLorimer`, `ZetaFactor` or `AbsorptionCorrection` by
+`@testable import` can move to `EDXQuantification`; those types stay `package`.
+
 ## 0.7.1 (2026-10-21) — FormatoKit range widened to 0.4.0 up to 1.0.0
 
 Dependency range only; no source change, and no SpectroKit API or number moves.
