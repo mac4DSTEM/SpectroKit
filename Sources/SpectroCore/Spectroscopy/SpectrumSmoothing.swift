@@ -89,11 +89,15 @@ public enum SpectrumSmoothing: Sendable, Equatable {
         case .savitzkyGolay(let w, let p, _):
             guard w >= 3 else { throw SpectrumSmoothingError(description: "Savitzky-Golay window \(w) is below 3.") }
             guard w % 2 == 1 else { throw SpectrumSmoothingError(description: "Savitzky-Golay window \(w) is even; it must be odd.") }
+            guard w <= 4097 else { throw SpectrumSmoothingError(description: "Savitzky-Golay window \(w) is above the limit of 4097.") }
             guard p >= 1 else { throw SpectrumSmoothingError(description: "Savitzky-Golay polynomial order \(p) is below 1.") }
             guard p < w else { throw SpectrumSmoothingError(description: "Savitzky-Golay polynomial order \(p) must be less than the window \(w).") }
         case .gaussian(let s, let t, _):
             guard s.isFinite, s > 0, s < 1e6 else { throw SpectrumSmoothingError(description: "Gaussian sigma must be positive and finite (got \(s)).") }
             guard t.isFinite, t > 0, t * s < 1e7 else { throw SpectrumSmoothingError(description: "Gaussian truncate must be positive and finite (got \(t)).") }
+            guard t * s + 0.5 < Double(1 << 19) else {
+                throw SpectrumSmoothingError(description: "Gaussian kernel radius \(t * s) channels is above the limit of \((1 << 19) - 1).")
+            }
         case .movingAverage(let w, _):
             guard w >= 1, w < 1 << 24 else { throw SpectrumSmoothingError(description: "Moving-average width \(w) is below 1.") }
         }
@@ -176,7 +180,8 @@ public enum SpectrumSmoothing: Sendable, Equatable {
                 kind = .kernel(weights: [Double](repeating: 1 / Double(w), count: w), left: left, boundary: b)
             case .gaussian(let sigma, let truncate, let b):
                 let radius = Int(truncate * sigma + 0.5)
-                var k = (-radius...radius).map { exp(-0.5 / (sigma * sigma) * Double($0 * $0)) }
+                // radius 0 (sigma so small the kernel is one tap) is the identity, as scipy's gaussian_filter1d; avoids 0 * inf
+                var k = radius == 0 ? [1.0] : (-radius...radius).map { exp(-0.5 / (sigma * sigma) * Double($0 * $0)) }
                 let total = k.reduce(0, +)
                 k = k.map { $0 / total }
                 kind = .kernel(weights: k, left: radius, boundary: b)

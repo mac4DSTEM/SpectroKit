@@ -90,6 +90,13 @@ struct SpectrumSmoothingTests {
         }
         #expect(throws: SpectrumSmoothingError.self) { try SpectrumSmoothing.savitzkyGolay(window: 31, order: 2).smooth(y) }
         #expect(throws: Never.self) { try SpectrumSmoothing.savitzkyGolay(window: 31, order: 2, edge: .extend(.reflect)).smooth(y) }
+        // absurd windows and kernels are refused before any allocation
+        for w in [4099, 200_001, Int.max] {
+            #expect(throws: SpectrumSmoothingError.self) { try SpectrumSmoothing.savitzkyGolay(window: w, order: 2, edge: .extend(.reflect)).smooth(y) }
+        }
+        #expect(throws: SpectrumSmoothingError.self) { try SpectrumSmoothing.gaussian(sigma: 5e5).smooth(y) }
+        // a vanishing sigma is the identity (a one-tap kernel), not NaN
+        #expect(try SpectrumSmoothing.gaussian(sigma: 1e-170).smooth([1.0, 5.0, 2.0] as [Double]) == [1.0, 5.0, 2.0])
         #expect(throws: SpectrumSmoothingError.self) { try SpectrumSmoothing.gaussian(sigma: 1).smooth([1, .nan, 2]) }
         #expect(throws: SpectrumSmoothingError.self) { try SpectrumSmoothing.gaussian(sigma: 1).smoothBatch([1, 2, 3, 4, 5], spectrumLength: 2) }
     }
