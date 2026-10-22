@@ -10,3 +10,5 @@ Tests (2026-10-21): the pinned Python comparisons (golden baseline, exSpy/HyperS
 0.11.0 adds to the element proposer the confirmation-line rule (R4), the sum-peak plausibility bound and the end of the pool at Bi
 (`FamilyConsistencyTests`; measured on three real spectrum images through macTEM's harness), and an opt-in low-energy tail of the line
 shape (`LineTail`, `TailEstimate`, off by default) once that lands. Fast target green on 2026-10-23; the parity target runs before the tag.
+
+EELS per-edge windows (0.11.0, unreleased): `EELSModelFit.fit(edgeWindows:)` fits each edge's power law on its own background window and its amplitude on its own signal window (`EdgeWindows.defaults` holds the field's rules); `EELSBackground.preview` is the live power-law estimate; planted tests only, `validation: "none"`.

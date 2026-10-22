@@ -99,4 +99,12 @@ public nonisolated enum EELSModelError: Error, Equatable, Sendable {
     case invalidExponentRange
     case maskShapeMismatch(expected: Int, got: Int)
     case emptyMask
+    /// `edgeWindows` must hold one entry per fitted edge (the result's `edges`: twins of one element and family are one), in onset order.
+    case edgeWindowCountMismatch(expected: Int, got: Int)
+    /// Two edges' signal windows share energies; each channel of the signal belongs to one edge.
+    case overlappingSignalWindows(String, String)
+    /// A window that is not finite, empty, too narrow (background 4 channels, signal 2), not inside the axis, or not at positive energy.
+    case edgeWindowInvalid(edge: String, why: String)
+    /// `EELSBackground.preview` could not estimate a power law (a window sum that is not positive, or a non-finite result).
+    case backgroundNotEstimable(String)
 }

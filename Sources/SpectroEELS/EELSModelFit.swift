@@ -62,6 +62,20 @@ public struct EELSModelResult: Sendable {
     public let methodName: String
     public let validation: String
     fileprivate let basis: EELSEdgeBasis
+    /// Set by a fit with per-edge windows (`EELSModelFit.fit(edgeWindows:)`), nil for the one-range joint fit. One entry per `edges`.
+    public internal(set) var edgeWindows: [EdgeWindows]? = nil
+    /// The signal window each edge was fitted on, as the channels it holds (eV); nil without per-edge windows.
+    public internal(set) var fitRangeEV: [ClosedRange<Double>]? = nil
+    /// `edgeBackgrounds[pixel][edge]`: the power law fitted on each edge's own background window(s); nil without per-edge windows
+    /// (`backgrounds` then holds the first edge's).
+    public internal(set) var edgeBackgrounds: [[PowerLawParameters?]]? = nil
+    fileprivate var signalRows: [Range<Int>] = []
+
+    /// The background exponent r of one edge at one pixel; nil without per-edge windows or where the fit failed.
+    public func exponent(pixel: Int, edge: Int) -> Double? {
+        guard let eb = edgeBackgrounds, pixel >= 0, pixel < eb.count, edge >= 0, edge < eb[pixel].count else { return nil }
+        return eb[pixel][edge]?.r
+    }
 
     /// exSpy's `quantify()` text for one pixel's masters: `Elem.\tIntensity`, element symbols (and `Element_Shell` where one element has several
     /// independent edges), six decimals.
@@ -86,6 +100,17 @@ public struct EELSModelResult: Sendable {
     /// as exSpy's `as_signal()`. nil where the fit failed.
     public func modelCurve(pixel: Int) -> [Double]? {
         guard pixel >= 0, pixel < pixels.count, let bg = backgrounds[pixel] else { return nil }
+        if let eb = edgeBackgrounds {
+            // per-edge windows: each edge's background plus its amplitude, inside its own signal window; zero elsewhere
+            var curve = [Double](repeating: 0, count: basis.channels)
+            for g in 0 ..< edges.count {
+                guard let intensity = pixels[pixel][g].intensity, let b = eb[pixel][g] else { return nil }
+                let rows = signalRows[g]
+                let column = basis.column(group: g, pixel: pixel, rows: rows)
+                for (i, k) in rows.enumerated() { curve[k] = b.a * Libm.pow(basis.energies[k], -b.r) * basis.scale + intensity * column[i] }
+            }
+            return curve
+        }
         var curve = [Double](repeating: 0, count: basis.channels)
         for k in 0 ..< basis.channels where basis.energies[k] > 0 { curve[k] = bg.a * Libm.pow(basis.energies[k], -bg.r) * basis.scale }   // PowerLaw is 0 at E <= 0 (left_cutoff)
         for g in 0 ..< edges.count {
@@ -195,11 +220,22 @@ public enum EELSModelFit {
     // MARK: Public entry points
 
     /// The model fit (exSpy `create_model(...)` then `fit(kind="smart")`) of every pixel not masked out (`mask[p] == true` fits, false skips).
+    ///
+    /// With `edgeWindows` (one per fitted edge, i.e. per entry of the result's `edges`, in onset order; `options.startEnergyEV` and the
+    /// pre-edge safe window are not used) the fit is a per-edge sequence instead of the one joint model: each edge's background is a power law
+    /// fitted (non-negative least squares, exponent by Brent) on its own background window(s), extrapolated under its signal window, and the
+    /// edge's intensity is the cross-section column fitted on the background-subtracted signal window. Signal windows that share energies are
+    /// refused. This is the field's per-edge convention (GMS, eels.info), not exSpy's; `validation: "none"`. The same call is the per-pixel
+    /// map: every pixel gets every edge's intensity and its own r (`EELSModelResult.exponent(pixel:edge:)`). Without `edgeWindows` nothing changes.
     public static func fit(
         coreLoss: CoreLossSpectrumImage, edges: [CoreLossEdge], microscope: EELSMicroscope, lowLoss: LowLossSpectrumImage? = nil,
-        mask: PixelMask? = nil, options: EELSModelOptions = .init(),
+        mask: PixelMask? = nil, options: EELSModelOptions = .init(), edgeWindows: [EdgeWindows]? = nil,
         cancelled: @Sendable () -> Bool = SpectroCancellation.task, progress: (@Sendable (Double) -> Void)? = nil
     ) throws -> EELSModelResult {
+        if let edgeWindows {
+            return try fitWindowed(coreLoss: coreLoss, edges: edges, microscope: microscope, lowLoss: lowLoss, mask: mask, options: options,
+                                   windows: edgeWindows, cancelled: cancelled, progress: progress)
+        }
         let setup = try prepare(coreLoss: coreLoss, edges: edges, options: options, mask: mask, lowLoss: lowLoss)
         let basis = try EELSEdgeBasis(axis: setup.axis, groups: setup.groups.map(\.shells), microscope: microscope, lowLoss: lowLoss)
         let np = coreLoss.pixelCount, n = coreLoss.channels, m = setup.groups.count
@@ -278,6 +314,131 @@ public enum EELSModelFit {
                 }
             }
         }
+    }
+
+    // MARK: Per-edge windows
+
+    private struct WindowedPixel: Sendable {
+        var failure: EELSUnavailable?
+        var backgrounds: [PowerLawParameters?] = []
+        var intensities: [Double] = []
+        var rss = 0.0
+        var atBound = false
+    }
+
+    private static func fitWindowed(
+        coreLoss: CoreLossSpectrumImage, edges: [CoreLossEdge], microscope: EELSMicroscope, lowLoss: LowLossSpectrumImage?, mask: PixelMask?,
+        options: EELSModelOptions, windows: [EdgeWindows], cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?
+    ) throws -> EELSModelResult {
+        // the same checks and the same twin grouping as `prepare`, without the one-range window
+        guard !edges.isEmpty else { throw EELSModelError.noEdgeInRange(fromEV: coreLoss.energyOffsetEV, toEV: coreLoss.energyOffsetEV) }
+        guard options.exponentRange.lowerBound.isFinite, options.exponentRange.upperBound.isFinite,
+              options.exponentRange.lowerBound < options.exponentRange.upperBound else { throw EELSModelError.invalidExponentRange }
+        if let mask, mask.count != coreLoss.pixelCount { throw EELSModelError.maskShapeMismatch(expected: coreLoss.pixelCount, got: mask.count) }
+        if let ll = lowLoss, ll.pixelCount != coreLoss.pixelCount { throw EELSModelError.lowLossShapeMismatch(expected: coreLoss.pixelCount, got: ll.pixelCount) }
+        let axis = try EELSAxis(offset: coreLoss.energyOffsetEV, scale: coreLoss.energyScaleEV, size: coreLoss.channels)
+        var seen = Set<String>()
+        var byKey: [String: [CoreLossEdge]] = [:]
+        for e in edges {
+            guard CoreLossEdge.bundled.contains(e) else { throw EELSModelError.edgeNotBundled(e.description) }
+            guard seen.insert(e.element + " " + e.subshell).inserted else { throw EELSModelError.duplicateEdge(e.description) }
+            byKey[e.element + " " + e.family, default: []].append(e)
+        }
+        var groups = byKey.values.map { shells -> Group in
+            let sorted = shells.sorted { $0.subshell < $1.subshell }
+            return Group(master: sorted.last!, shells: sorted)
+        }
+        groups.sort { ($0.master.onsetEV, $0.master.element) < ($1.master.onsetEV, $1.master.element) }
+        let m = groups.count
+        guard windows.count == m else { throw EELSModelError.edgeWindowCountMismatch(expected: m, got: windows.count) }
+
+        // the channels of every window, checked
+        var bgRowsV = [[Range<Int>]](), sigRowsV = [Range<Int>]()
+        for g in 0 ..< m {
+            let name = groups[g].master.element + " " + groups[g].master.family
+            let w = windows[g]
+            func check(_ r: ClosedRange<Double>, _ what: String, minChannels: Int) throws -> Range<Int> {
+                guard r.lowerBound.isFinite, r.upperBound.isFinite else { throw EELSModelError.edgeWindowInvalid(edge: name, why: "\(what) window is not finite") }
+                guard r.lowerBound >= axis.lowValue - 1e-9, r.upperBound <= axis.highValue + 1e-9 else {
+                    throw EELSModelError.edgeWindowInvalid(edge: name, why: "\(what) window \(r.lowerBound) to \(r.upperBound) eV is not inside the axis \(axis.lowValue) to \(axis.highValue) eV")
+                }
+                let rows = EdgeWindows.rows(r, offset: axis.offset, scale: axis.scale, size: axis.size)
+                guard rows.count >= minChannels else { throw EELSModelError.edgeWindowInvalid(edge: name, why: "\(what) window holds \(rows.count) channels, needs \(minChannels)") }
+                guard axis.energy(ofChannel: rows.lowerBound) > 0 else { throw EELSModelError.edgeWindowInvalid(edge: name, why: "\(what) window is not at positive energy") }
+                return rows
+            }
+            var bg = [try check(w.backgroundEV, "background", minChannels: 2)]
+            if let second = w.secondBackgroundEV { bg.append(try check(second, "second background", minChannels: 2)) }
+            guard bg.reduce(0, { $0 + $1.count }) >= 4 else { throw EELSModelError.edgeWindowInvalid(edge: name, why: "background windows hold fewer than 4 channels") }
+            bgRowsV.append(bg)
+            sigRowsV.append(try check(w.signalEV, "signal", minChannels: 2))
+        }
+        let bgRows = bgRowsV, sigRows = sigRowsV
+        for a in 0 ..< m { for b in (a + 1) ..< max(m, a + 1) where sigRows[a].overlaps(sigRows[b]) {
+            let n = { (g: Int) in groups[g].master.element + " " + groups[g].master.family }
+            throw EELSModelError.overlappingSignalWindows(n(a), n(b))
+        } }
+
+        let basis = try EELSEdgeBasis(axis: axis, groups: groups.map(\.shells), microscope: microscope, lowLoss: lowLoss)
+        let np = coreLoss.pixelCount, n = coreLoss.channels
+        let slots = EELSSlots<WindowedPixel?>(count: np, initial: nil)
+        let bgLogE = bgRows.map { rs in rs.flatMap { r in r.map { log(basis.energies[$0]) } } }
+        let range = options.exponentRange
+        try coreLoss.counts.withUnsafeBufferPointer { counts in
+            nonisolated(unsafe) let input = counts
+            try EELSParallel.forEachPixel(count: np, cancelled: cancelled, progress: progress) { p in
+                if let mask, !mask[p] { slots.set(p, WindowedPixel(failure: .masked)); return }
+                let base = input.baseAddress! + p * n
+                var out = WindowedPixel()
+                for g in 0 ..< m {
+                    var yb = [Double]()
+                    for r in bgRows[g] { yb += UnsafeBufferPointer(start: base + r.lowerBound, count: r.count) }
+                    let f = solve(y: yb, logE: bgLogE[g], scale: basis.scale, edgeColumns: [], range: range)
+                    if f.failure != nil { slots.set(p, WindowedPixel(failure: .fitFailed)); return }
+                    out.backgrounds.append(PowerLawParameters(a: f.a, r: f.r)); out.atBound = out.atBound || f.atBound
+                    let rows = sigRows[g]
+                    let column = basis.column(group: g, pixel: p, rows: rows)
+                    var cc = 0.0, cd = 0.0
+                    var d = [Double](repeating: 0, count: rows.count)
+                    for (i, k) in rows.enumerated() {
+                        d[i] = base[k] - f.a * Libm.pow(basis.energies[k], -f.r) * basis.scale
+                        cc += column[i] * column[i]; cd += column[i] * d[i]
+                    }
+                    guard cc > 0 else { slots.set(p, WindowedPixel(failure: .fitFailed)); return }   // the window lies below the edge's onset
+                    let intensity = max(0, cd / cc)
+                    out.intensities.append(intensity)
+                    for i in 0 ..< rows.count { let e = d[i] - intensity * column[i]; out.rss += e * e }
+                }
+                slots.set(p, out)
+            }
+        }
+        var pixels: [[EdgeIntensityPixel]] = [], backgrounds: [PowerLawParameters?] = [], perEdge: [[PowerLawParameters?]] = []
+        var atBound: [Bool] = [], rss: [Double?] = []
+        for p in 0 ..< np {
+            let f = slots[p]!
+            if let why = f.failure {
+                pixels.append([EdgeIntensityPixel](repeating: EdgeIntensityPixel(intensity: nil, arealDensityPerNM2: nil, unavailable: why), count: m))
+                backgrounds.append(nil); perEdge.append([PowerLawParameters?](repeating: nil, count: m)); atBound.append(false); rss.append(nil)
+                continue
+            }
+            pixels.append((0 ..< m).map { g in
+                EdgeIntensityPixel(intensity: f.intensities[g], arealDensityPerNM2: basis.convolved ? f.intensities[g] * 1e10 : nil, unavailable: nil)
+            })
+            backgrounds.append(f.backgrounds[0]); perEdge.append(f.backgrounds); atBound.append(f.atBound); rss.append(f.rss)
+        }
+        let lo = bgRows.flatMap { $0 }.map(\.lowerBound).min()!, hi = sigRows.map(\.upperBound).max()!
+        var result = EELSModelResult(
+            nx: coreLoss.nx, ny: coreLoss.ny, edges: groups.map(\.master), shells: groups.map(\.shells), pixels: pixels,
+            backgrounds: backgrounds, exponentAtBound: atBound, residualSumOfSquares: rss,
+            windowEV: axis.energy(ofChannel: lo) ... axis.energy(ofChannel: hi - 1),
+            preEdgeWindowEV: axis.energy(ofChannel: bgRows[0][0].lowerBound) ... axis.energy(ofChannel: bgRows[0][0].upperBound - 1),
+            convolved: basis.convolved, methodName: methodName + "; per-edge windows (sequence: power law on each background window, then the edge on its signal window)",
+            validation: "none", basis: basis)
+        result.edgeWindows = windows
+        result.fitRangeEV = sigRows.map { axis.energy(ofChannel: $0.lowerBound) ... axis.energy(ofChannel: $0.upperBound - 1) }
+        result.edgeBackgrounds = perEdge
+        result.signalRows = sigRows
+        return result
     }
 
     // MARK: Setup
