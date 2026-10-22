@@ -148,7 +148,7 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
     /// an equal -300 is the continuum-line projection.
     public static let weakLineBiasNote =
         "a weak line next to Al K\u{03B1} reads low by \u{2248} 300 counts per pooled spectrum on synthetic data "
-        + "(cause: the Al K\u{03B1} incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); "
+        + "(cause: the Al K\u{03B1} incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); "
         + "unmeasured on real data. Weak-line bias measured on synthetic data: \u{0394} = \u{2212}295 \u{00B1} 31 counts at 900 planted Mg K\u{03B1} "
         + "(generator A, no tail: continuum\u{2013}line projection) and \u{2212}310 \u{00B1} 23 at 882 (generator S); "
         + "\u{2212}402 \u{00B1} 33 at 3000 (A) and \u{2212}310 \u{00B1} 23 at 2899 (S)"

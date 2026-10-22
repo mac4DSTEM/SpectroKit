@@ -41,7 +41,7 @@ package nonisolated struct SDDEfficiency: DetectorEfficiency {
 
     package var sourceName: String {
         "EPQ getDefaultSDDProperties (Au \(goldNm) nm, Al \(aluminiumNm) nm, Si dead layer \(deadLayerMicrons) \u{00B5}m, Si \(siliconMicrons) \u{00B5}m); "
-            + "generic SDD model, not the owner's Super-X calibration; FFAST MACs"
+            + "generic SDD model, not a measured calibration of this detector; FFAST MACs"
     }
 
     package func efficiency(energyKeV e: Double) -> Double {
