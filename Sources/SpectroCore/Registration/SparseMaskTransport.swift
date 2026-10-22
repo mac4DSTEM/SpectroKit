@@ -47,9 +47,15 @@ public struct SparseRegion: Sendable, Equatable {
             out = ix
         case .runs(let runs):
             out = []
+            var expanded = 0
+            let cap = width * height * 4
             for r in runs {
-                guard r.length >= 0, r.row >= 0, r.row < height, r.column >= 0, r.column + r.length <= width else {
+                guard r.length >= 0, r.row >= 0, r.row < height, r.column >= 0, r.column <= width, r.length <= width - r.column else {
                     throw MaskTransportError(description: "A run (row \(r.row), column \(r.column), length \(r.length)) leaves the \(width) x \(height) scan grid.")
+                }
+                expanded += r.length
+                guard expanded <= cap else {
+                    throw MaskTransportError(description: "The runs of a region expand to more than four times the \(width) x \(height) scan grid.")
                 }
                 out.append(contentsOf: (r.row * width + r.column)..<(r.row * width + r.column + r.length))
             }

@@ -119,6 +119,13 @@ struct SparseMaskTransportTests {
         #expect(throws: MaskTransportError.self) {
             try MaskTransport.regions([SparseRegion(runs: [.init(row: 16, column: 0, length: 1)])], registration: reg)
         }
+        // an absurd length must throw, not trap on column + length
+        #expect(throws: MaskTransportError.self) {
+            try MaskTransport.regions([SparseRegion(runs: [.init(row: 0, column: 1, length: Int.max)])], registration: reg)
+        }
+        // overlapping runs may not expand beyond four times the grid
+        let many = [SparseRegion.Run](repeating: .init(row: 0, column: 0, length: 20), count: 70)
+        #expect(throws: MaskTransportError.self) { try MaskTransport.regions([SparseRegion(runs: many)], registration: reg) }
         #expect(try MaskTransport.regions([], registration: reg).regionCount == 0)
         let empty = try MaskTransport.regions([SparseRegion(pixelIndices: [])], registration: reg)
         #expect(empty.entries[0].pixels.isEmpty && empty.entries[0].footprintArea == 0)
