@@ -76,7 +76,7 @@ public nonisolated enum SpectroscopyExport {
 
     /// RFC 4180: a field with a comma, quote or line break is quoted, quotes doubled.
     package static func field(_ s: String) -> String {
-        guard s.contains(where: { $0 == "," || $0 == "\"" || $0 == "\n" || $0 == "\r" }) else { return s }
+        guard s.unicodeScalars.contains(where: { $0 == "," || $0 == "\"" || $0 == "\n" || $0 == "\r" }) else { return s }
         return "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\""
     }
 }

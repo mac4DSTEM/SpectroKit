@@ -115,4 +115,11 @@ struct SpectroscopyLaneUSpectro {
         let noAl = try PooledQuantifier.run(Q.input(Q.method(elements: [("Mg", .quantify), ("Si", .quantify)]), image: image), tables: Q.tables)
         #expect(!noAl.warnings.contains(ContinuumForm.weakLineBiasNote))
     }
+
+    /// Mutation: the quote test back on Characters ("\r\n" is one Character equal to neither) - red.
+    @Test func testACRLFInAFieldIsQuoted() throws {
+        #expect(SpectroscopyExport.field("a\r\nb") == "\"a\r\nb\"")
+        #expect(SpectroscopyExport.field("a\nb") == "\"a\nb\"" && SpectroscopyExport.field("a,b") == "\"a,b\"")
+        #expect(SpectroscopyExport.field("a\"b") == "\"a\"\"b\"" && SpectroscopyExport.field("plain") == "plain")
+    }
 }
