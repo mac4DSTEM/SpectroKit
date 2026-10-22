@@ -78,11 +78,11 @@ Tests/SpectroEELSTests/Fixtures/exspy-linescan-*.f64 are eXSpy's simulated test 
 Generalised oscillator strengths (EELS core-loss cross sections, SpectroEELS)
 ================================================================================
 
-Sources/SpectroEELS/Resources/GOS/dft-{C,N,O}-K1.json hold the K-shell tables of
+Sources/SpectroEELS/Resources/GOS/dft-*.json hold the K1, L1 and L23 tables (C, N, O, Mg, Al, Si, Fe, Cu) of
 the GOSH database of Segger, Guzzinati and Kohl, version 1.5.0, as eXSpy fetches
 it (Segger_Guzzinati_Kohl_1.5.0.gosh, md5 7fee8891c147a4f769668403b54c529b),
 extracted unchanged (every stored float32 value read back bit for bit) by
-tools/eels-edge/extract_gos.py into JSON:
+tools/eels-edge/extract_gos.py (--task16 for the L tables) into JSON:
 
     L. Segger, G. Guzzinati, H. Kohl, "A set of Generalised Oscillator Strengths
     for the simulation of EELS spectra", version 1.5.0, Zenodo,

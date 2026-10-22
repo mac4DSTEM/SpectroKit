@@ -36,6 +36,7 @@ ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
 ap.add_argument("--gosh", default=os.path.join(REPO, "References", "gos-dft-1.5.0.gosh"))
 ap.add_argument("--exspy", default=os.path.join(REPO, "References", "exspy-7185a4d1"))
 ap.add_argument("--out", default=os.path.join(REPO, "Sources", "SpectroEELS", "Resources", "GOS"))
+ap.add_argument("--task16", action="store_true", help="write the task-16 tables (K1 of Mg, Al, Si; L1 and L23 of Mg, Al, Si, Fe, Cu) in the per-TABLE schema instead of C, N, O K1")
 ARGS = ap.parse_args()
 
 MD5 = "7fee8891c147a4f769668403b54c529b"
@@ -88,7 +89,58 @@ def dump(v, ind, out):
         out.append(scalar(v))
 
 
+# Task 16 (docs/design/eels-task-16.md section 6.1): one file per element AND TABLE, dft-<El>-<table>.json, listing the edges that read it.
+# L2 and L3 share the L23 table and differ only in their occupancy ratio (exSpy's `subshell_factor`: 0.333 and 0.667); Al has the single "L2,3"
+# (factor 1.0). The onsets are exSpy's eels_binding_energies.json. Same float32-exact number writing and key sorting as the K1 files.
+TASK16 = {
+    "K1": {"Mg": ["K1"], "Al": ["K1"], "Si": ["K1"]},
+    "L1": {el: ["L1"] for el in ("Mg", "Al", "Si", "Fe", "Cu")},
+    "L23": {"Mg": ["L2", "L3"], "Al": ["L2,3"], "Si": ["L2", "L3"], "Fe": ["L2", "L3"], "Cu": ["L2", "L3"]},
+}
+
+
+def main_task16():
+    assert md5_file(ARGS.gosh) == MD5, "the GOSH file is not the pinned one"
+    with open(os.path.join(ARGS.exspy, "exspy", "material", "eels_binding_energies.json")) as f:
+        be = json.load(f)
+    os.makedirs(ARGS.out, exist_ok=True)
+    with h5py.File(ARGS.gosh, "r") as h:
+        assert h["/metadata/data_ref"].attrs["data_doi"] == DOI
+        info = h["metadata/edges_info"]
+        for table, elements in TASK16.items():
+            for el, subshells in elements.items():
+                g = h[f"/{el}/{table}"]
+                data, q, fe = g["data"][:], g["q"][:], g["free_energies"][:]
+                assert data.shape == (192, 97, 1) and q.shape == (192,) and fe.shape == (97,), (el, table, data.shape)
+                gos = np.squeeze(data.T)
+                assert gos.shape == (97, 192)
+                edges = []
+                for sub in subshells:
+                    assert str(info[sub].attrs["table"]) == table, (sub, info[sub].attrs["table"])
+                    key = "K" if sub == "K1" else sub
+                    edges.append({"subshell": sub, "onsetEV": float(be["elements"][el][key]["onset_energy (eV)"]),
+                                  "occupancyRatio": float(info[sub].attrs["occupancy_ratio"])})
+                obj = {
+                    "element": el, "table": table, "edges": edges,
+                    "storedDtype": {"gos": str(data.dtype), "q": str(q.dtype), "freeEnergies": str(fe.dtype),
+                                    "occupancyRatio": str(info[subshells[0]].attrs["occupancy_ratio"].dtype)},
+                    "freeEnergies": [float(x) for x in fe], "q": [float(x) for x in q],
+                    "gos": [[float(x) for x in row] for row in gos],
+                    "source": {"file": "Segger_Guzzinati_Kohl_1.5.0.gosh", "md5": MD5, "doi": DOI,
+                               "licence": "CC-BY-4.0", "attribution": ATTRIBUTION},
+                }
+                parts = []
+                dump(obj, 0, parts)
+                raw = ("".join(parts) + "\n").encode()
+                p = os.path.join(ARGS.out, f"dft-{el}-{table}.json")
+                with open(p, "wb") as f:
+                    f.write(raw)
+                print(f"{p}  {len(raw)} bytes  sha256 {hashlib.sha256(raw).hexdigest()}")
+
+
 def main():
+    if ARGS.task16:
+        return main_task16()
     assert md5_file(ARGS.gosh) == MD5, "the GOSH file is not the pinned one"
     with open(os.path.join(ARGS.exspy, "exspy", "material", "eels_binding_energies.json")) as f:
         be = json.load(f)

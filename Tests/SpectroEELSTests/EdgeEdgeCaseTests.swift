@@ -86,7 +86,8 @@ struct EdgeEdgeCaseTests {
                                                        energyOffsetEV: 0, energyScaleEV: 1) }) {
             #expect((error as? EELSEdgeError) == .nonFiniteCounts(pixel: 1))
         }
-        #expect(CoreLossEdge.bundled.map(\.element) == ["C", "N", "O"])
+        #expect(CoreLossEdge.bundled.count == 20 && Set(CoreLossEdge.bundled.map(\.element)) == ["C", "N", "O", "Mg", "Al", "Si", "Fe", "Cu"])
+        #expect(CoreLossEdge.bundled("Fe", "L3") == .ironL3 && CoreLossEdge.bundled("Fe", "M3") == nil)
         // An edge window wholly below the onset: σ_k = 0, refused (review R1), not n = ±inf.
         if let error = #expect(throws: (any Error).self, performing: { try EELSEdgeQuantification.ratioMethod(coreLoss: core, microscope: m, lowLoss: .integratedToWidth(low),
                                                                     backgroundWindowEV: 160...200, edgeOnsetEV: 210) }) {
