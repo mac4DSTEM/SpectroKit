@@ -13,6 +13,9 @@
 //  The CSV writer follows `SpectroscopyExport`: RFC 4180 quoting, a period and six significant digits whatever the locale. One WIDE
 //  row per region (`csvHeader(elements:)` and `csvRow(elements:)`, the elements fixed by the caller so regions line up) or one LONG
 //  row per element (`csvLongHeader`, `csvLongRows`). `reportRow(elements:)` is the wide row as a string array for a table view.
+//  An element with two fitted lines (two rows of one element) is ONE block of the wide row: `line` names them joined by "+", the net
+//  counts, wt% and at% are their sums, and the sigmas and k are left empty (the lines' covariance is not in the result); the long
+//  form has a row per line.
 //
 
 import Foundation
@@ -22,8 +25,9 @@ public nonisolated struct RegionQuantResult: Codable, Sendable, Equatable {
         public var element: String
         /// The fitted group, for example "Al_Ka".
         public var line: String
-        public var netCounts: Double
-        public var netSigma: Double
+        /// nil when the fit gave no finite value (a plain `JSONEncoder` refuses NaN).
+        public var netCounts: Double?
+        public var netSigma: Double?
         /// Held at 0 by the non-negativity bound: not detected, the sigma is an upper-limit scale.
         public var atBound: Bool
         public var isReference: Bool
@@ -89,7 +93,7 @@ public nonisolated struct RegionQuantResult: Codable, Sendable, Equatable {
             if r.atBound && r.failure == nil { flags.append("held at 0 by the non-negativity bound: not detected, sigma is an upper-limit scale") }
             if !r.supported && r.failure == nil { flags.append("not supported by the data") }
             let kf = k.flatMap { i < $0.count ? $0[i] : nil }
-            lines.append(Line(element: r.element, line: r.groupID, netCounts: r.net, netSigma: r.sigma, atBound: r.atBound,
+            lines.append(Line(element: r.element, line: r.groupID, netCounts: r.net.isFinite ? r.net : nil, netSigma: r.sigma.isFinite ? r.sigma : nil, atBound: r.atBound,
                               isReference: r.isReference, k: kf?.k, kRelativeSigma: kf?.relativeSigma,
                               weightPercent: r.weightPercent, weightSigma: r.weightSigma,
                               atomicPercent: r.atomicPercent, atomicSigma: r.atomicSigma,
@@ -128,9 +132,14 @@ public nonisolated struct RegionQuantResult: Codable, Sendable, Equatable {
         let num = SpectroscopyExport.num
         var out = [regionName, String(pixelCount), validation, kSource ?? "", absorptionNote, unlistedLineCheck, methodHash, fitQuality]
         for e in elements {
-            if let l = lines.first(where: { $0.element == e }) {
-                out += [l.line, num(l.netCounts), num(l.netSigma), l.k.map(num) ?? "", l.weightPercent.map(num) ?? "", l.weightSigma.map(num) ?? "",
-                        l.atomicPercent.map(num) ?? "", l.atomicSigma.map(num) ?? ""]
+            let ls = lines.filter { $0.element == e }
+            if ls.count == 1, let l = ls.first {
+                out += [l.line, l.netCounts.map(num) ?? "", l.netSigma.map(num) ?? "", l.k.map(num) ?? "", l.weightPercent.map(num) ?? "",
+                        l.weightSigma.map(num) ?? "", l.atomicPercent.map(num) ?? "", l.atomicSigma.map(num) ?? ""]
+            } else if ls.count > 1 {
+                func total(_ v: [Double?]) -> String { let f = v.compactMap { $0 }; return f.isEmpty ? "" : num(f.reduce(0, +)) }
+                out += [ls.map(\.line).joined(separator: "+"), total(ls.map(\.netCounts)), "", "", total(ls.map(\.weightPercent)), "",
+                        total(ls.map(\.atomicPercent)), ""]
             } else {
                 out += [String](repeating: "", count: Self.perElement.count)
             }
@@ -146,11 +155,14 @@ public nonisolated struct RegionQuantResult: Codable, Sendable, Equatable {
 
     public var csvLongRows: [String] {
         let num = SpectroscopyExport.num
+        let head: [String] = [regionName, String(pixelCount), validation, kSource ?? "", absorptionNote, unlistedLineCheck, methodHash, fitQuality]
         return lines.map { l in
-            ([regionName, String(pixelCount), validation, kSource ?? "", absorptionNote, unlistedLineCheck, methodHash, fitQuality,
-              l.element, l.line, num(l.netCounts), num(l.netSigma), l.k.map(num) ?? "", l.kRelativeSigma.map(num) ?? "",
-              l.weightPercent.map(num) ?? "", l.weightSigma.map(num) ?? "", l.atomicPercent.map(num) ?? "", l.atomicSigma.map(num) ?? "",
-              l.kFreeRatio.map(num) ?? "", l.kFreeSigma.map(num) ?? "", l.flags.joined(separator: "; ")]).map(SpectroscopyExport.field).joined(separator: ",")
+            let net: [String] = [l.netCounts.map(num) ?? "", l.netSigma.map(num) ?? "", l.k.map(num) ?? "", l.kRelativeSigma.map(num) ?? ""]
+            let wt: [String] = [l.weightPercent.map(num) ?? "", l.weightSigma.map(num) ?? ""]
+            let at: [String] = [l.atomicPercent.map(num) ?? "", l.atomicSigma.map(num) ?? ""]
+            let kfree: [String] = [l.kFreeRatio.map(num) ?? "", l.kFreeSigma.map(num) ?? "", l.flags.joined(separator: "; ")]
+            let fields: [String] = head + [l.element, l.line] + net + wt + at + kfree
+            return fields.map(SpectroscopyExport.field).joined(separator: ",")
         }
     }
 }

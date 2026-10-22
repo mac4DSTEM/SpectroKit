@@ -85,7 +85,7 @@ struct RegionQuantResultTests {
         let q = try PooledQuantifier.run(PooledQuantificationInput(counts: Self.planted(), axis: Self.axis, method: m, metadata: meta,
                                                                     regionName: "r", pixelCount: 3), tables: QuantificationTables.bundled())
         let r = RegionQuantResult.make(from: q, regionName: "r", pixelCount: 3)
-        #expect(r.abundanceRefusal != nil && r.kKind == nil && r.lines[0].weightPercent == nil && r.lines[0].netCounts > 0)
+        #expect(r.abundanceRefusal != nil && r.kKind == nil && r.lines[0].weightPercent == nil && (r.lines[0].netCounts ?? 0) > 0)
     }
 
     @Test func roundTripsThroughCodable() throws {
@@ -93,6 +93,26 @@ struct RegionQuantResultTests {
         let data = try JSONEncoder().encode(r)
         let back = try JSONDecoder().decode(RegionQuantResult.self, from: data)
         #expect(back == r)
+    }
+
+    @Test func aNonFiniteNetCountEncodesAsNilAndTwoLinesOfOneElementAreBothExported() throws {
+        var r = RegionQuantResult.make(from: try Self.quantification(), regionName: "R", pixelCount: 24)
+        var nan = r.lines[0]
+        nan.netCounts = nil; nan.netSigma = nil
+        r.lines[0] = nan
+        let back = try JSONDecoder().decode(RegionQuantResult.self, from: try JSONEncoder().encode(r))
+        #expect(back == r && back.lines[0].netCounts == nil)
+        #expect(r.reportRow(elements: ["Al"])[9] == "")
+        // a second fitted line of Al: the wide row sums the element's lines and names both
+        var second = r.lines[0]
+        second.line = "Al_La"; second.netCounts = 100; second.weightPercent = 1.5; second.atomicPercent = 2.5
+        var first = r.lines[0]
+        first.netCounts = 900; first.weightPercent = 10; first.atomicPercent = 20
+        r.lines = [first, second] + r.lines.dropFirst()
+        let row = r.reportRow(elements: ["Al"])
+        #expect(row[8] == "Al_Ka+Al_La" && row[9] == "1000" && row[12] == "11.5" && row[14] == "22.5")
+        #expect(row[10] == "" && row[11] == "" && row[13] == "" && row[15] == "")
+        #expect(r.csvLongRows.count == 4)
     }
 
     @Test func csvRowsLineUpWithTheirHeaders() throws {
