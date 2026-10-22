@@ -44,6 +44,18 @@ package nonisolated struct EELSAxis: Sendable {
         try? rules.index(of: value)
     }
 
+    /// `value2index(value, rounding=math.floor)` or `math.ceil` (`axes.py:1283-1349`, the non-default branch: the index truncated at 1e-12
+    /// channels, then `np.floor` / `np.ceil`); nil where HyperSpy raises (outside the axis, NaN).
+    package func channel(ofEnergy value: Double, rounding: FloatingPointRoundingRule) -> Int? {
+        guard !value.isNaN else { return nil }
+        let multiplier = 1e12
+        let truncated = 1 / multiplier * ((value - offset) / scale * multiplier).rounded(.towardZero)
+        let r = truncated.rounded(rounding)
+        guard r.magnitude < 9e15 else { return nil }
+        let i = Int(r)
+        return i >= 0 && i < size ? i : nil
+    }
+
     /// `UniformDataAxis.value_range_to_indices(v1, v2)` (`axes.py:648-691`, increasing axis): `[i1, i2]` as HyperSpy
     /// returns them, to be used as the half-open crop `isig[i1:i2]` (exSpy `_eels.py:712-715`).
     /// `i1 = value2index(v1)` only if `low < v1 <= high`, else 0; `i2 = value2index(v2)` only if `high > v2 >= low`,
