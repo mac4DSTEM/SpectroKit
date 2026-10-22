@@ -31,6 +31,10 @@ package nonisolated struct FitLine: Sendable, Equatable {
     package let energy: Double    // keV
     package let weight: Double    // relative to the group's alpha line (1 for the alpha line)
     package let fwhm: Double      // keV
+
+    package init(id: String, energy: Double, weight: Double, fwhm: Double) {
+        self.id = id; self.energy = energy; self.weight = weight; self.fwhm = fwhm
+    }
 }
 
 public nonisolated struct FitLineGroup: Sendable, Equatable {

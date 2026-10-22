@@ -86,10 +86,14 @@ public nonisolated struct PooledQuantificationInput: Sendable {
     /// The choices the library made about the fit and the step to composition (`QuantificationPolicy.default` is what it has always
     /// done). A non-default policy is named in the result's footer. It is not part of `method`, whose hash it leaves alone.
     public var policy: QuantificationPolicy
+    /// The optional sum-peak and common-escape-fraction components of the fit (0.10.0; nil, the default, runs the fit as it always ran).
+    /// Unvalidated (no Python reference); named in the footer when on.
+    public var sumEscape: SumEscapeModel? = nil
 
     public init(counts: [UInt64], axis: EnergyAxis, method: QuantificationMethod, metadata: SpectrumImageMetadata,
                  regionName: String, pixelCount: Int, resolutionMnKaEV: Double = 130,
-                 refinement: AxisRefinementResult? = nil, policy: QuantificationPolicy = .default) {
+                 refinement: AxisRefinementResult? = nil, policy: QuantificationPolicy = .default, sumEscape: SumEscapeModel? = nil) {
+        self.sumEscape = sumEscape
         self.counts = counts; self.axis = axis; self.method = method; self.metadata = metadata
         self.regionName = regionName; self.pixelCount = pixelCount
         self.resolutionMnKaEV = resolutionMnKaEV; self.refinement = refinement; self.policy = policy
@@ -262,7 +266,15 @@ public nonisolated enum PooledQuantifier {
         let fit: EDSFitResult
         try SpectroCancellation.check(cancelled)
         progress?(0.85)
-        do { fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings, escapeRatioWarning: policy.fit.escapeRatioWarning) }
+        var sumEscapeLines: [String] = []
+        do {
+            if let model = input.sumEscape, !model.isOff {
+                let r = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings, model: model)
+                fit = r.fit; sumEscapeLines = r.parameters
+            } else {
+                fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings, escapeRatioWarning: policy.fit.escapeRatioWarning)
+            }
+        }
         catch { throw QuantificationRefusal("The fit could not run: \(error).") }
         // The fit appends the weak-line bias note to every continuum fit; it is a statement about a weak line beside Al K-alpha
         // (measured at Mg K-alpha on synthetic data), so it is kept only when that situation is in this result.
@@ -370,6 +382,7 @@ public nonisolated enum PooledQuantifier {
         if let b = BeamEnergy.provenance(typedKeV: input.method.beamEnergyKeV, metadata: input.metadata) { footer.append(b) }
         footer.append("\(fitRange.footerText) \u{00B7} \(input.pixelCount) px pooled (\(input.regionName))")
         if let p = policy.footerLine { footer.append(p) }
+        footer += sumEscapeLines
         // WP3b F3's wording item (D5: list x range x estimator moved Ti by ~ +-20 % against a counting sigma of ~4 %).
         footer.append(sigmaScopeLine)
         footer.append(sigmaFitLine(label: qualityLabel, value: quality))   // the fit's own misfit, stated beside the scope (no bar, no colour)
