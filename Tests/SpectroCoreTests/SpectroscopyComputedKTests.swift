@@ -96,7 +96,7 @@ struct SpectroscopyComputedKTests {
         assertRel(bare.efficiency(energyKeV: 1.4865), 1 - exp(-si * 2.33 * 450e-4), 1e-12)
         #expect(Self.sdd.efficiency(energyKeV: 1e-6) == 0)   // outside FFAST: refusal value
         let s = Self.sdd.sourceName
-        for needle in ["EPQ getDefaultSDDProperties", "generic SDD model", "not the owner's Super-X", "Au 0.0 nm", "Al 10.0 nm",
+        for needle in ["EPQ getDefaultSDDProperties", "generic SDD model", "not a measured calibration of this detector", "Au 0.0 nm", "Al 10.0 nm",
                        "dead layer 0.0", "Si 450.0", "FFAST"] {
             #expect(s.contains(needle), "\(needle) in \(s)")
         }

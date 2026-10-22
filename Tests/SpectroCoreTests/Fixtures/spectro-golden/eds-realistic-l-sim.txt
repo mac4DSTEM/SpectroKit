@@ -712,7 +712,7 @@ seed0.four.quantification.method.elements[3].symbol = "Ni"
 seed0.four.quantification.method.elements[3].role = .quantify
 seed0.four.quantification.method.elements[3].isManual = false
 seed0.four.quantification.method.kFactorSource = .computed
-seed0.four.quantification.method.kSource = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not the owner's Super-X calibration; FFAST MACs"
+seed0.four.quantification.method.kSource = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs"
 seed0.four.quantification.method.kDate = "EPQ 249dd3f8 + Krause 1979 + FFAST"
 seed0.four.quantification.method.kReference = nil
 seed0.four.quantification.method.typedK: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
@@ -934,7 +934,7 @@ seed0.four.quantification.kSet.values[0] = 3fe83b222d39aaa6 0.75721844513949033
 seed0.four.quantification.kSet.values[1] = 3ff0000000000000 1
 seed0.four.quantification.kSet.values[2] = 3ff7700548d3005b 1.4648487896629578
 seed0.four.quantification.kSet.values[3] = 3ffdcea7bd3d5a09 1.862952937333491
-seed0.four.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not the owner's Super-X calibration; FFAST MACs; relative to Si; beam 200.0 keV; UNVALIDATED"
+seed0.four.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV; UNVALIDATED"
 seed0.four.quantification.kSet.date = "EPQ 249dd3f8 + Krause 1979 + FFAST"
 seed0.four.quantification.kSet.relativeSigma: n 4 sum 3fe3333333333334 0.60000000000000009 fnv a7277b4a2d72b5b0
 seed0.four.quantification.kSet.relativeSigma[0] = 3fc999999999999a 0.20000000000000001
@@ -954,7 +954,7 @@ seed0.four.quantification.footerLines[2] = "beam 200 kV · typed"
 seed0.four.quantification.footerLines[3] = "fit range 0.2–20 keV (default; axis to 79.97 keV) · 1 px pooled (synthetic)"
 seed0.four.quantification.footerLines[4] = "σ: counting only; model choice can move a weak line by more"
 seed0.four.quantification.footerLines[5] = "σ is counting statistics at χ²ᵣ = 1; this fit is at 5373 (Pearson)"
-seed0.four.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not the owner's Super-X calibration; FFAST MACs; relative to Si; beam 200.0 keV; UNVALIDATED (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Si)"
+seed0.four.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV; UNVALIDATED (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Si)"
 seed0.four.quantification.footerLines[7] = "k-free ratio: net / net(Si)"
 seed0.four.quantification.footerLines[8] = "absorption correction: off"
 seed0.four.quantification.fitSettings.elements: array 4
