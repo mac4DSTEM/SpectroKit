@@ -226,7 +226,9 @@ struct SpectroCancellationTests {
         let input = Self.input(listed: [("Al", .quantify), ("Si", .quantify)], peaks: Self.peaks)
         let q = try PooledQuantifier.run(input, tables: nil)
         let counts = input.counts.map { Double($0) }
-        let proposal = try UnlistedLineChecker.propose(counts: counts, quantification: q)
+        // The peaks are lone K alpha lines (a cancellation fixture, not a sample): the family-consistency rule would withhold them.
+        let proposal = try UnlistedLineChecker.propose(counts: counts, quantification: q,
+                                                       proposer: ElementProposer(policy: ProposerPolicy(familyConsistency: false)))
         #expect(!(proposal.candidates.filter { $0.isProposed }.isEmpty), "Ti and Cu are strong and unlisted")
         for at in [1, 2, 3] {
             assertCancels({ try UnlistedLineChecker.check(proposal: proposal, input: input, quantification: q, cancelled: Flip(at: at).closure) }, "check \(at)")

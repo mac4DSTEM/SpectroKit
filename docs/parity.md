@@ -263,6 +263,11 @@ continuum with an Al K-edge step, Poisson maximum-likelihood and reference shape
 fit-range sensitivity check, and, in EELS, the ratio-method areal density (`EELSEdgeQuantification.ratioMethod`, Egerton's
 ratio method on exSpy's GOS), which exSpy does not have as a function.
 
+The proposer's family-consistency rule (R4, `ProposerPolicy.familyConsistency`, the field's confirmation-line rule) and its sum-peak plausibility bound
+(`sumPeakFraction`): no Python counterpart;
+the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured cuts), `validation: "none"`; tests `FamilyConsistencyTests` on planted
+spectra, the owner's three files in macTEM's real-data harness.
+
 ## Where the source claims more than the tests show
 
 - `NumpySum.swift` header: I_0 and I_t "bit for bit" against exSpy, citing `ThicknessPinsTests`. Those tests hold I_0 and I_t to

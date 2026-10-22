@@ -86,7 +86,7 @@ public nonisolated struct ProposalRules: Equatable, Sendable {
     /// Pure: the same result and rules always give the same picks. `resolutionMnKaEV` sets the FWHM that R1's distance is counted in
     /// (the room's detector width; the harness uses the app's default, 130 eV).
     public func apply(_ r: ProposalResult, resolutionMnKaEV: Double = 130) -> RuledProposal {
-        let proposedAll = r.candidates.filter(\.isProposed)   // held candidates included: a K peak is a K peak
+        let proposedAll = r.candidates.filter(\.aboveDetectionLimit)   // held and withheld candidates included: a K peak is a K peak
         func z(_ element: String) -> Int { XRayLines.lines(of: element).first?.atomicNumber ?? 0 }
         func family(_ group: String) -> XRayFamily { XRayLines.line(group)?.family ?? .K }
         func name(_ group: String) -> String { UnlistedLineChecker.displayName(group) }

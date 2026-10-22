@@ -79,15 +79,28 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
     /// Which elements get the grid, implantation and quantify-by-default treatment. Default `ElementContext.default` (Cu, Cu, Ga:
     /// the elements of the sample preparation the library was first used with).
     public var context: ElementContext
+    /// R4, the confirmation-line rule: withhold an element proposed by an L or M line whose K (or L) alpha line reads below its own L_D where the
+    /// fitted range holds it. Default true. False skips the check and reproduces the run without it.
+    public var familyConsistency: Bool
+    /// The beam energy must be at least this many times the companion line's energy for R4 to demand it (the edge proxy; NIST EPQ's rule takes the
+    /// first family whose edge is below half the beam energy). Default 2.
+    public var familyOvervoltage: Double
+    /// A candidate on a pile-up energy is a sum-peak question only when its net is at most this fraction of the smaller parent's net. Default 1: a pile-up
+    /// peak can never exceed its smaller parent (the chance of a second photon within the shaping time is at most 1); a smaller value would be a measured
+    /// dead-time fraction of one detector.
+    public var sumPeakFraction: Double
 
     public init(currie: Currie = .standard, pool: [String]? = nil, excluded: Set<String> = ElementProposer.defaultExcluded,
                 maxPasses: Int = 5, maxForwardRounds: Int = 24, minimumLineEnergyKeV: Double = 0.45, flankScaling: Bool = true,
                 flank: FlankMisfitGeometry = .default, rangeMarginFWHM: Double = 0.5,
-                sumPeakToleranceKeV: Double = ProposerPolicy.defaultSumPeakToleranceKeV, context: ElementContext = .default) {
+                sumPeakToleranceKeV: Double = ProposerPolicy.defaultSumPeakToleranceKeV, context: ElementContext = .default,
+                familyConsistency: Bool = true, familyOvervoltage: Double = 2, sumPeakFraction: Double = 1) {
         self.currie = currie; self.pool = pool; self.excluded = excluded; self.maxPasses = maxPasses
         self.maxForwardRounds = maxForwardRounds; self.minimumLineEnergyKeV = minimumLineEnergyKeV
         self.flankScaling = flankScaling; self.flank = flank; self.rangeMarginFWHM = rangeMarginFWHM
         self.sumPeakToleranceKeV = sumPeakToleranceKeV; self.context = context
+        self.familyConsistency = familyConsistency; self.familyOvervoltage = familyOvervoltage
+        self.sumPeakFraction = sumPeakFraction
     }
 
     /// 0.06 keV: about half the Mn K alpha width of one detector.
@@ -120,6 +133,9 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
         add("context.quantifyByDefault", list(context.quantifyByDefault.sorted()), list(b.context.quantifyByDefault.sorted()))
         add("context.gridElements", list(context.gridElements.sorted()), list(b.context.gridElements.sorted()))
         add("context.implantedElements", list(context.implantedElements.sorted()), list(b.context.implantedElements.sorted()))
+        add("familyConsistency", "\(familyConsistency)", "\(b.familyConsistency)")
+        add("familyOvervoltage", "\(familyOvervoltage)", "\(b.familyOvervoltage)")
+        add("sumPeakFraction", "\(sumPeakFraction)", "\(b.sumPeakFraction)")
         return d.isEmpty ? nil : "policy (non-default): " + d.joined(separator: ", ")
     }
 }

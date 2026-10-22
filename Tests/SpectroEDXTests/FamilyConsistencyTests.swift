@@ -1,0 +1,121 @@
+//
+//  FamilyConsistencyTests.swift
+//  Role: R4, the family-consistency rule of the element proposer (`ProposerPolicy.familyConsistency`): a proposed element must show
+//        the other lines its proposal implies. Noise-free planted spectra as in ProposerPolicyTests, so each statement is about the
+//        rule, not about a draw. Red before the rule existed: the lone-line tests (the lone line was proposed), the sum-peak bound and the refinement
+//        test (no such field). The whole-family test is the control: it holds with and without the rule (it needs the field to compile).
+//
+
+import Foundation
+import Testing
+import SpectroCore
+import SpectroEDX
+
+struct FamilyConsistencyTests {
+
+    private static let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1100)   // 0 to 10.99 keV
+    private static let energies = (0..<axis.size).map { axis.energy(ofChannel: $0) }
+
+    private static let kramers: @Sendable (Double) -> Double = { e in
+        let x = max(e, 0.05)
+        return 60 * max(200 - e, 0) / x * exp(-pow(0.30 / x, 3)) * 0.02 + 0.5
+    }
+
+    private static func group(_ id: String) -> FitLineGroup {
+        let el = String(id.prefix { $0 != "_" })
+        return EDSLineModel.build(elements: [el], axis: axis, beamEnergy: 200, resolutionMnKaEV: 130).groups.first { $0.id == id }!
+    }
+
+    /// Continuum x dose, plus each planted column x dose: the group's lines that `keep` accepts.
+    private static func expected(_ planted: [(id: String, area: Double, keep: @Sendable (FitLine) -> Bool)], dose k: Double = 10) -> [Double] {
+        var out = energies.map { $0 >= 0.2 ? k * kramers($0) : 0 }
+        for (id, area, keep) in planted {
+            let g = group(id)
+            let col = EDSLineModel.column(of: g.lines.filter(keep), energies: energies, scale: axis.scale)
+            for i in out.indices { out[i] += k * area * col[i] }
+        }
+        return out
+    }
+
+    private static func propose(_ counts: [Double], policy: ProposerPolicy = .default) throws -> ProposalResult {
+        try ElementProposer(policy: policy).propose(
+            counts: counts, axis: axis, settings: FitSettings.standard(elements: ["Al"], axis: axis, resolutionMnKaEV: 130, beamEnergy: 200))
+    }
+    private static func candidate(_ r: ProposalResult, _ el: String) -> ElementCandidate? { r.candidates.first { $0.element == el } }
+
+    private static let whole: @Sendable (FitLine) -> Bool = { _ in true }
+    private static let alphaOnly: @Sendable (FitLine) -> Bool = { $0.weight == 1 }
+
+    private static let loneGaL = expected([("Al_Ka", 9000, whole), ("Ga_La", 300, alphaOnly)])
+    private static let off = ProposerPolicy(familyConsistency: false)
+
+    @Test func testAnLLineWithoutItsKLineIsWithheld() throws {
+        let old = try Self.propose(Self.loneGaL, policy: Self.off)
+        #expect(Self.candidate(old, "Ga")?.isProposed == true)
+        let r = try Self.propose(Self.loneGaL)
+        let ga = try #require(Self.candidate(r, "Ga"))
+        #expect(!ga.isProposed && ga.aboveDetectionLimit)
+        let note = try #require(ga.familyNote)
+        #expect(note.contains("Ga K\u{03B1}") && note.contains("below its detection limit"), "\(note)")
+        #expect(!r.proposed.contains { $0.element == "Ga" })
+        #expect(r.notes.contains { $0.hasPrefix("Family consistency withheld Ga") })
+    }
+
+    /// The K line is planted weaker than the L line (a fifth), so the L group stays the element's best group and the check runs; the K line is
+    /// still far above its own limit, so Ga is kept.
+    @Test func testAnLLineWithItsKLineIsKept() throws {
+        let counts = Self.expected([("Al_Ka", 9000, Self.whole), ("Ga_La", 300, Self.whole), ("Ga_Ka", 60, Self.whole)])
+        let r = try Self.propose(counts)
+        let ga = try #require(Self.candidate(r, "Ga"))
+        #expect(ga.group == "Ga_La", "the L group is the best group, so the companion check ran")
+        #expect(ga.isProposed && ga.familyNote == nil)
+        #expect(r.proposed.contains { $0.element == "Ga" })
+    }
+
+    /// An M line needs its L line: Hf Mα alone (Hf Lα 7.90 keV is in range, the beam 25 times above it) is withheld.
+    @Test func testAnMLineWithoutItsLLineIsWithheld() throws {
+        let r = try Self.propose(Self.expected([("Al_Ka", 9000, Self.whole), ("Hf_Ma", 300, Self.alphaOnly)]))
+        let hf = try #require(Self.candidate(r, "Hf"))
+        #expect(!hf.isProposed && hf.familyNote?.contains("Hf L\u{03B1}") == true, "\(hf.familyNote ?? "no note")")
+    }
+
+    /// Below the overvoltage bar the companion is not demanded: at a 12 keV beam Ga Kα (9.25 keV) is less than twice below it, so a lone Ga L line stays.
+    @Test func testACompanionBelowTheOvervoltageBarIsNotDemanded() throws {
+        let settings = FitSettings.standard(elements: ["Al"], axis: Self.axis, resolutionMnKaEV: 130, beamEnergy: 12)
+        let r = try ElementProposer().propose(counts: Self.loneGaL, axis: Self.axis, settings: settings)
+        let ga = try #require(Self.candidate(r, "Ga"))
+        #expect(ga.familyNote == nil && ga.isProposed)
+        let demanded = try ElementProposer(policy: ProposerPolicy(familyOvervoltage: 1.2)).propose(counts: Self.loneGaL, axis: Self.axis, settings: settings)
+        #expect(Self.candidate(demanded, "Ga")?.familyNote != nil, "at 1.2 the 12 keV beam clears 9.25 keV and the K line is demanded")
+    }
+
+    /// A pile-up peak is a few percent of its parents: Si Kα (1.740 keV) on the Mg+O sum energy (1.779 keV) is a sum-peak question only when its net
+    /// could be that small. Red before the bound: Si carried the question whatever its size.
+    @Test func testASumPeakQuestionNeedsPlausibleParents() throws {
+        let counts = Self.expected([("Al_Ka", 9000, Self.whole), ("O_Ka", 3000, Self.whole), ("Mg_Ka", 300, Self.whole), ("Si_Ka", 6000, Self.whole)])
+        let r = try Self.propose(counts)
+        let si = try #require(Self.candidate(r, "Si"))
+        #expect(!si.hasSumPeakQuestion && r.proposed.contains { $0.element == "Si" }, "\(si.conflicts.map(\.question))")
+        let loose = try Self.propose(counts, policy: ProposerPolicy(sumPeakFraction: 1000))
+        #expect(Self.candidate(loose, "Si")?.hasSumPeakQuestion == true, "with no bound the Mg+O sum claims Si")
+    }
+
+    @Test func testFamilyConsistencyOffReproducesTheOldRun() throws {
+        let a = try Self.propose(Self.loneGaL, policy: Self.off)
+        let b = try Self.propose(Self.loneGaL)
+        #expect(a.candidates.map(\.element) == b.candidates.map(\.element))
+        for ca in a.candidates {
+            let cb = try #require(Self.candidate(b, ca.element))
+            #expect(ca.net == cb.net && ca.detectionLimit == cb.detectionLimit && ca.criticalLevel == cb.criticalLevel, "\(ca.element)")
+            #expect(ca.familyNote == nil)
+            if ca.element != "Ga" { #expect(ca.isProposed == cb.isProposed && cb.familyNote == nil, "\(ca.element)") }
+        }
+        #expect(!a.notes.contains { $0.contains("Family consistency") })
+    }
+
+    @Test func testTheNoteLineNamesTheFamilyFields() {
+        #expect(ProposerPolicy(familyOvervoltage: 3).noteLine?.contains("familyOvervoltage = 3") == true)
+        #expect(ProposerPolicy(familyConsistency: false).noteLine?.contains("familyConsistency = false") == true)
+        #expect(ProposerPolicy.default.noteLine == nil)
+    }
+}

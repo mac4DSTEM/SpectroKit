@@ -57,12 +57,15 @@ public nonisolated struct ElementCandidate: Equatable, Sendable {
     public let holeRegionNote: String?
     /// The flank-misfit factor sigma_0 was multiplied by (>= 1; 1 = the fit's own variance unchanged).
     public let misfit: Double
+    /// Why the family-consistency rule withheld the element (one sentence with the numbers); nil when it is consistent or the check
+    /// could not judge. A withheld candidate keeps its numbers but is not proposed.
+    public let familyNote: String?
 
     /// net >= L_D: the proposer's bar.
     public var aboveDetectionLimit: Bool { net >= detectionLimit }
     /// L_C < net < L_D: shown as "possible", never proposed.
     public var aboveCriticalLevel: Bool { net > criticalLevel }
-    public var isProposed: Bool { aboveDetectionLimit }
+    public var isProposed: Bool { aboveDetectionLimit && familyNote == nil }
     public var hasSumPeakQuestion: Bool { conflicts.contains { $0.kind == .sumPeak } }
     /// How many detection limits the net is (the order in which to show candidates).
     public var significance: Double { net / detectionLimit }
@@ -70,10 +73,11 @@ public nonisolated struct ElementCandidate: Equatable, Sendable {
     /// Explicit so the room's tests can state a candidate (the memberwise one is internal).
     public init(element: String, group: String, energyKeV: Double, net: Double, sigma: Double, sigmaZero: Double,
                  criticalLevel: Double, detectionLimit: Double, conflicts: [LineConflict],
-                 suggestedRole: QuantificationMethod.ElementRole, holeRegionNote: String?, misfit: Double) {
+                 suggestedRole: QuantificationMethod.ElementRole, holeRegionNote: String?, misfit: Double, familyNote: String? = nil) {
         self.element = element; self.group = group; self.energyKeV = energyKeV; self.net = net; self.sigma = sigma
         self.sigmaZero = sigmaZero; self.criticalLevel = criticalLevel; self.detectionLimit = detectionLimit
         self.conflicts = conflicts; self.suggestedRole = suggestedRole; self.holeRegionNote = holeRegionNote; self.misfit = misfit
+        self.familyNote = familyNote
     }
 }
 
@@ -105,7 +109,9 @@ public nonisolated struct ProposalResult: Sendable {
     public var proposed: [ElementCandidate] { candidates.filter { $0.isProposed && !$0.hasSumPeakQuestion } }
     /// At or above L_D but sitting on a pile-up energy of the detected parents: "sum peak or this element?", not a finding.
     public var sumPeakQuestions: [ElementCandidate] { candidates.filter { $0.isProposed && $0.hasSumPeakQuestion } }
-    public var possible: [ElementCandidate] { candidates.filter { $0.aboveCriticalLevel && !$0.isProposed } }
+    public var possible: [ElementCandidate] { candidates.filter { $0.aboveCriticalLevel && !$0.isProposed && $0.familyNote == nil } }
+    /// At or above L_D but withheld by the family-consistency rule (`familyNote` says why).
+    public var withheld: [ElementCandidate] { candidates.filter { $0.familyNote != nil } }
 
     /// Explicit so the room's tests can state a result (the memberwise one is internal).
     public init(candidates: [ElementCandidate], sumPeaks: [SumPeakFinding], refused: [(element: String, reason: String)],
@@ -151,11 +157,15 @@ public nonisolated struct ElementProposer: Sendable {
     package var sumPeakToleranceKeV = LineConflicts.sumPeakToleranceKeV
     /// Which elements get the grid, implantation and quantify-by-default treatment.
     package var context = ElementContext.default
+    /// R4 and its companions, see `ProposerPolicy`.
+    package var familyConsistency = true
+    package var familyOvervoltage = 2.0
+    package var sumPeakFraction = 1.0
 
     /// Elements the line table lists that no spectrum of a material shows or that the app has no use for:
-    /// radioactive or absent from the table (Tc, Pm, Po, At, Rn, Fr, Ra, Ac, Pa, Np, Pu, Am), noble gases other than Ar
+    /// radioactive or absent from the table (Tc, Pm and everything from Po up, as the field's auto IDs stop at Bi), noble gases other than Ar
     /// (Ne, Kr, Xe; Ar is a named conflict). A reader may pass any `pool` instead.
-    public static let defaultExcluded: Set<String> = ["Tc", "Pm", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Pa", "Np", "Pu", "Am", "Ne", "Kr", "Xe"]
+    public static let defaultExcluded: Set<String> = ["Tc", "Pm", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa", "U", "Np", "Pu", "Am", "Ne", "Kr", "Xe"]
 
     /// Every element of the line table, minus the refused (H, He, Li, Be) and `defaultExcluded`.
     public static var defaultPool: [String] { defaultPool(excluding: defaultExcluded) }
@@ -174,7 +184,8 @@ public nonisolated struct ElementProposer: Sendable {
     package var policy: ProposerPolicy {
         ProposerPolicy(currie: currie, pool: pool, excluded: excluded, maxPasses: maxPasses, maxForwardRounds: maxForwardRounds,
                        minimumLineEnergyKeV: minimumLineEnergyKeV, flankScaling: flankScaling, flank: flank,
-                       rangeMarginFWHM: rangeMarginFWHM, sumPeakToleranceKeV: sumPeakToleranceKeV, context: context)
+                       rangeMarginFWHM: rangeMarginFWHM, sumPeakToleranceKeV: sumPeakToleranceKeV, context: context,
+                       familyConsistency: familyConsistency, familyOvervoltage: familyOvervoltage, sumPeakFraction: sumPeakFraction)
     }
 
     /// The proposer with every choice named (`ProposerPolicy.default` is what the other initialiser builds).
@@ -183,6 +194,8 @@ public nonisolated struct ElementProposer: Sendable {
                   minimumLineEnergyKeV: policy.minimumLineEnergyKeV)
         flankScaling = policy.flankScaling; excluded = policy.excluded; flank = policy.flank
         rangeMarginFWHM = policy.rangeMarginFWHM; sumPeakToleranceKeV = policy.sumPeakToleranceKeV; context = policy.context
+        familyConsistency = policy.familyConsistency; familyOvervoltage = policy.familyOvervoltage
+        sumPeakFraction = policy.sumPeakFraction
     }
 
     /// - Parameters:
@@ -331,6 +344,7 @@ public nonisolated struct ElementProposer: Sendable {
         var sumElements: [String: (label: String, elements: [String])] = [:]
         var last: [String: Stat] = [:]
         var parents: [SumParent] = []
+        var parentNets: [String: Double] = [:]
         var passes = 0, trials = 0, settled = true
 
         /// The candidates that claim a pile-up energy: the active ones at or above L_D in their last fit. A candidate that is only
@@ -345,8 +359,8 @@ public nonisolated struct ElementProposer: Sendable {
         /// Equality to rounding, not a tolerance: the line table carries four decimals, so only sums equal in the table merge
         /// (registration: docs/archive/v5/sum-column-exact-dedup-preregistration-2026-10-08.md).
         let exactSumToleranceKeV = 1e-9
-        func sumColumns(_ parents: [SumParent], claiming claimers: Set<String>, design: [FitLineGroup]) -> [FitLineGroup] {
-            var claimed = currentGroups.map { $0.lines[0].energy }
+        func sumColumns(_ parents: [SumParent], claiming claimers: Set<String>, design: [FitLineGroup], alsoClaimed: [Double] = []) -> [FitLineGroup] {
+            var claimed = currentGroups.map { $0.lines[0].energy } + alsoClaimed
             claimed += poolGroups.filter { claimers.contains($0.id) }.map { $0.lines[0].energy }
             // A group of THIS design (the groups the fit it serves holds) whose escape list has one entry has a ONE-COMPONENT escape
             // column: one Gaussian at that energy. A pair at exactly that energy would be an identical column (rankDeficient), so it
@@ -394,11 +408,11 @@ public nonisolated struct ElementProposer: Sendable {
                 })
                 // Parents: the strongest detected group of each element, among the current set and the survivors. A survivor that sits
                 // on a pile-up peak of the LISTED parents is the question, not a parent (Ar at the Al+Al sum must not make Ar+Al sums).
-                var best: [String: (sig: Double, energy: Double, listed: Bool)] = [:]
+                var best: [String: (sig: Double, energy: Double, listed: Bool, net: Double)] = [:]
                 for (gi, g) in p.model.groups.enumerated() where g.element != "sum" {
                     guard let st = stat(p, gi), st.net >= st.ld, nextActive.contains(g.id) || !active.contains(g.id) else { continue }
                     if best[g.element].map({ st.significance > $0.sig }) ?? true {
-                        best[g.element] = (st.significance, g.lines[0].energy, current.contains(g.element))
+                        best[g.element] = (st.significance, g.lines[0].energy, current.contains(g.element), st.net)
                     }
                 }
                 let listed = best.filter { $0.value.listed }.map { SumParent(element: $0.key, energyKeV: $0.value.energy) }
@@ -410,6 +424,7 @@ public nonisolated struct ElementProposer: Sendable {
                 let stable = nextActive == active && sumColumns(nextParents, claiming: claiming(nextActive),
                                                                 design: currentGroups + poolGroups.filter { nextActive.contains($0.id) }).map(\.id) == sums.map(\.id)
                 parents = nextParents
+                parentNets = Dictionary(uniqueKeysWithValues: nextParents.map { ($0.element, best[$0.element]?.net ?? 0) })
                 if stable { return p }
                 if iteration >= maxPasses { settled = false; return p }
                 active = nextActive
@@ -476,8 +491,14 @@ public nonisolated struct ElementProposer: Sendable {
             let gs = poolGroups.filter { $0.element == el }.compactMap { g in last[g.id].map { (g, $0) } }
             guard let (g, st) = gs.max(by: { $0.1.significance < $1.1.significance }) else { continue }
             let alpha = g.lines[0].energy
+            // A pile-up peak can never exceed its smaller parent's group net: its area is that parent's counts times the chance that another photon of
+            // the other parent arrives within the shaping time, at most 1 (`sumPeakFraction`, a bound, not a measured dead-time fraction; a self-pair is
+            // in truth at most half, a tightening left for a registration with the planted sum fixtures, which exceed it). A candidate above the bound
+            // carries no sum-peak question (the Mg+O sum at 1.78 keV must not hold back a Si K line twenty times the Mg line).
             let conflicts = LineConflicts.conflicts(element: el, line: g.id, lineEnergyKeV: alpha, parents: parents,
-                                                    toleranceKeV: sumPeakToleranceKeV, context: context)
+                                                    toleranceKeV: sumPeakToleranceKeV, context: context).filter { c in
+                c.kind != .sumPeak || (c.requires.compactMap { parentNets[$0] }.min() ?? 0) * sumPeakFraction >= st.net
+            }
             var note: String?
             if context.gridElements.contains(el) {
                 if let hole = holeCounts {
@@ -494,6 +515,37 @@ public nonisolated struct ElementProposer: Sendable {
                 element: el, group: g.id, energyKeV: alpha, net: st.net, sigma: st.sigma, sigmaZero: st.sigmaZero,
                 criticalLevel: st.lc, detectionLimit: st.ld, conflicts: conflicts,
                 suggestedRole: context.quantifyByDefault.contains(el) ? .quantify : .fitOnly, holeRegionNote: note, misfit: st.misfit))
+        }
+        // R4, family consistency (the field's confirmation-line rule: Goldstein ch. 18, Newbury 2005, AutoEMX 2026, NIST EPQ's overvoltage rule): an
+        // element proposed by an L or M line must show its next family's alpha line (K for L, L for M) at or above that line's own L_D where the fitted
+        // range holds it and the beam is well above its edge. One extra joint fit per such candidate (the settled design plus the companion group) reads
+        // the companion's net. A candidate the check cannot fit keeps its standing. No Python counterpart; `validation: "none"`.
+        var withheld: [String] = []
+        func lineLabel(_ id: String) -> String {   // "Ba_Lb1" -> "L\u{03B2}1"
+            String(id.drop { $0 != "_" }.dropFirst().map { c in ["a": "\u{03B1}", "b": "\u{03B2}", "g": "\u{03B3}"][c] ?? String(c) }.joined())
+        }
+        if familyConsistency {
+            for (k, c) in candidates.enumerated() where c.isProposed && !c.hasSumPeakQuestion {
+                guard let g = poolGroups.first(where: { $0.id == c.group }), let family = XRayLines.line(g.lines[0].id)?.family, family != .K else { continue }
+                // The companion: K for an L group, L for an M group, when its alpha line is in the fitted range and the beam is at least `familyOvervoltage`
+                // times its energy (the edge proxy; below that the family can be too weakly excited to demand).
+                let companionID = c.element + (family == .L ? "_Ka" : "_La")
+                guard let h = poolGroups.first(where: { $0.id == companionID && s.beamEnergy >= familyOvervoltage * $0.lines[0].energy }) else { continue }
+                var design = currentGroups + poolGroups.filter { active.contains($0.id) || $0.id == g.id }
+                if !design.contains(where: { $0.id == h.id }) { design.append(h) }
+                let p: Pass
+                do { p = try run(design + sumColumns(parents, claiming: claiming(active).union([g.id, h.id]), design: design), on: counts) }
+                catch ProposerError.cancelled { throw ProposerError.cancelled }
+                catch { continue }   // a check that cannot be fitted keeps the candidate
+                guard let gi = p.model.groups.firstIndex(where: { $0.id == h.id }), let sh = stat(p, gi), sh.net < sh.ld else { continue }
+                let note = String(format: "%@ %@ (%.2f keV) reads below its detection limit (net %.0f < L_D %.0f) although %@ %@ is proposed at %.0f counts: not %@.",
+                                  c.element, lineLabel(h.lines[0].id), h.lines[0].energy, sh.net, sh.ld, c.element, lineLabel(g.lines[0].id), c.net, c.element)
+                withheld.append("Family consistency withheld \(c.element): \(note)")
+                candidates[k] = ElementCandidate(
+                    element: c.element, group: c.group, energyKeV: c.energyKeV, net: c.net, sigma: c.sigma, sigmaZero: c.sigmaZero,
+                    criticalLevel: c.criticalLevel, detectionLimit: c.detectionLimit, conflicts: c.conflicts,
+                    suggestedRole: c.suggestedRole, holeRegionNote: c.holeRegionNote, misfit: c.misfit, familyNote: note)
+            }
         }
         candidates.sort { $0.significance > $1.significance }
 
@@ -516,6 +568,10 @@ public nonisolated struct ElementProposer: Sendable {
             ? "Flank-misfit scaling: no proposed or near-miss candidate (net/L_D \u{2265} 0.5) had its \u{03C3}\u{2080} inflated."
             : "\u{03C3}\u{2080} was scaled by the flank-misfit factor (never below 1; a neighbour's misfit inflates every candidate within about \u{00B1}0.5 keV): "
                 + inflated.map { String(format: "%@ \u{00D7}%.2f", $0.element, $0.misfit) }.joined(separator: ", ") + " (candidates at net/L_D \u{2265} 0.5).")
+        if familyConsistency {
+            notes.append("Family consistency (R4, the confirmation-line rule, validation: none): an element proposed by an L or M line needs its K or L alpha line at or above its own L_D where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise the element is withheld.")
+            notes += withheld
+        }
         let pChance = 0.5 * erfc((currie.zAlpha + currie.zBeta) / 2.0.squareRoot())
         notes.append(String(format: "Look-elsewhere: %d line groups were tested, so about %d \u{00D7} %.1e = %.2f chance proposals per spectrum are expected; a candidate near net/L_D = 1 is as likely chance as real.", poolGroups.count, poolGroups.count, pChance, Double(poolGroups.count) * pChance))
         if !settled { notes.append("The surviving set did not settle in \(maxPasses) passes: the last fit is shown.") }

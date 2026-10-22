@@ -222,7 +222,7 @@ struct ProposerPolicyTests {
     }
 
     @Test func testMoveBarSelectsTheMovedNets() throws {
-        let counts = Self.expected(areas: ["Al_Ka": 30000, "Mg_Ka": 4000, "Si_Ka": 12000, "Zn_La": 3000], dose: 3)
+        let counts = Self.expected(areas: ["Al_Ka": 30000, "Mg_Ka": 4000, "Si_Ka": 12000, "Zn_La": 3000, "Zn_Ka": 9000], dose: 3)
         var m = QuantificationMethod()
         m.elements = ["Al", "Mg", "Si"].map { QuantificationMethod.ElementState(symbol: $0, role: .quantify, isManual: false) }
         m.beamEnergyKeV = 200; m.lockEnergyAxis = true

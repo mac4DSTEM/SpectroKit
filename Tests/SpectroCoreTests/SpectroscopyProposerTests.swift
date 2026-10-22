@@ -141,13 +141,13 @@ struct SpectroscopyProposerTests {
 
     // MARK: 2. A strong Ga L-alpha, Mg absent
 
-    /// Fable's case 2 (the round-1/2 false Mg): Ga L-alpha 900 counts x dose beside an absent Mg. Ga is a column of the joint fit, so its
+    /// Fable's case 2 (the round-1/2 false Mg): Ga L-alpha 900 counts x dose (with its K family, 2700, as the family-consistency rule needs) beside an absent Mg. Ga is a column of the joint fit, so its
     /// tail is not read as Mg. Ga is found from x10 and carries the named FIB conflict.
     @Test func testGaLAlphaDoesNotMakeAFalseMg() throws {
         for k in Self.doses {
             var gaFound = 0
             for s in 0..<Self.seeds {
-                let counts = Self.draw(Self.expected(areas: ["Al_Ka": 9000, "Ga_La": 900], dose: k, continuum: Self.kramers), seed: UInt64(2000 + 100 * Int(k) + s))
+                let counts = Self.draw(Self.expected(areas: ["Al_Ka": 9000, "Ga_La": 900, "Ga_Ka": 2700], dose: k, continuum: Self.kramers), seed: UInt64(2000 + 100 * Int(k) + s))
                 let r = try run(counts, current: ["Al"])
                 #expect(!(candidate(r, "Mg").isProposed), "false Mg beside Ga L at x\(Int(k))")
                 let ga = candidate(r, "Ga")
@@ -272,7 +272,11 @@ struct SpectroscopyProposerTests {
         #expect(dense.sumPeakQuestions.contains { $0.element == "Ar" }, "Ar is a sum-peak question")
         // The phantoms at pile-up energies are questions, never findings.
         for el in ["Rh", "Sn", "Sr", "Ar"] { #expect(!(dense.proposed.contains { $0.element == el }), "\(el) must not be in `proposed`") }
-        #expect(Set(dense.sumPeakQuestions.map(\.element)).isSuperset(of: ["Rh", "Sn", "Sr"]), "Rh, Sn, Sr are listed as sum-peak questions")
+        // Since 0.11.0 the family rule (R4) can take one of them first: an L line whose K line is in range and absent is withheld, not a question.
+        for el in ["Rh", "Sn", "Sr"] {
+            let c = dense.candidates.first { $0.element == el }
+            #expect(dense.sumPeakQuestions.contains { $0.element == el } || c?.familyNote != nil, "\(el) is a sum-peak question or withheld by R4: \(c?.familyNote ?? "no note")")
+        }
         #expect(ar.conflicts.contains { $0.kind == .sumPeak && $0.question.contains("Al+Al sum") }, "Al sum or Ar?")
     }
 

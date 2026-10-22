@@ -240,8 +240,9 @@ public nonisolated enum UnlistedLineChecker {
         try SpectroCancellation.check(cancelled)
         progress?(0)
         let dismissed = Set(q.method.elements.filter { $0.role == .off }.map(\.symbol))
-        // `isProposed` = proposed and sum-peak questions alike (both at or above L_D), strongest first.
-        let found = proposal.candidates.filter { $0.isProposed && !dismissed.contains($0.element) }
+        // Everything at or above L_D: proposed, sum-peak questions and the candidates the family rule withheld alike (an excess beside a listed line is an
+        // excess whatever its name), strongest first.
+        let found = proposal.candidates.filter { $0.aboveDetectionLimit && !dismissed.contains($0.element) }
 
         // Beside a listed line or a split edge: an unexplained excess, not an element (A2). Listed = the reported fit's own list,
         // axis and width; nets from the fit's group values.
