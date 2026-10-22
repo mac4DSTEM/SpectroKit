@@ -108,6 +108,11 @@ public struct EELSModelResult: Sendable {
                 let rows = signalRows[g]
                 let column = basis.column(group: g, pixel: pixel, rows: rows)
                 for (i, k) in rows.enumerated() { curve[k] = b.a * Libm.pow(basis.energies[k], -b.r) * basis.scale + intensity * column[i] }
+                for h in 0 ..< g {                                              // the earlier edges' tails under this window (the background was fitted without them)
+                    guard let ih = pixels[pixel][h].intensity, ih > 0 else { continue }
+                    let tail = basis.column(group: h, pixel: pixel, rows: rows)
+                    for (i, k) in rows.enumerated() { curve[k] += ih * tail[i] }
+                }
             }
             return curve
         }
@@ -227,6 +232,12 @@ public enum EELSModelFit {
     /// edge's intensity is the cross-section column fitted on the background-subtracted signal window. Signal windows that share energies are
     /// refused. This is the field's per-edge convention (GMS, eels.info), not exSpy's; `validation: "none"`. The same call is the per-pixel
     /// map: every pixel gets every edge's intensity and its own r (`EELSModelResult.exponent(pixel:edge:)`). Without `edgeWindows` nothing changes.
+    ///
+    /// The edges are fitted in onset order and each is stripped before the next: once edge i has its background (on its window) and its amplitude
+    /// (on its signal window), amplitude x cross section, on every channel to the end of the range (the cross section's own tail beyond the signal
+    /// window), is subtracted from a working copy of the spectrum, and edge i+1's power law and amplitude are fitted on that copy. Without it the
+    /// next edge's background window lies in the earlier edge's tail, the fresh power law there is too steep and runs above the data under the
+    /// next edge, and its non-negative amplitude clamps to 0 (N K behind C K on real files). The reported intensities are the amplitudes.
     public static func fit(
         coreLoss: CoreLossSpectrumImage, edges: [CoreLossEdge], microscope: EELSMicroscope, lowLoss: LowLossSpectrumImage? = nil,
         mask: PixelMask? = nil, options: EELSModelOptions = .init(), edgeWindows: [EdgeWindows]? = nil,
@@ -390,9 +401,10 @@ public enum EELSModelFit {
                 if let mask, !mask[p] { slots.set(p, WindowedPixel(failure: .masked)); return }
                 let base = input.baseAddress! + p * n
                 var out = WindowedPixel()
+                var work = Array(UnsafeBufferPointer(start: base, count: n))          // the spectrum with the edges fitted so far stripped
                 for g in 0 ..< m {
                     var yb = [Double]()
-                    for r in bgRows[g] { yb += UnsafeBufferPointer(start: base + r.lowerBound, count: r.count) }
+                    for r in bgRows[g] { yb += r.map { work[$0] } }
                     let f = solve(y: yb, logE: bgLogE[g], scale: basis.scale, edgeColumns: [], range: range)
                     if f.failure != nil { slots.set(p, WindowedPixel(failure: .fitFailed)); return }
                     out.backgrounds.append(PowerLawParameters(a: f.a, r: f.r)); out.atBound = out.atBound || f.atBound
@@ -401,13 +413,17 @@ public enum EELSModelFit {
                     var cc = 0.0, cd = 0.0
                     var d = [Double](repeating: 0, count: rows.count)
                     for (i, k) in rows.enumerated() {
-                        d[i] = base[k] - f.a * Libm.pow(basis.energies[k], -f.r) * basis.scale
+                        d[i] = work[k] - f.a * Libm.pow(basis.energies[k], -f.r) * basis.scale
                         cc += column[i] * column[i]; cd += column[i] * d[i]
                     }
                     guard cc > 0 else { slots.set(p, WindowedPixel(failure: .fitFailed)); return }   // the window lies below the edge's onset
                     let intensity = max(0, cd / cc)
                     out.intensities.append(intensity)
                     for i in 0 ..< rows.count { let e = d[i] - intensity * column[i]; out.rss += e * e }
+                    if g + 1 < m, intensity > 0 {                                     // strip this edge, tail included, before the next one is fitted
+                        let full = basis.column(group: g, pixel: p, rows: 0 ..< n)
+                        for k in 0 ..< n { work[k] -= intensity * full[k] }
+                    }
                 }
                 slots.set(p, out)
             }
@@ -432,7 +448,7 @@ public enum EELSModelFit {
             backgrounds: backgrounds, exponentAtBound: atBound, residualSumOfSquares: rss,
             windowEV: axis.energy(ofChannel: lo) ... axis.energy(ofChannel: hi - 1),
             preEdgeWindowEV: axis.energy(ofChannel: bgRows[0][0].lowerBound) ... axis.energy(ofChannel: bgRows[0][0].upperBound - 1),
-            convolved: basis.convolved, methodName: methodName + "; per-edge windows (sequence: power law on each background window, then the edge on its signal window)",
+            convolved: basis.convolved, methodName: methodName + "; per-edge windows (sequence: power law on each background window, then the edge on its signal window, then the edge stripped from the spectrum)",
             validation: "none", basis: basis)
         result.edgeWindows = windows
         result.fitRangeEV = sigRows.map { axis.energy(ofChannel: $0.lowerBound) ... axis.energy(ofChannel: $0.upperBound - 1) }

@@ -12,15 +12,14 @@ import SpectroEELS
 struct EdgeWindowsTests {
     private let axis = EnergyAxis(offset: 150, scale: 0.75, size: 2020)
 
-    private func planted(curved: Bool) throws -> (core: CoreLossSpectrumImage, mic: EELSMicroscope, truth: [Double]) {
+    private func planted(curved: Bool, backgroundScale: Double = 1, ratio: [Double] = [3.0, 1.0, 2.0]) throws -> (core: CoreLossSpectrumImage, mic: EELSMicroscope, truth: [Double]) {
         let mic = EELSMicroscope(beamEnergyKeV: 200, convergenceMrad: 10, collectionMrad: 20)
         let energies = (0 ..< axis.size).map { axis.energy(ofChannel: $0) }
         // the r = 3 plasmon tail; `curved` adds a shallower power law (E^-1, equal to the tail at 300 eV) that takes over higher up,
         // so no single power law fits 150 to 1664 eV, as on the real files
         let tail = 3.0e10 / pow(300.0, 3)
-        var counts = energies.map { e in 3.0e10 * pow(e, -3) + (curved ? tail * 300 / e : 0) }
+        var counts = energies.map { e in backgroundScale * (3.0e10 * pow(e, -3) + (curved ? tail * 300 / e : 0)) }
         let edges: [CoreLossEdge] = [.carbonK, .nitrogenK, .oxygenK]
-        let ratio = [3.0, 1.0, 2.0]
         // the kit's own cross sections, so the planted amplitudes are the fitted quantity (2000 counts per channel for C at 30 eV above its onset)
         var unit = 0.0
         for (g, edge) in edges.enumerated() {
@@ -100,6 +99,73 @@ struct EdgeWindowsTests {
         #expect(w.edgeWindows == defaultWindows() && w.fitRangeEV!.count == 3)
         #expect(w.modelCurve(pixel: 0)?.count == 2020)
         #expect((1.5 ... 4).contains(w.exponent(pixel: 0, edge: 0)!))   // between the tail (3) and the shallower part (1)
+    }
+
+
+    /// The real-file case: the N K default background window (319 to 396 eV) lies in the tail of C K, which dominates a weak background.
+    @Test func testStrippingRecoversNKInsideTheCTail() throws {
+        let (core, mic, ratio) = try planted(curved: true, backgroundScale: 0.02, ratio: [100, 1, 2])
+        let edges: [CoreLossEdge] = [.carbonK, .nitrogenK, .oxygenK]
+        let w = defaultWindows()
+        // the C K tail under the N signal window against the N signal itself
+        let energies = (0 ..< axis.size).map { axis.energy(ofChannel: $0) }
+        func column(_ e: CoreLossEdge) -> [Double] {
+            EdgeCrossSection(table: GOSTable.bundled(e)!, beamEnergyKeV: 200, convergenceMrad: 10, collectionMrad: 20)!.differential(energies).map { $0 * axis.scale }
+        }
+        let cc = column(.carbonK), nn = column(.nitrogenK)
+        let rows = EdgeWindows.rows(w[1].signalEV, offset: 150, scale: 0.75, size: axis.size)
+        let tailShare = rows.reduce(0.0) { $0 + ratio[0] * cc[$1] } / rows.reduce(0.0) { $0 + ratio[1] * nn[$1] }
+        #expect(tailShare >= 0.10, Comment(rawValue: "C tail / N signal = \(tailShare)"))
+        let s = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, edgeWindows: w)
+        // without stripping: the same fit of N K and O K alone, the C K edge left in the data
+        let n = try EELSModelFit.fit(coreLoss: core, edges: [.nitrogenK, .oxygenK], microscope: mic, edgeWindows: [w[1], w[2]])
+        let iS = s.pixels[0].map { $0.intensity ?? .nan }, iN = n.pixels[0].map { $0.intensity ?? .nan }
+        print("C tail / N signal \(tailShare) | N K without stripping \(iN[0]) (planted-unit N \(iS[1])), O/N \(iN[1] / max(iN[0], 1e-300)) | with stripping C:N:O \(iS.map { $0 / iS[1] })")
+        for k in 0 ..< 3 { #expect(abs(iS[k] / iS[1] - ratio[k] / ratio[1]) <= 0.05 * ratio[k] / ratio[1], Comment(rawValue: "edge \(k): \(iS)")) }
+        #expect(abs(iN[0] / iS[1] - 1) > 0.2, Comment(rawValue: "unstripped N \(iN[0]) vs stripped \(iS[1])"))
+    }
+
+    /// Two edges 85 eV apart (Fe L1 846 and Cu L3 931 eV): the second default background window is empty by the first rule, so rule 2 applies.
+    @Test func testCloseEdgesShareAWindowAndAreRecovered() throws {
+        let fe = EdgeWindows.defaults(onsetEV: 846, family: "L", precedingSignalEndEV: nil, nextOnsetEV: 931, axis: axis)
+        let plain = EdgeWindows.defaults(onsetEV: 931, family: "L", precedingSignalEndEV: fe.signalEV.upperBound, nextOnsetEV: nil, axis: axis)
+        #expect(plain.backgroundEV.upperBound - plain.backgroundEV.lowerBound < 20 && plain.note == nil)
+        let cu = EdgeWindows.defaults(onsetEV: 931, family: "L", precedingSignalEndEV: fe.signalEV.upperBound, nextOnsetEV: nil, axis: axis,
+                                      precedingOnsetEV: 846, precedingBackgroundEV: fe.backgroundEV, precedingName: "Fe L")
+        #expect(cu.backgroundEV == 846 ... 926 && cu.note == "background between Fe L's onset and this one: edges 85 eV apart", Comment(rawValue: "\(cu)"))
+        // the stretch too short: the preceding edge's own window is reused
+        let tight = EdgeWindows.defaults(onsetEV: 931, family: "L", precedingSignalEndEV: 915, nextOnsetEV: nil, axis: axis,
+                                         precedingOnsetEV: 920, precedingBackgroundEV: fe.backgroundEV, precedingName: "Fe L")
+        #expect(tight.backgroundEV == fe.backgroundEV && tight.note == "background shares Fe L's window: edges 11 eV apart", Comment(rawValue: "\(tight)"))
+        // no fallback given: still empty, the fit refuses it
+        #expect(plain.backgroundEV.upperBound - plain.backgroundEV.lowerBound < 20)
+
+        let edges: [CoreLossEdge] = [.ironL1, .copperL3]
+        let energies = (0 ..< axis.size).map { axis.energy(ofChannel: $0) }
+        var counts = energies.map { 4.0e9 * pow($0, -2.5) }
+        let planted = [1.0, 0.6]
+        var peak = 0.0
+        for (g, e) in edges.enumerated() {
+            let col = EdgeCrossSection(table: GOSTable.bundled(e)!, beamEnergyKeV: 200, convergenceMrad: 10, collectionMrad: 20)!.differential(energies).map { $0 * axis.scale }
+            if g == 0 { peak = 300 / col[Int((e.onsetEV + 40 - 150) / 0.75)] }
+            for k in 0 ..< axis.size { counts[k] += planted[g] * peak * col[k] }
+        }
+        let core = try CoreLossSpectrumImage(nx: 1, ny: 1, channels: axis.size, counts: counts, energyOffsetEV: 150, energyScaleEV: 0.75)
+        let mic = EELSMicroscope(beamEnergyKeV: 200, convergenceMrad: 10, collectionMrad: 20)
+        let r = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, edgeWindows: [fe, cu])
+        let i = r.pixels[0].map { $0.intensity ?? .nan }
+        print("close edges: windows \(fe.backgroundEV) / \(cu.backgroundEV) note \(cu.note ?? "-") | Cu/Fe \(i[1] / i[0]) planted \(planted[1] / planted[0])")
+        #expect(i[1] > 0 && abs(i[1] / i[0] - planted[1] / planted[0]) <= 0.10 * planted[1] / planted[0], Comment(rawValue: "\(i)"))
+        #expect(r.edgeWindows?[1].note == cu.note)
+    }
+
+    @Test func testDefaultNotesAreNilInTheEasyCase() {
+        #expect(defaultWindows().allSatisfy { $0.note == nil })
+        let c = EdgeWindows.defaults(onsetEV: 284, family: "K", precedingSignalEndEV: nil, nextOnsetEV: 401, axis: axis,
+                                     precedingOnsetEV: 100, precedingBackgroundEV: 150 ... 200, precedingName: "X")
+        #expect(c.note == nil)
+        let back = try? JSONDecoder().decode(EdgeWindows.self, from: JSONEncoder().encode(c))
+        #expect(back == c)
     }
 
     @Test func testPreviewRecoversThePlantedExponent() throws {
