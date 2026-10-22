@@ -1,0 +1,153 @@
+{
+ "exspy": "exspy 0.3.2 with hyperspy 2.4.0 (utils.eds quantification_cliff_lorimer)",
+ "sets": [
+  {
+   "name": "docstring",
+   "elements": [
+    "Al",
+    "Cr",
+    "Ni"
+   ],
+   "lines": [
+    "Al_Ka",
+    "Cr_Ka",
+    "Ni_Ka"
+   ],
+   "k": [
+    1.0,
+    1.47,
+    1.72
+   ],
+   "texts": {
+    "tab_header": "Element\tLine\tk-factor\nAl\tKa\t1.00\nCr\tKa\t1.47\nNi\tKa\t1.72\n",
+    "semicolon_decimal_comma": "Element;Line;k\nAl;Ka;1,00\nCr;Ka;1,47\nNi;Ka;1,72\n",
+    "comma_no_header": "Al,Ka,1.00\nCr,Ka,1.47\nNi,Ka,1.72\n",
+    "units_line_combined": "Units: k-factors relative to Al\nAl K\t1.00\nCr K\t1.47\nNi K\t1.72\n"
+   },
+   "expected": [
+    {
+     "intensities": [
+      1000.0,
+      800.0,
+      600.0
+     ],
+     "weight_fraction": [
+      0.3117206982543641,
+      0.3665835411471322,
+      0.32169576059850374
+     ]
+    },
+    {
+     "intensities": [
+      250.0,
+      4000.0,
+      90.0
+     ],
+     "weight_fraction": [
+      0.0397785132382892,
+      0.9355906313645621,
+      0.02463085539714867
+     ]
+    },
+    {
+     "intensities": [
+      12.0,
+      7.0,
+      5.0
+     ],
+     "weight_fraction": [
+      0.38847523470378764,
+      0.33311751375849796,
+      0.27840725153771445
+     ]
+    },
+    {
+     "intensities": [
+      500000.0,
+      300000.0,
+      200000.0
+     ],
+     "weight_fraction": [
+      0.3891050583657588,
+      0.3431906614785993,
+      0.267704280155642
+     ]
+    }
+   ]
+  },
+  {
+   "name": "FeCuZn",
+   "elements": [
+    "Fe",
+    "Cu",
+    "Zn"
+   ],
+   "lines": [
+    "Fe_Ka",
+    "Cu_Ka",
+    "Zn_Ka"
+   ],
+   "k": [
+    1.0,
+    1.31,
+    1.52
+   ],
+   "texts": {
+    "tab_header": "Element\tLine\tk-factor\nFe\tKa\t1.00\nCu\tKa\t1.31\nZn\tKa\t1.52\n",
+    "semicolon_decimal_comma": "Element;Line;k\nFe;Ka;1,00\nCu;Ka;1,31\nZn;Ka;1,52\n",
+    "comma_no_header": "Fe,Ka,1.00\nCu,Ka,1.31\nZn,Ka,1.52\n",
+    "units_line_combined": "Units: k-factors relative to Fe\nFe K\t1.00\nCu K\t1.31\nZn K\t1.52\n"
+   },
+   "expected": [
+    {
+     "intensities": [
+      1000.0,
+      800.0,
+      600.0
+     ],
+     "weight_fraction": [
+      0.33783783783783783,
+      0.35405405405405405,
+      0.30810810810810807
+     ]
+    },
+    {
+     "intensities": [
+      250.0,
+      4000.0,
+      90.0
+     ],
+     "weight_fraction": [
+      0.04443022677187744,
+      0.9312575531385512,
+      0.024312220089571335
+     ]
+    },
+    {
+     "intensities": [
+      12.0,
+      7.0,
+      5.0
+     ],
+     "weight_fraction": [
+      0.41710114702815426,
+      0.31873479318734793,
+      0.2641640597844977
+     ]
+    },
+    {
+     "intensities": [
+      500000.0,
+      300000.0,
+      200000.0
+     ],
+     "weight_fraction": [
+      0.41771094402673353,
+      0.32832080200501257,
+      0.25396825396825395
+     ]
+    }
+   ]
+  }
+ ]
+}
