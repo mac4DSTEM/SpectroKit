@@ -221,7 +221,7 @@ public enum MaskTransport {
     // MARK: - Convex polygon against an axis-aligned square
 
     /// Area of the intersection of a convex polygon (any winding) with [uLo, uHi] x [vLo, vHi].
-    private static func clippedArea(_ polygon: [(Double, Double)], uLo: Double, uHi: Double,
+    package static func clippedArea(_ polygon: [(Double, Double)], uLo: Double, uHi: Double,
                                     vLo: Double, vHi: Double) -> Double {
         var p = polygon
         // (axis, bound, keep-greater)
