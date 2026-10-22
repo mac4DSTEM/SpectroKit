@@ -116,9 +116,12 @@ struct EdgeWindowsTests {
         let rows = EdgeWindows.rows(w[1].signalEV, offset: 150, scale: 0.75, size: axis.size)
         let tailShare = rows.reduce(0.0) { $0 + ratio[0] * cc[$1] } / rows.reduce(0.0) { $0 + ratio[1] * nn[$1] }
         #expect(tailShare >= 0.10, Comment(rawValue: "C tail / N signal = \(tailShare)"))
-        let s = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, edgeWindows: w)
-        // without stripping: the same fit of N K and O K alone, the C K edge left in the data
+        let s = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, options: EELSModelOptions(stripPrecedingEdges: true), edgeWindows: w)
+        // without stripping (the default): the same fit of N K and O K alone, the C K edge left in the data
         let n = try EELSModelFit.fit(coreLoss: core, edges: [.nitrogenK, .oxygenK], microscope: mic, edgeWindows: [w[1], w[2]])
+        let d = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, edgeWindows: w)
+        #expect(d.pixels[0][1].intensity == n.pixels[0][0].intensity && d.pixels[0][2].intensity == n.pixels[0][1].intensity, "the default does not strip")
+        #expect(!d.strippedPrecedingEdges && s.strippedPrecedingEdges && !d.methodName.contains("stripped") && s.methodName.contains("stripped"))
         let iS = s.pixels[0].map { $0.intensity ?? .nan }, iN = n.pixels[0].map { $0.intensity ?? .nan }
         print("C tail / N signal \(tailShare) | N K without stripping \(iN[0]) (planted-unit N \(iS[1])), O/N \(iN[1] / max(iN[0], 1e-300)) | with stripping C:N:O \(iS.map { $0 / iS[1] })")
         for k in 0 ..< 3 { #expect(abs(iS[k] / iS[1] - ratio[k] / ratio[1]) <= 0.05 * ratio[k] / ratio[1], Comment(rawValue: "edge \(k): \(iS)")) }
@@ -152,7 +155,7 @@ struct EdgeWindowsTests {
         }
         let core = try CoreLossSpectrumImage(nx: 1, ny: 1, channels: axis.size, counts: counts, energyOffsetEV: 150, energyScaleEV: 0.75)
         let mic = EELSMicroscope(beamEnergyKeV: 200, convergenceMrad: 10, collectionMrad: 20)
-        let r = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, edgeWindows: [fe, cu])
+        let r = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, options: EELSModelOptions(stripPrecedingEdges: true), edgeWindows: [fe, cu])
         let i = r.pixels[0].map { $0.intensity ?? .nan }
         print("close edges: windows \(fe.backgroundEV) / \(cu.backgroundEV) note \(cu.note ?? "-") | Cu/Fe \(i[1] / i[0]) planted \(planted[1] / planted[0])")
         #expect(i[1] > 0 && abs(i[1] / i[0] - planted[1] / planted[0]) <= 0.10 * planted[1] / planted[0], Comment(rawValue: "\(i)"))

@@ -24,8 +24,13 @@ public struct EELSModelOptions: Sendable, Equatable {
     public var preEdgeSafeWindowEV: Double = 2
     /// The power-law exponent r is searched in this range. exSpy's is unbounded; a fit that ends on a bound is flagged (`exponentAtBound`).
     public var exponentRange: ClosedRange<Double> = 0 ... 10
-    public init(startEnergyEV: Double? = nil, preEdgeSafeWindowEV: Double = 2, exponentRange: ClosedRange<Double> = 0 ... 10) {
+    /// Per-edge windows only: each fitted edge (amplitude times its cross section on every channel) is subtracted from the spectrum before the
+    /// next edge's background and amplitude are fitted. Off by default: on the owner's real GMS maps the convolved C K model, fitted on its
+    /// 30 eV signal window, overshoots the data 150 eV further up and leaves O K nothing to fit (2026-10-23); the planted tests hold the on case.
+    public var stripPrecedingEdges: Bool = false
+    public init(startEnergyEV: Double? = nil, preEdgeSafeWindowEV: Double = 2, exponentRange: ClosedRange<Double> = 0 ... 10, stripPrecedingEdges: Bool = false) {
         self.startEnergyEV = startEnergyEV; self.preEdgeSafeWindowEV = preEdgeSafeWindowEV; self.exponentRange = exponentRange
+        self.stripPrecedingEdges = stripPrecedingEdges
     }
 }
 
@@ -69,6 +74,8 @@ public struct EELSModelResult: Sendable {
     /// `edgeBackgrounds[pixel][edge]`: the power law fitted on each edge's own background window(s); nil without per-edge windows
     /// (`backgrounds` then holds the first edge's).
     public internal(set) var edgeBackgrounds: [[PowerLawParameters?]]? = nil
+    /// Per-edge windows: whether each edge was stripped before the next (`EELSModelOptions.stripPrecedingEdges`).
+    public internal(set) var strippedPrecedingEdges = false
     fileprivate var signalRows: [Range<Int>] = []
 
     /// The background exponent r of one edge at one pixel; nil without per-edge windows or where the fit failed.
@@ -108,7 +115,7 @@ public struct EELSModelResult: Sendable {
                 let rows = signalRows[g]
                 let column = basis.column(group: g, pixel: pixel, rows: rows)
                 for (i, k) in rows.enumerated() { curve[k] = b.a * Libm.pow(basis.energies[k], -b.r) * basis.scale + intensity * column[i] }
-                for h in 0 ..< g {                                              // the earlier edges' tails under this window (the background was fitted without them)
+                for h in 0 ..< g where strippedPrecedingEdges {                 // the earlier edges' tails under this window (the background was fitted without them)
                     guard let ih = pixels[pixel][h].intensity, ih > 0 else { continue }
                     let tail = basis.column(group: h, pixel: pixel, rows: rows)
                     for (i, k) in rows.enumerated() { curve[k] += ih * tail[i] }
@@ -420,7 +427,7 @@ public enum EELSModelFit {
                     let intensity = max(0, cd / cc)
                     out.intensities.append(intensity)
                     for i in 0 ..< rows.count { let e = d[i] - intensity * column[i]; out.rss += e * e }
-                    if g + 1 < m, intensity > 0 {                                     // strip this edge, tail included, before the next one is fitted
+                    if options.stripPrecedingEdges, g + 1 < m, intensity > 0 {        // strip this edge, tail included, before the next one is fitted
                         let full = basis.column(group: g, pixel: p, rows: 0 ..< n)
                         for k in 0 ..< n { work[k] -= intensity * full[k] }
                     }
@@ -448,11 +455,12 @@ public enum EELSModelFit {
             backgrounds: backgrounds, exponentAtBound: atBound, residualSumOfSquares: rss,
             windowEV: axis.energy(ofChannel: lo) ... axis.energy(ofChannel: hi - 1),
             preEdgeWindowEV: axis.energy(ofChannel: bgRows[0][0].lowerBound) ... axis.energy(ofChannel: bgRows[0][0].upperBound - 1),
-            convolved: basis.convolved, methodName: methodName + "; per-edge windows (sequence: power law on each background window, then the edge on its signal window, then the edge stripped from the spectrum)",
+            convolved: basis.convolved, methodName: methodName + "; per-edge windows (sequence: power law on each background window, then the edge on its signal window" + (options.stripPrecedingEdges ? ", then the edge stripped from the spectrum)" : ")"),
             validation: "none", basis: basis)
         result.edgeWindows = windows
         result.fitRangeEV = sigRows.map { axis.energy(ofChannel: $0.lowerBound) ... axis.energy(ofChannel: $0.upperBound - 1) }
         result.edgeBackgrounds = perEdge
+        result.strippedPrecedingEdges = options.stripPrecedingEdges
         result.signalRows = sigRows
         return result
     }
