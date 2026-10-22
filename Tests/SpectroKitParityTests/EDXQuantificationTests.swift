@@ -130,6 +130,33 @@ struct EDXQuantificationTests {
         #expect(z.failures.allSatisfy { $0 != nil } && z.weightPercent[0][0].isNaN)
     }
 
+    /// A take-off angle per pixel (0.8.3): equal angles reproduce the single-angle run; a different angle at a pixel gives that pixel the result
+    /// of a run at that angle; a missing absorption setting, a wrong count and a grazing angle are refused or fail the one pixel.
+    @Test func aTakeOffAnglePerPixelEqualsASingleAngleRunAtThatAngle() throws {
+        let c = Self.pins.cases[1]
+        let r = c.runs.first { $0.method == "zeta" && $0.absorption && $0.units == "weight" }!
+        let maps = c.intensities.map(Self.flat)
+        let n = c.rows * c.cols
+        let setup = Self.setup(c, r)
+        let base = try #require(setup.absorption).takeOffDegrees
+        let reference = try EDXQuantification.quantifyMaps(intensityMaps: maps, rows: c.rows, columns: c.cols, setup: setup)
+        let same = try EDXQuantification.quantifyMaps(intensityMaps: maps, rows: c.rows, columns: c.cols, setup: setup, takeOffDegreesPerPixel: [Double](repeating: base, count: n))
+        #expect(same.weightPercent == reference.weightPercent)
+        var angles = [Double](repeating: base, count: n)
+        angles[1] = 20
+        angles[2] = 0
+        let mixed = try EDXQuantification.quantifyMaps(intensityMaps: maps, rows: c.rows, columns: c.cols, setup: setup, takeOffDegreesPerPixel: angles)
+        var atTwenty = setup
+        atTwenty.absorption!.takeOffDegrees = 20
+        let twenty = try EDXQuantification.quantifyMaps(intensityMaps: maps, rows: c.rows, columns: c.cols, setup: atTwenty)
+        #expect(mixed.weightPercent[0][1] == twenty.weightPercent[0][1] && mixed.weightPercent[0][1] != reference.weightPercent[0][1])
+        #expect(mixed.failures[2] != nil && mixed.weightPercent[0][2].isNaN)
+        #expect(mixed.weightPercent[0][3] == reference.weightPercent[0][3])
+        #expect(throws: (any Error).self) { try EDXQuantification.quantifyMaps(intensityMaps: maps, rows: c.rows, columns: c.cols, setup: setup, takeOffDegreesPerPixel: [30]) }
+        var plain = setup; plain.absorption = nil
+        #expect(throws: (any Error).self) { try EDXQuantification.quantifyMaps(intensityMaps: maps, rows: c.rows, columns: c.cols, setup: plain, takeOffDegreesPerPixel: angles) }
+    }
+
     @Test func aLargeImageEqualsPixelByPixelAcrossTheChunks() throws {
         let c = Self.pins.cases[1]
         let r = c.runs.first { $0.method == "zeta" && $0.absorption && $0.units == "weight" }!

@@ -69,9 +69,10 @@ func edgeQuantificationChecks(_ r: inout Report, _ eelsFixtures: URL) throws {
     r.check("CoreLossEdge .carbonK .nitrogenK .oxygenK: element, subshell K1, onset 284 / 401 / 532 eV",
             [CoreLossEdge.carbonK, .nitrogenK, .oxygenK].map { [$0.element, $0.subshell, String($0.onsetEV)] }
             == [["C", "K1", "284.0"], ["N", "K1", "401.0"], ["O", "K1", "532.0"]])
-    r.check("CoreLossEdge.bundled is [C K, N K, O K]; Equatable distinguishes them; .description is \"<element> K\"",
-            CoreLossEdge.bundled == [.carbonK, .nitrogenK, .oxygenK] && CoreLossEdge.carbonK != .oxygenK
-            && CoreLossEdge.bundled.map { $0.description } == ["C K", "N K", "O K"] && "\(CoreLossEdge.nitrogenK)" == "N K")
+    r.check("CoreLossEdge.bundled starts with [C K, N K, O K] (20 edges since 0.9.0); Equatable distinguishes them; .description is \"<element> K\"",
+            CoreLossEdge.bundled.prefix(3) == [.carbonK, .nitrogenK, .oxygenK] && CoreLossEdge.carbonK != .oxygenK
+            && CoreLossEdge.bundled.prefix(3).map { $0.description } == ["C K", "N K", "O K"] && "\(CoreLossEdge.nitrogenK)" == "N K"
+            && "\(CoreLossEdge.ironL3)" == "Fe L3")
     r.equal("EELSEdgeQuantification.defaultBackgroundWindow(onsetEV: 284) is [E_k - 50, E_k - 5] = 234...279",
             EELSEdgeQuantification.defaultBackgroundWindow(onsetEV: 284), 234...279)
     r.check("EELSEdgeQuantification.methodName names the power law, the ratio method and exSpy's dft GOS",

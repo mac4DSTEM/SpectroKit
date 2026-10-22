@@ -24,7 +24,7 @@ public nonisolated struct SpectrumDetectorSegment: Equatable, Sendable {
     public var liveTime: Double?
     public var realTime: Double?
 
-    package init(name: String, azimuthDegrees: Double? = nil, elevationDegrees: Double? = nil,
+    public init(name: String, azimuthDegrees: Double? = nil, elevationDegrees: Double? = nil,
                  solidAngle: Double? = nil, liveTime: Double? = nil, realTime: Double? = nil) {
         self.name = name; self.azimuthDegrees = azimuthDegrees; self.elevationDegrees = elevationDegrees
         self.solidAngle = solidAngle; self.liveTime = liveTime; self.realTime = realTime

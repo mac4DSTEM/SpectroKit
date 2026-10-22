@@ -90,7 +90,7 @@ public nonisolated struct ResolvedWindow: Equatable, Sendable {
         public let scale: Double
         /// The memberwise initialiser, written out so that it is `package`: the tests (a different module from here since the
         /// SpectroCore / SpectroEDX split) build these values directly; the implicit one is internal.
-        package init(left: Range<Int>, right: Range<Int>, scale: Double) {
+        public init(left: Range<Int>, right: Range<Int>, scale: Double) {
             self.left = left
             self.right = right
             self.scale = scale
@@ -100,7 +100,7 @@ public nonisolated struct ResolvedWindow: Equatable, Sendable {
     public let background: Background?
 
     /// The memberwise initialiser, written out so that it is `package` (see `Background.init`).
-    package init(signal: Range<Int>, background: Background?) {
+    public init(signal: Range<Int>, background: Background?) {
         self.signal = signal
         self.background = background
     }

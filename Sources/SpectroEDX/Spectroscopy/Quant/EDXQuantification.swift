@@ -149,8 +149,11 @@ public nonisolated enum EDXQuantification {
     /// Per-pixel quantification. `intensityMaps[e][pixel]` is element e's net intensity at a pixel (row-major, rows x columns).
     /// `navigationMask[pixel] == true` excludes the pixel (composition 0, as eXSpy's mask); `liveTimesSeconds[pixel]` is the
     /// pixel's live time (zeta and cross section; a pixel with live time <= 0 recorded nothing and fails).
+    /// `takeOffDegreesPerPixel[pixel]` replaces `setup.absorption.takeOffDegrees` at that pixel (a tilted or curved specimen, a tilt
+    /// series): it needs an absorption setting, one angle per pixel, and a pixel whose angle is not in (0, 90] degrees fails.
     public static func quantifyMaps(intensityMaps: [[Double]], rows: Int, columns: Int, setup: EDXQuantificationSetup,
-                                    navigationMask: [Bool]? = nil, liveTimesSeconds: [Double]? = nil) throws -> EDXQuantificationMaps {
+                                    navigationMask: [Bool]? = nil, liveTimesSeconds: [Double]? = nil,
+                                    takeOffDegreesPerPixel: [Double]? = nil) throws -> EDXQuantificationMaps {
         let n = intensityMaps.count
         try validate(setup, count: n)
         let pixels = rows * columns
@@ -159,6 +162,10 @@ public nonisolated enum EDXQuantification {
         }
         if let m = navigationMask, m.count != pixels { throw QuantError.countMismatch("The navigation mask must hold rows x columns values.") }
         if let t = liveTimesSeconds, t.count != pixels { throw QuantError.countMismatch("One live time per pixel.") }
+        if let a = takeOffDegreesPerPixel {
+            guard setup.absorption != nil else { throw QuantError.invalid("A take-off angle per pixel needs an absorption setting.") }
+            guard a.count == pixels else { throw QuantError.countMismatch("One take-off angle per pixel.") }
+        }
 
         var weight = [[Double]](repeating: [Double](repeating: 0, count: pixels), count: n)
         var atomic = weight
@@ -186,7 +193,8 @@ public nonisolated enum EDXQuantification {
                     if navigationMask?[p] == true { continue }
                     do {
                         out[p] = .ok(try solve((0..<n).map { intensityMaps[$0][p] }, setup: setup,
-                                               liveTime: liveTimesSeconds?[p] ?? setup.liveTimeSeconds))
+                                               liveTime: liveTimesSeconds?[p] ?? setup.liveTimeSeconds,
+                                               takeOffDegrees: takeOffDegreesPerPixel?[p]))
                     } catch {
                         out[p] = .failed((error as? LocalizedError)?.errorDescription ?? "\(error)")
                     }
@@ -250,14 +258,17 @@ public nonisolated enum EDXQuantification {
         for el in s.elements where QuantElementData.entry(el) == nil { throw QuantError.unknownElement(el) }
     }
 
-    private static func solve(_ intensities: [Double], setup s: EDXQuantificationSetup, liveTime: Double?) throws -> EDXQuantificationPixel {
+    private static func solve(_ intensities: [Double], setup s: EDXQuantificationSetup, liveTime: Double?,
+                              takeOffDegrees: Double? = nil) throws -> EDXQuantificationPixel {
         guard intensities.allSatisfy({ $0.isFinite && $0 >= 0 }) else { throw QuantError.invalid("Intensities must be finite and not negative.") }
         var absSetup: AbsorptionSetup? = nil
         var options = AbsorptionIterationOptions()
         if let a = s.absorption {
             guard let table = MassAbsorptionTable.bundled else { throw QuantError.invalid("The mass-absorption table is missing from the bundle.") }
+            let toa = takeOffDegrees ?? a.takeOffDegrees
+            guard toa > 0, toa <= 90 else { throw QuantError.grazingTakeOff(segment: "detector", degrees: toa) }
             absSetup = AbsorptionSetup(elements: s.elements, lineEnergiesKeV: a.lineEnergiesKeV,
-                                       geometry: SingleDetectorGeometry(takeOffDegrees: a.takeOffDegrees), table: table)
+                                       geometry: SingleDetectorGeometry(takeOffDegrees: toa), table: table)
             options = AbsorptionIterationOptions(convergence: a.convergencePercent, maxIterations: a.maxIterations,
                                                  criterion: a.exspySignedCriterion ? .exspySigned : .absolute)
         }

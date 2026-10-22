@@ -70,16 +70,14 @@ differ from raw SciPy where the CPU-dependent tie rule says so.
 
 ### The largest gaps, in the order the study needs them
 
-1. **A full EELS model fit** (`EELSModel` with `EELSCLEdge` components: several edges, power-law background fitted with the edges, fine
-   structure, low-loss convolution, `quantify`). What exists is one K edge (C, N or O) by the ratio method. See `docs/open-items.md`.
-2. **EELS deconvolution and the dielectric function** (`fourier_log_deconvolution`, `fourier_ratio_deconvolution`, `richardson_lucy_deconvolution`,
-   `power_law_extrapolation`, `kramers_kronig_analysis`) and **zero-loss alignment** (`align_zero_loss_peak`, `get_zero_loss_peak_mask`).
+1. **What remains of the EELS chain** (0.9.0 landed alignment, power-law extrapolation, Fourier-log and Fourier-ratio, and the multi-edge model fit on 20 K and L edges):
+   fine structure and a free onset energy in the model, `richardson_lucy_deconvolution`, `kramers_kronig_analysis`, hydrogenic and Dirac GOS, M edges. See `docs/open-items.md`.
+2. **The dielectric function** (`kramers_kronig_analysis`) and the EELS model on real data (no validation yet).
 3. **EDS calibration and model operations**: `rebin`, `get_calibration_from`, `calibrate_xray_lines`, free/fix of line parameters, the public
    background-window parameters (`line_width`, `windows_width`, `integration_window_factor`), `vacuum_mask` (the mask is an input now).
 4. **EDX fit accuracy on real Al alloys** (Mg K alpha about 300 counts low, Si 8.7 % low, sigma 5 to 12 % small; auto ID misses Mg in 37 of 38
    Al-Mg-Si files): the diagnosis needs the pure-Al standard; `docs/open-items.md` carries the cause as far as it is known.
-5. **The app-side `@testable` reach** into `PooledQuantificationInput` (`axis`, `method`, `metadata`, `regionName`, `pixelCount` are `package`) is
-   the next unwind; the neutral per-pixel API above does not need them.
+5. **The app-side `@testable` reach**: 0.9.0 opened `PooledQuantificationInput`'s fields and the window, segment and proposal initialisers; `UnlistedLineCheck.Candidate` stays `package`.
 
 ## EDS
 

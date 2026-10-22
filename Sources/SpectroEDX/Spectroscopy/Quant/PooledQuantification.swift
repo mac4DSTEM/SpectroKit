@@ -74,12 +74,12 @@ public nonisolated struct QuantificationTables: Sendable {
 
 public nonisolated struct PooledQuantificationInput: Sendable {
     public var counts: [UInt64]
-    package var axis: EnergyAxis
-    package var method: QuantificationMethod
-    package var metadata: SpectrumImageMetadata
-    package var regionName: String
-    package var pixelCount: Int
-    package var resolutionMnKaEV: Double
+    public var axis: EnergyAxis
+    public var method: QuantificationMethod
+    public var metadata: SpectrumImageMetadata
+    public var regionName: String
+    public var pixelCount: Int
+    public var resolutionMnKaEV: Double
     /// A refinement already computed for the same spectrum, elements and background (the controller caches it:
     /// it is the slow step and does not depend on the estimator, k or absorption).
     public var refinement: AxisRefinementResult?

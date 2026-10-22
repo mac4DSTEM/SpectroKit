@@ -103,15 +103,15 @@ public nonisolated struct LineWindow: Equatable, Sendable {
     public let element: String
     /// `Element_Line`, e.g. "Al_Ka"; the bare symbol when the element has no line on the axis.
     public let id: String
-    package let energy: Double
-    package let fwhm: Double
+    public let energy: Double
+    public let fwhm: Double
     public let window: ResolvedWindow?
     /// Why there is no window: no line on the axis, a window edge outside it, an empty background window.
     public let failure: String?
     public let conflicts: [WindowConflict]
 
     /// The memberwise initialiser, written out so that it is `package` (see `ResolvedWindow.Background.init`).
-    package init(element: String, id: String, energy: Double, fwhm: Double, window: ResolvedWindow?, failure: String?,
+    public init(element: String, id: String, energy: Double, fwhm: Double, window: ResolvedWindow?, failure: String?,
                  conflicts: [WindowConflict]) {
         self.element = element
         self.id = id

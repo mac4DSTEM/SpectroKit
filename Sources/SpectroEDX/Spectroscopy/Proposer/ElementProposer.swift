@@ -47,28 +47,28 @@ public nonisolated struct ElementCandidate: Equatable, Sendable {
     /// Standard deviation of the area at the fitted state (it contains the line's own Poisson variance).
     public let sigma: Double
     /// Standard deviation of the area with the candidate absent (the basis of L_C and L_D).
-    package let sigmaZero: Double
-    package let criticalLevel: Double
-    package let detectionLimit: Double
+    public let sigmaZero: Double
+    public let criticalLevel: Double
+    public let detectionLimit: Double
     public let conflicts: [LineConflict]
     /// Cu defaults to Quantify (the Q phase); everything else to Fit only.
-    package let suggestedRole: QuantificationMethod.ElementRole
+    public let suggestedRole: QuantificationMethod.ElementRole
     /// Cu only, when a hole spectrum was given: what the hole region said.
-    package let holeRegionNote: String?
+    public let holeRegionNote: String?
     /// The flank-misfit factor sigma_0 was multiplied by (>= 1; 1 = the fit's own variance unchanged).
-    package let misfit: Double
+    public let misfit: Double
 
     /// net >= L_D: the proposer's bar.
-    package var aboveDetectionLimit: Bool { net >= detectionLimit }
+    public var aboveDetectionLimit: Bool { net >= detectionLimit }
     /// L_C < net < L_D: shown as "possible", never proposed.
-    package var aboveCriticalLevel: Bool { net > criticalLevel }
-    package var isProposed: Bool { aboveDetectionLimit }
-    package var hasSumPeakQuestion: Bool { conflicts.contains { $0.kind == .sumPeak } }
+    public var aboveCriticalLevel: Bool { net > criticalLevel }
+    public var isProposed: Bool { aboveDetectionLimit }
+    public var hasSumPeakQuestion: Bool { conflicts.contains { $0.kind == .sumPeak } }
     /// How many detection limits the net is (the order in which to show candidates).
     public var significance: Double { net / detectionLimit }
 
     /// Explicit so the room's tests can state a candidate (the memberwise one is internal).
-    package init(element: String, group: String, energyKeV: Double, net: Double, sigma: Double, sigmaZero: Double,
+    public init(element: String, group: String, energyKeV: Double, net: Double, sigma: Double, sigmaZero: Double,
                  criticalLevel: Double, detectionLimit: Double, conflicts: [LineConflict],
                  suggestedRole: QuantificationMethod.ElementRole, holeRegionNote: String?, misfit: Double) {
         self.element = element; self.group = group; self.energyKeV = energyKeV; self.net = net; self.sigma = sigma
@@ -78,26 +78,26 @@ public nonisolated struct ElementCandidate: Equatable, Sendable {
 }
 
 /// A pile-up peak the fit modelled as a column of its own (no candidate sat near its energy).
-package nonisolated struct SumPeakFinding: Equatable, Sendable {
-    package let label: String
-    package let elements: [String]
-    package let energyKeV: Double
-    package let net: Double
-    package let sigmaZero: Double
-    package let detectionLimit: Double
-    package var detected: Bool { net >= detectionLimit }
+public nonisolated struct SumPeakFinding: Equatable, Sendable {
+    public let label: String
+    public let elements: [String]
+    public let energyKeV: Double
+    public let net: Double
+    public let sigmaZero: Double
+    public let detectionLimit: Double
+    public var detected: Bool { net >= detectionLimit }
 }
 
 public nonisolated struct ProposalResult: Sendable {
     /// One per pool element with a line group in the fitted range, strongest first.
-    package let candidates: [ElementCandidate]
-    package let sumPeaks: [SumPeakFinding]
+    public let candidates: [ElementCandidate]
+    public let sumPeaks: [SumPeakFinding]
     public let refused: [(element: String, reason: String)]
-    package let currie: Currie
+    public let currie: Currie
     /// The fit settings and warnings that shaped the result, in plain words (the footer).
     public let notes: [String]
-    package let passes: Int
-    package let settled: Bool
+    public let passes: Int
+    public let settled: Bool
     /// Pearson reduced chi-square of the settled fit these candidates came from (R7, wp3e F3.3: shown beside every suggestion;
     /// a read of the fit, nothing here changes it). nil for a hand-built result.
     public let reducedChiSquared: Double?
@@ -105,10 +105,10 @@ public nonisolated struct ProposalResult: Sendable {
     public var proposed: [ElementCandidate] { candidates.filter { $0.isProposed && !$0.hasSumPeakQuestion } }
     /// At or above L_D but sitting on a pile-up energy of the detected parents: "sum peak or this element?", not a finding.
     public var sumPeakQuestions: [ElementCandidate] { candidates.filter { $0.isProposed && $0.hasSumPeakQuestion } }
-    package var possible: [ElementCandidate] { candidates.filter { $0.aboveCriticalLevel && !$0.isProposed } }
+    public var possible: [ElementCandidate] { candidates.filter { $0.aboveCriticalLevel && !$0.isProposed } }
 
     /// Explicit so the room's tests can state a result (the memberwise one is internal).
-    package init(candidates: [ElementCandidate], sumPeaks: [SumPeakFinding], refused: [(element: String, reason: String)],
+    public init(candidates: [ElementCandidate], sumPeaks: [SumPeakFinding], refused: [(element: String, reason: String)],
                  currie: Currie, notes: [String], passes: Int, settled: Bool, reducedChiSquared: Double? = nil) {
         self.reducedChiSquared = reducedChiSquared
         self.candidates = candidates; self.sumPeaks = sumPeaks; self.refused = refused; self.currie = currie

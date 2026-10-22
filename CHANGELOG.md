@@ -2,6 +2,21 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.9.0 (2026-10-22) — EELS task 16: alignment, deconvolution and the edge model
+
+SpectroEELS grows from the t/lambda map and one K edge to the study's EELS chain, all against exSpy 0.3.2 / HyperSpy 2.4.0 (`docs/parity.md`, `docs/design/eels-task-16.md`).
+
+- **Zero-loss alignment:** `EELSAlignment.alignZeroLossPeak`, `.zeroLossPeakCentre`, `.zeroLossPeakMask`, `.estimateShift`, `.shift` (calibrate, subpixel, crop, mask, signal range, also-align).
+- **Spectrum operations:** `EELSSpectrumOps.powerLawExtrapolation` (binned axis) and `.hanningTaper`.
+- **Deconvolution:** `EELSDeconvolution.fourierLog`, `.fourierRatio`, `.optimalFFTSize`, `.peakWidth`, with their option and result types; quirks of exSpy kept and pinned. Richardson-Lucy is not in this release.
+- **Edge model:** `EELSModelFit.fit`, `.fitBackground`, `.twoAreaBackground` on the new K and L edges, `EELSModelResult.modelCurve(pixel:)` and `.quantifyText(pixel:)`; `EELSQuantification.composition` (at% and wt%); `sum(mask:)` on `LowLossSpectrumImage` and `CoreLossSpectrumImage`. Intensities within 3e-5 of exSpy's converged fit. Deviation: an exact minimiser (variable projection) instead of Levenberg-Marquardt; no fine structure, no free onset energy.
+- **Edges:** `CoreLossEdge` now carries 20 bundled edges: K of C, N, O, Mg, Al, Si and the L edges of Mg, Al, Si, Fe, Cu (`CoreLossEdge.bundled(_:_:)`, public initialiser, `family`). The tables are the same dft GOSH file, bit-exact.
+- **EDX (the 0.8.3 asks):** `EDXQuantification.quantifyMaps(takeOffDegreesPerPixel:)`; public initialisers and readbacks for tests and replay: `ResolvedWindow`, `ResolvedWindow.Background`, `LineWindow`, `SpectrumDetectorSegment`, `ElementCandidate`, `SumPeakFinding`, `ProposalResult`, and the `PooledQuantificationInput` fields.
+- **Dependency:** SpectroKit now depends on ImagoKit `"0.6.1"..<"1.0.0"` (ImagoCore's exact-length FFT, used by the deconvolutions).
+
+### Migration
+`CoreLossEdge.bundled` is no longer `[C K, N K, O K]` but 20 edges (the first three are unchanged); code that compared the whole list or assumed K1 only must be adjusted. `EELSUnavailable`, `EELSDeconvolutionError` and `EELSModelError` are new enums; nothing was removed or renamed. A consumer's `swift build` now also resolves ImagoKit.
+
 ## 0.8.2 (2026-10-21) — the pooled fit's k, line energies and take-off angle are public
 
 Additive public API; no number moves. An app can now build a per-pixel `EDXQuantificationSetup` (`quantify`, `quantifyMaps`) from the very k-factors, line energies and detector geometry the pooled fit used, computed k and absorption included.
