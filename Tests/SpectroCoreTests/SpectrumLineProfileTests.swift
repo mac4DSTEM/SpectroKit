@@ -103,4 +103,18 @@ struct SpectrumLineProfileTests {
         }
         #expect(throws: SpectrumLineProfileError.self) { try SpectrumLineProfile.compute(image: img, path: [a, b], width: 1, spacing: 1e-9) }
     }
+
+    @Test func memoryHungryRequestsAreRefusedBeforeAllocating() throws {
+        // 1e6 steps x 4096 channels would be 32 GB of accumulators
+        let wide = DenseSpectrumImage(ny: 1, nx: 2, channels: 4096, counts: [UInt32](repeating: 0, count: 2 * 4096))
+        #expect(throws: SpectrumLineProfileError.self) {
+            try SpectrumLineProfile.compute(image: wide, path: [PixelPosition(row: 0, column: 0), PixelPosition(row: 0, column: 1000)],
+                                            width: 1, spacing: 0.001)
+        }
+        // a bilinear width of 1e8 would loop 1e8 times per step
+        #expect(throws: SpectrumLineProfileError.self) {
+            try SpectrumLineProfile.compute(image: Self.cube(), path: [PixelPosition(row: 5, column: 2), PixelPosition(row: 5, column: 20)],
+                                            width: 1e8, weighting: .bilinear)
+        }
+    }
 }

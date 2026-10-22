@@ -81,7 +81,8 @@ public struct SpectrumLineProfile: Sendable, Equatable {
 
     /// One pooled spectrum per step along `path`, `width` pixels wide, a step every `spacing` pixels of arc length.
     /// Throws `SpectrumLineProfileError` for fewer than two points, a non-finite coordinate, a zero-length path,
-    /// a width or spacing that is not positive and finite, or more than 10 million steps.
+    /// a width or spacing that is not positive and finite, more than 10 million steps or 2^28 values (steps x channels), or a
+    /// `.bilinear` width over four times the scan's larger side.
     public static func compute(image: some SpectrumImage, path: [PixelPosition], width: Double, spacing: Double = 1,
                                weighting: LineProfileWeighting = .hard,
                                reduction: LineProfileReduction = .mean) throws -> SpectrumLineProfile {
@@ -113,6 +114,9 @@ public struct SpectrumLineProfile: Sendable, Equatable {
         let nSteps = Int(stepsD)
         let reader = PixelReader(image)
         let ny = image.ny, nx = image.nx, ch = image.channels
+        guard stepsD * Double(ch) <= Double(1 << 28) else {
+            throw SpectrumLineProfileError(description: "\(nSteps) steps of \(ch) channels are more than 2^28 values; use a larger spacing.")
+        }
 
         var acc = [[Double]](repeating: [Double](repeating: 0, count: ch), count: nSteps)
         var counts = [Int](repeating: 0, count: nSteps)
@@ -171,6 +175,9 @@ public struct SpectrumLineProfile: Sendable, Equatable {
                 }
             }
         case .bilinear:
+            guard width <= 4 * Double(max(ny, nx)) else {
+                throw SpectrumLineProfileError(description: "The width \(width) is more than four times the larger side of the \(ny) x \(nx) scan.")
+            }
             let n = max(1, Int(width.rounded()))
             for k in 0..<nSteps {
                 let g = segs[stepSeg[k]]
