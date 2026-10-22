@@ -72,10 +72,10 @@ public nonisolated enum SpectroscopyExport {
         return String(allowed)
     }
 
-    private static func num(_ v: Double) -> String { v.isFinite ? String(format: "%.6g", v) : "" }
+    package static func num(_ v: Double) -> String { v.isFinite ? String(format: "%.6g", v) : "" }
 
     /// RFC 4180: a field with a comma, quote or line break is quoted, quotes doubled.
-    private static func field(_ s: String) -> String {
+    package static func field(_ s: String) -> String {
         guard s.contains(where: { $0 == "," || $0 == "\"" || $0 == "\n" || $0 == "\r" }) else { return s }
         return "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\""
     }
