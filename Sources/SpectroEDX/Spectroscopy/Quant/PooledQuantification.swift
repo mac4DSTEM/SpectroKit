@@ -269,13 +269,17 @@ public nonisolated enum PooledQuantifier {
         var sumEscapeLines: [String] = []
         do {
             if let model = input.sumEscape, !model.isOff {
-                let r = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings, model: model)
+                let r = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings, model: model,
+                                                    escapeRatioWarning: policy.fit.escapeRatioWarning)
                 fit = r.fit; sumEscapeLines = r.parameters
             } else {
                 fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings, escapeRatioWarning: policy.fit.escapeRatioWarning)
             }
         }
-        catch { throw QuantificationRefusal("The fit could not run: \(error).") }
+        catch {
+            let why = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+            throw QuantificationRefusal("The fit could not run: \(why).")
+        }
         // The fit appends the weak-line bias note to every continuum fit; it is a statement about a weak line beside Al K-alpha
         // (measured at Mg K-alpha on synthetic data), so it is kept only when that situation is in this result.
         warnings += fit.warnings.filter { $0 != ContinuumForm.weakLineBiasNote }

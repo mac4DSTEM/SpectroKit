@@ -123,7 +123,8 @@ public nonisolated enum EDSSumEscapeFit {
     public static let validation = "none"
 
     public static func run(counts: [Double], axis: EnergyAxis, settings: FitSettings, model: SumEscapeModel,
-                           channels explicit: Range<Int>? = nil) throws -> SumEscapeResult {
+                           channels explicit: Range<Int>? = nil,
+                           escapeRatioWarning: Double = FitPolicy.default.escapeRatioWarning) throws -> SumEscapeResult {
         if model.sumPeaks, model.parentCount < 1 { throw SumEscapeError.invalidParentCount(model.parentCount) }
         if let c = model.sumCoefficient, !(c.isFinite && c >= 0) {
             throw SumEscapeError.invalidCoefficient("The pile-up coefficient must be finite and not negative; \(c) was given.")
@@ -131,7 +132,7 @@ public nonisolated enum EDSSumEscapeFit {
         if let f = model.escapeFraction, !(f.isFinite && f >= 0 && f <= 1) {
             throw SumEscapeError.invalidCoefficient("The escape fraction must lie in 0...1; \(f) was given.")
         }
-        let baseline = try EDSFit.run(counts: counts, axis: axis, settings: settings, channels: explicit)
+        let baseline = try EDSFit.run(counts: counts, axis: axis, settings: settings, channels: explicit, escapeRatioWarning: escapeRatioWarning)
         if model.isOff {
             return SumEscapeResult(fit: baseline, baseline: baseline, sumCoefficient: nil, sumCoefficientSigma: nil,
                                    sumCoefficientAtBound: false, sumPeaks: [], escapeFraction: nil, escapeFractionSigma: nil,
@@ -271,7 +272,8 @@ public nonisolated enum EDSSumEscapeFit {
 
         // Final fit with covariance on the linearised design at the converged point.
         let dFinal = linearised(design, c: c, f: f, area: area)
-        var fit = EDSFit.fit(design: dFinal, model: lineModel, counts: counts, settings: fitSettings, computeCovariance: true)
+        var fit = EDSFit.fit(design: dFinal, model: lineModel, counts: counts, settings: fitSettings, computeCovariance: true,
+                            escapeRatioWarning: escapeRatioWarning)
         area = fit.values
 
         // Components as run.

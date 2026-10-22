@@ -224,6 +224,20 @@ struct QuantificationPolicyTests {
         #expect(hw.contains("exceeds 5 %") && hw.contains("the 5 % flag"), "\(hw)")
     }
 
+    @Test func testSumEscapeKeepsTheEscapeWarningLevelAndTheTypedErrorText() throws {
+        let c = Self.counts(areas: ["Al_Ka": 30000, "Cu_Ka": 20000], escape: ["Cu_Ka": 0.03])
+        let els: [(String, QuantificationMethod.ElementRole)] = [("Al", .quantify), ("Cu", .quantify)]
+        var inp = Self.input(c, method: Self.method(els, locked: true), policy: Self.fit(FitPolicy(escapeRatioWarning: 0.001)))
+        inp.sumEscape = SumEscapeModel(sumPeaks: true)
+        let q = try PooledQuantifier.run(inp, tables: Self.tables)
+        let w = try #require(q.fit.warnings.first { $0.contains("Si-escape/parent ratio") })
+        #expect(w.contains("exceeds 0.1 %"), "\(w)")
+        // A refused sum/escape model says why in words, not as an enum case dump.
+        inp.sumEscape = SumEscapeModel(sumPeaks: true, parentCount: 0)
+        do { _ = try PooledQuantifier.run(inp, tables: Self.tables); Issue.record("expected a refusal") }
+        catch { #expect(error.localizedDescription.contains("at least one parent line group"), "\(error.localizedDescription)") }
+    }
+
     // MARK: F8 - F9 the polynomial bound and the Poisson iteration
 
     @Test func testPolynomialOrderBoundAndPoissonIteration() throws {
