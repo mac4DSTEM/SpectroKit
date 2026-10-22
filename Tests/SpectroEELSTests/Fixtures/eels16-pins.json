@@ -7,7 +7,7 @@
   "numpy": "2.5.4",
   "python": "3.13.16",
   "scipy": "1.18.1",
-  "scriptSha256": "192d72478088a4edf94040f88b1da1d1254bd844f11309de7aabd7491ff72b11"
+  "scriptSha256": "1e9cc77b2609e732df6f5c26dae4bae39107d86bb8bfc41f0f0fc189ea65d262"
  },
  "files": {
   "fl-add-zlp": {
@@ -554,7 +554,7 @@
    "default": {
     "channels": 300,
     "coreLossChannelsAfterExtrapolation": 400,
-    "fftSize": 2100,
+    "fftSize": 2000,
     "file": "fr-default",
     "fwhmEV": 0.900029897766919,
     "i0": [
@@ -606,7 +606,7 @@
    "fixed-threshold-6": {
     "channels": 300,
     "coreLossChannelsAfterExtrapolation": 400,
-    "fftSize": 2100,
+    "fftSize": 2000,
     "file": "fr-fixed-threshold-6",
     "fwhmEV": 0.900029897766919,
     "i0": [
@@ -641,7 +641,7 @@
    "fwhm-1.5": {
     "channels": 300,
     "coreLossChannelsAfterExtrapolation": 400,
-    "fftSize": 2100,
+    "fftSize": 2000,
     "file": "fr-fwhm-1.5",
     "fwhmEV": 1.5,
     "i0": [
@@ -750,7 +750,7 @@
    "no-extrap-ll": {
     "channels": 300,
     "coreLossChannelsAfterExtrapolation": 400,
-    "fftSize": 2000,
+    "fftSize": 1920,
     "file": "fr-no-extrap-ll",
     "fwhmEV": 0.900029897766919,
     "i0": [

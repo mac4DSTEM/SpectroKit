@@ -39,6 +39,8 @@ public nonisolated enum EELSUnavailable: String, Error, Sendable, Equatable {
     case divisionByZero
     /// The half-maximum has not exactly two roots, so no width (exSpy `estimate_peak_width` gives NaN).
     case noTwoRoots
+    /// The zero-loss threshold has no value for this pixel (no inflexion found, or the threshold lies outside the axis).
+    case noThreshold
 }
 
 public nonisolated enum EELSAlignmentError: Error, Equatable, Sendable {
@@ -62,9 +64,15 @@ public nonisolated enum EELSDeconvolutionError: Error, Equatable, Sendable {
     case shapeMismatch(expected: Int, got: Int)
     case kernelSizeMismatch(expected: Int, got: Int)
     case invalidFWHM(Double)
+    /// `estimate_peak_width`'s `factor` must lie strictly between 0 and 1.
+    case invalidPeakFactor(Double)
+    /// The first low-loss spectrum has no two-root half-maximum, so no Gaussian width can be estimated (pass `fwhmEV`).
+    case noPeakWidth
     case invalidIterations(Int)
     case extrapolationWindowTooWide(window: Int, channels: Int)
     case tooFewChannels(Int)
+    /// Accelerate could not set up a transform of this length.
+    case fftSetup(size: Int)
 }
 
 public nonisolated enum EELSModelError: Error, Equatable, Sendable {

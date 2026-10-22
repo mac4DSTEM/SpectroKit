@@ -371,7 +371,7 @@ for name, kw in {"default": {}, "fixed-threshold-6": dict(threshold=6.0), "fwhm-
     ll2 = l.power_law_extrapolation(window_size=100, extrapolation_size=100) if kw.get("extrapolate_lowloss", True) else l.deepcopy()
     cl2 = c.power_law_extrapolation(window_size=20, extrapolation_size=100) if kw.get("extrapolate_coreloss", True) else c.deepcopy()
     tap_ll, tap_cl = ll2.hanning_taper(), cl2.hanning_taper()
-    size = optimal_fft_size(ll2.axes_manager.signal_axes[0].size + cl2.axes_manager.signal_axes[0].size - 1)
+    size = optimal_fft_size(ll2.axes_manager.signal_axes[0].size + c.axes_manager.signal_axes[0].size - 1)   # exSpy sizes from the ORIGINAL core loss (`self`), not the extrapolated copy
     thr = kw.get("threshold")
     thr_used = l.estimate_elastic_scattering_threshold() if thr is None else None
     I0 = ll2.estimate_elastic_scattering_intensity(threshold=thr_used if thr is None else thr)

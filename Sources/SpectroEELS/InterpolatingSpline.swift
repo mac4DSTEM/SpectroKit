@@ -51,6 +51,63 @@ package nonisolated struct InterpolatingSpline: Sendable {
         return s
     }
 
+    /// All zeros of the spline inside [x[0], x[n-1]], increasing (FITPACK `sproot` on a cubic: the roots of each knot interval's polynomial,
+    /// those shared by two intervals once). Each interval's cubic is rebuilt from four evaluations, split at its critical points and bisected,
+    /// so a pair of roots inside one interval is found as well as a single crossing. A tangent touch (double root) is not a crossing and is missed.
+    package func roots() -> [Double] {
+        let k = Self.degree, nt = coefficients.count
+        var found = [Double]()
+        for l in k ..< nt where knots[l + 1] > knots[l] {
+            let a = knots[l], h = knots[l + 1] - a
+            func value(_ u: Double) -> Double {
+                let hh = Self.basis(knots, k: k, x: a + u * h, interval: l)
+                var sum = 0.0
+                for i in 0 ... k { sum += coefficients[l - k + i] * hh[i] }
+                return sum
+            }
+            // The two knot values are computed once per knot (`self(x)`), so the neighbouring intervals see the same number and a root
+            // sitting on a knot cannot fall between two rounding errors.
+            let f0 = self(a), f1 = value(1.0 / 3), f2 = value(2.0 / 3), f3 = self(knots[l + 1])
+            let c1 = (-11 * f0 + 18 * f1 - 9 * f2 + 2 * f3) / 2
+            let c2 = (18 * f0 - 45 * f1 + 36 * f2 - 9 * f3) / 2
+            let c3 = (-9 * f0 + 27 * f1 - 27 * f2 + 9 * f3) / 2
+            func p(_ u: Double) -> Double { f0 + u * (c1 + u * (c2 + u * c3)) }
+            var cuts = [0.0]
+            let qa = 3 * c3, qb = 2 * c2, qc = c1
+            if qa != 0 {
+                let disc = qb * qb - 4 * qa * qc
+                if disc > 0 {
+                    let r = disc.squareRoot()
+                    for u in [(-qb - r) / (2 * qa), (-qb + r) / (2 * qa)].sorted() where u > 0 && u < 1 { cuts.append(u) }
+                }
+            } else if qb != 0 {
+                let u = -qc / qb
+                if u > 0 && u < 1 { cuts.append(u) }
+            }
+            cuts.append(1)
+            for i in 0 ..< cuts.count - 1 {
+                var lo = cuts[i], hi = cuts[i + 1]
+                var plo = i == 0 ? f0 : p(lo), phi = i == cuts.count - 2 ? f3 : p(hi)
+                if plo == 0 { found.append(a + lo * h); continue }
+                if phi == 0 { found.append(a + hi * h); continue }
+                guard (plo < 0) != (phi < 0) else { continue }
+                for _ in 0 ..< 200 {
+                    let mid = 0.5 * (lo + hi)
+                    if mid == lo || mid == hi { break }
+                    let pm = p(mid)
+                    if pm == 0 { lo = mid; hi = mid; break }
+                    if (pm < 0) == (plo < 0) { lo = mid; plo = pm } else { hi = mid; phi = pm }
+                }
+                found.append(a + 0.5 * (lo + hi) * h)
+            }
+        }
+        found.sort()
+        var unique = [Double]()
+        let span = knots[nt] - knots[0]
+        for r in found where unique.last.map({ r - $0 > 1e-12 * span }) ?? true { unique.append(r) }
+        return unique
+    }
+
     /// `_find_interval` (scipy `_bspl.pyx` / `__fitpack.h`) with extrapolation: l in [k, n-1] with t[l] <= x < t[l+1];
     /// x below t[k] gives k, x at or above t[n] gives n - 1.
     private static func interval(_ t: [Double], k: Int, x: Double, coefficientCount n: Int) -> Int {

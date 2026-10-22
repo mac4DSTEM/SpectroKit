@@ -1,5 +1,5 @@
 {
-  "originHash" : "2d0019780e6ba17e0e60e5c9bd9d5093509e2e22e44d9e6d6114d5088cb1fed4",
+  "originHash" : "47fb35af32d934d15d5d3ab8d663900e6c439d54cb4cb432a5fd4ff1fefb0287",
   "pins" : [
     {
       "identity" : "formatokit",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "80b11b7079ceb9b4199dd594a629f00f9e9c81c2",
         "version" : "0.7.0"
+      }
+    },
+    {
+      "identity" : "imagokit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mac4DSTEM/ImagoKit",
+      "state" : {
+        "revision" : "dd2db86c9ea4d3d599f3f1c3641ddc1130e3be3e",
+        "version" : "0.6.1"
       }
     }
   ],

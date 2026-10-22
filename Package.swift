@@ -25,6 +25,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/mac4DSTEM/FormatoKit", "0.4.0"..<"1.0.0"),
+        // SpectroEELS runs its Fourier deconvolutions on ImagoCore's exact-length FFT (task 16, decision D25); 0.6.1 is the first tag with it.
+        .package(url: "https://github.com/mac4DSTEM/ImagoKit", "0.6.1"..<"1.0.0"),
     ],
     targets: [
         // Plain-C wrappers over the four Accelerate LAPACK routines `FitLinearAlgebra` calls. ACCELERATE_NEW_LAPACK is
@@ -60,7 +62,7 @@ let package = Package(
         // (CC-BY-4.0, NOTICE) are its `Bundle.module` resources (bundle `SpectroKit_SpectroEELS`).
         .target(
             name: "SpectroEELS",
-            dependencies: ["SpectroCore"],
+            dependencies: ["SpectroCore", .product(name: "ImagoCore", package: "ImagoKit")],
             resources: [.copy("Resources/GOS")],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
