@@ -41,6 +41,10 @@ public nonisolated enum EELSUnavailable: String, Error, Sendable, Equatable {
     case noTwoRoots
     /// The zero-loss threshold has no value for this pixel (no inflexion found, or the threshold lies outside the axis).
     case noThreshold
+    /// The edge model could not be fitted at this pixel (the least-squares solve failed or the spectrum has no support).
+    case fitFailed
+    /// A composition cannot be formed: the fitted amounts sum to zero or an element's amount is missing.
+    case noComposition
 }
 
 public nonisolated enum EELSAlignmentError: Error, Equatable, Sendable {
@@ -82,4 +86,17 @@ public nonisolated enum EELSModelError: Error, Equatable, Sendable {
     case lowLossShapeMismatch(expected: Int, got: Int)
     case backgroundWindowEmpty
     case fitDidNotConverge(pixel: Int)
+    /// The low-loss channel width differs from the core loss's, so exSpy's convolution would shift the edge.
+    case lowLossScaleMismatch(coreEV: Double, lowEV: Double)
+    /// The low-loss axis has no zero-loss channel (exSpy's `value2index(0)` raises).
+    case lowLossAxisHasNoZero
+    /// `windowEV` or the pre-edge window cannot be placed on the axis (too few channels below the first edge).
+    case preEdgeWindowTooNarrow(channels: Int)
+    case invalidMicroscope
+    case crossSectionFailed(String)
+    /// A symbol passed to `composition` has no fitted edge.
+    case symbolNotFitted(String)
+    case invalidExponentRange
+    case maskShapeMismatch(expected: Int, got: Int)
+    case emptyMask
 }
