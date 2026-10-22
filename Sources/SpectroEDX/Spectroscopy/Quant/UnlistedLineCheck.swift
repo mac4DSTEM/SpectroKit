@@ -248,7 +248,7 @@ public nonisolated enum UnlistedLineChecker {
         // axis and width; nets from the fit's group values.
         let fs = q.fitSettings
         let listed = EDSLineModel.build(elements: fs.elements, axis: q.usedAxis, beamEnergy: fs.beamEnergy,
-                                        resolutionMnKaEV: fs.resolutionMnKaEV, escapePeaks: fs.escapePeaks).groups
+                                        resolutionMnKaEV: fs.resolutionMnKaEV, escapePeaks: fs.escapePeaks, lineTail: fs.lineTail).groups
         var nets: [String: Double] = [:]
         for (id, v) in zip(q.fit.groupIDs, q.fit.values) { nets[id] = v }
         var edges: [Double] = []

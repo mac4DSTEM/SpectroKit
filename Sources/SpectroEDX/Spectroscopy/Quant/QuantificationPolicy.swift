@@ -56,6 +56,8 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     public var continuumEfficiency: DetectorLayers?
     /// Fit a Si-escape copy of every line group above the Si K edge with an area of its own. Default true; false is the reference's.
     public var escapePeaks: Bool
+    /// An opt-in low-energy tail on every line of the fit (`LineTail`). Default nil: Gaussians, every number unchanged.
+    public var lineTail: LineTail?
     /// Largest order of the whole-range polynomial background (`QuantificationMethod.polynomialOrder` is clamped to 0...this). Default 8.
     public var maximumPolynomialOrder: Int
     /// Poisson maximum likelihood: iteration cap, tolerance and the floor of the model. Default 200, 1e-9, 1e-6.
@@ -70,12 +72,14 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                 continuumEdges: [Double] = [FitPolicy.alKEdgeKeV], continuumNonNegative: Bool = true,
                 continuumEfficiency: DetectorLayers? = nil, escapePeaks: Bool = true, maximumPolynomialOrder: Int = 8,
                 irls: IRLSSettings = IRLSSettings(), escapeRatioWarning: Double = 0.05,
-                axisRefinement: AxisRefinementSettings = AxisRefinementSettings()) {
+                axisRefinement: AxisRefinementSettings = AxisRefinementSettings(),
+                lineTail: LineTail? = nil) {
         self.fitFromKeV = fitFromKeV; self.defaultUpperLimitKeV = defaultUpperLimitKeV
         self.continuumOrders = continuumOrders; self.continuumEdges = continuumEdges
         self.continuumNonNegative = continuumNonNegative; self.continuumEfficiency = continuumEfficiency
         self.escapePeaks = escapePeaks; self.maximumPolynomialOrder = maximumPolynomialOrder
         self.irls = irls; self.escapeRatioWarning = escapeRatioWarning; self.axisRefinement = axisRefinement
+        self.lineTail = lineTail
     }
 
     /// The Al K absorption edge, keV (X-ray Data Booklet, Table 1-1): the default continuum split.

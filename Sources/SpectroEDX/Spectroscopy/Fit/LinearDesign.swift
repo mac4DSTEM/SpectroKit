@@ -77,7 +77,7 @@ package nonisolated struct LinearDesign: Sendable {
         func support(_ v: [Double]) -> Bool { (v.max() ?? 0) >= 1e-8 }
 
         for (g, group) in model.groups.enumerated() {
-            var v = EDSLineModel.column(of: group.lines, energies: energies, scale: axis.scale)
+            var v = EDSLineModel.column(of: group.lines, energies: energies, scale: axis.scale, tail: model.lineTail)
             for s in shapes.shapes {
                 if case .lineAmplitude(let target, let f) = s.tie, target == group.id {
                     precondition(s.profile.count == axis.size, "reference profile must have one value per channel")
@@ -89,7 +89,7 @@ package nonisolated struct LinearDesign: Sendable {
             area.append(Column(kind: .line(group: g), name: group.id, values: v, signed: false, supported: ok))
         }
         for (g, group) in model.groups.enumerated() where !group.escapes.isEmpty {
-            var v = EDSLineModel.column(of: group.escapes, energies: energies, scale: axis.scale)
+            var v = EDSLineModel.column(of: group.escapes, energies: energies, scale: axis.scale, tail: model.lineTail)
             let ok = support(v)
             if !ok { v = [Double](repeating: 0, count: n) }
             area.append(Column(kind: .escape(group: g), name: group.id + " escape", values: v, signed: false, supported: ok))

@@ -25,14 +25,17 @@ public nonisolated struct FitSettings: Sendable, Equatable {
     public var escapePeaks: Bool = true
     package var referenceShapes: ReferenceShapes = .none
     package var method: FitMethod = .leastSquares
+    /// Opt-in low-energy tail on every line, escape and sum peak; nil (default) = Gaussians, every number unchanged.
+    public var lineTail: LineTail? = nil
 
     package init(elements: [String], resolutionMnKaEV: Double, beamEnergy: Double,
                  fitFrom: Double? = nil, fitTo: Double? = nil, background: FitBackground,
                  escapePeaks: Bool = true, referenceShapes: ReferenceShapes = .none,
-                 method: FitMethod = .leastSquares) {
+                 method: FitMethod = .leastSquares, lineTail: LineTail? = nil) {
         self.elements = elements; self.resolutionMnKaEV = resolutionMnKaEV; self.beamEnergy = beamEnergy
         self.fitFrom = fitFrom; self.fitTo = fitTo; self.background = background
         self.escapePeaks = escapePeaks; self.referenceShapes = referenceShapes; self.method = method
+        self.lineTail = lineTail
     }
 
     /// The upper end of the default fitted range, keV (WP3c, docs/archive/v5/wp3c-fit-range-preregistration-2026-10-06.md).
@@ -67,7 +70,7 @@ public nonisolated struct FitSettings: Sendable, Equatable {
                     background: .continuum(ContinuumForm(beamEnergy: beamEnergy, edges: policy.continuumEdges,
                                                          orders: policy.continuumOrders, nonNegative: policy.continuumNonNegative,
                                                          efficiency: efficiency)),
-                    escapePeaks: policy.escapePeaks)
+                    escapePeaks: policy.escapePeaks, lineTail: policy.lineTail)
     }
 }
 
@@ -111,6 +114,8 @@ public nonisolated struct EDSFitResult: FittedAmplitudes, Sendable {
     public var methodLabel: String
     package var referenceShapesLabel: String
     package var escapeLabel: String
+    /// "line shape: Gaussian" or the Gaussian + tail with its numbers and source.
+    public var lineShapeLabel: String
     /// The background as run, named (the continuum form and orders, or the parity polynomial).
     public var backgroundLabel: String
     /// How the solver ended: "converged", "stationary (no deviance decrease, KKT satisfied)", "cap reached", "stalled (KKT violated)".
@@ -149,7 +154,8 @@ package nonisolated enum EDSFit {
         let channels = explicit ?? axis.fitChannels(from: settings.fitFrom, to: settings.fitTo)
         guard !channels.isEmpty else { throw EDSFitError.noChannels }
         let model = EDSLineModel.build(elements: settings.elements, axis: axis, beamEnergy: settings.beamEnergy,
-                                       resolutionMnKaEV: settings.resolutionMnKaEV, escapePeaks: settings.escapePeaks)
+                                       resolutionMnKaEV: settings.resolutionMnKaEV, escapePeaks: settings.escapePeaks,
+                                       lineTail: settings.lineTail)
         try validate(settings.referenceShapes, axis: axis, model: model)
         let design = LinearDesign.build(model: model, axis: axis, channels: channels, background: settings.background,
                                         shapes: settings.referenceShapes, counts: counts)
@@ -343,7 +349,7 @@ package nonisolated enum EDSFit {
             negativeModelChannels: mu.reduce(0) { $0 + ($1 < 0 ? 1 : 0) },
             degreesOfFreedom: dof, reducedChiSquared: rss / dofD, pearsonReducedChiSquared: pearson / dofD,
             deviance: dev, reducedDeviance: dev / dofD,
-            methodLabel: label, referenceShapesLabel: settings.referenceShapes.label, escapeLabel: escLabel,
+            methodLabel: label, referenceShapesLabel: settings.referenceShapes.label, escapeLabel: escLabel, lineShapeLabel: LineTail.label(settings.lineTail),
             backgroundLabel: bgLabel, exit: exit, warnings: warnings, droppedLines: model.droppedLines, escapeRatios: escRatios,
             iterations: iterations, converged: converged, irls: irls, devianceHistory: history)
     }

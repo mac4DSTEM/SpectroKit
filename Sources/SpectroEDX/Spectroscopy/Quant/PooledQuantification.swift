@@ -236,6 +236,7 @@ public nonisolated enum PooledQuantifier {
             }
             s.method = method.estimator == .leastSquares ? .leastSquares : .poissonML(policy.fit.irls)
             s.fitTo = range(axis).toKeV
+            s.lineTail = policy.fit.lineTail
             return s
         }
 
@@ -292,7 +293,7 @@ public nonisolated enum PooledQuantifier {
         progress?(0.95)
         // Plot curves: the model, and the background as the fitted continuum columns.
         let lineModel = EDSLineModel.build(elements: active, axis: axis, beamEnergy: beam, resolutionMnKaEV: resolution,
-                                           escapePeaks: fitSettings.escapePeaks)
+                                           escapePeaks: fitSettings.escapePeaks, lineTail: fitSettings.lineTail)
         let design = LinearDesign.build(model: lineModel, axis: axis, channels: fit.channels, background: fitSettings.background,
                                         shapes: fitSettings.referenceShapes, counts: counts)
         var plotModel = [Double](repeating: 0, count: axis.size), plotBackground = plotModel
@@ -376,7 +377,7 @@ public nonisolated enum PooledQuantifier {
         let quality = isML ? fit.reducedDeviance : fit.pearsonReducedChiSquared
         let qualityLabel = isML ? "reduced deviance" : "\u{03C7}\u{00B2}\u{1D63} (Pearson)"
 
-        var footer = ["\(fit.methodLabel) \u{00B7} \(fit.backgroundLabel) \u{00B7} \(fit.escapeLabel)"]
+        var footer = ["\(fit.methodLabel) \u{00B7} \(fit.backgroundLabel) \u{00B7} \(fit.escapeLabel)" + (fit.lineShapeLabel == LineTail.label(nil) ? "" : " \u{00B7} \(fit.lineShapeLabel)")]
         if locked { footer.append("energy axis: the file's (locked)") }
         else if let r = refinement {
             footer.append(String(format: "energy axis: file %.3f keV + %.4f keV/ch \u{2192} refined %+.1f eV, gain %+.3f %%, FWHM(Mn K\u{03B1}) %.0f eV%@",

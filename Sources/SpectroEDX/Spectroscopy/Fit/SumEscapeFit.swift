@@ -144,7 +144,7 @@ public nonisolated enum EDSSumEscapeFit {
         var s = settings
         if model.commonEscapeFraction { s.escapePeaks = true }   // the line model needs the escape lists; the free columns are removed below
         let lineModel = EDSLineModel.build(elements: s.elements, axis: axis, beamEnergy: s.beamEnergy,
-                                           resolutionMnKaEV: s.resolutionMnKaEV, escapePeaks: s.escapePeaks)
+                                           resolutionMnKaEV: s.resolutionMnKaEV, escapePeaks: s.escapePeaks, lineTail: s.lineTail)
         var design = LinearDesign.build(model: lineModel, axis: axis, channels: channels, background: s.background,
                                         shapes: s.referenceShapes, counts: counts)
         if model.commonEscapeFraction {
@@ -172,7 +172,7 @@ public nonisolated enum EDSSumEscapeFit {
                 guard e < s.beamEnergy else { continue }
                 let w = XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: e)
                     ?? (la.fwhm * la.fwhm + lb.fwhm * lb.fwhm).squareRoot()
-                let col = EDSLineModel.column(of: [FitLine(id: "sum", energy: e, weight: 1, fwhm: w)], energies: energies, scale: axis.scale)
+                let col = EDSLineModel.column(of: [FitLine(id: "sum", energy: e, weight: 1, fwhm: w)], energies: energies, scale: axis.scale, tail: s.lineTail)
                 guard (col.max() ?? 0) >= 1e-8 else { continue }
                 pairs.append(Pair(i: i, j: j, mult: i == j ? 1 : 2, energy: e, column: col))
             } }
@@ -180,7 +180,7 @@ public nonisolated enum EDSSumEscapeFit {
         var escColumns = [[Double]?](repeating: nil, count: g)
         if model.commonEscapeFraction {
             for (gi, grp) in groups.enumerated() where !grp.escapes.isEmpty && baseline.supported[gi] {
-                let col = EDSLineModel.column(of: grp.escapes, energies: energies, scale: axis.scale)
+                let col = EDSLineModel.column(of: grp.escapes, energies: energies, scale: axis.scale, tail: s.lineTail)
                 if (col.max() ?? 0) >= 1e-8 { escColumns[gi] = col }
             }
         }

@@ -144,6 +144,15 @@ unclear by mac4DSTEM's v5.0 research and are carried here as a recorded risk.
 
 
 ================================================================================
+PyMca (line-shape tail formula)
+================================================================================
+
+The opt-in low-energy tail of the EDS line shape (LineTail, Sources/SpectroEDX/Spectroscopy/Fit/EDSModel.swift) uses the
+formula of PyMca's Hypermet short tail (PyMca, V. A. Sole et al., ESRF, MIT licence). The formula only; no PyMca code is
+copied or ported.
+
+
+================================================================================
 HDF5 (through FormatoKit)
 ================================================================================
 

@@ -26,6 +26,32 @@
 import Foundation
 import SpectroCore
 
+/// An opt-in low-energy tail on every line (and escape and sum peak) of the fit: PyMca's Hypermet short tail (the formula; MIT, NOTICE).
+/// Per line at E0 with Gaussian sigma and total area A, the column is `A (G(E) + T(E)) / (1 + fraction)` with
+/// `T(E) = fraction / (2 slope) exp((E - E0)/slope + sigma^2/(2 slope^2)) erfc((E - E0)/(sqrt2 sigma) + sigma/(sqrt2 slope))`, tied to the same A (no new free
+/// parameter). The shelf (step) term of Hypermet is NOT included. No Python counterpart (exSpy fits Gaussians); `validation: "none"`.
+public nonisolated struct LineTail: Sendable, Equatable, Codable {
+    /// Tail area as a fraction of the Gaussian area (T integrates to this).
+    public var fraction: Double
+    /// Decay length of the tail towards low energy, keV.
+    public var slopeKeV: Double
+    /// Where the numbers come from (a measurement, a standard, a typed value); printed in the fit's footer.
+    public var source: String
+
+    /// A fraction below 0 reads as 0 (no tail) and a slope below 1 eV as 1 eV: the column must never be NaN (review 2026-10-23).
+    public init(fraction: Double, slopeKeV: Double, source: String) {
+        self.fraction = fraction.isFinite ? max(fraction, 0) : 0
+        self.slopeKeV = slopeKeV.isFinite ? max(slopeKeV, 0.001) : 0.001
+        self.source = source
+    }
+
+    /// The footer's words for the line shape.
+    package static func label(_ tail: LineTail?) -> String {
+        guard let t = tail else { return "line shape: Gaussian" }
+        return "line shape: Gaussian + tail (f \(String(format: "%.3g", t.fraction)), \u{03B2} \(String(format: "%.3g", t.slopeKeV)) keV, \(t.source))"
+    }
+}
+
 package nonisolated struct FitLine: Sendable, Equatable {
     package let id: String        // "Fe_Ka"
     package let energy: Double    // keV
@@ -58,10 +84,13 @@ public nonisolated struct EDSLineModel: Sendable, Equatable {
     /// Lines the model could not place, with the reason (never a NaN width): `XRayLines.fwhm` is nil when the
     /// law's radicand is negative (a low line on a very good detector). A group whose alpha line is dropped is dropped.
     package let droppedLines: [String]
+    /// The low-energy tail of every column of this model; nil = Gaussians only (every number of the default fit).
+    package var lineTail: LineTail? = nil
 
     /// Groups in alphabetical order of the alpha line (eXSpy `_get_lines_from_elements` sorts).
     public static func build(
-        elements: [String], axis: EnergyAxis, beamEnergy: Double, resolutionMnKaEV: Double, escapePeaks: Bool = true
+        elements: [String], axis: EnergyAxis, beamEnergy: Double, resolutionMnKaEV: Double, escapePeaks: Bool = true,
+        lineTail: LineTail? = nil
     ) -> EDSLineModel {
         let mains = XRayLines.defaultLines(
             elements: elements, axis: axis, beamEnergy: beamEnergy, onlyOne: false, onlyLines: ["Ka", "La", "Ma"])
@@ -99,12 +128,20 @@ public nonisolated struct EDSLineModel: Sendable, Equatable {
         }
         return EDSLineModel(groups: groups, resolutionMnKaEV: resolutionMnKaEV, beamEnergy: beamEnergy,
                             escapePeaks: escapePeaks,
-                            droppedLines: dropped)
+                            droppedLines: dropped, lineTail: lineTail)
     }
 
     /// Counts per channel of a unit-area Gaussian sum over `energies` (channel-centre sampling,
     /// binned axis: times `scale`).
     package static func column(of lines: [FitLine], energies: [Double], scale: Double) -> [Double] {
+        column(of: lines, energies: energies, scale: scale, tail: nil)
+    }
+
+    /// As `column(of:energies:scale:)` with an optional low-energy tail. With `tail` nil this is the Gaussian column, the same code path
+    /// and the same numbers. With a tail each line is `weight * scale * (G + T) / (1 + f)`: the tail adds area `f`, and dividing by `(1 + f)`
+    /// keeps the line's weight (and so the fitted area A) its TOTAL area, tail included.
+    package static func column(of lines: [FitLine], energies: [Double], scale: Double, tail: LineTail?) -> [Double] {
+        if let tail, tail.fraction != 0 { return tailColumn(of: lines, energies: energies, scale: scale, tail: tail) }
         var out = [Double](repeating: 0, count: energies.count)
         for l in lines {
             let sigma = l.fwhm / sigma2fwhm
@@ -116,6 +153,34 @@ public nonisolated struct EDSLineModel: Sendable, Equatable {
                 let d = energies[i] - l.energy
                 if abs(d) > reach { continue }
                 out[i] += norm * exp(-d * d * inv)
+            }
+        }
+        return out
+    }
+
+    private static func tailColumn(of lines: [FitLine], energies: [Double], scale: Double, tail: LineTail) -> [Double] {
+        var out = [Double](repeating: 0, count: energies.count)
+        let f = tail.fraction, beta = tail.slopeKeV
+        let total = 1 + f
+        for l in lines {
+            let sigma = l.fwhm / sigma2fwhm
+            let gNorm = l.weight * scale / (total * sigma * (2 * Double.pi).squareRoot())
+            let tNorm = l.weight * scale * f / (total * 2 * beta)
+            let inv = 1 / (2 * sigma * sigma)
+            let reach = 38 * sigma
+            let lowReach = reach + 40 * beta
+            let r2s = 1 / (2.0.squareRoot() * sigma)
+            let shift = sigma / (2.0.squareRoot() * beta)
+            let half = sigma * sigma / (2 * beta * beta)
+            for i in energies.indices {
+                let d = energies[i] - l.energy
+                if d > reach || d < -lowReach { continue }
+                var v = 0.0
+                if abs(d) <= reach { v = gNorm * exp(-d * d * inv) }
+                // exp overflows past about 709 where erfc has already underflowed (a small beta against sigma): the product is 0 there, never NaN.
+                let exponent = d / beta + half
+                if exponent < 700 { v += tNorm * exp(exponent) * erfc(d * r2s + shift) }
+                out[i] += v
             }
         }
         return out

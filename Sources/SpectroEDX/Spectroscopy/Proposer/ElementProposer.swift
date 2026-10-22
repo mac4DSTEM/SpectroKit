@@ -231,7 +231,7 @@ public nonisolated struct ElementProposer: Sendable {
     private static func fitPass(groups: [FitLineGroup], data: [Double], settings s: FitSettings, axis: EnergyAxis,
                                 channels: Range<Int>, dropped: [String]) throws -> Pass {
         let model = EDSLineModel(groups: groups, resolutionMnKaEV: s.resolutionMnKaEV, beamEnergy: s.beamEnergy,
-                                 escapePeaks: s.escapePeaks, droppedLines: dropped)
+                                 escapePeaks: s.escapePeaks, droppedLines: dropped, lineTail: s.lineTail)
         try EDSFit.validate(s.referenceShapes, axis: axis, model: model)
         let design = LinearDesign.build(model: model, axis: axis, channels: channels, background: s.background,
                                         shapes: s.referenceShapes, counts: data)
@@ -283,7 +283,7 @@ public nonisolated struct ElementProposer: Sendable {
         let poolElements = requested.filter { LineConflicts.refusal(for: $0) == nil && !current.contains($0) }
 
         let base = EDSLineModel.build(elements: current + poolElements, axis: axis, beamEnergy: s.beamEnergy,
-                                      resolutionMnKaEV: s.resolutionMnKaEV, escapePeaks: s.escapePeaks)
+                                      resolutionMnKaEV: s.resolutionMnKaEV, escapePeaks: s.escapePeaks, lineTail: s.lineTail)
         let dropped = base.droppedLines.filter { l in current.contains { l.contains("\($0)_") } }
         let currentGroups = base.groups.filter { current.contains($0.element) }
         // A candidate group needs its alpha line inside the fitted range by half a width (its column must have support).
