@@ -45,6 +45,33 @@ struct KFactorImportTests {
         #expect(abs(typed[0].relativeSigma! - 0.1) < 1e-15 && abs(typed[1].relativeSigma! - 0.05) < 1e-15)
     }
 
+    @Test func theSeparatorIsReadFromTheDataLinesAndDecimalCommasSurviveWhitespace() throws {
+        // a comma in a comment or units line must not pick the separator; the table is whitespace separated with decimal commas
+        let t = try KFactorImport.parse("# exported by lab, 2026\nunits: k, relative to Si\nFe Ka 1,23\nCu Ka 1,9 0,05\n")
+        let ks: [Double] = t.rows.map(\.k), sigmas: [Double?] = t.rows.map(\.sigma)
+        #expect(ks == [1.23, 1.9] && sigmas == [nil, 0.05])
+        // a tab table whose comment has a semicolon
+        let u = try KFactorImport.parse("# a; b\nFe\tKa\t1.5\n")
+        #expect(u.rows.map(\.k) == [1.5])
+        // "Fe K,1.23" stays comma separated
+        #expect(try KFactorImport.parse("Fe K,1.23\n").rows.map(\.k) == [1.23])
+    }
+
+    @Test func aPercentSigmaIsReadWhereverItIsWritten() throws {
+        let t = try KFactorImport.parse("Al;Ka;2.0;5%\nSi;Ka;2.0;5 %\nFe;Ka;2.0;0,1\n")
+        let expected: Double = 5.0 / 100 * 2.0
+        let sigmas: [Double?] = t.rows.map(\.sigma)
+        #expect(sigmas == [expected, expected, 0.1])
+        let header = try KFactorImport.parse("Element;Line;k;Sigma %\nAl;Ka;2.0;5%\n")
+        #expect(header.rows[0].sigma == expected)
+    }
+
+    @Test func aNonFiniteResultIsRefused() throws {
+        #expect(throws: KFactorImportError.self) { _ = try KFactorImport.parse("Al,Ka,1e308,1e308%\n") }
+        let t = try KFactorImport.parse("Al,Ka,1e308\nSi,Ka,1e-308\n")
+        #expect(throws: KFactorImportError.self) { _ = try KFactorImport.typedK(from: t, elements: ["Al", "Si"], reference: "Si") }
+    }
+
     @Test func headerColumnOrderIsTakenFromTheNames() throws {
         let t = try KFactorImport.parse("k;Sigma;Line;Element\n1.5;0.1;Ka;Fe\n")
         #expect(t.rows == [ImportedKFactor(element: "Fe", line: "Ka", k: 1.5, sigma: 0.1, sourceLine: 2)])

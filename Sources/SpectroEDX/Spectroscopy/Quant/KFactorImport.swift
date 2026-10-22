@@ -4,7 +4,8 @@
 //        (`QuantificationMethod.TypedK`, the list `KFactorSource.typed` runs on and `PooledQuantification.kFactors` reports).
 //
 //  What it reads. One row per element and line: element, line, k, and optionally sigma. Separators: tab, semicolon or comma (the
-//  first of these found in the text, in that order; with none, runs of whitespace). A decimal comma is accepted where the
+//  first of these found in the data lines, in that order, a comma only if some line splits into three fields on it, or has no whitespace, or is "Fe K,1.23"; with none, runs
+//  of whitespace). A decimal comma is accepted where the
 //  separator is not a comma. A header row is optional (recognised when its k field is not a number); its column names (element,
 //  line, k / k-factor / kfactor, sigma / error / uncertainty, with "%" or "rel" in a sigma name meaning relative sigma in percent)
 //  decide the column order; without one the order is element, line, k, sigma. An element and its line may share one field
@@ -88,7 +89,21 @@ public nonisolated enum KFactorImport {
             .split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
         // Drop a byte-order mark.
         let lines = rawLines.enumerated().map { $0.offset == 0 ? $0.element.replacingOccurrences(of: "\u{FEFF}", with: "") : $0.element }
-        let separator: Character? = lines.contains { $0.contains("\t") } ? "\t" : (lines.contains { $0.contains(";") } ? ";" : (lines.contains { $0.contains(",") } ? "," : nil))
+        var ignored: [String] = []
+        var content: [(n: Int, text: String)] = []
+        for (i, l) in lines.enumerated() {
+            let t = l.trimmingCharacters(in: .whitespaces)
+            if t.isEmpty { continue }
+            let low = t.lowercased()
+            if t.hasPrefix("#") || t.hasPrefix("//") || low.hasPrefix("unit") { ignored.append(t); continue }
+            content.append((i + 1, t))
+        }
+
+        // The separator is read from the data lines only (not the comments or the units line): tab, then semicolon, then a comma
+        // that splits some line into at least three fields (so a whitespace table with decimal commas, "Fe Ka 1,23", is not split).
+        let separator: Character? = content.contains { $0.text.contains("\t") } ? "\t"
+            : (content.contains { $0.text.contains(";") } ? ";"
+               : (content.contains { commaFields($0.text) >= 3 && restHasNoSpaces($0.text) || combinedThenK($0.text) || ($0.text.contains(",") && !$0.text.contains(where: \.isWhitespace)) } ? "," : nil))
 
         func fields(_ s: String) -> [String] {
             let parts: [Substring]
@@ -101,16 +116,6 @@ public nonisolated enum KFactorImport {
             if separator != "," { t = t.replacingOccurrences(of: ",", with: ".") }
             guard !t.isEmpty, let v = Double(t), v.isFinite else { return nil }
             return v
-        }
-
-        var ignored: [String] = []
-        var content: [(n: Int, text: String)] = []
-        for (i, l) in lines.enumerated() {
-            let t = l.trimmingCharacters(in: .whitespaces)
-            if t.isEmpty { continue }
-            let low = t.lowercased()
-            if t.hasPrefix("#") || t.hasPrefix("//") || low.hasPrefix("unit") { ignored.append(t); continue }
-            content.append((i + 1, t))
         }
 
         var header: [String]? = nil
@@ -160,8 +165,13 @@ public nonisolated enum KFactorImport {
             guard let k = number(f[order.k]), k > 0 else { throw KFactorImportError.badK(line: n, text: f[order.k]) }
             var sigma: Double? = nil
             if let si = order.sigma, si < f.count, !f[si].isEmpty {
-                guard let s = number(f[si]), s >= 0 else { throw KFactorImportError.badSigma(line: n, text: f[si]) }
-                sigma = sigmaIsPercent ? s / 100 * k : s
+                var text = f[si]
+                var percent = sigmaIsPercent
+                if text.hasSuffix("%") { text = String(text.dropLast()).trimmingCharacters(in: .whitespaces); percent = true }
+                guard let s = number(text), s >= 0 else { throw KFactorImportError.badSigma(line: n, text: f[si]) }
+                let value = percent ? s / 100 * k : s
+                guard value.isFinite else { throw KFactorImportError.badSigma(line: n, text: f[si]) }
+                sigma = value
             }
             if out.contains(where: { $0.element == symbol && $0.line == line }) {
                 throw KFactorImportError.duplicate(element: symbol, line: line, sourceLine: n)
@@ -169,6 +179,25 @@ public nonisolated enum KFactorImport {
             out.append(ImportedKFactor(element: symbol, line: line, k: k, sigma: sigma, sourceLine: n))
         }
         return KFactorTable(rows: out, header: header, ignored: ignored)
+    }
+
+    /// How many fields a line has when split on commas.
+    private static func commaFields(_ text: String) -> Int { text.split(separator: ",", omittingEmptySubsequences: false).count }
+
+    /// After the first comma field, no field has a space inside ("Fe K, 1.2, 0.05" yes; "Cu Ka 1,9 0,05", decimal commas, no).
+    private static func restHasNoSpaces(_ text: String) -> Bool {
+        text.split(separator: ",", omittingEmptySubsequences: false).dropFirst()
+            .allSatisfy { !$0.trimmingCharacters(in: .whitespaces).contains(where: \.isWhitespace) }
+    }
+
+    /// "Fe K,1.23": exactly two comma fields, the first a lone element and line ("Fe K", "Fe-Ka"), so a comma is the separator.
+    private static func combinedThenK(_ text: String) -> Bool {
+        let parts = text.split(separator: ",", omittingEmptySubsequences: false)
+        guard parts.count == 2 else { return false }
+        let first = parts[0].trimmingCharacters(in: .whitespaces)
+        guard first.split(whereSeparator: { $0 == " " || $0 == "-" || $0 == "_" }).count == 2 else { return false }
+        let (e, l) = elementSplit(first)
+        return l != nil && normalisedSymbol(e) != nil && normalisedLine(l!) != nil
     }
 
     private static func normalisedSymbol(_ s: String) -> String? {
@@ -221,10 +250,14 @@ public nonisolated enum KFactorImport {
             picked.append(row)
         }
         let scale = reference.flatMap { r in picked.first { $0.element == r }?.k } ?? 1
-        return picked.map { row in
+        return try picked.map { row in
             let isRef = row.element == reference
-            return QuantificationMethod.TypedK(element: row.element, k: row.k / scale,
-                                               relativeSigma: isRef ? 0 : row.sigma.map { $0 / row.k })
+            let k = row.k / scale
+            let relativeSigma = isRef ? 0 : row.sigma.map { $0 / row.k }
+            guard k.isFinite, k > 0, relativeSigma?.isFinite ?? true else {
+                throw KFactorImportError.badK(line: row.sourceLine, text: "\(row.k)")
+            }
+            return QuantificationMethod.TypedK(element: row.element, k: k, relativeSigma: relativeSigma)
         }
     }
 
