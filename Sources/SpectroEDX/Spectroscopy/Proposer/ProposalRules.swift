@@ -125,7 +125,7 @@ public nonisolated struct ProposalRules: Equatable, Sendable {
         }
         let corroborated = corroboration ? picks.filter { family($0.group) != .K }.map(\.element) : []
         return RuledProposal(raw: r, rules: self, picks: picks, withheld: withheld, released: released, heldQuestions: stillHeld,
-                             lineGroupsCorroborated: corroborated)
+                             familyWithheld: r.withheld, lineGroupsCorroborated: corroborated)
     }
 }
 
@@ -139,6 +139,9 @@ public nonisolated struct RuledProposal: Sendable {
     public let released: [ProposalRules.Release]
     /// Still at or above L_D and on a pile-up energy: not an element, shown as the sum-peak question.
     public let heldQuestions: [ElementCandidate]
+    /// At or above L_D but withheld by the proposer's own family-consistency rule (0.11.0, R4): each carries its `familyNote`. A consumer shows them
+    /// with the note; they are no pick and no question.
+    public let familyWithheld: [ElementCandidate]
     /// L and M picks that cleared R2 (empty when R2 is off).
     package let lineGroupsCorroborated: [String]
 

@@ -59,6 +59,9 @@ struct FamilyConsistencyTests {
         #expect(note.contains("Ga K\u{03B1}") && note.contains("below its detection limit"), "\(note)")
         #expect(!r.proposed.contains { $0.element == "Ga" })
         #expect(r.notes.contains { $0.hasPrefix("Family consistency withheld Ga") })
+        // A consumer sees it through the rules' result too.
+        let ruled = ProposalRules.shipped.apply(r)
+        #expect(ruled.familyWithheld.map(\.element) == ["Ga"] && !ruled.picks.contains { $0.element == "Ga" })
     }
 
     /// The K line is planted weaker than the L line (a fifth), so the L group stays the element's best group and the check runs; the K line is
