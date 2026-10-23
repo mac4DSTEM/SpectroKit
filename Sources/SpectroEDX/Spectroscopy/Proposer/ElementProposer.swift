@@ -231,7 +231,7 @@ public nonisolated struct ElementProposer: Sendable {
     /// strong line's shape error dragged the continuum beside it (data over model 3.1 in 1 to 2.5 keV beside a planted Al 6 eV narrower than the
     /// model) and the hump it left became an element (Os M). The pass's `result` is returned in counts (its model and residual unscaled).
     private static func fitPass(groups: [FitLineGroup], data: [Double], settings s: FitSettings, axis: EnergyAxis,
-                                channels: Range<Int>, dropped: [String], relative: Double, widths: [Int]) throws -> Pass {
+                                channels: Range<Int>, dropped: [String], relative: Double, widths: [Int], weighted: Bool = true) throws -> Pass {
         let model = EDSLineModel(groups: groups, resolutionMnKaEV: s.resolutionMnKaEV, beamEnergy: s.beamEnergy,
                                  escapePeaks: s.escapePeaks, droppedLines: dropped, lineTail: s.lineTail)
         try EDSFit.validate(s.referenceShapes, axis: axis, model: model)
@@ -243,7 +243,7 @@ public nonisolated struct ElementProposer: Sendable {
         let scale = y.indices.map { i -> Double in
             let h = widths[i] / 2, a = max(i - h, 0), b = min(i + h, y.count - 1)
             let ys = (prefix[b + 1] - prefix[a]) / Double(b - a + 1)
-            return 1 / max(ys + relative * relative * ys * ys, 1).squareRoot()
+            return weighted ? 1 / max(ys + relative * relative * ys * ys, 1).squareRoot() : 1
         }
         for j in design.areaColumns.indices { for i in scale.indices { design.areaColumns[j].values[i] *= scale[i] } }
         for j in design.backgroundColumns.indices { for i in scale.indices { design.backgroundColumns[j].values[i] *= scale[i] } }
@@ -261,7 +261,7 @@ public nonisolated struct ElementProposer: Sendable {
         result.reducedChiSquared = result.residual.reduce(0) { $0 + $1 * $1 } / dof
         result.deviance = PoissonMLFit.deviance(y: y, mu: result.model, floor: 1e-6)
         result.reducedDeviance = result.deviance / dof
-        result.methodLabel = "least squares, weighted by 1/(y + (\(relative) y)\u{00B2})"
+        if weighted { result.methodLabel = "least squares, weighted by 1/(y + (\(relative) y)\u{00B2})" }
         let terms = IdentificationLoop.chiSquaredTerms(y: y, mu: result.model, relative: relative)
         return Pass(model: model, result: result, variances: variances, terms: terms, statistic: terms.reduce(0, +))
     }
@@ -576,8 +576,15 @@ public nonisolated struct ElementProposer: Sendable {
             if n >= 10, m > 0, !(0.8...1.25).contains(d / m) { unhealthy.append((a, min(b, hi), d / m)) }
         }
 
+        // The reported numbers of the final model (found elements, pile-up parents and sums, the hole region) come from the standard fit (unweighted least squares, as Quantify and the proposer before
+        // 0.11.0): the weighted fit decides membership, its areas are not quantification-grade (a strong line's area reads low where the model's
+        // shape is off, and the statistic's weights spare that misfit). σ₀ and L_D are that fit's own null variance. Pruned, rejected and withheld
+        // candidates keep the numbers of the fit that decided them (they are not in the final model).
+        let report = try Self.fitPass(groups: model, data: counts, settings: s, axis: axis, channels: channels, dropped: dropped,
+                                      relative: t.relativeModelTerm, widths: widths, weighted: false)
+        fitsDone += 1
         // Candidates: the found elements from the final fit, then the pruned, then the rest that were tested.
-        let finalParents = parents(fit)
+        let finalParents = parents(report)
         let parentNets = Dictionary(uniqueKeysWithValues: finalParents.map { ($0.parent.element, $0.net) })
         func conflicts(_ el: String, _ group: String, _ alpha: Double, _ net: Double) -> [LineConflict] {
             LineConflicts.conflicts(element: el, line: group, lineEnergyKeV: alpha, parents: finalParents.map(\.parent).filter { $0.element != el },
@@ -592,7 +599,9 @@ public nonisolated struct ElementProposer: Sendable {
             var note: String?
             if context.gridElements.contains(el) {
                 if let hole = holeCounts {
-                    let hp = try run(currentGroups + poolGroups.filter { $0.element == el }, on: hole)
+                    if cancelled() { throw ProposerError.cancelled }
+                    let hp = try Self.fitPass(groups: currentGroups + poolGroups.filter { $0.element == el }, data: hole, settings: s, axis: axis,
+                                              channels: channels, dropped: dropped, relative: t.relativeModelTerm, widths: widths, weighted: false)
                     if let gi = hp.model.groups.firstIndex(where: { $0.id == group }), let hs = stat(hp, gi) {
                         note = hs.net >= hs.ld
                             ? String(format: "%@ is also detected on the hole region (net %.0f \u{2265} L_D %.0f): part of it is grid.", el, hs.net, hs.ld)
@@ -611,10 +620,10 @@ public nonisolated struct ElementProposer: Sendable {
         func unstated(_ p: Pass, _ gi: Int) -> Stat { Stat(net: p.result.values[gi], sigma: 0, sigmaZero: 0, lc: .infinity, ld: .infinity) }
         let noLimit = "Its area has no stated limit (the fit with it is rank deficient)."
         for el in foundOrder where model.contains(where: { $0.element == el }) {
-            guard let f = found[el], let first = fit.model.groups.firstIndex(where: { $0.element == el }) else { continue }
-            let gs = fit.model.groups.enumerated().filter { $0.element.element == el }.compactMap { gi, g in stat(fit, gi).map { (g, $0) } }
+            guard let f = found[el], let first = report.model.groups.firstIndex(where: { $0.element == el }) else { continue }
+            let gs = report.model.groups.enumerated().filter { $0.element.element == el }.compactMap { gi, g in stat(report, gi).map { (g, $0) } }
             guard let (g, st) = gs.max(by: { $0.1.significance < $1.1.significance }) else {
-                try append(el, group: fit.model.groups[first].id, stat: unstated(fit, first), possibleReason: noLimit)
+                try append(el, group: report.model.groups[first].id, stat: unstated(report, first), possibleReason: noLimit)
                 continue
             }
             var reason: String?
@@ -623,8 +632,10 @@ public nonisolated struct ElementProposer: Sendable {
             } else if !f.ambiguous.isEmpty {
                 reason = String(format: "%@ explain%@ the peak at %.3f keV about as well (within %.0f of its gain there, %.0f).",
                                 f.ambiguous.map { sumInfo[$0]?.label ?? $0 }.joined(separator: ", "), f.ambiguous.count == 1 ? "s" : "", f.peakKeV, t.ambiguityGain, f.gain)
-            } else if el == "Si", let gi = fit.model.groups.firstIndex(where: { $0.id == "Si_Ka" }), fit.result.values[gi] < t.siliconArtefactFraction * totalCounts {
-                reason = String(format: "Si K\u{03B1} holds %.2f %% of the counts, below the %.1f %% under which it is the detector's own Si.", 100 * fit.result.values[gi] / totalCounts, 100 * t.siliconArtefactFraction)
+            } else if el == "Si", let gi = report.model.groups.firstIndex(where: { $0.id == "Si_Ka" }), report.result.values[gi] < t.siliconArtefactFraction * totalCounts {
+                reason = String(format: "Si K\u{03B1} holds %.2f %% of the counts, below the %.1f %% under which it is the detector's own Si.", 100 * report.result.values[gi] / totalCounts, 100 * t.siliconArtefactFraction)
+            } else if st.net < st.ld {
+                reason = String(format: "It joined on the identification fit, but in the standard fit its area %.0f is below its detection limit %.0f.", st.net, st.ld)
             } else if let band = unhealthy.first(where: { f.peakKeV >= $0.lo && f.peakKeV < $0.hi }) {
                 reason = String(format: "Its peak (%.3f keV) lies where the background is off (data over model %.2f in %.1f to %.1f keV).", f.peakKeV, band.ratio, band.lo, band.hi)
             }
@@ -642,8 +653,8 @@ public nonisolated struct ElementProposer: Sendable {
         candidates.sort { $0.significance > $1.significance }
 
         var sumPeaks: [SumPeakFinding] = []
-        for (gi, g) in fit.model.groups.enumerated() where g.element == "sum" {
-            guard let st = stat(fit, gi), let info = sumInfo[g.id] else { continue }
+        for (gi, g) in report.model.groups.enumerated() where g.element == "sum" {
+            guard let st = stat(report, gi), let info = sumInfo[g.id] else { continue }
             sumPeaks.append(SumPeakFinding(label: info.label, elements: info.elements, energyKeV: g.lines[0].energy,
                                            net: st.net, sigmaZero: st.sigmaZero, detectionLimit: st.ld))
         }
@@ -652,7 +663,7 @@ public nonisolated struct ElementProposer: Sendable {
             String(format: "Lines below %.2f keV are not tested (a measured limit of the continuum model, not a property of the method).", minimumLineEnergyKeV),
             String(format: "Identification (validation: none): the residual's peaks at or above %.0f \u{03C3} of its top-hat filter (%.1f \u{00D7} below %.0f keV); a candidate joins when \u{03A3}(y \u{2212} \u{03BC})\u{00B2}/(\u{03BC} + (%.2f \u{03BC})\u{00B2}) falls by at least %.0f, %.0f %% of that at its own lines, with its area at or above Currie L_D (\(Self.rateText(currie)), \u{03C3}\u{2080} from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (%.0f). K\u{03B2} weights from NIST EPQ in this fit.",
                    t.peakSigma, t.lowEnergyFactor, t.lowEnergyBelowKeV, t.relativeModelTerm, t.minimumGain, 100 * t.minimumLocalShare, t.pruneGain),
-            "Fit: \(fit.result.methodLabel); \(fit.result.backgroundLabel); \(fit.result.escapeLabel); \(fit.result.referenceShapesLabel); \(examined) residual peak\(examined == 1 ? "" : "s") examined, \(tested) candidate fits, \(fitsDone) fits in all.",
+            "Fit: \(fit.result.methodLabel) to decide, \(report.result.methodLabel) for the numbers shown; \(fit.result.backgroundLabel); \(fit.result.escapeLabel); \(fit.result.referenceShapesLabel); \(examined) residual peak\(examined == 1 ? "" : "s") examined, \(tested) candidate fits, \(fitsDone) fits in all.",
         ]
         if let p = policy.noteLine { notes.insert(p, at: 3) }
         if EPQLineWeights.bundled == nil { notes.append("The NIST EPQ line weights are missing from this build: the identification fit used eXSpy's Kβ weights.") }
@@ -665,11 +676,11 @@ public nonisolated struct ElementProposer: Sendable {
         notes.append(String(format: "Look-elsewhere: %d candidates were tested, so about %.2f chance passes of the area bar alone are expected; the gain and confirmation bars stand beside it.", tested, Double(tested) * pChance))
         if capped && examined >= t.maximumPeaks { notes.append("The loop stopped after \(t.maximumPeaks) residual peaks: this spectrum keeps producing peaks, which points to a model misfit (continuum or line shapes) rather than to that many elements.") }
         if capped && foundOrder.count >= t.maximumNewElements { notes.append("The loop stopped at \(t.maximumNewElements) new elements.") }
-        for w in fit.result.warnings where !notes.contains(w) { notes.append(w) }
+        for w in report.result.warnings where !notes.contains(w) { notes.append(w) }
         progress?(1)
         return ProposalResult(candidates: candidates, sumPeaks: sumPeaks, refused: refused, currie: currie,
                               notes: notes, passes: fitsDone, settled: !(capped && examined >= t.maximumPeaks),
-                              reducedChiSquared: fit.result.pearsonReducedChiSquared)
+                              reducedChiSquared: report.result.pearsonReducedChiSquared)
     }
 
     /// "Ba_Lb1" -> "Lβ1".

@@ -105,7 +105,7 @@ struct FamilyConsistencyTests {
         #expect(Self.candidate(loose, "Si")?.hasSumPeakQuestion == true, "with no bound the Mg+O sum claims Si")
     }
 
-    /// The rule off is the old run (no note, no withheld). The rule on: the withheld keep the numbers of the fit that held them, and every other
+    /// The rule off is the old run (no note, no withheld). The rule on: the withheld keep the numbers of their own test fit, and every other
     /// candidate has the numbers of the old run made without the withheld elements in the pool (the model is settled again without them, so their
     /// counts return to the lines they belong to).
     @Test func testFamilyConsistencyOffReproducesTheOldRunAndOnSettlesAgainWithoutTheWithheld() throws {
@@ -116,7 +116,9 @@ struct FamilyConsistencyTests {
         let out = b.withheld.map(\.element)
         #expect(out.contains("Ga"), "\(out)")
         let ga = try #require(Self.candidate(b, "Ga")), gaOld = try #require(Self.candidate(a, "Ga"))
-        #expect(ga.net == gaOld.net && ga.detectionLimit == gaOld.detectionLimit, "the withheld keep the numbers of the fit that held them")
+        // 0.11.0: a withheld element never enters the model, so its numbers are those of its own test fit (the identification fit), while the rule-off
+        // run reports Ga from the final standard fit; both state a net and a limit.
+        #expect(ga.net > 0 && ga.detectionLimit.isFinite && gaOld.net > 0 && gaOld.detectionLimit.isFinite, "\(ga.net) \(gaOld.net)")
         var without = Self.off
         without.pool = ElementProposer.defaultPool.filter { !out.contains($0) }
         let c = try Self.propose(Self.loneGaL, policy: without)

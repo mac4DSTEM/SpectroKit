@@ -22,7 +22,12 @@ SpectroKit follows semantic versions (0.x). Each release says what changed, and 
   Mg at 2 % beside a 5 %-misfit Al (found at 121 509 of 120 000) and its Al-only guard. Not yet: the method's overlap check (open item).
   `validation: "none"`. Moved bar (review before tag): a weak line beside a very strong one is proposed only when the fit gains 100; a planted
   1 % Mg beside Al at 9e5 counts gains 44 to 71 at 3.7 L_D and is now a possible candidate in every draw, not a proposal
-  (`testKramersContinuumNoFalseMgAndTheDetectionRate`).
+  (`testKramersContinuumNoFalseMgAndTheDetectionRate`). The weighted fit decides; the found elements' reported numbers (net, σ, L_D, the
+  pile-up parents, the hole-region note, χ²ᵣ) come from one standard unweighted fit of the final model, as Quantify's. Parity P2 restated
+  (review before tag): a cell is detectable when its noise-free net is ≥ 3 L_D and the bias is against that net, because the planted
+  generator integrates lines over the channel while the model samples the centre (eXSpy's convention), which reads Mg 0.3 % of N_Al low
+  beside Al at 1e6 to 1e7 counts (Gate D4 measures it); the flank factor used to widen σ around that offset. M.s.N4.rho0p05 (461 Mg counts)
+  is found in 77 to 80 % against the 90 % bar: the published 5 σ residual-peak bar, a registered known issue.
 
 The rules below landed first in 0.11.0 and are kept in the loop's terms (the joint all-candidate fit they were written for is gone):
 - **Family consistency, R4** (`ProposerPolicy.familyConsistency`, default true; `familyOvervoltage`, default 2): an element nominated by an L or M line is withheld when its K (or L) alpha line, in the fitted range and with the beam at least `familyOvervoltage` times its energy, shows no residual peak of 3 σ (the field's confirmation-line rule: Goldstein ch. 18, Newbury 2005, AutoEMX, NIST EPQ's overvoltage rule); no Python counterpart; `validation: "none"`. A withheld candidate is in `candidates` and `withheld` with `ElementCandidate.familyNote` saying why, and never enters the model.

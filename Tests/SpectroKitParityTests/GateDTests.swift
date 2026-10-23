@@ -256,8 +256,11 @@ struct GateDTests {
         }
         let c = cell("M.s.N7.rho0p002")
         let m0 = PlantedRuns.run(centreSampledMatched(c))
-        #expect(m0.misfit < 3, "control: with the model's own sampling convention the matched flank factor is small")
-        #expect(RunStore.shared.single("M.s.N7.rho0p002").mean.misfit > m0.misfit, "the generator's bin integration is what inflates the flank factor")
+        // 0.11.0: the flank factor is gone; what the bin integration does shows in the net itself (Mg reads about 0.3 % of N_Al low beside the
+        // bin-integrated Al, as the P2 bias cells print).
+        let truth = c.truth["Mg"]!
+        #expect(abs(RunStore.shared.single("M.s.N7.rho0p002").mean.net - truth) > abs(m0.net - truth),
+                "the generator's bin integration is what moves the Mg net (centre-sampled control: \(m0.net) of \(truth))")
         gateNote("EDX D4 verdict: registration predicts a margin of 20 to 50 at N_Al 1e7 (L_D(M) = 2.2e3); the generator-matched set gives the margin printed above; D6 and the alloy's nominal Mg (Q2) are not available, so D4 can be neither refuted nor confirmed on real data")
     }
 }

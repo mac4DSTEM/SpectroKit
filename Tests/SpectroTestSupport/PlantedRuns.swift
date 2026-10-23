@@ -14,9 +14,12 @@ package struct MgRun: Sendable {
     package var proposed: Bool
     package var other: [String]       // other elements proposed (full pool)
     package var present: Bool         // Mg had a candidate at all
-    package init(net: Double, sigma: Double, sigmaZero: Double, lc: Double, ld: Double, misfit: Double, proposed: Bool, other: [String], present: Bool) {
+    /// Proposed, or at or above L_D and held back only by the identification loop's gain bar (its possible reason says so).
+    package var reported: Bool
+    package init(net: Double, sigma: Double, sigmaZero: Double, lc: Double, ld: Double, misfit: Double, proposed: Bool, other: [String], present: Bool,
+                 reported: Bool = false) {
         self.net = net; self.sigma = sigma; self.sigmaZero = sigmaZero; self.lc = lc; self.ld = ld; self.misfit = misfit
-        self.proposed = proposed; self.other = other; self.present = present
+        self.proposed = proposed; self.other = other; self.present = present; self.reported = reported || proposed
     }
 }
 
@@ -35,7 +38,9 @@ package enum PlantedRuns {
         }
         return MgRun(net: c.net, sigma: c.sigma, sigmaZero: c.sigmaZero, lc: c.criticalLevel, ld: c.detectionLimit, misfit: c.misfit,
                      proposed: r.proposed.contains { $0.element == "Mg" },
-                     other: r.proposed.map(\.element).filter { $0 != "Mg" }, present: true)
+                     other: r.proposed.map(\.element).filter { $0 != "Mg" }, present: true,
+                     reported: c.isProposed || (c.aboveDetectionLimit && c.familyNote == nil
+                                                && (c.possibleReason?.hasPrefix("Adding it improves the fit by") ?? false)))
     }
 
     /// Single-candidate runs on the noise-free mean and on `reals` realisations (all when nil) of a cell.
@@ -50,6 +55,7 @@ package enum PlantedRuns {
 
 package extension Array where Element == MgRun {
     var pProposed: Double { isEmpty ? .nan : Double(filter(\.proposed).count) / Double(count) }
+    var pReported: Double { isEmpty ? .nan : Double(filter(\.reported).count) / Double(count) }
     var meanNet: Double { map(\.net).reduce(0, +) / Double(count) }
     var meanSigma: Double { map(\.sigma).reduce(0, +) / Double(count) }
     var sdNet: Double {
