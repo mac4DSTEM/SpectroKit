@@ -89,7 +89,15 @@ struct RichardsonLucyTests {
     @Test func testSharedAndPerPixelPSF() throws {
         let n = 80
         let psf = gaussian(n, centre: 30, sigma: 2.5)
-        let rows = (0 ..< 6).map { p in blur((0 ..< n).map { 2 + Double(p) + 50 * exp(-0.5 * pow((Double($0) - 40) / 2, 2)) }, psf: psf) }
+        // Split in named steps: the one-line form timed out the type checker on the CI runner's Xcode (nightly review 2026-10-23).
+        let rows: [[Double]] = (0 ..< 6).map { (p: Int) -> [Double] in
+            let base = 2.0 + Double(p)
+            let line: [Double] = (0 ..< n).map { (k: Int) -> Double in
+                let z = (Double(k) - 40.0) / 2.0
+                return base + 50.0 * exp(-0.5 * z * z)
+            }
+            return blur(line, psf: psf)
+        }
         let image = try lowLoss(rows, nx: 3, ny: 2)
         let shared = try EELSDeconvolution.richardsonLucy(image, psf: try lowLoss([psf], nx: 1, ny: 1))
         let each = try EELSDeconvolution.richardsonLucy(image, psf: try lowLoss([[Double]](repeating: psf, count: 6), nx: 3, ny: 2))

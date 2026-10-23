@@ -61,7 +61,8 @@ struct FamilyConsistencyTests {
         #expect(r.notes.contains { $0.hasPrefix("Family consistency withheld Ga") })
         // A consumer sees it through the rules' result too.
         let ruled = ProposalRules.shipped.apply(r)
-        #expect(ruled.familyWithheld.map(\.element) == ["Ga"] && !ruled.picks.contains { $0.element == "Ga" })
+        // The rerun without Ga may withhold the next phantom its counts moved to, so Ga is among the withheld, not alone.
+        #expect(ruled.familyWithheld.map(\.element).contains("Ga") && !ruled.picks.contains { $0.element == "Ga" }, "\(ruled.familyWithheld.map(\.element))")
     }
 
     /// The K line is planted weaker than the L line (a fifth), so the L group stays the element's best group and the check runs; the K line is
@@ -103,17 +104,26 @@ struct FamilyConsistencyTests {
         #expect(Self.candidate(loose, "Si")?.hasSumPeakQuestion == true, "with no bound the Mg+O sum claims Si")
     }
 
-    @Test func testFamilyConsistencyOffReproducesTheOldRun() throws {
+    /// The rule off is the old run (no note, no withheld). The rule on: the withheld keep the numbers of the fit that held them, and every other
+    /// candidate has the numbers of the old run made without the withheld elements in the pool (the model is settled again without them, so their
+    /// counts return to the lines they belong to).
+    @Test func testFamilyConsistencyOffReproducesTheOldRunAndOnSettlesAgainWithoutTheWithheld() throws {
         let a = try Self.propose(Self.loneGaL, policy: Self.off)
         let b = try Self.propose(Self.loneGaL)
-        #expect(a.candidates.map(\.element) == b.candidates.map(\.element))
-        for ca in a.candidates {
-            let cb = try #require(Self.candidate(b, ca.element))
-            #expect(ca.net == cb.net && ca.detectionLimit == cb.detectionLimit && ca.criticalLevel == cb.criticalLevel, "\(ca.element)")
-            #expect(ca.familyNote == nil)
-            if ca.element != "Ga" { #expect(ca.isProposed == cb.isProposed && cb.familyNote == nil, "\(ca.element)") }
+        #expect(Set(a.candidates.map(\.element)) == Set(b.candidates.map(\.element)))
+        #expect(a.candidates.allSatisfy { $0.familyNote == nil } && !a.notes.contains { $0.contains("Family consistency") })
+        let out = b.withheld.map(\.element)
+        #expect(out.contains("Ga"), "\(out)")
+        let ga = try #require(Self.candidate(b, "Ga")), gaOld = try #require(Self.candidate(a, "Ga"))
+        #expect(ga.net == gaOld.net && ga.detectionLimit == gaOld.detectionLimit, "the withheld keep the numbers of the fit that held them")
+        var without = Self.off
+        without.pool = ElementProposer.defaultPool.filter { !out.contains($0) }
+        let c = try Self.propose(Self.loneGaL, policy: without)
+        for cb in b.candidates where cb.familyNote == nil {
+            let cc = try #require(Self.candidate(c, cb.element), Comment(rawValue: cb.element))
+            #expect(cb.net == cc.net && cb.detectionLimit == cc.detectionLimit && cb.criticalLevel == cc.criticalLevel && cb.isProposed == cc.isProposed, "\(cb.element)")
         }
-        #expect(!a.notes.contains { $0.contains("Family consistency") })
+        #expect(b.notes.contains { $0.hasPrefix("Settled again without") && $0.contains("Ga") })
     }
 
     @Test func testTheNoteLineNamesTheFamilyFields() {

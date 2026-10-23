@@ -180,6 +180,15 @@ public nonisolated struct ElementProposer: Sendable {
         return out
     }
 
+    /// The note naming every proposed or near-miss candidate whose σ₀ the flank-misfit factor inflated.
+    static func misfitNote(_ candidates: [ElementCandidate]) -> String {
+        let inflated = candidates.filter { $0.significance >= 0.5 && $0.misfit > 1.005 }
+        return inflated.isEmpty
+            ? "Flank-misfit scaling: no proposed or near-miss candidate (net/L_D \u{2265} 0.5) had its \u{03C3}\u{2080} inflated."
+            : "\u{03C3}\u{2080} was scaled by the flank-misfit factor (never below 1; a neighbour's misfit inflates every candidate within about \u{00B1}0.5 keV): "
+                + inflated.map { String(format: "%@ \u{00D7}%.2f", $0.element, $0.misfit) }.joined(separator: ", ") + " (candidates at net/L_D \u{2265} 0.5)."
+    }
+
     /// The proposer's choices as a value (what `init(policy:)` took, with any package-level change since).
     package var policy: ProposerPolicy {
         ProposerPolicy(currie: currie, pool: pool, excluded: excluded, maxPasses: maxPasses, maxForwardRounds: maxForwardRounds,
@@ -547,6 +556,33 @@ public nonisolated struct ElementProposer: Sendable {
                     suggestedRole: c.suggestedRole, holeRegionNote: c.holeRegionNote, misfit: c.misfit, familyNote: note)
             }
         }
+        // A withheld element's group stays in the settled model, where it may hold counts that belong to a real line at the same energy (a planted
+        // Mg Kα at 1.254 keV read at a fifth of its truth while a Tb Mα at 1.240 keV, withheld for its missing Lα, held the rest; P2 M.L.N7). So the
+        // proposal is made again with the withheld elements out of the pool, and the withheld candidates (their numbers from this fit, their
+        // notes) are appended to that result. The rerun cannot withhold the same element twice; it ends when nothing new is withheld.
+        if !withheld.isEmpty {
+            let withheldCandidates = candidates.filter { $0.familyNote != nil }
+            let out = Set(withheldCandidates.map(\.element))
+            var again = self
+            again.pool = poolElements.filter { !out.contains($0) }
+            let reportedSoFar = reported
+            var inner: (@Sendable (Double) -> Void)? = nil
+            if let progress { inner = { @Sendable p in progress(max(reportedSoFar, 0.5 + 0.5 * p)) } }
+            let r = try again.propose(counts: counts, axis: axis, settings: settings, holeCounts: holeCounts, cancelled: cancelled, progress: inner)
+            var merged = r.candidates + withheldCandidates
+            merged.sort { $0.significance > $1.significance }
+            var notes = r.notes
+            // The rerun's explicit pool is this proposal's own pool minus the withheld, not a policy of its own: the policy note is this run's.
+            notes.removeAll { $0.hasPrefix("policy (non-default)") }
+            if let p = policy.noteLine { notes.insert(p, at: min(3, notes.count)) }
+            if let m = notes.firstIndex(where: { $0.hasPrefix("Flank-misfit scaling") || $0.contains("flank-misfit factor") }) { notes[m] = Self.misfitNote(merged) }
+            if let i = notes.firstIndex(where: { $0.hasPrefix("Family consistency (R4") }) {
+                notes.insert(contentsOf: withheld + ["Settled again without \(out.sorted().joined(separator: ", ")): the numbers above are from that fit; the withheld keep theirs from the fit that held them."], at: i + 1)
+            } else { notes += withheld }
+            progress?(1)
+            return ProposalResult(candidates: merged, sumPeaks: r.sumPeaks, refused: r.refused, currie: r.currie, notes: notes,
+                                  passes: passes + r.passes, settled: settled && r.settled, reducedChiSquared: r.reducedChiSquared)
+        }
         candidates.sort { $0.significance > $1.significance }
 
         var sumPeaks: [SumPeakFinding] = []
@@ -562,12 +598,7 @@ public nonisolated struct ElementProposer: Sendable {
             "Fit: \(fit.result.methodLabel); \(fit.result.backgroundLabel); \(fit.result.escapeLabel); \(fit.result.referenceShapesLabel); \(poolGroups.count) candidate line groups: \(passes) joint fit\(passes == 1 ? "" : "s") pruned at L_C, then \(trials) single-candidate tests of the pruned ones against the settled model.",
         ]
         if let p = policy.noteLine { notes.insert(p, at: 3) }
-        let near = candidates.filter { $0.significance >= 0.5 }
-        let inflated = near.filter { $0.misfit > 1.005 }
-        notes.append(inflated.isEmpty
-            ? "Flank-misfit scaling: no proposed or near-miss candidate (net/L_D \u{2265} 0.5) had its \u{03C3}\u{2080} inflated."
-            : "\u{03C3}\u{2080} was scaled by the flank-misfit factor (never below 1; a neighbour's misfit inflates every candidate within about \u{00B1}0.5 keV): "
-                + inflated.map { String(format: "%@ \u{00D7}%.2f", $0.element, $0.misfit) }.joined(separator: ", ") + " (candidates at net/L_D \u{2265} 0.5).")
+        notes.append(Self.misfitNote(candidates))
         if familyConsistency {
             notes.append("Family consistency (R4, the confirmation-line rule, validation: none): an element proposed by an L or M line needs its K or L alpha line at or above its own L_D where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise the element is withheld.")
             notes += withheld
