@@ -78,18 +78,20 @@ Tests/SpectroEELSTests/Fixtures/exspy-linescan-*.f64 are eXSpy's simulated test 
 Generalised oscillator strengths (EELS core-loss cross sections, SpectroEELS)
 ================================================================================
 
-Sources/SpectroEELS/Resources/GOS/dft-*.json hold the K1, L1 and L23 tables (C, N, O, Mg, Al, Si, Fe, Cu) of
-the GOSH database of Segger, Guzzinati and Kohl, version 1.5.0, as eXSpy fetches
-it (Segger_Guzzinati_Kohl_1.5.0.gosh, md5 7fee8891c147a4f769668403b54c529b),
-extracted unchanged (every stored float32 value read back bit for bit) by
-tools/eels-edge/extract_gos.py (--task16 for the L tables) into JSON:
+Sources/SpectroEELS/Resources/GOS/dft-*.json hold the K1, L1 and L23 tables (C, N, O, Mg, Al, Si, Fe, Cu), and
+Sources/SpectroEELS/Resources/GOS/dft-gos-tables.bin with dft-gos-index.json the 231 K1, L1, L23, M23 and M45 tables of
+95 elements that eXSpy builds its K, L and M edges from (0.12.0), of the GOSH database of Segger, Guzzinati and
+Kohl, version 1.5.0, as eXSpy fetches it (Segger_Guzzinati_Kohl_1.5.0.gosh, md5 7fee8891c147a4f769668403b54c529b),
+extracted unchanged (every stored float32 value read back bit for bit) by tools/eels-edge/extract_gos.py
+(--task16 for the L tables, --all for the pack) into JSON and into raw float32:
 
     L. Segger, G. Guzzinati, H. Kohl, "A set of Generalised Oscillator Strengths
     for the simulation of EELS spectra", version 1.5.0, Zenodo,
     https://doi.org/10.5281/zenodo.7645765
     Licensed under the Creative Commons Attribution 4.0 International licence
     (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/
-    Changes: three groups of the HDF5 file re-written as JSON; no value changed.
+    Changes: groups of the HDF5 file re-written as JSON and as raw little-endian float32 with a JSON index;
+    no value changed.
 
 The cross section computed from them (Sources/SpectroEELS/EdgeCrossSection.swift)
 ports eXSpy's EELSCLEdge and GOS integration (commit 7185a4d1, GPL-3.0-or-later),

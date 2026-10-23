@@ -86,8 +86,19 @@ struct EdgeEdgeCaseTests {
                                                        energyOffsetEV: 0, energyScaleEV: 1) }) {
             #expect((error as? EELSEdgeError) == .nonFiniteCounts(pixel: 1))
         }
-        #expect(CoreLossEdge.bundled.count == 20 && Set(CoreLossEdge.bundled.map(\.element)) == ["C", "N", "O", "Mg", "Al", "Si", "Fe", "Cu"])
-        #expect(CoreLossEdge.bundled("Fe", "L3") == .ironL3 && CoreLossEdge.bundled("Fe", "M3") == nil)
+        // Every K, L and M edge exSpy builds with the dft GOS (0.12.0): 383 edges, the 20 named ones among them with their onsets.
+        #expect(CoreLossEdge.bundled.count == 383)
+        #expect(Dictionary(grouping: CoreLossEdge.bundled, by: \.family).mapValues(\.count) == ["K": 17, "L": 126, "M": 240])
+        let named: [CoreLossEdge] = [.carbonK, .nitrogenK, .oxygenK, .magnesiumK, .aluminiumK, .siliconK, .magnesiumL1, .magnesiumL2, .magnesiumL3,
+                                     .aluminiumL1, .aluminiumL23, .siliconL1, .siliconL2, .siliconL3, .ironL1, .ironL2, .ironL3, .copperL1, .copperL2, .copperL3]
+        for e in named { #expect(CoreLossEdge.bundled.contains(e), Comment(rawValue: e.description)) }
+        #expect(CoreLossEdge.bundled("Fe", "L3") == .ironL3 && CoreLossEdge.bundled("Fe", "N1") == nil)
+        #expect(CoreLossEdge.bundled("Ba", "M5")?.onsetEV == 781 && CoreLossEdge.bundled("Ti", "L3")?.onsetEV == 456)
+        // Every bundled edge has its table (the pack's bytes fit the index), on the GOSH grid.
+        for e in CoreLossEdge.bundled {
+            let t = GOSTable.bundled(e)
+            #expect(t != nil && t!.gos.count == t!.energyAxis.count && t!.gos.allSatisfy { $0.count == t!.q.count }, Comment(rawValue: e.description))
+        }
         // An edge window wholly below the onset: σ_k = 0, refused (review R1), not n = ±inf.
         if let error = #expect(throws: (any Error).self, performing: { try EELSEdgeQuantification.ratioMethod(coreLoss: core, microscope: m, lowLoss: .integratedToWidth(low),
                                                                     backgroundWindowEV: 160...200, edgeOnsetEV: 210) }) {

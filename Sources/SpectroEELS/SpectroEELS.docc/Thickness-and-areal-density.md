@@ -67,7 +67,7 @@ func arealDensity(core counts: [Double], nx: Int, ny: Int, channels: Int,
 }
 ```
 
-The edge is one of ``CoreLossEdge/bundled``: 20 edges: K of C, N, O, Mg, Al, Si (``CoreLossEdge/carbonK``, ``CoreLossEdge/nitrogenK``, ``CoreLossEdge/oxygenK``, …) and the L edges of Mg, Al, Si, Fe and Cu.
+The edge is one of ``CoreLossEdge/bundled``: every K, L and M edge exSpy builds with the dft GOS, 383 edges of 95 elements; the named ones (``CoreLossEdge/carbonK``, ``CoreLossEdge/nitrogenK``, ``CoreLossEdge/oxygenK``, …, the L edges of Mg, Al, Si, Fe and Cu) are among them.
 Where I_low comes from is a ``LowLossIntensity``:
 
 - ``LowLossIntensity/integratedToWidth(_:)`` integrates the low-loss counts to Δ eV past the zero loss (Egerton eq. 4.66, the

@@ -72,8 +72,10 @@ public nonisolated struct CoreLossEdge: Sendable, Equatable, CustomStringConvert
     /// Copper L3, onset 931 eV.
     public static let copperL3 = CoreLossEdge(element: "Cu", subshell: "L3", onsetEV: 931.0)
 
-    /// The edges whose GOS ships with SpectroKit: K of C, N, O, Mg, Al, Si and the L edges of Mg, Al, Si, Fe, Cu.
-    public static let bundled: [CoreLossEdge] = [
+    /// The edges whose GOS ships with SpectroKit: every K, L and M edge exSpy builds with the dft GOS (its eels_binding_energies.json against the GOSH file's
+    /// tables): 383 edges of 95 elements, K 17, L 126, M 240 (`Resources/GOS/dft-gos-index.json`, tools/eels-edge/extract_gos.py --all). The 20 named edges
+    /// above are among them, with the same onsets. Ordered by element symbol, then subshell.
+    public static let bundled: [CoreLossEdge] = GOSPack.shared?.edges ?? [
         .carbonK, .nitrogenK, .oxygenK, .magnesiumK, .aluminiumK, .siliconK,
         .magnesiumL1, .magnesiumL2, .magnesiumL3, .aluminiumL1, .aluminiumL23, .siliconL1, .siliconL2, .siliconL3,
         .ironL1, .ironL2, .ironL3, .copperL1, .copperL2, .copperL3,
@@ -87,10 +89,13 @@ public nonisolated struct CoreLossEdge: Sendable, Equatable, CustomStringConvert
     /// "K" or "L" (the shell the subshell belongs to).
     public var family: String { String(subshell.prefix(1)) }
 
-    /// The GOSH table the subshell reads: K1, L1, or L23 (L2, L3 and L2,3 share it, with their own occupancy ratios).
+    /// The GOSH table the subshell reads (the file's metadata/edges_info): K1, L1, M1 alone; L2, L3 and L2,3 share L23, M2, M3 and M2,3 share M23, M4, M5
+    /// and M4,5 share M45, each with its own occupancy ratio.
     package var table: String {
         switch subshell {
         case "L2", "L3", "L2,3": "L23"
+        case "M2", "M3", "M2,3": "M23"
+        case "M4", "M5", "M4,5": "M45"
         default: subshell
         }
     }
@@ -164,7 +169,7 @@ package nonisolated struct GOSTable: Sendable {
             made = GOSTable(edge: edge, occupancyRatio: Float(e.occupancyRatio), freeEnergies: s.freeEnergies.map { Float($0) },
                             q: s.q.map { Float($0) }, gos: s.gos.map { $0.map { Float($0) } })
         } else {
-            made = nil
+            made = GOSPack.shared?.table(for: edge)
         }
         if let made { cache[key] = made }
         return made
@@ -172,4 +177,56 @@ package nonisolated struct GOSTable: Sendable {
 
     nonisolated(unsafe) private static var cache: [String: GOSTable] = [:]
     private static let cacheLock = NSLock()
+}
+
+/// The pack of every K, L and M table (tools/eels-edge/extract_gos.py --all): `dft-gos-index.json` lists each table's element, name, byte offset and
+/// sizes and the edges that read it; `dft-gos-tables.bin` holds per table free_energies, q and gos (energy-major) as float32 little-endian, the GOSH file's
+/// stored values. Read once, mapped, never copied whole; a table is cut out when an edge first asks for it.
+package nonisolated final class GOSPack: Sendable {
+    struct Index: Decodable {
+        struct Table: Decodable {
+            struct Edge: Decodable { let subshell: String; let onsetEV: Double; let occupancyRatio: Double }
+            let element: String
+            let table: String
+            let offset: Int
+            let energies: Int
+            let q: Int
+            let edges: [Edge]
+        }
+        let tables: [Table]
+        let packBytes: Int
+    }
+
+    let index: Index
+    let data: Data
+    package let edges: [CoreLossEdge]
+
+    package static let shared: GOSPack? = {
+        guard let i = Bundle.module.url(forResource: "dft-gos-index", withExtension: "json", subdirectory: "GOS"),
+              let b = Bundle.module.url(forResource: "dft-gos-tables", withExtension: "bin", subdirectory: "GOS"),
+              let indexData = try? Data(contentsOf: i), let index = try? JSONDecoder().decode(Index.self, from: indexData),
+              let data = try? Data(contentsOf: b, options: .alwaysMapped), data.count == index.packBytes else { return nil }
+        return GOSPack(index: index, data: data)
+    }()
+
+    init(index: Index, data: Data) {
+        self.index = index
+        self.data = data
+        self.edges = index.tables.flatMap { t in t.edges.map { CoreLossEdge(element: t.element, subshell: $0.subshell, onsetEV: $0.onsetEV) } }
+            .sorted { ($0.element, $0.subshell) < ($1.element, $1.subshell) }
+    }
+
+    /// The table `edge` reads, with its own onset and occupancy ratio; nil when the pack holds no such edge or the bytes do not fit the index.
+    package func table(for edge: CoreLossEdge) -> GOSTable? {
+        guard let t = index.tables.first(where: { $0.element == edge.element && $0.edges.contains { $0.subshell == edge.subshell } }),
+              let e = t.edges.first(where: { $0.subshell == edge.subshell }), e.onsetEV == edge.onsetEV else { return nil }
+        let count = t.energies + t.q + t.energies * t.q
+        guard t.offset >= 0, t.offset + 4 * count <= data.count else { return nil }
+        let floats: [Float] = data.withUnsafeBytes { raw in
+            (0 ..< count).map { Float(bitPattern: UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: t.offset + 4 * $0, as: UInt32.self))) }
+        }
+        let fe = Array(floats[0 ..< t.energies]), q = Array(floats[t.energies ..< t.energies + t.q])
+        let gos = (0 ..< t.energies).map { i in Array(floats[(t.energies + t.q + i * t.q) ..< (t.energies + t.q + (i + 1) * t.q)]) }
+        return GOSTable(edge: edge, occupancyRatio: Float(e.occupancyRatio), freeEnergies: fe, q: q, gos: gos)
+    }
 }

@@ -1,0 +1,4008 @@
+{
+  "packBytes": 17475612,
+  "packSHA256": "eb17a3bd780bbcfc2e5caec1c9ab1d7a16cd748925dbf49bd9bcf47f0ef114ad",
+  "source": {
+    "attribution": "Segger, Guzzinati and Kohl, GOSH 1.5.0 (A set of Generalised Oscillator Strengths for the simulation of EELS spectra), DOI 10.5281/zenodo.7645765, CC-BY-4.0",
+    "doi": "10.5281/zenodo.7645765",
+    "edgesFrom": "exspy/material/eels_binding_energies.json (exSpy 7185a4d1)",
+    "file": "Segger_Guzzinati_Kohl_1.5.0.gosh",
+    "licence": "CC-BY-4.0",
+    "md5": "7fee8891c147a4f769668403b54c529b"
+  },
+  "tables": [
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 19840.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Ac",
+      "energies": 97,
+      "offset": 0,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 19083.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 15871.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Ac",
+      "energies": 97,
+      "offset": 75652,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 5002.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Ac",
+      "energies": 97,
+      "offset": 151304,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 4656.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 3909.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ac",
+      "energies": 97,
+      "offset": 226956,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3370.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3219.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ac",
+      "energies": 97,
+      "offset": 302608,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 602.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 571.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ag",
+      "energies": 97,
+      "offset": 378260,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 373.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 367.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ag",
+      "energies": 97,
+      "offset": 453912,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1560.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Al",
+      "energies": 97,
+      "offset": 529564,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 118.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Al",
+      "energies": 97,
+      "offset": 605216,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 73.0,
+          "subshell": "L2,3"
+        }
+      ],
+      "element": "Al",
+      "energies": 97,
+      "offset": 680868,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 23773.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Am",
+      "energies": 97,
+      "offset": 756520,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 22944.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 18504.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Am",
+      "energies": 97,
+      "offset": 832172,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 6121.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Am",
+      "energies": 97,
+      "offset": 907824,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 5710.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 4667.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Am",
+      "energies": 97,
+      "offset": 983476,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 4092.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3887.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Am",
+      "energies": 97,
+      "offset": 1059128,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 320.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Ar",
+      "energies": 97,
+      "offset": 1134780,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 245.0,
+          "subshell": "L2,3"
+        }
+      ],
+      "element": "Ar",
+      "energies": 97,
+      "offset": 1210432,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1526.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "As",
+      "energies": 97,
+      "offset": 1286084,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1359.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1323.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "As",
+      "energies": 97,
+      "offset": 1361736,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 17493.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "At",
+      "energies": 97,
+      "offset": 1437388,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 16785.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 14214.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "At",
+      "energies": 97,
+      "offset": 1513040,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 4317.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "At",
+      "energies": 97,
+      "offset": 1588692,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 4008.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 3426.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "At",
+      "energies": 97,
+      "offset": 1664344,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2908.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2787.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "At",
+      "energies": 97,
+      "offset": 1739996,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2291.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2206.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Au",
+      "energies": 97,
+      "offset": 1815648,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 188.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "B",
+      "energies": 97,
+      "offset": 1891300,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1137.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1062.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ba",
+      "energies": 97,
+      "offset": 1966952,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 796.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 781.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ba",
+      "energies": 97,
+      "offset": 2042604,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 111.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Be",
+      "energies": 97,
+      "offset": 2118256,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2688.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2580.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Bi",
+      "energies": 97,
+      "offset": 2193908,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1782.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Br",
+      "energies": 97,
+      "offset": 2269560,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1596.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1550.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Br",
+      "energies": 97,
+      "offset": 2345212,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 284.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "C",
+      "energies": 97,
+      "offset": 2420864,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 438.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Ca",
+      "energies": 97,
+      "offset": 2496516,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 350.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 346.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Ca",
+      "energies": 97,
+      "offset": 2572168,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 651.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 616.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Cd",
+      "energies": 97,
+      "offset": 2647820,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 411.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 404.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Cd",
+      "energies": 97,
+      "offset": 2723472,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1273.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1185.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ce",
+      "energies": 97,
+      "offset": 2799124,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 901.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 883.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ce",
+      "energies": 97,
+      "offset": 2874776,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 270.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Cl",
+      "energies": 97,
+      "offset": 2950428,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 200.0,
+          "subshell": "L2,3"
+        }
+      ],
+      "element": "Cl",
+      "energies": 97,
+      "offset": 3026080,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 926.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Co",
+      "energies": 97,
+      "offset": 3101732,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 794.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 779.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Co",
+      "energies": 97,
+      "offset": 3177384,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 59.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 59.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Co",
+      "energies": 97,
+      "offset": 3253036,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 695.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Cr",
+      "energies": 97,
+      "offset": 3328688,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 584.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 575.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Cr",
+      "energies": 97,
+      "offset": 3404340,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 43.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 43.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Cr",
+      "energies": 97,
+      "offset": 3479992,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1065.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 998.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Cs",
+      "energies": 97,
+      "offset": 3555644,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 740.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 726.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Cs",
+      "energies": 97,
+      "offset": 3631296,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1096.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Cu",
+      "energies": 97,
+      "offset": 3706948,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 951.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 931.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Cu",
+      "energies": 97,
+      "offset": 3782600,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 74.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 74.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Cu",
+      "energies": 97,
+      "offset": 3858252,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1842.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1676.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Dy",
+      "energies": 97,
+      "offset": 3933904,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1332.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1295.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Dy",
+      "energies": 97,
+      "offset": 4009556,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2006.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1812.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Er",
+      "energies": 97,
+      "offset": 4085208,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1453.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1409.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Er",
+      "energies": 97,
+      "offset": 4160860,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1614.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1481.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Eu",
+      "energies": 97,
+      "offset": 4236512,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1161.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1131.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Eu",
+      "energies": 97,
+      "offset": 4312164,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 685.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "F",
+      "energies": 97,
+      "offset": 4387816,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 7113.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Fe",
+      "energies": 97,
+      "offset": 4463468,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 846.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Fe",
+      "energies": 97,
+      "offset": 4539120,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 721.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 708.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Fe",
+      "energies": 97,
+      "offset": 4614772,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 57.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 57.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Fe",
+      "energies": 97,
+      "offset": 4690424,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 18639.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Fr",
+      "energies": 97,
+      "offset": 4766076,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 17907.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 15031.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Fr",
+      "energies": 97,
+      "offset": 4841728,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 4652.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Fr",
+      "energies": 97,
+      "offset": 4917380,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 4327.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 3663.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Fr",
+      "energies": 97,
+      "offset": 4993032,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3136.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3000.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Fr",
+      "energies": 97,
+      "offset": 5068684,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1298.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Ga",
+      "energies": 97,
+      "offset": 5144336,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1142.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1115.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Ga",
+      "energies": 97,
+      "offset": 5219988,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1688.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1544.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Gd",
+      "energies": 97,
+      "offset": 5295640,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1217.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1185.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Gd",
+      "energies": 97,
+      "offset": 5371292,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1414.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Ge",
+      "energies": 97,
+      "offset": 5446944,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1248.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1217.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Ge",
+      "energies": 97,
+      "offset": 5522596,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 13.598,
+          "subshell": "K1"
+        }
+      ],
+      "element": "H",
+      "energies": 97,
+      "offset": 5598248,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 24.587,
+          "subshell": "K1"
+        }
+      ],
+      "element": "He",
+      "energies": 97,
+      "offset": 5673900,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1716.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1662.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Hf",
+      "energies": 97,
+      "offset": 5749552,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2385.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2295.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Hg",
+      "energies": 97,
+      "offset": 5825204,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1923.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1741.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ho",
+      "energies": 97,
+      "offset": 5900856,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1391.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1351.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ho",
+      "energies": 97,
+      "offset": 5976508,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 930.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 875.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "I",
+      "energies": 97,
+      "offset": 6052160,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 631.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 620.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "I",
+      "energies": 97,
+      "offset": 6127812,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 702.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 664.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "In",
+      "energies": 97,
+      "offset": 6203464,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 451.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 443.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "In",
+      "energies": 97,
+      "offset": 6279116,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2116.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2040.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ir",
+      "energies": 97,
+      "offset": 6354768,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 377.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "K",
+      "energies": 97,
+      "offset": 6430420,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 296.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 294.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "K",
+      "energies": 97,
+      "offset": 6506072,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1921.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Kr",
+      "energies": 97,
+      "offset": 6581724,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1727.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1675.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Kr",
+      "energies": 97,
+      "offset": 6657376,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 89.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 89.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Kr",
+      "energies": 97,
+      "offset": 6733028,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1204.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1123.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "La",
+      "energies": 97,
+      "offset": 6808680,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 849.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 832.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "La",
+      "energies": 97,
+      "offset": 6884332,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 55.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Li",
+      "energies": 97,
+      "offset": 6959984,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2263.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 2024.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Lu",
+      "energies": 97,
+      "offset": 7035636,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1639.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1588.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Lu",
+      "energies": 97,
+      "offset": 7111288,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1305.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Mg",
+      "energies": 97,
+      "offset": 7186940,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 89.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Mg",
+      "energies": 97,
+      "offset": 7262592,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 51.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 51.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Mg",
+      "energies": 97,
+      "offset": 7338244,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 769.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Mn",
+      "energies": 97,
+      "offset": 7413896,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 651.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 640.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Mn",
+      "energies": 97,
+      "offset": 7489548,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 51.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 51.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Mn",
+      "energies": 97,
+      "offset": 7565200,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 2866.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Mo",
+      "energies": 97,
+      "offset": 7640852,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2625.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 2520.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Mo",
+      "energies": 97,
+      "offset": 7716504,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 410.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 392.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Mo",
+      "energies": 97,
+      "offset": 7792156,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 228.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 227.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Mo",
+      "energies": 97,
+      "offset": 7867808,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 401.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "N",
+      "energies": 97,
+      "offset": 7943460,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1072.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Na",
+      "energies": 97,
+      "offset": 8019112,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 63.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Na",
+      "energies": 97,
+      "offset": 8094764,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 31.0,
+          "subshell": "L2,3"
+        }
+      ],
+      "element": "Na",
+      "energies": 97,
+      "offset": 8170416,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 2698.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Nb",
+      "energies": 97,
+      "offset": 8246068,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2465.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 2371.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Nb",
+      "energies": 97,
+      "offset": 8321720,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 378.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 363.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Nb",
+      "energies": 97,
+      "offset": 8397372,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 205.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 202.3,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Nb",
+      "energies": 97,
+      "offset": 8473024,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1403.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1297.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Nd",
+      "energies": 97,
+      "offset": 8548676,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1000.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 978.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Nd",
+      "energies": 97,
+      "offset": 8624328,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 867.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Ne",
+      "energies": 97,
+      "offset": 8699980,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1008.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Ni",
+      "energies": 97,
+      "offset": 8775632,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 872.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 855.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Ni",
+      "energies": 97,
+      "offset": 8851284,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 68.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 68.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ni",
+      "energies": 97,
+      "offset": 8926936,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 22427.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Np",
+      "energies": 97,
+      "offset": 9002588,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 21601.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 17610.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Np",
+      "energies": 97,
+      "offset": 9078240,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 5723.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Np",
+      "energies": 97,
+      "offset": 9153892,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 5366.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 4435.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Np",
+      "energies": 97,
+      "offset": 9229544,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3850.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3666.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Np",
+      "energies": 97,
+      "offset": 9305196,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 532.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "O",
+      "energies": 97,
+      "offset": 9380848,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2031.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1960.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Os",
+      "energies": 97,
+      "offset": 9456500,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 2146.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "P",
+      "energies": 97,
+      "offset": 9532152,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 189.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "P",
+      "energies": 97,
+      "offset": 9607804,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 132.0,
+          "subshell": "L2,3"
+        }
+      ],
+      "element": "P",
+      "energies": 97,
+      "offset": 9683456,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 21105.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Pa",
+      "energies": 97,
+      "offset": 9759108,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 20314.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 16733.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Pa",
+      "energies": 97,
+      "offset": 9834760,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 5367.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Pa",
+      "energies": 97,
+      "offset": 9910412,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 5001.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 4174.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Pa",
+      "energies": 97,
+      "offset": 9986064,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3611.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3442.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Pa",
+      "energies": 97,
+      "offset": 10061716,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2586.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2484.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Pb",
+      "energies": 97,
+      "offset": 10137368,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 559.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 531.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Pd",
+      "energies": 97,
+      "offset": 10213020,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 340.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 335.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Pd",
+      "energies": 97,
+      "offset": 10288672,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 7428.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Pm",
+      "energies": 97,
+      "offset": 10364324,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 7013.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 6459.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Pm",
+      "energies": 97,
+      "offset": 10439976,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1646.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Pm",
+      "energies": 97,
+      "offset": 10515628,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1471.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1357.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Pm",
+      "energies": 97,
+      "offset": 10591280,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1052.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1027.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Pm",
+      "energies": 97,
+      "offset": 10666932,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 16939.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Po",
+      "energies": 97,
+      "offset": 10742584,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 16244.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 13814.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Po",
+      "energies": 97,
+      "offset": 10818236,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 4149.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Po",
+      "energies": 97,
+      "offset": 10893888,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 3854.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 3302.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Po",
+      "energies": 97,
+      "offset": 10969540,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2798.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2683.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Po",
+      "energies": 97,
+      "offset": 11045192,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1337.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1242.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Pr",
+      "energies": 97,
+      "offset": 11120844,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 951.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 931.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Pr",
+      "energies": 97,
+      "offset": 11196496,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2202.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2122.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Pt",
+      "energies": 97,
+      "offset": 11272148,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 23097.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Pu",
+      "energies": 97,
+      "offset": 11347800,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 22266.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 18057.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Pu",
+      "energies": 97,
+      "offset": 11423452,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 5933.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Pu",
+      "energies": 97,
+      "offset": 11499104,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 5541.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 4557.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Pu",
+      "energies": 97,
+      "offset": 11574756,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3973.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3778.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Pu",
+      "energies": 97,
+      "offset": 11650408,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 19237.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Ra",
+      "energies": 97,
+      "offset": 11726060,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 18484.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 15444.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Ra",
+      "energies": 97,
+      "offset": 11801712,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 4822.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Ra",
+      "energies": 97,
+      "offset": 11877364,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 4490.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 3792.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ra",
+      "energies": 97,
+      "offset": 11953016,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3248.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3105.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ra",
+      "energies": 97,
+      "offset": 12028668,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 2065.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Rb",
+      "energies": 97,
+      "offset": 12104320,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1864.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1804.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Rb",
+      "energies": 97,
+      "offset": 12179972,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 247.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 238.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Rb",
+      "energies": 97,
+      "offset": 12255624,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 110.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 110.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Rb",
+      "energies": 97,
+      "offset": 12331276,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1949.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1883.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Re",
+      "energies": 97,
+      "offset": 12406928,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 521.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 496.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Rh",
+      "energies": 97,
+      "offset": 12482580,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 312.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 308.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Rh",
+      "energies": 97,
+      "offset": 12558232,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 18049.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Rn",
+      "energies": 97,
+      "offset": 12633884,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 17337.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 14619.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Rn",
+      "energies": 97,
+      "offset": 12709536,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 4482.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Rn",
+      "energies": 97,
+      "offset": 12785188,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 4159.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 3538.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Rn",
+      "energies": 97,
+      "offset": 12860840,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3022.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2892.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Rn",
+      "energies": 97,
+      "offset": 12936492,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 483.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 461.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ru",
+      "energies": 97,
+      "offset": 13012144,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 279.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 279.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ru",
+      "energies": 97,
+      "offset": 13087796,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 229.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "S",
+      "energies": 97,
+      "offset": 13163448,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 165.0,
+          "subshell": "L2,3"
+        }
+      ],
+      "element": "S",
+      "energies": 97,
+      "offset": 13239100,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 812.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 766.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Sb",
+      "energies": 97,
+      "offset": 13314752,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 537.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 528.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Sb",
+      "energies": 97,
+      "offset": 13390404,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 500.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Sc",
+      "energies": 97,
+      "offset": 13466056,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 407.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 402.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Sc",
+      "energies": 97,
+      "offset": 13541708,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 32.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 32.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Sc",
+      "energies": 97,
+      "offset": 13617360,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1654.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Se",
+      "energies": 97,
+      "offset": 13693012,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1476.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1436.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Se",
+      "energies": 97,
+      "offset": 13768664,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1839.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Si",
+      "energies": 97,
+      "offset": 13844316,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 149.7,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Si",
+      "energies": 97,
+      "offset": 13919968,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 99.8,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 99.2,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Si",
+      "energies": 97,
+      "offset": 13995620,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1541.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1420.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Sm",
+      "energies": 97,
+      "offset": 14071272,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1106.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1080.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Sm",
+      "energies": 97,
+      "offset": 14146924,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 756.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 714.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Sn",
+      "energies": 97,
+      "offset": 14222576,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 494.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 485.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Sn",
+      "energies": 97,
+      "offset": 14298228,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 2216.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Sr",
+      "energies": 97,
+      "offset": 14373880,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2007.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1940.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Sr",
+      "energies": 97,
+      "offset": 14449532,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 280.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 269.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Sr",
+      "energies": 97,
+      "offset": 14525184,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 134.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 134.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Sr",
+      "energies": 97,
+      "offset": 14600836,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1793.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1735.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Ta",
+      "energies": 97,
+      "offset": 14676488,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1768.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1611.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Tb",
+      "energies": 97,
+      "offset": 14752140,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1275.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1241.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Tb",
+      "energies": 97,
+      "offset": 14827792,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 21044.0,
+          "subshell": "K1"
+        }
+      ],
+      "element": "Tc",
+      "energies": 97,
+      "offset": 14903444,
+      "q": 192,
+      "table": "K1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 3043.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Tc",
+      "energies": 97,
+      "offset": 14979096,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2793.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 2677.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Tc",
+      "energies": 97,
+      "offset": 15054748,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 544.0,
+          "subshell": "M1"
+        }
+      ],
+      "element": "Tc",
+      "energies": 97,
+      "offset": 15130400,
+      "q": 192,
+      "table": "M1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 445.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 425.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Tc",
+      "energies": 97,
+      "offset": 15206052,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 256.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 253.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Tc",
+      "energies": 97,
+      "offset": 15281704,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 870.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 819.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Te",
+      "energies": 97,
+      "offset": 15357356,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 582.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 572.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Te",
+      "energies": 97,
+      "offset": 15433008,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3491.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3332.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Th",
+      "energies": 97,
+      "offset": 15508660,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 564.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Ti",
+      "energies": 97,
+      "offset": 15584312,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 462.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 456.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Ti",
+      "energies": 97,
+      "offset": 15659964,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 35.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 35.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Ti",
+      "energies": 97,
+      "offset": 15735616,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 2485.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 2389.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Tl",
+      "energies": 97,
+      "offset": 15811268,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2090.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1884.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Tm",
+      "energies": 97,
+      "offset": 15886920,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1515.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1468.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Tm",
+      "energies": 97,
+      "offset": 15962572,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 3728.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 3552.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "U",
+      "energies": 97,
+      "offset": 16038224,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 628.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "V",
+      "energies": 97,
+      "offset": 16113876,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 521.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 513.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "V",
+      "energies": 97,
+      "offset": 16189528,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 38.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 38.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "V",
+      "energies": 97,
+      "offset": 16265180,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1872.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1809.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "W",
+      "energies": 97,
+      "offset": 16340832,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 685.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 672.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Xe",
+      "energies": 97,
+      "offset": 16416484,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 2372.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Y",
+      "energies": 97,
+      "offset": 16492136,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2155.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 2080.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Y",
+      "energies": 97,
+      "offset": 16567788,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 312.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 300.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Y",
+      "energies": 97,
+      "offset": 16643440,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 160.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 160.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Y",
+      "energies": 97,
+      "offset": 16719092,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2173.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1950.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Yb",
+      "energies": 97,
+      "offset": 16794744,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 1576.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 1528.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Yb",
+      "energies": 97,
+      "offset": 16870396,
+      "q": 192,
+      "table": "M45"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 1194.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Zn",
+      "energies": 97,
+      "offset": 16946048,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 1043.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 1020.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Zn",
+      "energies": 97,
+      "offset": 17021700,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 87.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 87.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Zn",
+      "energies": 97,
+      "offset": 17097352,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 1.0,
+          "onsetEV": 2532.0,
+          "subshell": "L1"
+        }
+      ],
+      "element": "Zr",
+      "energies": 97,
+      "offset": 17173004,
+      "q": 192,
+      "table": "L1"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 2307.0,
+          "subshell": "L2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 2222.0,
+          "subshell": "L3"
+        }
+      ],
+      "element": "Zr",
+      "energies": 97,
+      "offset": 17248656,
+      "q": 192,
+      "table": "L23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.3330000042915344,
+          "onsetEV": 344.0,
+          "subshell": "M2"
+        },
+        {
+          "occupancyRatio": 0.6669999957084656,
+          "onsetEV": 330.0,
+          "subshell": "M3"
+        }
+      ],
+      "element": "Zr",
+      "energies": 97,
+      "offset": 17324308,
+      "q": 192,
+      "table": "M23"
+    },
+    {
+      "edges": [
+        {
+          "occupancyRatio": 0.4000000059604645,
+          "onsetEV": 181.0,
+          "subshell": "M4"
+        },
+        {
+          "occupancyRatio": 0.6000000238418579,
+          "onsetEV": 181.0,
+          "subshell": "M5"
+        }
+      ],
+      "element": "Zr",
+      "energies": 97,
+      "offset": 17399960,
+      "q": 192,
+      "table": "M45"
+    }
+  ]
+}

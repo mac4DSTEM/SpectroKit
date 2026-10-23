@@ -2,7 +2,18 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
-## 0.12.0 (2026-10-23), EELS per-edge windows report a 1σ on each edge intensity
+## 0.12.0 (2026-10-23), EELS per-edge windows report a 1σ on each edge intensity; every K, L and M edge of the dft GOS
+
+- **Every edge exSpy builds with the dft GOS** (additive). `CoreLossEdge.bundled` holds 383 edges of 95 elements (K 17, L 126, M 240): each K, L and M
+  subshell of exSpy 7185a4d1's eels_binding_energies.json whose GOSH table the file holds, with exSpy's onsets and occupancy ratios; the 20 named
+  edges are among them, unchanged. The tables are Segger, Guzzinati and Kohl's dft GOS, GOSH 1.5.0 (DOI 10.5281/zenodo.7645765, CC BY 4.0, md5
+  7fee8891c147a4f769668403b54c529b, the file exSpy fetches with pooch), bundled, not fetched: 231 tables as float32 in `Resources/GOS/dft-gos-tables.bin`
+  (17.5 MB, the stored values exactly) with `dft-gos-index.json`, so a sandboxed app works offline on first use and every number is the pinned file's
+  (tools/eels-edge/extract_gos.py --all). M edges pair as exSpy's twins (M2 with M3, M4 with M5) by element and family, as L2 with L3 already did.
+  Parity: all 231 tables bit-exact, and B K, Ti L1, L2, L3, Zr M2, M3, Ba M4, M5 against exSpy at two microscope settings each (EdgePackPinsTests:
+  angle 0, qint 3e-16, function 6e-16 against 1e-14, 1e-12, 1e-10). `validation: "none"` as before.
+- **Migration.** A consumer that lists `CoreLossEdge.bundled` (a periodic table, a picker) now gets 383 edges, not 20: filter by the energies its
+  spectrum covers. Nothing else changes; the JSON tables of the 20 named edges stay and are read first.
 
 - `EdgeIntensityPixel.intensityStd` (additive; nil on the joint fit, on failed or masked pixels, and for every edge after the first with `stripPrecedingEdges`): the signal window's Poisson counting noise plus the background power law's (A, r) sandwich covariance, the error propagation behind Egerton's h factor. Statistical only, of the unclamped estimator, for raw detected counts; areal density's σ is `intensityStd` × 1e10 on a convolved fit. `validation: "none"`. No intensity changes.
 

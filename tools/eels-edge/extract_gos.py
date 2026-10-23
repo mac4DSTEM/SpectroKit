@@ -37,6 +37,7 @@ ap.add_argument("--gosh", default=os.path.join(REPO, "References", "gos-dft-1.5.
 ap.add_argument("--exspy", default=os.path.join(REPO, "References", "exspy-7185a4d1"))
 ap.add_argument("--out", default=os.path.join(REPO, "Sources", "SpectroEELS", "Resources", "GOS"))
 ap.add_argument("--task16", action="store_true", help="write the task-16 tables (K1 of Mg, Al, Si; L1 and L23 of Mg, Al, Si, Fe, Cu) in the per-TABLE schema instead of C, N, O K1")
+ap.add_argument("--all", action="store_true", help="write every K, L and M edge exSpy builds with the dft GOS into one pack: dft-gos-tables.bin and dft-gos-index.json")
 ARGS = ap.parse_args()
 
 MD5 = "7fee8891c147a4f769668403b54c529b"
@@ -138,7 +139,60 @@ def main_task16():
                 print(f"{p}  {len(raw)} bytes  sha256 {hashlib.sha256(raw).hexdigest()}")
 
 
+# Every edge exSpy builds with GOS="dft" (Paul, 2026-10-23: "we need to put everything in"): each K, L and M subshell of exspy/material/eels_binding_energies.json
+# whose GOSH subshell (metadata/edges_info) names a table the file holds for the element: 383 edges from 231 tables (K 17, L 126, M 240 edges). One pack, not
+# 231 JSON files (about 17 MB of float32 instead of about 100 MB of text): dft-gos-tables.bin holds, per table, free_energies (nE), q (nQ) and gos (nE x nQ,
+# exSpy's np.squeeze(data.T) layout, row-major) as float32 little-endian, exactly the stored values; dft-gos-index.json lists each table's element, name, byte
+# offset and sizes and the edges that read it (subshell as exSpy's binding-energy key, "K" written "K1"; onset; occupancy ratio), with the source and a sha256
+# of the pack.
+def main_all():
+    assert md5_file(ARGS.gosh) == MD5, "the GOSH file is not the pinned one"
+    with open(os.path.join(ARGS.exspy, "exspy", "material", "eels_binding_energies.json")) as f:
+        be = json.load(f)["elements"]
+    os.makedirs(ARGS.out, exist_ok=True)
+    blob = bytearray()
+    tables = {}
+    with h5py.File(ARGS.gosh, "r") as h:
+        assert h["/metadata/data_ref"].attrs["data_doi"] == DOI
+        info = h["metadata/edges_info"]
+        for el in sorted(be):
+            for key in sorted(be[el]):
+                sub = "K1" if key == "K" else key
+                if sub[0] not in "KLM" or sub not in info:
+                    continue
+                table = str(info[sub].attrs["table"])
+                if el not in h or table not in h[el]:
+                    continue
+                tk = (el, table)
+                if tk not in tables:
+                    g = h[f"/{el}/{table}"]
+                    data, q, fe = g["data"][:], g["q"][:], g["free_energies"][:]
+                    assert data.ndim == 3 and data.shape[2] == 1 and data.shape[0] == q.shape[0] and data.shape[1] == fe.shape[0], (el, table, data.shape)
+                    gos = np.ascontiguousarray(data[:, :, 0].T).astype("<f4")    # = exSpy's np.squeeze(data.T) for (q, energy, 1)
+                    assert gos.shape == (fe.shape[0], q.shape[0]), (el, table, gos.shape)
+                    offset = len(blob)
+                    blob += fe.astype("<f4").tobytes() + q.astype("<f4").tobytes() + gos.tobytes()
+                    tables[tk] = {"element": el, "table": table, "offset": offset, "energies": int(fe.shape[0]), "q": int(q.shape[0]), "edges": []}
+                tables[tk]["edges"].append({"subshell": sub, "onsetEV": float(be[el][key]["onset_energy (eV)"]),
+                                            "occupancyRatio": float(info[sub].attrs["occupancy_ratio"])})
+    raw = bytes(blob)
+    index = {"tables": [tables[k] for k in sorted(tables)], "packSHA256": hashlib.sha256(raw).hexdigest(), "packBytes": len(raw),
+             "source": {"file": "Segger_Guzzinati_Kohl_1.5.0.gosh", "md5": MD5, "doi": DOI, "licence": "CC-BY-4.0", "attribution": ATTRIBUTION,
+                        "edgesFrom": "exspy/material/eels_binding_energies.json (exSpy 7185a4d1)"}}
+    with open(os.path.join(ARGS.out, "dft-gos-tables.bin"), "wb") as f:
+        f.write(raw)
+    parts = []
+    dump(index, 0, parts)
+    text = ("".join(parts) + "\n").encode()
+    with open(os.path.join(ARGS.out, "dft-gos-index.json"), "wb") as f:
+        f.write(text)
+    edges = sum(len(t["edges"]) for t in tables.values())
+    print(f"{len(tables)} tables, {edges} edges, pack {len(raw)} bytes sha256 {index['packSHA256']}, index {len(text)} bytes")
+
+
 def main():
+    if ARGS.all:
+        return main_all()
     if ARGS.task16:
         return main_task16()
     assert md5_file(ARGS.gosh) == MD5, "the GOSH file is not the pinned one"
