@@ -142,10 +142,11 @@ level0.quantification.fit.reducedDeviance = 401fd6702f5d4c60 7.9594123268790042
 level0.quantification.fit.methodLabel = "least squares, unweighted"
 level0.quantification.fit.referenceShapesLabel = "reference shapes: none"
 level0.quantification.fit.escapeLabel = "escape peaks: none (no line above the Si K edge, 1.839 keV)"
+level0.quantification.fit.lineShapeLabel = "line shape: Gaussian"
 level0.quantification.fit.backgroundLabel = "continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data"
 level0.quantification.fit.exit = "converged"
 level0.quantification.fit.warnings: array 1
-level0.quantification.fit.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
+level0.quantification.fit.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
 level0.quantification.fit.droppedLines: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 level0.quantification.fit.escapeRatios: array 4
 level0.quantification.fit.escapeRatios[0] = nil
@@ -180,7 +181,7 @@ level0.quantification.kSet = nil
 level0.quantification.abundanceRefusal = "The computed-k data files are not available in this build."
 level0.quantification.absorption = .off
 level0.quantification.warnings: array 1
-level0.quantification.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
+level0.quantification.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
 level0.quantification.qualityLabel = "χ²ᵣ (Pearson)"
 level0.quantification.quality = 4030ea637a6c1f82 16.915580417058216
 level0.quantification.footerLines: array 8
@@ -210,6 +211,7 @@ level0.quantification.fitSettings.background.continuum.efficiency = nil
 level0.quantification.fitSettings.escapePeaks = true
 level0.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 level0.quantification.fitSettings.method = .leastSquares
+level0.quantification.fitSettings.lineTail = nil
 level0.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
 level0.quantification.fitRange.toKeV = 40340160bc0314bd 20.005382300140571
 level0.quantification.fitRange.source = .defaultReach
@@ -221,7 +223,7 @@ level0.quantification.rangeSensitivity = nil
 level0.quantification.unlistedCheck = nil
 level0.quantification.unlistedCheckPending = false
 level0.quantification.abundanceCaveat = nil
-level0.csv-fnv = 86a6eb7d4a596ef4
+level0.csv-fnv = 7bdff3fd070201e7
 level0.rangeSensitivity = nil
 level4.quantification.method.version = 1
 level4.quantification.method.estimator = .leastSquares
@@ -366,10 +368,11 @@ level4.quantification.fit.reducedDeviance = 4015339896d88538 5.3003867692616993
 level4.quantification.fit.methodLabel = "least squares, unweighted"
 level4.quantification.fit.referenceShapesLabel = "reference shapes: none"
 level4.quantification.fit.escapeLabel = "escape peaks: none (no line above the Si K edge, 1.839 keV)"
+level4.quantification.fit.lineShapeLabel = "line shape: Gaussian"
 level4.quantification.fit.backgroundLabel = "continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data"
 level4.quantification.fit.exit = "converged"
 level4.quantification.fit.warnings: array 1
-level4.quantification.fit.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
+level4.quantification.fit.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
 level4.quantification.fit.droppedLines: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 level4.quantification.fit.escapeRatios: array 4
 level4.quantification.fit.escapeRatios[0] = nil
@@ -404,7 +407,7 @@ level4.quantification.kSet = nil
 level4.quantification.abundanceRefusal = "The computed-k data files are not available in this build."
 level4.quantification.absorption = .off
 level4.quantification.warnings: array 1
-level4.quantification.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until the owner's pure-Al reference spectrum is supplied); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
+level4.quantification.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
 level4.quantification.qualityLabel = "χ²ᵣ (Pearson)"
 level4.quantification.quality = 40228d6f4f146473 9.2762398445504228
 level4.quantification.footerLines: array 8
@@ -434,6 +437,7 @@ level4.quantification.fitSettings.background.continuum.efficiency = nil
 level4.quantification.fitSettings.escapePeaks = true
 level4.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 level4.quantification.fitSettings.method = .leastSquares
+level4.quantification.fitSettings.lineTail = nil
 level4.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
 level4.quantification.fitRange.toKeV = 403404cb90bd12c4 20.018731161270594
 level4.quantification.fitRange.source = .defaultReach
@@ -445,5 +449,5 @@ level4.quantification.rangeSensitivity = nil
 level4.quantification.unlistedCheck = nil
 level4.quantification.unlistedCheckPending = false
 level4.quantification.abundanceCaveat = nil
-level4.csv-fnv = 23543d9722a40046
+level4.csv-fnv = a32acb6ac2acfd15
 level4.rangeSensitivity = nil

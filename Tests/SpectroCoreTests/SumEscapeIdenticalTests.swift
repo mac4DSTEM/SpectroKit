@@ -156,7 +156,9 @@ struct SumEscapeIdenticalTests {
         let sum = XRayLines.line("Sr_La")!.energy + XRayLines.line("Ba_La")!.energy
         #expect(isEqual(sum, XRayLines.line("Tb_La")!.energy, accuracy: 1e-6), "the premise")
         let counts = Self.spectrum(Self.axis, areas: ["Sr_La": 40000, "Ba_La": 40000, "Tb_La": 300], seed: 21)
-        let r = try ElementProposer(pool: ["Sr", "Ba", "Tb", "Mg", "Al", "Fe"])
+        // Sr is planted by its L line alone, which the family rule (R4) rightly withholds at this beam energy, and a withheld element leaves the model
+        // (the proposal is settled again without it, so its pile-up column goes too). The premise here is the pile-up column, so the rule is off.
+        let r = try ElementProposer(policy: ProposerPolicy(pool: ["Sr", "Ba", "Tb", "Mg", "Al", "Fe"], familyConsistency: false))
             .propose(counts: counts, axis: Self.axis, settings: Self.settings(Self.axis))
         let col = try #require(r.sumPeaks.first { abs($0.energyKeV - sum) <= LineConflicts.sumPeakToleranceKeV }, "a column at the Sr+Ba energy; labels: \(r.sumPeaks.map(\.label))")
         #expect(Set(col.elements) == ["Sr", "Ba"])
