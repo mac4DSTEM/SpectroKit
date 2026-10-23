@@ -56,35 +56,35 @@ struct PolicyNamingTests {
         return try ElementProposer(policy: policy).propose(counts: counts(), axis: axis, settings: s).notes
     }
 
+    /// 0.11.0: the note moved into the identification note (the "Detection:" line is gone); the rates are written as before.
     @Test func testDetectionNoteGivesBothCurieRatesAndTheDefaultTextIsUnchanged() throws {
-        func detection(_ c: Currie) throws -> String { try #require(Self.notes(ProposerPolicy(currie: c)).first { $0.hasPrefix("Detection:") }) }
-        let tail = ", a convention; L_C and L_D are properties of this spectrum), \u{03C3}\u{2080} from the fit's own variance with the candidate absent."
-        let head = "Detection: fitted net \u{2265} Currie L_D ("
-        // Today's text, character for character.
-        #expect(try detection(.standard) == head + "\u{03B1} = \u{03B2} = 0.05" + tail)
-        #expect(try detection(Currie(alpha: 0.01, beta: 0.01)) == head + "\u{03B1} = \u{03B2} = 0.01" + tail)
+        func detection(_ c: Currie) throws -> String { try #require(Self.notes(ProposerPolicy(currie: c)).first { $0.hasPrefix("Identification (validation: none)") }) }
+        let tail = ", \u{03C3}\u{2080} from the fit's own variance with it absent)"
+        let head = "with its area at or above Currie L_D ("
+        #expect(try detection(.standard).contains(head + "\u{03B1} = \u{03B2} = 0.05" + tail))
+        #expect(try detection(Currie(alpha: 0.01, beta: 0.01)).contains(head + "\u{03B1} = \u{03B2} = 0.01" + tail))
         // Two different rates are both named, with the digits the caller gave (0.005 was printed as 0.01; two decimals stay where they give the rate back, as today).
-        #expect(try detection(Currie(alpha: 0.005, beta: 0.2)) == head + "\u{03B1} = 0.005, \u{03B2} = 0.20" + tail)
-        #expect(try detection(Currie(alpha: 0.05, beta: 0.1)) == head + "\u{03B1} = 0.05, \u{03B2} = 0.10" + tail)
+        #expect(try detection(Currie(alpha: 0.005, beta: 0.2)).contains(head + "\u{03B1} = 0.005, \u{03B2} = 0.20" + tail))
+        #expect(try detection(Currie(alpha: 0.05, beta: 0.1)).contains(head + "\u{03B1} = 0.05, \u{03B2} = 0.10" + tail))
         // Equal rates that two decimals would round are not rounded.
-        #expect(try detection(Currie(alpha: 0.005, beta: 0.005)) == head + "\u{03B1} = \u{03B2} = 0.005" + tail)
+        #expect(try detection(Currie(alpha: 0.005, beta: 0.005)).contains(head + "\u{03B1} = \u{03B2} = 0.005" + tail))
     }
 
     @Test func testNonDefaultProposerPolicyIsNamedOnceAndTheDefaultAddsNothing() throws {
         let plain = try Self.notes(.default)
         #expect(!plain.contains { $0.hasPrefix("policy") } && ProposerPolicy.default.noteLine == nil)
-        let p = ProposerPolicy(currie: Currie(alpha: 0.005, beta: 0.2), pool: ["Al", "Mg"], excluded: ["Ne"], maxPasses: 3,
-                               flankScaling: false, flank: FlankMisfitGeometry(binsPerSide: 4), rangeMarginFWHM: 1,
+        let p = ProposerPolicy(currie: Currie(alpha: 0.005, beta: 0.2), pool: ["Al", "Mg"], excluded: ["Ne"],
+                               thresholds: IdentificationThresholds(peakSigma: 4), rangeMarginFWHM: 1,
                                sumPeakToleranceKeV: 0.1, context: ElementContext(quantifyByDefault: ["Cu", "Fe"], implantedElements: []))
         let named = try Self.notes(p).filter { $0.hasPrefix("policy (non-default): ") }
         #expect(named.count == 1)
-        #expect(named.first == "policy (non-default): currie = alpha 0.005 beta 0.2, pool = [Al, Mg], excluded = [Ne], maxPasses = 3, "
-                + "flankScaling = false, flank.binsPerSide = 4, rangeMarginFWHM = 1.0, sumPeakToleranceKeV = 0.1, "
+        #expect(named.first == "policy (non-default): currie = alpha 0.005 beta 0.2, pool = [Al, Mg], excluded = [Ne], "
+                + "thresholds.peakSigma = 4.0, rangeMarginFWHM = 1.0, sumPeakToleranceKeV = 0.1, "
                 + "context.quantifyByDefault = [Cu, Fe], context.implantedElements = []")
         // Each field class alone: a number, a Bool, a set, a list, a struct field; the unchanged ones stay out.
         #expect(ProposerPolicy(minimumLineEnergyKeV: 0.3).noteLine == "policy (non-default): minimumLineEnergyKeV = 0.3")
-        #expect(ProposerPolicy(maxForwardRounds: 10).noteLine == "policy (non-default): maxForwardRounds = 10")
-        #expect(ProposerPolicy(flank: FlankMisfitGeometry(minimumBins: 4)).noteLine == "policy (non-default): flank.minimumBins = 4")
+        #expect(ProposerPolicy(thresholds: IdentificationThresholds(maximumPeaks: 10)).noteLine == "policy (non-default): thresholds.maximumPeaks = 10.0")
+        #expect(ProposerPolicy(thresholds: IdentificationThresholds(relativeModelTerm: 0.02)).noteLine == "policy (non-default): thresholds.relativeModelTerm = 0.02")
         #expect(ProposerPolicy(context: ElementContext(gridElements: ["Ni"])).noteLine == "policy (non-default): context.gridElements = [Ni]")
     }
 }

@@ -1,36 +1,30 @@
 //
 //  ElementProposer.swift
-//  Role: Propose elements from a pooled spectrum with the landed model fit. It RETURNS candidates and never touches
-//        an element list: nothing is added silently (ADR 054, V5-Q6). Round 3, rebuilt on lane F's `EDSFit`.
+//  Role: Propose elements from a pooled spectrum. It RETURNS candidates and never touches an element list: nothing is added silently
+//        (ADR 054, V5-Q6). Since 0.11.0 the search is the identification loop of docs/design/auto-id-tem.md, written from the published
+//        method (Newbury and Ritchie's automatic qualitative analysis, as AutoEMX documents its defaults; no code copied):
 //
-//  Why a joint fit (what rounds 1 and 2 got wrong, 2026-10-05, Fable's re-check): a window or sideband proposer has
-//  no model of the neighbours, so an unlisted line reads as a signal or a deficit in every listed window beside it
-//  (an unlisted O K-alpha biased Na, Mg and Si by up to -40 L_D; a Ga L-alpha tail made a false Mg at x100 dose) and
-//  its own continuum polynomial cannot follow a realistic Kramers x window-absorption continuum with an Al K step.
-//  Here:
-//   * the continuum is the fit's own default (Kramers x non-negative Bernstein, split at the Al K edge), fitted with
-//     the lines, never a second background of the proposer's;
-//   * EVERY candidate element is a column of one non-negative least-squares fit together with the current element
-//     set, so the fit itself tells overlapping lines apart (no windows, no sidebands, no shadow rule) and an
-//     unlisted strong line is a column of its own instead of a bias on its neighbours. Chosen over "one candidate
-//     at a time" because that is exactly the design that failed: with a candidate tested alone every other
-//     unlisted line is unmodelled;
-//   * the all-candidate fit has many collinear columns (Ga L, Na K, Mg K, Zn L ...), whose covariance is
-//     inflated, so a candidate is first PRUNED when its net is below Currie's L_C and the fit is repeated with the
-//     survivors, until the surviving set no longer changes (at most `maxPasses`). L_D is judged on the final fit;
-//   * a pile-up (sum) peak is a column of its own where no candidate sits near its energy, so it cannot create a
-//     phantom element; where a candidate does sit near it (Ar at the Al+Al sum, 15 eV apart) the two cannot be
-//     separated by any fit and the candidate carries the named conflict instead;
-//   * the detection bar is Currie's L_D (alpha = beta = 0.05, a convention reported with every result; L_C and
-//     L_D are properties of the dataset) with sigma_0 the standard deviation of the candidate's area when it is
-//     absent, from the fit's own variance (`FitNullVariance`): the continuum and every other line under its window.
+//   1. fit the listed elements (the landed `EDSFit`: Kramers x Bernstein continuum with the Al K step, Si-escape columns, unweighted
+//      non-negative least squares) with the NIST EPQ Kβ weights (`EDSLineWeights.epqK`; the quantification fit keeps eXSpy's);
+//   2. top-hat filter the residual and take its strongest peak at or above 5 σ (1.5 times that below 1 keV), the variance of a channel
+//      being y + (0.01 mu)^2, so a strong line's small shape error is not a peak;
+//   3. every pool element with a line of weight >= 0.1 within 2.5 σ + 25 eV of the peak is a candidate, and so is a pile-up pair of the
+//      modelled elements; an element nominated by an L or M line needs its K or L alpha line at 3 σ in the residual where the range holds
+//      it and the beam excites it (the confirmation rule, R4 before 0.11.0);
+//   4. each candidate is fitted with the model; it may join when the statistic sum (y - mu)^2 / (mu + (0.01 mu)^2) falls by at least 100,
+//      at least 20 % of that at its own lines, its area is at or above Currie's L_D (sigma_0 from the fit's own null variance) and no line
+//      of it worsens its window by 9 and 5 % of the gain. The best joins; the others within 30 of it make it ambiguous;
+//   5. repeat from 2 (30 peaks, 10 new elements at most); then leave each found element out of the final fit and drop it when that costs
+//      less than 100.
+//   Tiers: an element found from its own peak, unambiguous, needed by the final fit, Si above 0.2 % of the counts and its peak in a band
+//   where the background is healthy (data over model 0.8 to 1.25 off the lines) is proposed; every other found or tested element is a
+//   candidate with `possibleReason` (or `familyNote` for the confirmation rule) and is never proposed.
 //
-//  DEVIATION (the fit's settings): the proposer always uses unweighted least squares (the named default); an
-//  expert Poisson-ML choice is for the reported fit, not for screening, because the null variance is the LS sandwich.
-//  DEVIATION (Currie): L_D assumes the variance at a true net L is sigma_0^2 + L; an efficient amplitude estimator
-//  has a slightly LARGER one than the window sum Currie derived it for: for unweighted LS the own-line variance factor is
-//  sum g^3 / (sum g^2)^2 = 2/sqrt(3) = 1.155 for a Gaussian. L_D is therefore a little optimistic (effect < 1 %, sigma_0^2 dominates).
-//  The fit's weak-line warning (a weak line beside Al K-alpha reads low) is carried into `notes`.
+//  What went (0.11.0): the all-candidate joint fit with its L_C pruning and single-candidate forward step, and the flank-misfit factor that
+//  scaled a candidate's sigma_0 by its neighbour's misfit (x33 for Mg beside Al on the owner's file 1339, where Mg's own window fitted to
+//  ±3 σ). The 1 % model term does that job in the published way.
+//  Not yet: the method's overlap check (elements whose every peak sits under a modelled one); such an element leaves no residual peak and
+//  is not reported. An open item, not a proposal changer: the method reports its finds as possible only.
 //
 
 import Foundation
@@ -55,17 +49,24 @@ public nonisolated struct ElementCandidate: Equatable, Sendable {
     public let suggestedRole: QuantificationMethod.ElementRole
     /// Cu only, when a hole spectrum was given: what the hole region said.
     public let holeRegionNote: String?
-    /// The flank-misfit factor sigma_0 was multiplied by (>= 1; 1 = the fit's own variance unchanged).
+    /// Always 1 since 0.11.0: the flank-misfit factor is gone (docs/design/auto-id-tem.md); the field goes in the next minor.
     public let misfit: Double
     /// Why the family-consistency rule withheld the element (one sentence with the numbers); nil when it is consistent or the check
     /// could not judge. A withheld candidate keeps its numbers but is not proposed.
     public let familyNote: String?
+    /// Why the identification loop reports the element as possible rather than proposing it (one sentence with the numbers): the fit did not
+    /// gain enough, the gain was not at its lines, a line contradicted it, another candidate explains the peak as well, the final fit did not
+    /// need it, or Si below the detector-artefact bar. nil for a proposed element.
+    public let possibleReason: String?
+    /// Found by an L or M line whose confirmation line (K for L, L for M) lies outside the fitted range or too close to the beam energy: the
+    /// confirmation rule could not run, so the find is possible only (`possibleReason` says so). A consumer lists these as "uncorroborated".
+    public let unconfirmable: Bool
 
     /// net >= L_D: the proposer's bar.
     public var aboveDetectionLimit: Bool { net >= detectionLimit }
     /// L_C < net < L_D: shown as "possible", never proposed.
     public var aboveCriticalLevel: Bool { net > criticalLevel }
-    public var isProposed: Bool { aboveDetectionLimit && familyNote == nil }
+    public var isProposed: Bool { aboveDetectionLimit && familyNote == nil && possibleReason == nil }
     public var hasSumPeakQuestion: Bool { conflicts.contains { $0.kind == .sumPeak } }
     /// How many detection limits the net is (the order in which to show candidates).
     public var significance: Double { net / detectionLimit }
@@ -73,11 +74,12 @@ public nonisolated struct ElementCandidate: Equatable, Sendable {
     /// Explicit so the room's tests can state a candidate (the memberwise one is internal).
     public init(element: String, group: String, energyKeV: Double, net: Double, sigma: Double, sigmaZero: Double,
                  criticalLevel: Double, detectionLimit: Double, conflicts: [LineConflict],
-                 suggestedRole: QuantificationMethod.ElementRole, holeRegionNote: String?, misfit: Double, familyNote: String? = nil) {
+                 suggestedRole: QuantificationMethod.ElementRole, holeRegionNote: String?, misfit: Double, familyNote: String? = nil,
+                 possibleReason: String? = nil, unconfirmable: Bool = false) {
         self.element = element; self.group = group; self.energyKeV = energyKeV; self.net = net; self.sigma = sigma
         self.sigmaZero = sigmaZero; self.criticalLevel = criticalLevel; self.detectionLimit = detectionLimit
         self.conflicts = conflicts; self.suggestedRole = suggestedRole; self.holeRegionNote = holeRegionNote; self.misfit = misfit
-        self.familyNote = familyNote
+        self.familyNote = familyNote; self.possibleReason = possibleReason; self.unconfirmable = unconfirmable
     }
 }
 
@@ -93,7 +95,7 @@ public nonisolated struct SumPeakFinding: Equatable, Sendable {
 }
 
 public nonisolated struct ProposalResult: Sendable {
-    /// One per pool element with a line group in the fitted range, strongest first.
+    /// Every element the identification loop tested (found, pruned, rejected or withheld), strongest first; an element with no residual peak was never a candidate.
     public let candidates: [ElementCandidate]
     public let sumPeaks: [SumPeakFinding]
     public let refused: [(element: String, reason: String)]
@@ -125,39 +127,34 @@ public nonisolated struct ProposalResult: Sendable {
 public nonisolated enum ProposerError: Error, Equatable {
     case lengthMismatch
     case noChannels
-    /// The joint design is numerically rank deficient: no covariance, so no limit can be stated.
+    /// The fit of the listed elements is numerically rank deficient: no covariance, so no limit can be stated.
     case rankDeficient
     /// The calling task was cancelled (checked before every fit, each a fraction of a second). Not a failure: the caller discards.
     case cancelled
 }
 
+
 public nonisolated struct ElementProposer: Sendable {
     package var currie: Currie
     /// The elements tested; nil is `defaultPool`.
     package var pool: [String]?
-    package var maxPasses: Int
-    /// The forward step stops after this many rounds (a joiner or a rejection each costs one): a spectrum that keeps producing
-    /// candidates is a model failure, not a rich sample, and the room must not hang on it. Said in the notes when reached.
-    package var maxForwardRounds: Int
     /// A candidate group is tested only if its alpha line is at or above this energy (keV). MEASURED, not a property of the
     /// method: on the Kramers x window-absorption generator the only false elements at x100 dose were C K, N K, Ca L and
     /// Sc L at 0.28-0.40 keV, where the detector window cuts the continuum steeply and the fit's continuum cannot follow
     /// it at 10^4 counts per channel (lane P report). 0.45 keV keeps O K-alpha (0.525). Reported in every result's notes;
     /// an element with lines in range but none above it is refused with this reason (the user can still list it by hand).
     package var minimumLineEnergyKeV: Double
-    /// Scale sigma_0 by the flank misfit factor (see `flankMisfit`). On unless a test compares it off.
-    package var flankScaling = true
+    /// The identification loop's bars (see `IdentificationThresholds`).
+    package var thresholds = IdentificationThresholds.default
     /// Elements left out of the default pool (see `defaultExcluded`); used when `pool` is nil.
     package var excluded: Set<String> = ElementProposer.defaultExcluded
-    /// How the flank misfit is measured (see `FlankMisfitGeometry`).
-    package var flank = FlankMisfitGeometry.default
     /// A candidate's alpha line must lie this many FWHM inside the fitted range at each end.
     package var rangeMarginFWHM = 0.5
     /// A candidate's alpha line counts as on a pile-up energy within this many keV.
     package var sumPeakToleranceKeV = LineConflicts.sumPeakToleranceKeV
     /// Which elements get the grid, implantation and quantify-by-default treatment.
     package var context = ElementContext.default
-    /// R4 and its companions, see `ProposerPolicy`.
+    /// The confirmation-line rule and its overvoltage, see `ProposerPolicy`.
     package var familyConsistency = true
     package var familyOvervoltage = 2.0
     package var sumPeakFraction = 1.0
@@ -180,28 +177,17 @@ public nonisolated struct ElementProposer: Sendable {
         return out
     }
 
-    /// The note naming every proposed or near-miss candidate whose σ₀ the flank-misfit factor inflated.
-    static func misfitNote(_ candidates: [ElementCandidate]) -> String {
-        let inflated = candidates.filter { $0.significance >= 0.5 && $0.misfit > 1.005 }
-        return inflated.isEmpty
-            ? "Flank-misfit scaling: no proposed or near-miss candidate (net/L_D \u{2265} 0.5) had its \u{03C3}\u{2080} inflated."
-            : "\u{03C3}\u{2080} was scaled by the flank-misfit factor (never below 1; a neighbour's misfit inflates every candidate within about \u{00B1}0.5 keV): "
-                + inflated.map { String(format: "%@ \u{00D7}%.2f", $0.element, $0.misfit) }.joined(separator: ", ") + " (candidates at net/L_D \u{2265} 0.5)."
-    }
-
     /// The proposer's choices as a value (what `init(policy:)` took, with any package-level change since).
     package var policy: ProposerPolicy {
-        ProposerPolicy(currie: currie, pool: pool, excluded: excluded, maxPasses: maxPasses, maxForwardRounds: maxForwardRounds,
-                       minimumLineEnergyKeV: minimumLineEnergyKeV, flankScaling: flankScaling, flank: flank,
+        ProposerPolicy(currie: currie, pool: pool, excluded: excluded, minimumLineEnergyKeV: minimumLineEnergyKeV, thresholds: thresholds,
                        rangeMarginFWHM: rangeMarginFWHM, sumPeakToleranceKeV: sumPeakToleranceKeV, context: context,
                        familyConsistency: familyConsistency, familyOvervoltage: familyOvervoltage, sumPeakFraction: sumPeakFraction)
     }
 
     /// The proposer with every choice named (`ProposerPolicy.default` is what the other initialiser builds).
     public init(policy: ProposerPolicy) {
-        self.init(currie: policy.currie, pool: policy.pool, maxPasses: policy.maxPasses, maxForwardRounds: policy.maxForwardRounds,
-                  minimumLineEnergyKeV: policy.minimumLineEnergyKeV)
-        flankScaling = policy.flankScaling; excluded = policy.excluded; flank = policy.flank
+        self.init(currie: policy.currie, pool: policy.pool, minimumLineEnergyKeV: policy.minimumLineEnergyKeV)
+        thresholds = policy.thresholds; excluded = policy.excluded
         rangeMarginFWHM = policy.rangeMarginFWHM; sumPeakToleranceKeV = policy.sumPeakToleranceKeV; context = policy.context
         familyConsistency = policy.familyConsistency; familyOvervoltage = policy.familyOvervoltage
         sumPeakFraction = policy.sumPeakFraction
@@ -210,12 +196,10 @@ public nonisolated struct ElementProposer: Sendable {
     /// - Parameters:
     ///   - currie: the false-positive and false-negative rates of the detection limit. Default `.standard` (0.05 each), Currie's convention.
     ///   - pool: the elements tested; nil is `defaultPool`.
-    ///   - maxPasses: the backward step stops after this many joint fits. Default 5, the library's choice.
-    ///   - maxForwardRounds: the forward step stops after this many rounds. Default 24, the library's choice.
     ///   - minimumLineEnergyKeV: lines below this are not tested. Default 0.45 keV, measured on one synthetic generator where the
     ///     detector window cuts the continuum steeply (carbon, nitrogen, calcium and scandium were false there at 0.28-0.40 keV).
-    public init(currie: Currie = .standard, pool: [String]? = nil, maxPasses: Int = 5, maxForwardRounds: Int = 24, minimumLineEnergyKeV: Double = 0.45) {
-        self.currie = currie; self.pool = pool; self.maxPasses = maxPasses; self.maxForwardRounds = maxForwardRounds; self.minimumLineEnergyKeV = minimumLineEnergyKeV
+    public init(currie: Currie = .standard, pool: [String]? = nil, minimumLineEnergyKeV: Double = 0.45) {
+        self.currie = currie; self.pool = pool; self.minimumLineEnergyKeV = minimumLineEnergyKeV
     }
 
     /// "α = β = 0.05" when the two rates are equal, "α = 0.005, β = 0.2" otherwise; two decimals when they give the rate back
@@ -225,41 +209,100 @@ public nonisolated struct ElementProposer: Sendable {
         return c.alpha == c.beta ? "\u{03B1} = \u{03B2} = \(r(c.alpha))" : "\u{03B1} = \(r(c.alpha)), \u{03B2} = \(r(c.beta))"
     }
 
-    private struct Stat { var net: Double, sigma: Double, sigmaZero: Double, lc: Double, ld: Double, misfit: Double
+    private struct Stat { var net: Double, sigma: Double, sigmaZero: Double, lc: Double, ld: Double
         var significance: Double { net / ld } }
 
     private struct Pass {
         var model: EDSLineModel
         var result: EDSFitResult
-        var variances: AmplitudeVariances
+        /// nil when the design is numerically rank deficient (no limit can be stated for its groups).
+        var variances: AmplitudeVariances?
+        /// The statistic's terms per fitted channel.
+        var terms: [Double]
+        var statistic: Double
     }
 
     private struct ResultBox: @unchecked Sendable { var buffer: UnsafeMutableBufferPointer<Result<Pass, Error>?> }
 
-    /// One joint fit of `groups` against `data`: no cancellation check, no progress, no shared state (safe to run concurrently).
+    /// One fit of `groups` against `data`: no cancellation check, no progress, no shared state (safe to run concurrently).
+    /// The fit is WEIGHTED by the statistic's own variance, w = 1 / max(ȳ + (r ȳ)^2, 1), ȳ the data smoothed over one FWHM (`widths`) so a channel
+    /// that fluctuates high is not down-weighted for it (Neyman's bias, about one count per channel at low counts) (fixed, so every candidate is fitted on the
+    /// same footing and the problem stays linear): least squares in the scaled rows minimises the statistic with y in place of mu. Unweighted, a
+    /// strong line's shape error dragged the continuum beside it (data over model 3.1 in 1 to 2.5 keV beside a planted Al 6 eV narrower than the
+    /// model) and the hump it left became an element (Os M). The pass's `result` is returned in counts (its model and residual unscaled).
     private static func fitPass(groups: [FitLineGroup], data: [Double], settings s: FitSettings, axis: EnergyAxis,
-                                channels: Range<Int>, dropped: [String]) throws -> Pass {
+                                channels: Range<Int>, dropped: [String], relative: Double, widths: [Int]) throws -> Pass {
         let model = EDSLineModel(groups: groups, resolutionMnKaEV: s.resolutionMnKaEV, beamEnergy: s.beamEnergy,
                                  escapePeaks: s.escapePeaks, droppedLines: dropped, lineTail: s.lineTail)
         try EDSFit.validate(s.referenceShapes, axis: axis, model: model)
-        let design = LinearDesign.build(model: model, axis: axis, channels: channels, background: s.background,
+        var design = LinearDesign.build(model: model, axis: axis, channels: channels, background: s.background,
                                         shapes: s.referenceShapes, counts: data)
-        let result = EDSFit.fit(design: design, model: model, counts: data, settings: s, computeCovariance: false)
-        guard let v = FitNullVariance.compute(design: design, result: result) else { throw ProposerError.rankDeficient }
-        return Pass(model: model, result: result, variances: v)
+        let y = channels.map { data[$0] }
+        var prefix = [Double](repeating: 0, count: y.count + 1)
+        for i in y.indices { prefix[i + 1] = prefix[i] + y[i] }
+        let scale = y.indices.map { i -> Double in
+            let h = widths[i] / 2, a = max(i - h, 0), b = min(i + h, y.count - 1)
+            let ys = (prefix[b + 1] - prefix[a]) / Double(b - a + 1)
+            return 1 / max(ys + relative * relative * ys * ys, 1).squareRoot()
+        }
+        for j in design.areaColumns.indices { for i in scale.indices { design.areaColumns[j].values[i] *= scale[i] } }
+        for j in design.backgroundColumns.indices { for i in scale.indices { design.backgroundColumns[j].values[i] *= scale[i] } }
+        for i in scale.indices { design.offset[i] *= scale[i] }
+        var scaled = data
+        for (i, ch) in channels.enumerated() { scaled[ch] = y[i] * scale[i] }
+        var result = EDSFit.fit(design: design, model: model, counts: scaled, settings: s, computeCovariance: false)
+        let variances = FitNullVariance.compute(design: design, result: result, rowScale: scale)
+        result.model = zip(result.model, scale).map { $0 / $1 }
+        result.residual = zip(y, result.model).map { $0 - $1 }
+        result.standardizedResidual = zip(result.residual, result.model).map { $0 / max($1, EDSFitResult.standardizedFloor).squareRoot() }
+        let pearson = zip(result.residual, result.model).reduce(0.0) { $0 + $1.0 * $1.0 / max($1.1, EDSFitResult.standardizedFloor) }
+        let dof = result.degreesOfFreedom > 0 ? Double(result.degreesOfFreedom) : .nan
+        result.pearsonReducedChiSquared = pearson / dof
+        result.reducedChiSquared = result.residual.reduce(0) { $0 + $1 * $1 } / dof
+        result.deviance = PoissonMLFit.deviance(y: y, mu: result.model, floor: 1e-6)
+        result.reducedDeviance = result.deviance / dof
+        result.methodLabel = "least squares, weighted by 1/(y + (\(relative) y)\u{00B2})"
+        let terms = IdentificationLoop.chiSquaredTerms(y: y, mu: result.model, relative: relative)
+        return Pass(model: model, result: result, variances: variances, terms: terms, statistic: terms.reduce(0, +))
     }
 
     /// `fitPass` for every job, concurrently; the results are in job order.
     private static func fitPasses(jobs: [[FitLineGroup]], data: [Double], settings s: FitSettings, axis: EnergyAxis,
-                                  channels: Range<Int>, dropped: [String]) -> [Result<Pass, Error>] {
+                                  channels: Range<Int>, dropped: [String], relative: Double, widths: [Int]) -> [Result<Pass, Error>] {
         var out = [Result<Pass, Error>?](repeating: nil, count: jobs.count)
         out.withUnsafeMutableBufferPointer { buf in
             let box = ResultBox(buffer: buf)
             DispatchQueue.concurrentPerform(iterations: jobs.count) { i in
-                box.buffer[i] = Result { try fitPass(groups: jobs[i], data: data, settings: s, axis: axis, channels: channels, dropped: dropped) }
+                box.buffer[i] = Result { try fitPass(groups: jobs[i], data: data, settings: s, axis: axis, channels: channels,
+                                                     dropped: dropped, relative: relative, widths: widths) }
             }
         }
         return out.map { $0! }
+    }
+
+    /// A tested element (or pile-up column): what its fit with the model said.
+    private struct Trial {
+        var key: String
+        var group: String
+        var stat: Stat?
+        var gain: Double
+        /// The fall of the statistic within one FWHM of the peak that nominated it: which candidate explains THAT peak best.
+        var peakGain: Double
+        var localShare: Double
+        /// nil: it may join. Otherwise one sentence with the numbers.
+        var reason: String?
+        var confirmation: String?
+        /// An L or M nomination whose confirmation line lies outside the fitted range or above half the beam: it may join, but stays possible.
+        var unconfirmable: String?
+        var pass: Pass?
+    }
+
+    /// An element the loop added to the model.
+    private struct Found {
+        var peakKeV: Double
+        var gain: Double
+        var ambiguous: [String]
+        var unconfirmable: String?
     }
 
     /// - Parameters:
@@ -267,8 +310,8 @@ public nonisolated struct ElementProposer: Sendable {
     ///   - settings: the fit as the room runs it. `elements` is the CURRENT set (always fitted, never changed);
     ///     range, background, escape setting and reference shapes are used as given, the method is forced to LS.
     ///   - holeCounts: optional pooled spectrum of a hole region on the same axis, for the Cu grid check.
-    ///   - cancelled: asked before every fit (ADR 064 amendment 2 §2); default Swift task cancellation. DECISION: the proposer keeps
-    ///     its own `ProposerError.cancelled` (the room and its tests already match it) rather than `SpectroCancelled`; nothing partial is returned.
+    ///   - cancelled: asked before every round of fits (ADR 064 amendment 2 §2); default Swift task cancellation. The proposer keeps
+    ///     its own `ProposerError.cancelled`; nothing partial is returned.
     ///   - progress: monotone in 0...1, ends at 1. The number of fits is not known in advance, so it is fits done over fits done plus the
     ///     fits the current step still has planned, clamped never to fall.
     public func propose(counts: [Double], axis: EnergyAxis, settings: FitSettings,
@@ -280,6 +323,7 @@ public nonisolated struct ElementProposer: Sendable {
         s.method = .leastSquares
         let channels = axis.fitChannels(from: s.fitFrom, to: s.fitTo)
         guard !channels.isEmpty else { throw ProposerError.noChannels }
+        let t = thresholds
         let lo = axis.energy(ofChannel: channels.lowerBound), hi = axis.energy(ofChannel: channels.upperBound - 1)
         let current = s.elements
         let requested = pool ?? Self.defaultPool(excluding: excluded)
@@ -292,7 +336,8 @@ public nonisolated struct ElementProposer: Sendable {
         let poolElements = requested.filter { LineConflicts.refusal(for: $0) == nil && !current.contains($0) }
 
         let base = EDSLineModel.build(elements: current + poolElements, axis: axis, beamEnergy: s.beamEnergy,
-                                      resolutionMnKaEV: s.resolutionMnKaEV, escapePeaks: s.escapePeaks, lineTail: s.lineTail)
+                                      resolutionMnKaEV: s.resolutionMnKaEV, escapePeaks: s.escapePeaks, lineTail: s.lineTail,
+                                      lineWeights: .epqK)
         let dropped = base.droppedLines.filter { l in current.contains { l.contains("\($0)_") } }
         let currentGroups = base.groups.filter { current.contains($0.element) }
         // A candidate group needs its alpha line inside the fitted range by half a width (its column must have support).
@@ -305,6 +350,19 @@ public nonisolated struct ElementProposer: Sendable {
                 refused.append((el, String(format: "Its line at %.2f keV lies below the proposer's lowest tested line (%.2f keV): under the detector window the continuum is too model-dependent for a net area to be trusted. List it by hand if you know it is there.", low, minimumLineEnergyKeV)))
             }
         }
+        let testable = Set(poolGroups.map(\.element))
+
+        let y = channels.map { counts[$0] }
+        let energies = channels.map { axis.energy(ofChannel: $0) }
+        let widths = IdentificationLoop.widths(energies: energies, scale: axis.scale, resolutionMnKaEV: s.resolutionMnKaEV)
+        let totalCounts = y.reduce(0, +)
+        func fwhm(_ e: Double) -> Double { XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: max(e, 0)) ?? s.resolutionMnKaEV / 1000 }
+        /// Fitted-channel indices within `half` keV of `e`.
+        func window(_ e: Double, _ half: Double) -> Range<Int> {
+            let a = Int(((e - half - energies[0]) / axis.scale).rounded(.up)), b = Int(((e + half - energies[0]) / axis.scale).rounded(.down))
+            let lower = max(a, 0), upper = min(b + 1, energies.count)
+            return lower < upper ? lower..<upper : 0..<0
+        }
 
         var fitsDone = 0, fitsPlanned = 1, reported = 0.0
         func tick() {
@@ -313,206 +371,229 @@ public nonisolated struct ElementProposer: Sendable {
             reported = f
             progress(f)
         }
-        func run(_ groups: [FitLineGroup], on data: [Double]) throws -> Pass {
+        func runAll(_ jobs: [[FitLineGroup]], on data: [Double]) throws -> [Result<Pass, Error>] {
             if cancelled() { throw ProposerError.cancelled }
-            defer { fitsDone += 1; tick() }
-            return try Self.fitPass(groups: groups, data: data, settings: s, axis: axis, channels: channels, dropped: dropped)
-        }
-        func stat(_ p: Pass, _ gi: Int) -> Stat? {
-            guard p.result.supported[gi], let v0 = p.variances.null[gi], let vf = p.variances.atFit[gi] else { return nil }
-            let f = flankScaling ? flankMisfit(p, gi) : 1
-            let s0 = v0.squareRoot() * f
-            return Stat(net: p.result.values[gi], sigma: vf.squareRoot() * f, sigmaZero: s0,
-                        lc: currie.criticalLevel(sigmaZero: s0), ld: currie.detectionLimit(sigmaZero: s0), misfit: f)
-        }
-        /// sqrt(max(1, mean Z^2)) of the fit's residual summed in bins of one FWHM on both flanks of group `gi`
-        /// (1.5 to 6.5 FWHM from its alpha line, ten bins at most). Z = sum(residual) / sqrt(sum(max(model, 1))) is N(0, 1) when
-        /// the model is right; a smooth continuum misfit is correlated over the bins and shows up here although it hides in
-        /// the per-channel chi-square. The flanks leave out the line itself, so a real line does not inflate its own limit.
-        func flankMisfit(_ p: Pass, _ gi: Int) -> Double {
-            let line = p.model.groups[gi].lines[0]
-            let f = line.fwhm
-            let first = p.result.channels.lowerBound
-            var z2: [Double] = []
-            for side in [-1.0, 1.0] { for b in 0..<flank.binsPerSide {
-                let inner = flank.innerFWHM + Double(b) * flank.binWidthFWHM
-                let a = line.energy + side * inner * f, c = line.energy + side * (inner + flank.binWidthFWHM) * f
-                let lowE = min(a, c), highE = max(a, c)
-                var r = 0.0, m = 0.0, n = 0
-                for ch in p.result.channels {
-                    let e = axis.energy(ofChannel: ch)
-                    if e >= lowE && e < highE { r += p.result.residual[ch - first]; m += max(p.result.model[ch - first], EDSFitResult.standardizedFloor); n += 1 }
-                }
-                if n >= flank.minimumChannelsPerBin { z2.append(r * r / m) }
-            } }
-            guard z2.count >= flank.minimumBins else { return 1 }
-            return max(1, z2.reduce(0, +) / Double(z2.count)).squareRoot()
-        }
-
-        var active = Set(poolGroups.map(\.id))
-        var sumElements: [String: (label: String, elements: [String])] = [:]
-        var last: [String: Stat] = [:]
-        var parents: [SumParent] = []
-        var parentNets: [String: Double] = [:]
-        var passes = 0, trials = 0, settled = true
-
-        /// The candidates that claim a pile-up energy: the active ones at or above L_D in their last fit. A candidate that is only
-        /// "possible" must not claim it (it would swallow the sum peak through its inflated covariance and block the sum column).
-        func claiming(_ active: Set<String>) -> Set<String> { active.filter { last[$0].map { $0.net >= $0.ld } ?? false } }
-
-        /// The pile-up columns for a set of detected parents: every pair whose energy is in range and not claimed by a listed
-        /// line or by a claiming candidate (a claimed energy is the candidate's: the two cannot be told apart). Pairs whose energies
-        /// coincide in the line table (Dy+Ti and Cs+Ho at 11.0061 keV) share ONE column: two identical design columns make the
-        /// joint design rank deficient (the whole run fails), and the fit cannot tell such pairs apart. The kept column's id and
-        /// label name every pair it stands for; a lone pair keeps its plain id and label.
-        /// Equality to rounding, not a tolerance: the line table carries four decimals, so only sums equal in the table merge
-        /// (registration: docs/archive/v5/sum-column-exact-dedup-preregistration-2026-10-08.md).
-        let exactSumToleranceKeV = 1e-9
-        func sumColumns(_ parents: [SumParent], claiming claimers: Set<String>, design: [FitLineGroup], alsoClaimed: [Double] = []) -> [FitLineGroup] {
-            var claimed = currentGroups.map { $0.lines[0].energy } + alsoClaimed
-            claimed += poolGroups.filter { claimers.contains($0.id) }.map { $0.lines[0].energy }
-            // A group of THIS design (the groups the fit it serves holds) whose escape list has one entry has a ONE-COMPONENT escape
-            // column: one Gaussian at that energy. A pair at exactly that energy would be an identical column (rankDeficient), so it
-            // is not added. A pool group outside the design is never compared, and one-line LINE groups are not compared (owner,
-            // 2026-10-12, card A1 option a: dropping a pair into a line column would let La Ka = Cd Ka + Tl La fold into La).
-            // Registration: docs/archive/v5/sum-escape-only-preregistration-2026-10-12.md.
-            let oneComponentEscape = design.compactMap { $0.escapes.count == 1 ? $0.escapes[0].energy : nil }
-            var pairs: [[(label: String, energyKeV: Double, elements: [String])]] = []
-            for e in LineConflicts.sumEnergies(parents: parents) {
-                guard e.energyKeV > lo, e.energyKeV < hi, e.energyKeV < s.beamEnergy,
-                      !claimed.contains(where: { abs($0 - e.energyKeV) <= sumPeakToleranceKeV }),
-                      !oneComponentEscape.contains(where: { abs($0 - e.energyKeV) <= exactSumToleranceKeV }),
-                      XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: e.energyKeV) != nil else { continue }
-                // The first pair at an energy owns the column (its energy is the column's).
-                if let k = pairs.firstIndex(where: { abs($0[0].energyKeV - e.energyKeV) <= exactSumToleranceKeV }) {
-                    pairs[k].append(e)
-                } else { pairs.append([e]) }
-            }
-            var out: [FitLineGroup] = []
-            for group in pairs {
-                let first = group[0]
-                let id = "sum:" + group.map { $0.elements.joined(separator: "+") }.joined(separator: " / ")
-                let label = group.count == 1 ? first.label : group.map { $0.label.replacingOccurrences(of: " sum", with: "") }.joined(separator: " / ") + " sum"
-                let w = XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: first.energyKeV)!
-                out.append(FitLineGroup(id: id, element: "sum", lines: [FitLine(id: id, energy: first.energyKeV, weight: 1, fwhm: w)], escapes: []))
-                sumElements[id] = (label, group.count == 1 ? first.elements : Array(Set(group.flatMap(\.elements))).sorted())
-            }
+            fitsPlanned = max(fitsPlanned, jobs.count)
+            let out = Self.fitPasses(jobs: jobs, data: data, settings: s, axis: axis, channels: channels, dropped: dropped, relative: t.relativeModelTerm, widths: widths)
+            fitsDone += jobs.count; tick()
             return out
         }
-
-        /// Backward step: fit everything active (with the pile-up columns the current parents imply), drop what is not above
-        /// L_C, repeat until the active set and the parents are stable.
-        func settle() throws -> Pass {
-            var iteration = 0
-            while true {
-                iteration += 1; passes += 1
-                let design = currentGroups + poolGroups.filter { active.contains($0.id) }
-                let sums = sumColumns(parents, claiming: claiming(active), design: design)
-                let p = try run(design + sums, on: counts)
-                for (gi, g) in p.model.groups.enumerated() { if let st = stat(p, gi) { last[g.id] = st } }
-                // Survivors: candidates above L_C.
-                let nextActive = Set(p.model.groups.enumerated().compactMap { gi, g -> String? in
-                    guard active.contains(g.id), let st = stat(p, gi), st.net > st.lc else { return nil }
-                    return g.id
-                })
-                // Parents: the strongest detected group of each element, among the current set and the survivors. A survivor that sits
-                // on a pile-up peak of the LISTED parents is the question, not a parent (Ar at the Al+Al sum must not make Ar+Al sums).
-                var best: [String: (sig: Double, energy: Double, listed: Bool, net: Double)] = [:]
-                for (gi, g) in p.model.groups.enumerated() where g.element != "sum" {
-                    guard let st = stat(p, gi), st.net >= st.ld, nextActive.contains(g.id) || !active.contains(g.id) else { continue }
-                    if best[g.element].map({ st.significance > $0.sig }) ?? true {
-                        best[g.element] = (st.significance, g.lines[0].energy, current.contains(g.element), st.net)
-                    }
-                }
-                let listed = best.filter { $0.value.listed }.map { SumParent(element: $0.key, energyKeV: $0.value.energy) }
-                let listedSums = LineConflicts.sumEnergies(parents: listed).map(\.energyKeV)
-                let found = best.filter { entry in
-                    !entry.value.listed && !listedSums.contains { abs($0 - entry.value.energy) <= sumPeakToleranceKeV }
-                }.map { SumParent(element: $0.key, energyKeV: $0.value.energy) }
-                let nextParents = (listed + found).sorted { $0.element < $1.element }
-                let stable = nextActive == active && sumColumns(nextParents, claiming: claiming(nextActive),
-                                                                design: currentGroups + poolGroups.filter { nextActive.contains($0.id) }).map(\.id) == sums.map(\.id)
-                parents = nextParents
-                parentNets = Dictionary(uniqueKeysWithValues: nextParents.map { ($0.element, best[$0.element]?.net ?? 0) })
-                if stable { return p }
-                if iteration >= maxPasses { settled = false; return p }
-                active = nextActive
+        func run(_ groups: [FitLineGroup], on data: [Double]) throws -> Pass { try runAll([groups], on: data)[0].get() }
+        func stat(_ p: Pass, _ gi: Int) -> Stat? {
+            guard p.result.supported[gi], let v = p.variances, let v0 = v.null[gi], let vf = v.atFit[gi] else { return nil }
+            let s0 = v0.squareRoot()
+            return Stat(net: p.result.values[gi], sigma: vf.squareRoot(), sigmaZero: s0,
+                        lc: currie.criticalLevel(sigmaZero: s0), ld: currie.detectionLimit(sigmaZero: s0))
+        }
+        /// The strongest group of every modelled element, as pile-up parents, with its area.
+        func parents(_ p: Pass) -> [(parent: SumParent, net: Double)] {
+            var best: [String: (Double, Double)] = [:]
+            for (gi, g) in p.model.groups.enumerated() where g.element != "sum" {
+                let v = p.result.values[gi]
+                if best[g.element].map({ v > $0.1 }) ?? true { best[g.element] = (g.lines[0].energy, v) }
             }
+            return best.map { (SumParent(element: $0.key, energyKeV: $0.value.0), $0.value.1) }.sorted { $0.parent.element < $1.parent.element }
+        }
+        /// The filtered residual of a fit in standard deviations, the variance of a channel y + (r mu)^2.
+        func residualZ(_ p: Pass) -> [Double] {
+            let r = zip(y, p.result.model).map { $0 - $1 }
+            let v = zip(y, p.result.model).map { yi, m in max(yi, 1) + pow(t.relativeModelTerm * max(m, 0), 2) }
+            let f = IdentificationLoop.topHat(r, variance: v, widths: widths)
+            return zip(f.filtered, f.sigma).map { $1.isFinite && $1 > 0 ? $0 / $1 : 0 }
+        }
+        /// Every fitted channel within 1.5 FWHM of one of the groups' lines or escapes.
+        func near(_ groups: [FitLineGroup]) -> [Bool] {
+            var m = [Bool](repeating: false, count: energies.count)
+            for g in groups { for l in g.lines + g.escapes { for i in window(l.energy, 1.5 * l.fwhm) { m[i] = true } } }
+            return m
         }
 
-        // Forward step: every pruned candidate is tested ALONE against the settled model (the all-candidate fit has
-        // collinear columns, whose inflated covariance can prune a real weak line); the most significant one at or
-        // above L_D joins, and the model settles again. A candidate that was pruned after joining, or displaced by a joiner,
-        // stays out.
-        var banned = Set<String>()
-        var fit = try settle()
-        // The single-candidate tests depend on the settled model (its active set; the parents move little). After a joiner was
-        // pruned again the active set is unchanged and the other tests are reused (otherwise a crowded spectrum costs a full
-        // round per rejected joiner).
-        var cache: [String: Stat] = [:]
-        var cacheKey = ""
-        var rounds = 0, forwardCapped = false
+        var model = currentGroups
+        var fit = try run(model, on: counts)
+        // The listed elements' own fit must state limits (as before 0.11.0): a rank-deficient listed design is refused, not read.
+        if !current.isEmpty, fit.variances == nil { throw ProposerError.rankDeficient }
+        var found: [String: Found] = [:], foundOrder: [String] = []
+        var trials: [String: Trial] = [:]
+        var sumInfo: [String: (label: String, elements: [String])] = [:]
+        var tried: [Double] = []
+        var examined = 0, tested = 0
+        var capped = false
+
+        /// The confirmation rule for an element nominated by `line`: `withhold` says why it cannot be it; `unconfirmable` says why the rule
+        /// could not run (its confirmation line is outside the fitted range or too close to the beam energy), which keeps a find possible.
+        func confirmation(_ el: String, _ line: XRayLine, _ z: [Double]) -> (withhold: String?, unconfirmable: String?) {
+            guard familyConsistency, line.family != .K else { return (nil, nil) }
+            let companionID = el + (line.family == .L ? "_Ka" : "_La")
+            guard let c = XRayLines.line(companionID) else { return (nil, nil) }
+            guard c.energy >= lo + rangeMarginFWHM * fwhm(c.energy), c.energy <= hi - rangeMarginFWHM * fwhm(c.energy),
+                  s.beamEnergy >= familyOvervoltage * c.energy else {
+                return (nil, String(format: "Found by its %@ alone: its %@ (%.2f keV) lies outside the fitted range (%.2f to %.2f keV) or too close to the beam energy, so the confirmation line cannot be checked.",
+                                    Self.lineLabel(line.id), Self.lineLabel(companionID), c.energy, lo, hi))
+            }
+            // A peak of its own: a local maximum of the filtered residual within one Gaussian sigma of the line (the flank of a neighbour's
+            // unmodelled peak 1.6 sigma away, Cu Kα beside Ta Lα, is not a confirmation).
+            let sigma = fwhm(c.energy) / EDSLineModel.sigma2fwhm
+            let zc = window(c.energy, sigma).filter { i in
+                let h = widths[i] / 2
+                return !(max(0, i - h)...min(z.count - 1, i + h)).contains { $0 != i && z[$0] > z[i] }
+            }.map { z[$0] }.max() ?? 0
+            guard zc < t.confirmationSigma else { return (nil, nil) }
+            return (String(format: "%@ %@ (%.2f keV) has a residual peak of %.1f \u{03C3}, below the %.0f \u{03C3} its %@ (%.2f keV) needs: not %@.",
+                          el, Self.lineLabel(companionID), c.energy, zc, t.confirmationSigma, Self.lineLabel(line.id), line.energy, el), nil)
+        }
+
+        // The loop: the strongest residual peak, its candidates, the best of them joins.
         while true {
-            if rounds >= maxForwardRounds { forwardCapped = true; break }
-            rounds += 1
-            fitsPlanned = poolGroups.filter { !active.contains($0.id) && !banned.contains($0.id) }.count + 2
-            let key = active.sorted().joined(separator: ",")
-            if key != cacheKey { cache = [:]; cacheKey = key }
-            // The pending single-candidate fits are independent of each other (each reads the settled state only), so they run side by
-            // side, a bounded chunk at a time; the results are taken in pool order, exactly as the serial loop took them.
-            let pending = poolGroups.filter { !active.contains($0.id) && !banned.contains($0.id) && cache[$0.id] == nil }
-            let chunkSize = max(2 * ProcessInfo.processInfo.activeProcessorCount, 1)
-            var start = 0
-            while start < pending.count {
-                let chunk = pending[start..<min(start + chunkSize, pending.count)]
-                start += chunkSize
-                var jobs: [[FitLineGroup]] = []
-                for g in chunk {
-                    if cancelled() { throw ProposerError.cancelled }
-                    let design = currentGroups + poolGroups.filter { active.contains($0.id) || $0.id == g.id }
-                    jobs.append(design + sumColumns(parents, claiming: claiming(active).union([g.id]), design: design))
-                }
-                let passes = Self.fitPasses(jobs: jobs, data: counts, settings: s, axis: axis, channels: channels, dropped: dropped)
-                for (g, result) in zip(chunk, passes) {
-                    trials += 1
-                    fitsDone += 1; tick()
-                    let p = try result.get()
-                    guard let gi = p.model.groups.firstIndex(where: { $0.id == g.id }), let st = stat(p, gi) else { continue }
-                    cache[g.id] = st
-                    last[g.id] = st
-                }
+            if examined >= t.maximumPeaks || foundOrder.count >= t.maximumNewElements { capped = true; break }
+            let z = residualZ(fit)
+            var peak: (i: Int, z: Double)?
+            for i in z.indices {
+                let e = energies[i]
+                guard e >= minimumLineEnergyKeV, z[i] >= t.peakSigma * (e < t.lowEnergyBelowKeV ? t.lowEnergyFactor : 1),
+                      z[i] > (peak?.z ?? -.infinity) else { continue }
+                let h = widths[i] / 2
+                guard !(max(0, i - h)...min(z.count - 1, i + h)).contains(where: { $0 != i && z[$0] > z[i] }),
+                      !tried.contains(where: { abs($0 - e) <= fwhm(e) }) else { continue }
+                peak = (i, z[i])
             }
-            var best: (id: String, significance: Double)?
-            for g in poolGroups where !active.contains(g.id) && !banned.contains(g.id) {
-                if let st = cache[g.id], st.net >= st.ld, st.significance > (best?.significance ?? 0) { best = (g.id, st.significance) }
+            guard let peak else { break }
+            examined += 1
+            let ep = energies[peak.i]
+            tried.append(ep)
+            let reach = t.candidateWindowSigma * fwhm(ep) / EDSLineModel.sigma2fwhm + t.candidateWindowKeV
+
+            // Candidates: the elements with a line there, then the pile-up pairs of the modelled elements.
+            let inModel = Set(model.map(\.element))
+            var jobs: [[FitLineGroup]] = [], keys: [(key: String, group: String, confirmation: String?, unconfirmable: String?)] = []
+            for el in poolElements where testable.contains(el) && !inModel.contains(el) {
+                let lines = XRayLines.lines(of: el).filter { $0.weight >= t.minimumLineWeight && abs($0.energy - ep) <= reach && $0.energy >= lo && $0.energy <= hi }
+                guard let line = lines.min(by: { abs($0.energy - ep) < abs($1.energy - ep) }) else { continue }
+                let groups = poolGroups.filter { $0.element == el }
+                // The nominating family's group must be testable (its alpha line in range); otherwise the trial would report another family.
+                guard let g = groups.first(where: { $0.id.dropFirst(el.count + 1).first == line.name.first }) else { continue }
+                jobs.append(model + groups)
+                let check = confirmation(el, line, z)
+                keys.append((el, g.id, check.withhold, check.unconfirmable))
             }
-            guard let b = best else { break }
-            active.insert(b.id)
-            let before = active
-            fit = try settle()
-            // Whatever the settled fit dropped (the joiner itself or a rival it displaced) stays out: this ends the loop.
-            banned.formUnion(before.subtracting(active))
+            let columns = Set(model.map(\.id))
+            var sumEnergiesSeen: [Double] = []
+            for e in LineConflicts.sumEnergies(parents: parents(fit).map(\.parent)) {
+                let id = "sum:" + e.elements.joined(separator: "+")
+                guard abs(e.energyKeV - ep) <= reach, e.energyKeV < hi, e.energyKeV < s.beamEnergy, !columns.contains(id),
+                      !sumEnergiesSeen.contains(where: { abs($0 - e.energyKeV) < 1e-9 }),
+                      let w = XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: e.energyKeV) else { continue }
+                sumEnergiesSeen.append(e.energyKeV)
+                let g = FitLineGroup(id: id, element: "sum", lines: [FitLine(id: id, energy: e.energyKeV, weight: 1, fwhm: w)], escapes: [])
+                sumInfo[id] = (e.label, e.elements)
+                jobs.append(model + [g])
+                keys.append((id, id, nil, nil))
+            }
+            guard !jobs.isEmpty else { continue }
+            let results = try runAll(jobs, on: counts)
+            tested += jobs.count
+
+            var eligible: [Trial] = []
+            for (k, r) in zip(keys, results) {
+                guard let p = try? r.get(), let gi = p.model.groups.firstIndex(where: { $0.id == k.group }) else { continue }
+                let new = p.model.groups.filter { !columns.contains($0.id) }
+                let gain = fit.statistic - p.statistic
+                let mask = near(new)
+                let local = zip(mask.indices, mask).filter(\.1).reduce(0.0) { $0 + fit.terms[$1.0] - p.terms[$1.0] }
+                let peakGain = window(ep, fwhm(ep)).reduce(0.0) { $0 + fit.terms[$1] - p.terms[$1] }
+                var trial = Trial(key: k.key, group: k.group, stat: stat(p, gi), gain: gain, peakGain: peakGain, localShare: gain > 0 ? local / gain : 0,
+                                  reason: nil, confirmation: k.confirmation, unconfirmable: k.unconfirmable, pass: p)
+                // A line of the candidate that the data contradict: its window worsens by `contradictionGain` and by a share of the gain.
+                var contradicted: String?
+                for g in new { for l in g.lines where l.weight >= t.minimumLineWeight {
+                    let d = window(l.energy, l.fwhm).reduce(0.0) { $0 + fit.terms[$1] - p.terms[$1] }
+                    if d <= -t.contradictionGain && -d > t.contradictionShare * max(gain, 0) {
+                        contradicted = String(format: "its %@ (%.2f keV) makes the fit worse there by %.0f", Self.lineLabel(l.id), l.energy, -d)
+                        break
+                    }
+                } }
+                if let c = k.confirmation { trial.reason = c }
+                else if gain < t.minimumGain { trial.reason = String(format: "Adding it improves the fit by %.0f, below the %.0f a new line needs.", gain, t.minimumGain) }
+                else if trial.localShare < t.minimumLocalShare { trial.reason = String(format: "Only %.0f %% of its gain %.0f is at its own lines (%.0f %% needed): it mostly reshapes the background.", 100 * trial.localShare, gain, 100 * t.minimumLocalShare) }
+                else if let st = trial.stat, st.net < st.ld { trial.reason = String(format: "Its area %.0f is below its detection limit %.0f.", st.net, st.ld) }
+                else if trial.stat == nil { trial.reason = "Its area has no stated limit (the fit with it is rank deficient)." }
+                else if let c = contradicted { trial.reason = "The data contradict it: \(c)." }
+                if trial.reason == nil { eligible.append(trial) }
+                if !k.key.hasPrefix("sum:") && found[k.key] == nil { trials[k.key] = trial }
+            }
+            // The candidate that explains THIS peak best joins (its gain within one FWHM of the peak): a heavy element whose other families
+            // also soak up misfits elsewhere must not take a peak that a K line sits on exactly (W Mα took Si Kα on the owner's 1456 by total gain).
+            guard let best = eligible.max(by: { $0.peakGain < $1.peakGain }), let p = best.pass else { continue }
+            let rivals = eligible.filter { $0.key != best.key && $0.peakGain >= best.peakGain - t.ambiguityGain }.map(\.key)
+            for e in eligible where e.key != best.key && !e.key.hasPrefix("sum:") {
+                trials[e.key]?.reason = String(format: "The peak at %.3f keV went to %@, which explains it better (gain there %.0f against %.0f).",
+                                               ep, best.key.hasPrefix("sum:") ? (sumInfo[best.key]?.label ?? best.key) : best.key, best.peakGain, e.peakGain)
+            }
+            model = p.model.groups
+            fit = p
+            if !best.key.hasPrefix("sum:") {
+                found[best.key] = Found(peakKeV: ep, gain: best.peakGain, ambiguous: rivals, unconfirmable: best.unconfirmable)
+                foundOrder.append(best.key)
+                trials[best.key] = nil
+            }
         }
 
-        // Candidates: one per pool element, its best group.
-        var candidates: [ElementCandidate] = []
-        for el in poolElements {
-            let gs = poolGroups.filter { $0.element == el }.compactMap { g in last[g.id].map { (g, $0) } }
-            guard let (g, st) = gs.max(by: { $0.1.significance < $1.1.significance }) else { continue }
-            let alpha = g.lines[0].energy
-            // A pile-up peak can never exceed its smaller parent's group net: its area is that parent's counts times the chance that another photon of
-            // the other parent arrives within the shaping time, at most 1 (`sumPeakFraction`, a bound, not a measured dead-time fraction; a self-pair is
-            // in truth at most half, a tightening left for a registration with the planted sum fixtures, which exceed it). A candidate above the bound
-            // carries no sum-peak question (the Mg+O sum at 1.78 keV must not hold back a Si K line twenty times the Mg line).
-            let conflicts = LineConflicts.conflicts(element: el, line: g.id, lineEnergyKeV: alpha, parents: parents,
-                                                    toleranceKeV: sumPeakToleranceKeV, context: context).filter { c in
-                c.kind != .sumPeak || (c.requires.compactMap { parentNets[$0] }.min() ?? 0) * sumPeakFraction >= st.net
+        // Prune: leave each found element out of the final fit; drop the cheapest while that costs less than `pruneGain`.
+        var pruned: [String: Trial] = [:]
+        while true {
+            let inModel = foundOrder.filter { el in model.contains { $0.element == el } }
+            guard !inModel.isEmpty else { break }
+            let jobs = inModel.map { el in model.filter { $0.element != el } }
+            let results = try runAll(jobs, on: counts)
+            let costs = zip(inModel, results).compactMap { el, r in (try? r.get()).map { (el, $0.statistic - fit.statistic, $0) } }
+            // Dropped only when the final fit does not need it AND its own peak does not either (the statistic's fall within one FWHM of the
+            // peak it was found at, the filtered peak gain of the method's step 7).
+            func peakCost(_ el: String, _ p: Pass) -> Double {
+                guard let e = found[el]?.peakKeV else { return 0 }
+                return window(e, fwhm(e)).reduce(0.0) { $0 + p.terms[$1] - fit.terms[$1] }
             }
+            guard let cheapest = costs.filter({ peakCost($0.0, $0.2) < t.pruneGain }).min(by: { $0.1 < $1.1 }), cheapest.1 < t.pruneGain else { break }
+            let gi = fit.model.groups.enumerated().filter { $0.element.element == cheapest.0 }
+                .max { (stat(fit, $0.offset)?.significance ?? 0) < (stat(fit, $1.offset)?.significance ?? 0) }?.offset
+            pruned[cheapest.0] = Trial(key: cheapest.0, group: gi.map { fit.model.groups[$0].id } ?? "", stat: gi.flatMap { stat(fit, $0) },
+                                       gain: cheapest.1, peakGain: 0, localShare: 0,
+                                       reason: String(format: "Leaving it out of the final fit costs %.0f, below the %.0f it needs to stay.", cheapest.1, t.pruneGain),
+                                       confirmation: nil, unconfirmable: nil, pass: nil)
+            model = cheapest.2.model.groups
+            fit = cheapest.2
+        }
+        // A pile-up column whose parent was pruned goes with it.
+        if model.contains(where: { g in g.element == "sum" && (sumInfo[g.id]?.elements ?? []).contains { pruned[$0] != nil } }) {
+            model.removeAll { g in g.element == "sum" && (sumInfo[g.id]?.elements ?? []).contains { pruned[$0] != nil } }
+            fit = try run(model, on: counts)
+        }
+
+        // Background health in bands, off the modelled lines: data over model within 0.8 to 1.25.
+        let onLines = near(model)
+        var unhealthy: [(lo: Double, hi: Double, ratio: Double)] = []
+        for (a, b) in [(1.0, 2.5), (2.5, 5.0), (5.0, hi + 1)] {
+            var d = 0.0, m = 0.0, n = 0
+            for i in energies.indices where energies[i] >= a && energies[i] < b && !onLines[i] { d += y[i]; m += fit.result.model[i]; n += 1 }
+            if n >= 10, m > 0, !(0.8...1.25).contains(d / m) { unhealthy.append((a, min(b, hi), d / m)) }
+        }
+
+        // Candidates: the found elements from the final fit, then the pruned, then the rest that were tested.
+        let finalParents = parents(fit)
+        let parentNets = Dictionary(uniqueKeysWithValues: finalParents.map { ($0.parent.element, $0.net) })
+        func conflicts(_ el: String, _ group: String, _ alpha: Double, _ net: Double) -> [LineConflict] {
+            LineConflicts.conflicts(element: el, line: group, lineEnergyKeV: alpha, parents: finalParents.map(\.parent).filter { $0.element != el },
+                                    toleranceKeV: sumPeakToleranceKeV, context: context).filter { c in
+                c.kind != .sumPeak || (c.requires.compactMap { parentNets[$0] }.min() ?? 0) * sumPeakFraction >= net
+            }
+        }
+        var candidates: [ElementCandidate] = []
+        func append(_ el: String, group: String, stat st: Stat, familyNote: String? = nil, possibleReason: String? = nil,
+                    unconfirmable: Bool = false) throws {
+            let alpha = XRayLines.line(group)?.energy ?? 0
             var note: String?
             if context.gridElements.contains(el) {
                 if let hole = holeCounts {
                     let hp = try run(currentGroups + poolGroups.filter { $0.element == el }, on: hole)
-                    if let gi = hp.model.groups.firstIndex(where: { $0.id == g.id }), let hs = stat(hp, gi) {
+                    if let gi = hp.model.groups.firstIndex(where: { $0.id == group }), let hs = stat(hp, gi) {
                         note = hs.net >= hs.ld
                             ? String(format: "%@ is also detected on the hole region (net %.0f \u{2265} L_D %.0f): part of it is grid.", el, hs.net, hs.ld)
                             : String(format: "No %@ on the hole region (net %.0f < L_D %.0f): the %@ belongs to the sample.", el, hs.net, hs.ld, el)
@@ -521,96 +602,79 @@ public nonisolated struct ElementProposer: Sendable {
                                               : "No hole region available: \(el) from the grid and from the sample cannot be separated." }
             }
             candidates.append(ElementCandidate(
-                element: el, group: g.id, energyKeV: alpha, net: st.net, sigma: st.sigma, sigmaZero: st.sigmaZero,
-                criticalLevel: st.lc, detectionLimit: st.ld, conflicts: conflicts,
-                suggestedRole: context.quantifyByDefault.contains(el) ? .quantify : .fitOnly, holeRegionNote: note, misfit: st.misfit))
+                element: el, group: group, energyKeV: alpha, net: st.net, sigma: st.sigma, sigmaZero: st.sigmaZero,
+                criticalLevel: st.lc, detectionLimit: st.ld, conflicts: conflicts(el, group, alpha, st.net),
+                suggestedRole: context.quantifyByDefault.contains(el) ? .quantify : .fitOnly, holeRegionNote: note, misfit: 1,
+                familyNote: familyNote, possibleReason: possibleReason, unconfirmable: unconfirmable))
         }
-        // R4, family consistency (the field's confirmation-line rule: Goldstein ch. 18, Newbury 2005, AutoEMX 2026, NIST EPQ's overvoltage rule): an
-        // element proposed by an L or M line must show its next family's alpha line (K for L, L for M) at or above that line's own L_D where the fitted
-        // range holds it and the beam is well above its edge. One extra joint fit per such candidate (the settled design plus the companion group) reads
-        // the companion's net. A candidate the check cannot fit keeps its standing. No Python counterpart; `validation: "none"`.
-        var withheld: [String] = []
-        func lineLabel(_ id: String) -> String {   // "Ba_Lb1" -> "L\u{03B2}1"
-            String(id.drop { $0 != "_" }.dropFirst().map { c in ["a": "\u{03B1}", "b": "\u{03B2}", "g": "\u{03B3}"][c] ?? String(c) }.joined())
-        }
-        if familyConsistency {
-            for (k, c) in candidates.enumerated() where c.isProposed && !c.hasSumPeakQuestion {
-                guard let g = poolGroups.first(where: { $0.id == c.group }), let family = XRayLines.line(g.lines[0].id)?.family, family != .K else { continue }
-                // The companion: K for an L group, L for an M group, when its alpha line is in the fitted range and the beam is at least `familyOvervoltage`
-                // times its energy (the edge proxy; below that the family can be too weakly excited to demand).
-                let companionID = c.element + (family == .L ? "_Ka" : "_La")
-                guard let h = poolGroups.first(where: { $0.id == companionID && s.beamEnergy >= familyOvervoltage * $0.lines[0].energy }) else { continue }
-                var design = currentGroups + poolGroups.filter { active.contains($0.id) || $0.id == g.id }
-                if !design.contains(where: { $0.id == h.id }) { design.append(h) }
-                let p: Pass
-                do { p = try run(design + sumColumns(parents, claiming: claiming(active).union([g.id, h.id]), design: design), on: counts) }
-                catch ProposerError.cancelled { throw ProposerError.cancelled }
-                catch { continue }   // a check that cannot be fitted keeps the candidate
-                guard let gi = p.model.groups.firstIndex(where: { $0.id == h.id }), let sh = stat(p, gi), sh.net < sh.ld else { continue }
-                let note = String(format: "%@ %@ (%.2f keV) reads below its detection limit (net %.0f < L_D %.0f) although %@ %@ is proposed at %.0f counts: not %@.",
-                                  c.element, lineLabel(h.lines[0].id), h.lines[0].energy, sh.net, sh.ld, c.element, lineLabel(g.lines[0].id), c.net, c.element)
-                withheld.append("Family consistency withheld \(c.element): \(note)")
-                candidates[k] = ElementCandidate(
-                    element: c.element, group: c.group, energyKeV: c.energyKeV, net: c.net, sigma: c.sigma, sigmaZero: c.sigmaZero,
-                    criticalLevel: c.criticalLevel, detectionLimit: c.detectionLimit, conflicts: c.conflicts,
-                    suggestedRole: c.suggestedRole, holeRegionNote: c.holeRegionNote, misfit: c.misfit, familyNote: note)
+        /// The numbers of a group whose limit cannot be stated: its area, no limit (never proposed).
+        func unstated(_ p: Pass, _ gi: Int) -> Stat { Stat(net: p.result.values[gi], sigma: 0, sigmaZero: 0, lc: .infinity, ld: .infinity) }
+        let noLimit = "Its area has no stated limit (the fit with it is rank deficient)."
+        for el in foundOrder where model.contains(where: { $0.element == el }) {
+            guard let f = found[el], let first = fit.model.groups.firstIndex(where: { $0.element == el }) else { continue }
+            let gs = fit.model.groups.enumerated().filter { $0.element.element == el }.compactMap { gi, g in stat(fit, gi).map { (g, $0) } }
+            guard let (g, st) = gs.max(by: { $0.1.significance < $1.1.significance }) else {
+                try append(el, group: fit.model.groups[first].id, stat: unstated(fit, first), possibleReason: noLimit)
+                continue
             }
+            var reason: String?
+            if let u = f.unconfirmable {
+                reason = u
+            } else if !f.ambiguous.isEmpty {
+                reason = String(format: "%@ explain%@ the peak at %.3f keV about as well (within %.0f of its gain there, %.0f).",
+                                f.ambiguous.map { sumInfo[$0]?.label ?? $0 }.joined(separator: ", "), f.ambiguous.count == 1 ? "s" : "", f.peakKeV, t.ambiguityGain, f.gain)
+            } else if el == "Si", let gi = fit.model.groups.firstIndex(where: { $0.id == "Si_Ka" }), fit.result.values[gi] < t.siliconArtefactFraction * totalCounts {
+                reason = String(format: "Si K\u{03B1} holds %.2f %% of the counts, below the %.1f %% under which it is the detector's own Si.", 100 * fit.result.values[gi] / totalCounts, 100 * t.siliconArtefactFraction)
+            } else if let band = unhealthy.first(where: { f.peakKeV >= $0.lo && f.peakKeV < $0.hi }) {
+                reason = String(format: "Its peak (%.3f keV) lies where the background is off (data over model %.2f in %.1f to %.1f keV).", f.peakKeV, band.ratio, band.lo, band.hi)
+            }
+            try append(el, group: g.id, stat: st, possibleReason: reason, unconfirmable: f.unconfirmable != nil)
         }
-        // A withheld element's group stays in the settled model, where it may hold counts that belong to a real line at the same energy (a planted
-        // Mg Kα at 1.254 keV read at a fifth of its truth while a Tb Mα at 1.240 keV, withheld for its missing Lα, held the rest; P2 M.L.N7). So the
-        // proposal is made again with the withheld elements out of the pool, and the withheld candidates (their numbers from this fit, their
-        // notes) are appended to that result. The rerun cannot withhold the same element twice; it ends when nothing new is withheld.
-        if !withheld.isEmpty {
-            let withheldCandidates = candidates.filter { $0.familyNote != nil }
-            let out = Set(withheldCandidates.map(\.element))
-            var again = self
-            again.pool = poolElements.filter { !out.contains($0) }
-            let reportedSoFar = reported
-            var inner: (@Sendable (Double) -> Void)? = nil
-            if let progress { inner = { @Sendable p in progress(max(reportedSoFar, 0.5 + 0.5 * p)) } }
-            let r = try again.propose(counts: counts, axis: axis, settings: settings, holeCounts: holeCounts, cancelled: cancelled, progress: inner)
-            var merged = r.candidates + withheldCandidates
-            merged.sort { $0.significance > $1.significance }
-            var notes = r.notes
-            // The rerun's explicit pool is this proposal's own pool minus the withheld, not a policy of its own: the policy note is this run's.
-            notes.removeAll { $0.hasPrefix("policy (non-default)") }
-            if let p = policy.noteLine { notes.insert(p, at: min(3, notes.count)) }
-            if let m = notes.firstIndex(where: { $0.hasPrefix("Flank-misfit scaling") || $0.contains("flank-misfit factor") }) { notes[m] = Self.misfitNote(merged) }
-            if let i = notes.firstIndex(where: { $0.hasPrefix("Family consistency (R4") }) {
-                notes.insert(contentsOf: withheld + ["Settled again without \(out.sorted().joined(separator: ", ")): the numbers above are from that fit; the withheld keep theirs from the fit that held them."], at: i + 1)
-            } else { notes += withheld }
-            progress?(1)
-            return ProposalResult(candidates: merged, sumPeaks: r.sumPeaks, refused: r.refused, currie: r.currie, notes: notes,
-                                  passes: passes + r.passes, settled: settled && r.settled, reducedChiSquared: r.reducedChiSquared)
+        for el in foundOrder { if let p = pruned[el] {
+            try append(el, group: p.group, stat: p.stat ?? Stat(net: 0, sigma: 0, sigmaZero: 0, lc: .infinity, ld: .infinity), possibleReason: p.reason)
+        } }
+        for (el, tr) in trials.sorted(by: { $0.key < $1.key }) where !candidates.contains(where: { $0.element == el }) {
+            let st = tr.stat ?? tr.pass.flatMap { p in p.model.groups.firstIndex { $0.id == tr.group }.map { unstated(p, $0) } }
+                ?? Stat(net: 0, sigma: 0, sigmaZero: 0, lc: .infinity, ld: .infinity)
+            if let c = tr.confirmation { try append(el, group: tr.group, stat: st, familyNote: c) }
+            else { try append(el, group: tr.group, stat: st, possibleReason: tr.reason ?? "Tested but not added.") }
         }
         candidates.sort { $0.significance > $1.significance }
 
         var sumPeaks: [SumPeakFinding] = []
         for (gi, g) in fit.model.groups.enumerated() where g.element == "sum" {
-            guard let st = stat(fit, gi), let info = sumElements[g.id] else { continue }
+            guard let st = stat(fit, gi), let info = sumInfo[g.id] else { continue }
             sumPeaks.append(SumPeakFinding(label: info.label, elements: info.elements, energyKeV: g.lines[0].energy,
                                            net: st.net, sigmaZero: st.sigmaZero, detectionLimit: st.ld))
         }
 
         var notes = [
             String(format: "Lines below %.2f keV are not tested (a measured limit of the continuum model, not a property of the method).", minimumLineEnergyKeV),
-            "Detection: fitted net \u{2265} Currie L_D (\(Self.rateText(currie)), a convention; L_C and L_D are properties of this spectrum), \u{03C3}\u{2080} from the fit's own variance with the candidate absent.",
-            "Fit: \(fit.result.methodLabel); \(fit.result.backgroundLabel); \(fit.result.escapeLabel); \(fit.result.referenceShapesLabel); \(poolGroups.count) candidate line groups: \(passes) joint fit\(passes == 1 ? "" : "s") pruned at L_C, then \(trials) single-candidate tests of the pruned ones against the settled model.",
+            String(format: "Identification (validation: none): the residual's peaks at or above %.0f \u{03C3} of its top-hat filter (%.1f \u{00D7} below %.0f keV); a candidate joins when \u{03A3}(y \u{2212} \u{03BC})\u{00B2}/(\u{03BC} + (%.2f \u{03BC})\u{00B2}) falls by at least %.0f, %.0f %% of that at its own lines, with its area at or above Currie L_D (\(Self.rateText(currie)), \u{03C3}\u{2080} from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (%.0f). K\u{03B2} weights from NIST EPQ in this fit.",
+                   t.peakSigma, t.lowEnergyFactor, t.lowEnergyBelowKeV, t.relativeModelTerm, t.minimumGain, 100 * t.minimumLocalShare, t.pruneGain),
+            "Fit: \(fit.result.methodLabel); \(fit.result.backgroundLabel); \(fit.result.escapeLabel); \(fit.result.referenceShapesLabel); \(examined) residual peak\(examined == 1 ? "" : "s") examined, \(tested) candidate fits, \(fitsDone) fits in all.",
         ]
         if let p = policy.noteLine { notes.insert(p, at: 3) }
-        notes.append(Self.misfitNote(candidates))
+        if EPQLineWeights.bundled == nil { notes.append("The NIST EPQ line weights are missing from this build: the identification fit used eXSpy's Kβ weights.") }
         if familyConsistency {
-            notes.append("Family consistency (R4, the confirmation-line rule, validation: none): an element proposed by an L or M line needs its K or L alpha line at or above its own L_D where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise the element is withheld.")
-            notes += withheld
+            notes.append("Confirmation lines (validation: none): an element nominated by an L or M line needs its K or L alpha line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise it is withheld.")
+            notes += candidates.compactMap { c in c.familyNote.map { "Confirmation withheld \(c.element): \($0)" } }
         }
+        for b in unhealthy { notes.append(String(format: "Background check: data over model %.2f off the lines in %.1f to %.1f keV (0.80 to 1.25 is healthy); a find there is only possible.", b.ratio, b.lo, b.hi)) }
         let pChance = 0.5 * erfc((currie.zAlpha + currie.zBeta) / 2.0.squareRoot())
-        notes.append(String(format: "Look-elsewhere: %d line groups were tested, so about %d \u{00D7} %.1e = %.2f chance proposals per spectrum are expected; a candidate near net/L_D = 1 is as likely chance as real.", poolGroups.count, poolGroups.count, pChance, Double(poolGroups.count) * pChance))
-        if !settled { notes.append("The surviving set did not settle in \(maxPasses) passes: the last fit is shown.") }
-        if forwardCapped { notes.append("The forward step stopped at \(maxForwardRounds) rounds: this spectrum keeps producing candidates, which points to a model misfit (continuum or line widths) rather than to that many elements.") }
+        notes.append(String(format: "Look-elsewhere: %d candidates were tested, so about %.2f chance passes of the area bar alone are expected; the gain and confirmation bars stand beside it.", tested, Double(tested) * pChance))
+        if capped && examined >= t.maximumPeaks { notes.append("The loop stopped after \(t.maximumPeaks) residual peaks: this spectrum keeps producing peaks, which points to a model misfit (continuum or line shapes) rather than to that many elements.") }
+        if capped && foundOrder.count >= t.maximumNewElements { notes.append("The loop stopped at \(t.maximumNewElements) new elements.") }
         for w in fit.result.warnings where !notes.contains(w) { notes.append(w) }
         progress?(1)
         return ProposalResult(candidates: candidates, sumPeaks: sumPeaks, refused: refused, currie: currie,
-                              notes: notes, passes: passes, settled: settled,
+                              notes: notes, passes: fitsDone, settled: !(capped && examined >= t.maximumPeaks),
                               reducedChiSquared: fit.result.pearsonReducedChiSquared)
+    }
+
+    /// "Ba_Lb1" -> "Lβ1".
+    private static func lineLabel(_ id: String) -> String {
+        let name = id.drop { $0 != "_" }.dropFirst()
+        return String(name.prefix(1)) + name.dropFirst().map { c in ["a": "\u{03B1}", "b": "\u{03B2}", "g": "\u{03B3}"][c] ?? String(c) }.joined()
     }
 }

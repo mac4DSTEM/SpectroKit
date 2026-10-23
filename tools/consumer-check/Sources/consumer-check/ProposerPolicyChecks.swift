@@ -1,7 +1,7 @@
 //
 //  ProposerPolicyChecks.swift
 //  Role: family 3 of docs/generality-0.5.0-registration.md used from outside the package: `ProposerPolicy` (with `Currie`,
-//        `FlankMisfitGeometry`, `ElementContext`), `ElementProposer(policy:)`, the now public `ProposalRules` fields and
+//        `IdentificationThresholds`, `ElementContext`), `ElementProposer(policy:)`, the now public `ProposalRules` fields and
 //        `UnlistedLineRules` with `UnlistedLineChecker.neighbour`. Only public API is named.
 //
 
@@ -35,8 +35,8 @@ func proposerPolicyChecks(_ r: inout Report) throws {
     r.check("ProposerPolicy.default builds the proposer that ElementProposer() is", plain.proposed == named.proposed && plain.notes == named.notes)
     let d = ProposerPolicy.default
     r.check("ProposerPolicy defaults are the values the proposer has always used",
-            d.currie == .standard && d.pool == nil && d.excluded == ElementProposer.defaultExcluded && d.maxPasses == 5
-            && d.maxForwardRounds == 24 && d.minimumLineEnergyKeV == 0.45 && d.flankScaling && d.flank == FlankMisfitGeometry()
+            d.currie == .standard && d.pool == nil && d.excluded == ElementProposer.defaultExcluded
+            && d.minimumLineEnergyKeV == 0.45 && d.thresholds == IdentificationThresholds()
             && d.rangeMarginFWHM == 0.5 && d.sumPeakToleranceKeV == 0.06 && d.context == ElementContext())
     let strict = try propose(ProposerPolicy(currie: Currie(alpha: 0.01, beta: 0.01)))
     let both = plain.proposed.compactMap { p in strict.proposed.first { $0.element == p.element }.map { (p, $0) } }
@@ -51,8 +51,8 @@ func proposerPolicyChecks(_ r: inout Report) throws {
     r.check("the element context decides which candidates carry the implantation question",
             ga?.conflicts.contains { $0.kind == .fibContamination } == true
             && noCtx.proposed.first { $0.element == "Ga" }?.conflicts.isEmpty == true)
-    let off = try propose(ProposerPolicy(flankScaling: false, flank: FlankMisfitGeometry(binsPerSide: 3)))
-    r.check("flank scaling and its geometry are accepted", !off.proposed.isEmpty)
+    let off = try propose(ProposerPolicy(thresholds: IdentificationThresholds(peakSigma: 6, maximumPeaks: 20)))
+    r.check("identification thresholds are accepted and named", off.notes.contains { $0.contains("thresholds.peakSigma = 6.0") })
     var rules = ProposalRules.shipped
     rules.actinideZ = 80; rules.besideKFWHM = 2; rules.lineMinimumSignificance = 4; rules.releaseSignificance = 12
     rules.hygiene = true; rules.besideK = true; rules.besideKGuard = true; rules.corroboration = true; rules.release = true
@@ -67,9 +67,9 @@ func proposerPolicyChecks(_ r: inout Report) throws {
             UnlistedLineChecker.neighbour(energyKeV: e, listedGroups: al, resolutionMnKaEV: 130, edges: [])?.line == "Al K\u{03B1}"
             && UnlistedLineChecker.neighbour(energyKeV: e, listedGroups: al, resolutionMnKaEV: 130, edges: [], rules: UnlistedLineRules(besideLineFWHM: 0.5)) == nil)
     let codedRules = try JSONDecoder().decode(UnlistedLineRules.self, from: JSONEncoder().encode(UnlistedLineRules(moveSigmaFactor: 3)))
-    let codedFlank = try JSONDecoder().decode(FlankMisfitGeometry.self, from: JSONEncoder().encode(FlankMisfitGeometry(minimumBins: 4)))
+    let codedFlank = try JSONDecoder().decode(IdentificationThresholds.self, from: JSONEncoder().encode(IdentificationThresholds(minimumGain: 50)))
     let codedContext = try JSONDecoder().decode(ElementContext.self, from: JSONEncoder().encode(ElementContext(gridElements: ["Ni"])))
-    r.check("UnlistedLineRules, FlankMisfitGeometry and ElementContext round-trip through JSON",
-            codedRules == UnlistedLineRules(moveSigmaFactor: 3) && codedFlank == FlankMisfitGeometry(minimumBins: 4)
+    r.check("UnlistedLineRules, IdentificationThresholds and ElementContext round-trip through JSON",
+            codedRules == UnlistedLineRules(moveSigmaFactor: 3) && codedFlank == IdentificationThresholds(minimumGain: 50)
             && codedContext == ElementContext(gridElements: ["Ni"]))
 }

@@ -33,6 +33,23 @@ package nonisolated struct EPQLineWeights: Sendable {
         self.init(csv: try String(contentsOf: url, encoding: .utf8))
     }
 
+    /// The table shipped with the library (Resources/Spectroscopy/LineWeights.csv), loaded once; nil when the resource is missing.
+    package static let bundled: EPQLineWeights? = {
+        guard let url = Bundle.module.url(forResource: "LineWeights", withExtension: "csv", subdirectory: "Spectroscopy")
+            ?? Bundle.module.url(forResource: "LineWeights", withExtension: "csv") else { return nil }
+        return try? EPQLineWeights(contentsOf: url)
+    }()
+
+    /// Kβ over Kα: every K transition other than K-L2 and K-L3, over those two. nil when the element has no K-L3 or no other K line.
+    package func kBetaOverKAlpha(element: String) -> Double? {
+        guard let z = QuantElementData.entry(element)?.z, rows.indices.contains(z) else { return nil }
+        var alpha = 0.0, rest = 0.0
+        for (i, n) in names.enumerated() where rows[z].indices.contains(i) && n.hasPrefix("K-") {
+            if n == "K-L3" || n == "K-L2" { alpha += rows[z][i] } else { rest += rows[z][i] }
+        }
+        return alpha > 0 && rest > 0 ? rest / alpha : nil
+    }
+
     /// Weight of one transition (e.g. "K-L3") for `element`, nil if unknown.
     package func weight(element: String, transition: String) -> Double? {
         guard let z = QuantElementData.entry(element)?.z, rows.indices.contains(z),

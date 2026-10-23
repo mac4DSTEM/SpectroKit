@@ -54,17 +54,15 @@ struct ProposerPolicyTests {
         #expect(a.candidates == b.candidates && a.notes == b.notes && a.passes == b.passes && a.settled == b.settled)
         #expect(a.reducedChiSquared == b.reducedChiSquared)
         let d = ProposerPolicy.default
-        #expect(d.currie == .standard && d.pool == nil && d.excluded == ElementProposer.defaultExcluded && d.maxPasses == 5
-                && d.maxForwardRounds == 24 && d.minimumLineEnergyKeV == 0.45 && d.flankScaling && d.flank == .default
+        #expect(d.currie == .standard && d.pool == nil && d.excluded == ElementProposer.defaultExcluded
+                && d.minimumLineEnergyKeV == 0.45 && d.thresholds == .default
                 && d.rangeMarginFWHM == 0.5 && d.sumPeakToleranceKeV == 0.06 && d.context == .default)
-        let f = FlankMisfitGeometry.default
-        #expect(f.innerFWHM == 1.5 && f.binWidthFWHM == 1 && f.binsPerSide == 5 && f.minimumChannelsPerBin == 3 && f.minimumBins == 3)
         let c = ElementContext.default
         #expect(c.quantifyByDefault == ["Cu"] && c.gridElements == ["Cu"] && c.implantedElements == ["Ga"])
         let u = UnlistedLineRules.default
         #expect(u.besideLineFWHM == 2 && u.besideEdgeFWHM == 1 && u.moveSigmaFactor == 1)
         #expect(try JSONDecoder().decode(UnlistedLineRules.self, from: JSONEncoder().encode(UnlistedLineRules(besideLineFWHM: 3))) == UnlistedLineRules(besideLineFWHM: 3))
-        #expect(try JSONDecoder().decode(FlankMisfitGeometry.self, from: JSONEncoder().encode(FlankMisfitGeometry(binsPerSide: 4))) == FlankMisfitGeometry(binsPerSide: 4))
+        #expect(try JSONDecoder().decode(IdentificationThresholds.self, from: JSONEncoder().encode(IdentificationThresholds(peakSigma: 4))) == IdentificationThresholds(peakSigma: 4))
         #expect(try JSONDecoder().decode(ElementContext.self, from: JSONEncoder().encode(ElementContext(gridElements: ["Ni"]))) == ElementContext(gridElements: ["Ni"]))
     }
 
@@ -87,70 +85,27 @@ struct ProposerPolicyTests {
         #expect(!ElementProposer.defaultPool.contains("Ne") && ElementProposer.defaultPool(excluding: []).contains("Ne"))
         #expect(ElementProposer.defaultPool == ElementProposer.defaultPool(excluding: ElementProposer.defaultExcluded))
         let small = try Self.propose(Self.base, policy: ProposerPolicy(pool: ["Mg", "Si"]))
-        #expect(Set(small.candidates.map(\.element)) == ["Mg", "Si"])
-        let none = try Self.propose(Self.base)
-        let all = try Self.propose(Self.base, policy: ProposerPolicy(excluded: []))
+        // 0.11.0: an element is a candidate only where the residual has a peak for it, so the pool bounds the candidates from above.
+        #expect(Set(small.candidates.map(\.element)).isSubset(of: ["Mg", "Si"]))
+        // Neon planted (Ne K-alpha 0.85 keV): an excluded element is never a candidate; with nothing excluded it is found.
+        let neon = Self.expected(areas: ["Al_Ka": 9000, "Ne_Ka": 3000], dose: 10)
+        let none = try Self.propose(neon)
+        let all = try Self.propose(neon, policy: ProposerPolicy(excluded: []))
         #expect(Self.candidate(none, "Ne") == nil && Self.candidate(all, "Ne") != nil)
     }
 
-    // MARK: E6 - E8 the flank misfit and the range margin
-
-    /// A bump the continuum and the lines cannot follow: the flank misfit factor rises above 1 around it.
-    private static let bumpy: @Sendable (Double) -> Double = { e in kramers(e) * (1 + 0.5 * exp(-pow((e - 3.0) / 0.12, 2))) }
-    private static let bumpCounts = expected(areas: ["Al_Ka": 9000, "Mg_Ka": 90], dose: 10, continuum: bumpy)
-
-    @Test func testFlankScalingAndItsGeometry() throws {
-        let on = try Self.propose(Self.bumpCounts)
-        #expect(on.candidates.contains { $0.misfit > 1.005 }, "no candidate saw the bump: \(on.candidates.map(\.misfit).max() ?? 0)")
-        let off = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flankScaling: false))
-        #expect(off.candidates.allSatisfy { $0.misfit == 1 })
-        // Registered: L_D with scaling off does not exceed L_D with it on. It does, for most candidates: the scaling also changes which
-        // candidates survive the pruning, so the two runs end on different joint fits (e.g. 297.4 against 295.8 counts), and the
-        // factor only multiplies sigma_0 within one fit. What holds within a run: sigma_0 carries the factor into L_C and L_D.
-        for c in on.candidates where c.misfit > 1.005 {
-            #expect(c.criticalLevel == on.currie.criticalLevel(sigmaZero: c.sigmaZero))
-        }
-        // A geometry with too few bins to judge by, or with flanks beyond the range, reads 1 everywhere: the same candidates as "off".
-        let fewBins = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(minimumBins: 11)))
-        #expect(fewBins.candidates == off.candidates)
-        let far = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(innerFWHM: 200)))
-        #expect(far.candidates == off.candidates)
-        let thin = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(minimumChannelsPerBin: 1000)))
-        #expect(thin.candidates == off.candidates)
-        // Three bins a side see another part of the bump.
-        let three = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(binsPerSide: 3)))
-        #expect(three.candidates.map(\.misfit) != on.candidates.map(\.misfit))
-        let wide = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(binWidthFWHM: 2)))
-        #expect(wide.candidates.map(\.misfit) != on.candidates.map(\.misfit))
-        // Bins of ten widths hold about 78 channels: they pass a floor of 50 channels, and bins of one width (8 channels) would not.
-        let floor50 = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(binWidthFWHM: 10, minimumChannelsPerBin: 50)))
-        #expect(floor50.candidates.contains { $0.misfit > 1.005 })
-        // One bin 400 widths wide swallows the whole flank, the next starts past the range: two bins a line, fewer than three, so the
-        // factor is 1 everywhere, as with scaling off. A width that is not honoured (small bins, five a side) would see the bump.
-        let huge = try Self.propose(Self.bumpCounts, policy: ProposerPolicy(flank: FlankMisfitGeometry(binWidthFWHM: 400)))
-        #expect(huge.candidates == off.candidates)
-        // Bins of two widths reach 11.5 widths from the line, the default's 6.5: a candidate 8 to 10 widths from the bump sees it only
-        // with the wider bins, and only if the bins are laid end to end (not overlapping from the second bin on).
-        let seen = zip(on.candidates, wide.candidates).filter { $0.0.misfit <= 1.005 && $0.1.misfit > 1.005 }.map { $0.0.element }
-        let listing = "default " + on.candidates.map { $0.element + String(format: " %.3f", $0.misfit) }.joined(separator: ", ")
-            + " | wide " + wide.candidates.map { $0.element + String(format: " %.3f", $0.misfit) }.joined(separator: ", ")
-        #expect(!seen.isEmpty, "\(listing)")
-        // Zr and P lie 11 widths from the bump (measured: misfit 1.000 by default, 1.419 and 1.500 with bins of two widths); bins of
-        // two widths that overlapped from the second on would stop at 7.5 widths and miss it.
-        for el in ["Zr", "P"] {
-            let d = try #require(Self.candidate(on, el)), w = try #require(Self.candidate(wide, el))
-            #expect(d.misfit <= 1.005 && w.misfit > 1.005, "\(el): \(d.misfit) -> \(w.misfit)")
-        }
-    }
+    // MARK: E8 the range margin
 
     @Test func testRangeMarginAddsAGroupAtTheRangeStart() throws {
-        // Mg K-alpha (1.2536 keV) lies 13 eV inside a range that starts at 1.24 keV: half a width (36 eV) is the default margin.
-        var s = Self.settings(["Al"]); s.fitFrom = 1.24
-        let counts = Self.expected(areas: ["Al_Ka": 9000, "Mg_Ka": 900], dose: 10)
+        // 0.11.0: the group that takes the peak at the range start is whichever explains it best (Tb M-alpha 1.2326 keV beside Mg K-alpha
+        // 1.2536 keV); what the margin decides is whether a line 3 to 23 eV inside the range may be tested at all. Half a width (36 eV) is the default margin.
+        var s = Self.settings(["Al"]); s.fitFrom = 1.23
+        let counts = Self.expected(areas: ["Al_Ka": 9000, "Mg_Ka": 9000], dose: 10)   // large enough to leave a 5 sigma residual peak
         let normal = try Self.propose(counts, settings: s)
         let zero = try Self.propose(counts, policy: ProposerPolicy(rangeMarginFWHM: 0), settings: s)
-        #expect(Self.candidate(normal, "Mg") == nil && Self.candidate(zero, "Mg") != nil)
-        #expect(zero.candidates.count == normal.candidates.count + 1 || zero.candidates.count > normal.candidates.count)
+        let atStart: (ElementCandidate) -> Bool = { $0.energyKeV >= 1.23 && $0.energyKeV < 1.23 + 0.036 }
+        #expect(!normal.candidates.contains(where: atStart), "the default margin keeps the groups within 36 eV of the range start out")
+        #expect(zero.candidates.contains(where: atStart), "no margin: a group within 36 eV of the range start is tested: \(zero.candidates.map(\.group))")
     }
 
     // MARK: E9 the sum-peak tolerance, E10 the element context
@@ -166,13 +121,8 @@ struct ProposerPolicyTests {
         let n = try Self.propose(counts, policy: ProposerPolicy(sumPeakToleranceKeV: 0.005))
         #expect(try #require(Self.candidate(d, "Ar")).hasSumPeakQuestion)
         #expect(!(try #require(Self.candidate(n, "Ar")).hasSumPeakQuestion))
-        // With the energy claimed by Ar (15 eV away, inside 0.06) the pile-up has no column of its own; at 0.005 keV it has.
-        let pileUp: (ProposalResult) -> Bool = { r in r.sumPeaks.contains { $0.label.contains("Al+Al") } }
-        #expect(!pileUp(d) && pileUp(n), "default \(d.sumPeaks.map(\.label)) tight \(n.sumPeaks.map(\.label))")
-        // Ar sits on the listed Al's pile-up peak (inside 0.06 keV), so it is the question, not a parent of further pile-ups; at 0.005 keV
-        // it is a parent and the Ar sums get columns.
-        #expect(!d.sumPeaks.contains { $0.label.contains("Ar+") } && n.sumPeaks.contains { $0.label.contains("Ar+") },
-                "default \(d.sumPeaks.map(\.label)) tight \(n.sumPeaks.map(\.label))")
+        // 0.11.0: the proposer is the identification loop; "the pile-up has no column of its own while Ar claims the energy, one at 0.005 keV"
+        // and "Ar+ sums get columns once Ar is a parent" (proactive sum columns, exact-energy dedup) no longer exist.
 
         // Context: Cu, Ga and a made-up grid and implantation element.
         let cu = Self.expected(areas: ["Al_Ka": 9000, "Cu_Ka": 900, "Ga_La": 900, "Ni_Ka": 900], dose: 10)
@@ -193,11 +143,12 @@ struct ProposerPolicyTests {
 
     // MARK: E4 - E5 (already parameters) keep working through the policy
 
-    @Test func testPassesRoundsAndLowestLine() throws {
-        let r = try Self.propose(Self.base, policy: ProposerPolicy(maxPasses: 1, maxForwardRounds: 1))
-        #expect(r.passes == 1 || !r.settled)
-        let low = try Self.propose(Self.base, policy: ProposerPolicy(minimumLineEnergyKeV: 0.2))
-        let normal = try Self.propose(Self.base)
+    @Test func testPeakCapAndLowestLine() throws {
+        let r = try Self.propose(Self.base, policy: ProposerPolicy(thresholds: IdentificationThresholds(maximumPeaks: 1)))
+        #expect(r.proposed.count <= 1)
+        let carbon = Self.expected(areas: ["Al_Ka": 9000, "C_Ka": 3000], dose: 10)
+        let low = try Self.propose(carbon, policy: ProposerPolicy(minimumLineEnergyKeV: 0.2))
+        let normal = try Self.propose(carbon)
         #expect(Self.candidate(low, "C") != nil && Self.candidate(normal, "C") == nil)
         #expect(normal.refused.contains { $0.element == "C" })
     }

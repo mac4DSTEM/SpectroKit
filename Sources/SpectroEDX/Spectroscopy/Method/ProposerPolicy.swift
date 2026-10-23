@@ -7,30 +7,87 @@
 import Foundation
 import SpectroCore
 
-/// How the proposer measures the misfit of the fit's smooth parts around a candidate line, which scales its null standard deviation
-/// (and so L_C and L_D) up where the continuum does not follow the data. The residual is summed in bins on both flanks of the line,
-/// the line itself left out; each bin gives Z = sum(residual) / sqrt(sum(max(model, 1))), N(0, 1) when the model is right, and the
-/// factor is `sqrt(max(1, mean Z^2))`.
-public nonisolated struct FlankMisfitGeometry: Sendable, Equatable, Codable {
-    /// Distance from the line to the nearest edge of the first bin, in FWHM. Default 1.5.
-    public var innerFWHM: Double
-    /// Width of one bin, in FWHM. Default 1.
-    public var binWidthFWHM: Double
-    /// Bins on each side. Default 5 (so the flanks reach 6.5 FWHM).
-    public var binsPerSide: Int
-    /// A bin with fewer channels than this is left out. Default 3. At 40 on a summed spectrum of 4096 channels the
-    /// proposer throws `ProposerError.rankDeficient` (measured by the Gate B refuter); a larger value needs wider bins.
-    public var minimumChannelsPerBin: Int
-    /// With fewer bins than this the factor is 1 (nothing to judge by). Default 3. At 11 on a 4096-channel summed spectrum the
-    /// proposer throws `ProposerError.rankDeficient`.
-    public var minimumBins: Int
+/// The identification loop's thresholds (docs/design/auto-id-tem.md): the defaults of the published method (the Newbury-Ritchie loop as
+/// AutoEMX documents it), read for the method only. A changed default is a stated departure in `docs/parity.md`.
+public nonisolated struct IdentificationThresholds: Sendable, Equatable, Codable {
+    /// A residual peak needs this many standard deviations of the top-hat filtered residual. Default 5.
+    public var peakSigma: Double
+    /// Below `lowEnergyBelowKeV` the peak bar is this many times higher (edges and chemical effects leave structure there). Default 1.5.
+    public var lowEnergyFactor: Double
+    /// Default 1 keV.
+    public var lowEnergyBelowKeV: Double
+    /// A candidate element has a line within this many Gaussian sigma of the peak, plus `candidateWindowKeV`. Default 2.5.
+    public var candidateWindowSigma: Double
+    /// Default 0.025 keV.
+    public var candidateWindowKeV: Double
+    /// Only lines of at least this weight within their family nominate a candidate. Default 0.1.
+    public var minimumLineWeight: Double
+    /// The confirmation line (K for an L pick, L for an M pick, where the range holds it and the beam excites it) must show this many sigma
+    /// in the filtered residual. Default 3.
+    public var confirmationSigma: Double
+    /// A candidate joins when the statistic falls by at least this much. Default 100.
+    public var minimumGain: Double
+    /// ... and at least this share of the fall comes from channels near its own lines. Default 0.2.
+    public var minimumLocalShare: Double
+    /// A candidate's line window that worsens by this much ... Default 9.
+    public var contradictionGain: Double
+    /// ... and by more than this share of the total gain contradicts the candidate. Default 0.05.
+    public var contradictionShare: Double
+    /// Candidates whose gain is within this of the best explain the peak equally well (ambiguous). Default 30.
+    public var ambiguityGain: Double
+    /// A found element is pruned when leaving it out of the final fit costs less than this. Default 100.
+    public var pruneGain: Double
+    /// Si is a detector artefact unless its K alpha holds at least this fraction of the counts in range. Default 0.002.
+    public var siliconArtefactFraction: Double
+    /// At most this many residual peaks are examined. Default 30.
+    public var maximumPeaks: Int
+    /// At most this many elements are added. Default 10.
+    public var maximumNewElements: Int
+    /// The relative model term of the statistic: sum (y - mu)^2 / (mu + (r mu)^2). Default 0.01.
+    public var relativeModelTerm: Double
 
-    public init(innerFWHM: Double = 1.5, binWidthFWHM: Double = 1, binsPerSide: Int = 5, minimumChannelsPerBin: Int = 3, minimumBins: Int = 3) {
-        self.innerFWHM = innerFWHM; self.binWidthFWHM = binWidthFWHM; self.binsPerSide = binsPerSide
-        self.minimumChannelsPerBin = minimumChannelsPerBin; self.minimumBins = minimumBins
+    public init(peakSigma: Double = 5, lowEnergyFactor: Double = 1.5, lowEnergyBelowKeV: Double = 1, candidateWindowSigma: Double = 2.5,
+                candidateWindowKeV: Double = 0.025, minimumLineWeight: Double = 0.1, confirmationSigma: Double = 3, minimumGain: Double = 100,
+                minimumLocalShare: Double = 0.2, contradictionGain: Double = 9, contradictionShare: Double = 0.05, ambiguityGain: Double = 30,
+                pruneGain: Double = 100, siliconArtefactFraction: Double = 0.002, maximumPeaks: Int = 30, maximumNewElements: Int = 10,
+                relativeModelTerm: Double = 0.01) {
+        self.peakSigma = peakSigma; self.lowEnergyFactor = lowEnergyFactor; self.lowEnergyBelowKeV = lowEnergyBelowKeV
+        self.candidateWindowSigma = candidateWindowSigma; self.candidateWindowKeV = candidateWindowKeV; self.minimumLineWeight = minimumLineWeight
+        self.confirmationSigma = confirmationSigma; self.minimumGain = minimumGain; self.minimumLocalShare = minimumLocalShare
+        self.contradictionGain = contradictionGain; self.contradictionShare = contradictionShare; self.ambiguityGain = ambiguityGain
+        self.pruneGain = pruneGain; self.siliconArtefactFraction = siliconArtefactFraction; self.maximumPeaks = maximumPeaks
+        self.maximumNewElements = maximumNewElements; self.relativeModelTerm = relativeModelTerm
     }
 
-    public static let `default` = FlankMisfitGeometry()
+    public static let `default` = IdentificationThresholds()
+
+    private enum CodingKeys: String, CodingKey {
+        case peakSigma, lowEnergyFactor, lowEnergyBelowKeV, candidateWindowSigma, candidateWindowKeV, minimumLineWeight, confirmationSigma, minimumGain,
+             minimumLocalShare, contradictionGain, contradictionShare, ambiguityGain, pruneGain, siliconArtefactFraction, maximumPeaks,
+             maximumNewElements, relativeModelTerm
+    }
+
+    /// A stored value missing a field (written before the field existed) reads that field's default.
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self), d = IdentificationThresholds.default
+        self.init(peakSigma: try c.decodeIfPresent(Double.self, forKey: .peakSigma) ?? d.peakSigma,
+                  lowEnergyFactor: try c.decodeIfPresent(Double.self, forKey: .lowEnergyFactor) ?? d.lowEnergyFactor,
+                  lowEnergyBelowKeV: try c.decodeIfPresent(Double.self, forKey: .lowEnergyBelowKeV) ?? d.lowEnergyBelowKeV,
+                  candidateWindowSigma: try c.decodeIfPresent(Double.self, forKey: .candidateWindowSigma) ?? d.candidateWindowSigma,
+                  candidateWindowKeV: try c.decodeIfPresent(Double.self, forKey: .candidateWindowKeV) ?? d.candidateWindowKeV,
+                  minimumLineWeight: try c.decodeIfPresent(Double.self, forKey: .minimumLineWeight) ?? d.minimumLineWeight,
+                  confirmationSigma: try c.decodeIfPresent(Double.self, forKey: .confirmationSigma) ?? d.confirmationSigma,
+                  minimumGain: try c.decodeIfPresent(Double.self, forKey: .minimumGain) ?? d.minimumGain,
+                  minimumLocalShare: try c.decodeIfPresent(Double.self, forKey: .minimumLocalShare) ?? d.minimumLocalShare,
+                  contradictionGain: try c.decodeIfPresent(Double.self, forKey: .contradictionGain) ?? d.contradictionGain,
+                  contradictionShare: try c.decodeIfPresent(Double.self, forKey: .contradictionShare) ?? d.contradictionShare,
+                  ambiguityGain: try c.decodeIfPresent(Double.self, forKey: .ambiguityGain) ?? d.ambiguityGain,
+                  pruneGain: try c.decodeIfPresent(Double.self, forKey: .pruneGain) ?? d.pruneGain,
+                  siliconArtefactFraction: try c.decodeIfPresent(Double.self, forKey: .siliconArtefactFraction) ?? d.siliconArtefactFraction,
+                  maximumPeaks: try c.decodeIfPresent(Int.self, forKey: .maximumPeaks) ?? d.maximumPeaks,
+                  maximumNewElements: try c.decodeIfPresent(Int.self, forKey: .maximumNewElements) ?? d.maximumNewElements,
+                  relativeModelTerm: try c.decodeIfPresent(Double.self, forKey: .relativeModelTerm) ?? d.relativeModelTerm)
+    }
 }
 
 /// Which elements the proposer treats as special because of how a sample is prepared and held. Defaults are the library's choice.
@@ -58,19 +115,11 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
     public var pool: [String]?
     /// Elements left out of the default pool: radioactive or absent from the table, and the noble gases other than Ar.
     public var excluded: Set<String>
-    /// The backward step stops after this many passes. Default 5.
-    public var maxPasses: Int
-    /// The forward step stops after this many rounds. Default 24.
-    public var maxForwardRounds: Int
     /// A candidate group is tested only if its alpha line is at or above this energy, keV. Default 0.45, measured on one synthetic
     /// generator (carbon, nitrogen, calcium and scandium were false there at 0.28-0.40 keV).
     public var minimumLineEnergyKeV: Double
-    /// Scale each candidate's null standard deviation by the flank-misfit factor. Default true (the library's choice). False makes
-    /// every misfit exactly 1 and, on a 4096-channel summed spectrum, the proposer throws `ProposerError.rankDeficient`.
-    public var flankScaling: Bool
-    /// How the flank misfit is measured. Default `FlankMisfitGeometry.default` (flanks 1.5-6.5 FWHM from the line, 5 bins a side of
-    /// 1 FWHM, at least 3 channels a bin and 3 bins; the library's choice).
-    public var flank: FlankMisfitGeometry
+    /// The identification loop's bars. Default `IdentificationThresholds.default`, the published method's.
+    public var thresholds: IdentificationThresholds
     /// A candidate's alpha line must lie this many FWHM inside the fitted range at each end, so its column has support. Default 0.5.
     public var rangeMarginFWHM: Double
     /// A candidate's alpha line counts as on a pile-up peak's energy within this many keV. Default 0.06, about half the Mn K alpha
@@ -91,13 +140,11 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
     public var sumPeakFraction: Double
 
     public init(currie: Currie = .standard, pool: [String]? = nil, excluded: Set<String> = ElementProposer.defaultExcluded,
-                maxPasses: Int = 5, maxForwardRounds: Int = 24, minimumLineEnergyKeV: Double = 0.45, flankScaling: Bool = true,
-                flank: FlankMisfitGeometry = .default, rangeMarginFWHM: Double = 0.5,
+                minimumLineEnergyKeV: Double = 0.45, thresholds: IdentificationThresholds = .default, rangeMarginFWHM: Double = 0.5,
                 sumPeakToleranceKeV: Double = ProposerPolicy.defaultSumPeakToleranceKeV, context: ElementContext = .default,
                 familyConsistency: Bool = true, familyOvervoltage: Double = 2, sumPeakFraction: Double = 1) {
-        self.currie = currie; self.pool = pool; self.excluded = excluded; self.maxPasses = maxPasses
-        self.maxForwardRounds = maxForwardRounds; self.minimumLineEnergyKeV = minimumLineEnergyKeV
-        self.flankScaling = flankScaling; self.flank = flank; self.rangeMarginFWHM = rangeMarginFWHM
+        self.currie = currie; self.pool = pool; self.excluded = excluded
+        self.minimumLineEnergyKeV = minimumLineEnergyKeV; self.thresholds = thresholds; self.rangeMarginFWHM = rangeMarginFWHM
         self.sumPeakToleranceKeV = sumPeakToleranceKeV; self.context = context
         self.familyConsistency = familyConsistency; self.familyOvervoltage = familyOvervoltage
         self.sumPeakFraction = sumPeakFraction
@@ -119,15 +166,24 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
         add("currie", "alpha \(currie.alpha) beta \(currie.beta)", "alpha \(b.currie.alpha) beta \(b.currie.beta)")
         add("pool", list(pool), list(b.pool))
         add("excluded", list(excluded.sorted()), list(b.excluded.sorted()))
-        add("maxPasses", "\(maxPasses)", "\(b.maxPasses)")
-        add("maxForwardRounds", "\(maxForwardRounds)", "\(b.maxForwardRounds)")
         add("minimumLineEnergyKeV", "\(minimumLineEnergyKeV)", "\(b.minimumLineEnergyKeV)")
-        add("flankScaling", "\(flankScaling)", "\(b.flankScaling)")
-        add("flank.innerFWHM", "\(flank.innerFWHM)", "\(b.flank.innerFWHM)")
-        add("flank.binWidthFWHM", "\(flank.binWidthFWHM)", "\(b.flank.binWidthFWHM)")
-        add("flank.binsPerSide", "\(flank.binsPerSide)", "\(b.flank.binsPerSide)")
-        add("flank.minimumChannelsPerBin", "\(flank.minimumChannelsPerBin)", "\(b.flank.minimumChannelsPerBin)")
-        add("flank.minimumBins", "\(flank.minimumBins)", "\(b.flank.minimumBins)")
+        let t = thresholds, bt = b.thresholds
+        for (name, mine, base) in [("peakSigma", t.peakSigma, bt.peakSigma), ("lowEnergyFactor", t.lowEnergyFactor, bt.lowEnergyFactor),
+                                   ("lowEnergyBelowKeV", t.lowEnergyBelowKeV, bt.lowEnergyBelowKeV),
+                                   ("candidateWindowSigma", t.candidateWindowSigma, bt.candidateWindowSigma),
+                                   ("candidateWindowKeV", t.candidateWindowKeV, bt.candidateWindowKeV),
+                                   ("minimumLineWeight", t.minimumLineWeight, bt.minimumLineWeight),
+                                   ("confirmationSigma", t.confirmationSigma, bt.confirmationSigma), ("minimumGain", t.minimumGain, bt.minimumGain),
+                                   ("minimumLocalShare", t.minimumLocalShare, bt.minimumLocalShare),
+                                   ("contradictionGain", t.contradictionGain, bt.contradictionGain),
+                                   ("contradictionShare", t.contradictionShare, bt.contradictionShare),
+                                   ("ambiguityGain", t.ambiguityGain, bt.ambiguityGain), ("pruneGain", t.pruneGain, bt.pruneGain),
+                                   ("siliconArtefactFraction", t.siliconArtefactFraction, bt.siliconArtefactFraction),
+                                   ("maximumPeaks", Double(t.maximumPeaks), Double(bt.maximumPeaks)),
+                                   ("maximumNewElements", Double(t.maximumNewElements), Double(bt.maximumNewElements)),
+                                   ("relativeModelTerm", t.relativeModelTerm, bt.relativeModelTerm)] {
+            add("thresholds.\(name)", "\(mine)", "\(base)")
+        }
         add("rangeMarginFWHM", "\(rangeMarginFWHM)", "\(b.rangeMarginFWHM)")
         add("sumPeakToleranceKeV", "\(sumPeakToleranceKeV)", "\(b.sumPeakToleranceKeV)")
         add("context.quantifyByDefault", list(context.quantifyByDefault.sorted()), list(b.context.quantifyByDefault.sorted()))

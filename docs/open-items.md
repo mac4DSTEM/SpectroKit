@@ -19,9 +19,11 @@ Slowest against Python first (diagnose before changing a number, `../CLAUDE.md`)
 9. **Sigma on wt% and at%**: the thickness sigma, the dose and the detector are not in the per-spectrum `quantifyWithSigma` (the pooled quantification has the thickness term); a per-pixel sigma map is not provided.
 10. **k-factor import**: the table is taken in exSpy's convention (C_A/C_B = k_A/k_B I_A/I_B); a vendor table in the inverse convention is the caller's to invert. A real Velox export has not been read (none in the data folder); the layouts are the ones the task named.
 
-9. **0.11.0 leftovers, the proposer** (2026-10-23): Mg is still missed on one Al-Mg-Si map (1339) and Si and Pt on the SI (1456): the
-   line shape beside a dominant K line (the tail, opt-in in `LineTail`, to be measured per detector on the Al matrix and switched on by the
-   consumer); the proposer's own axis refinement with a two-line guard (the app refines on its K picks today); the downward family rule
+9. **0.11.0 leftovers, Auto ID** (2026-10-23): the identification loop finds every true element on the three files; open: the method's
+   overlap check (an element whose every peak sits under a modelled one leaves no residual peak and is not reported; the method reports
+   such finds as possible only), Mn on the Al alloys (proposed at 22 and 70 L_D, a 6xxx minor element by the numbers, the owner's word
+   pending), the line shape beside a dominant K line (the tail, opt-in in `LineTail`, to be measured per detector on the Al matrix and
+   switched on by the consumer); the proposer's own axis refinement with a two-line guard (the app refines on its K picks today); the downward family rule
    (a K pick of Z ≥ 30 shows its L line) and an "uncorroborated" tier in `ProposalResult` (the app tiers them today); the self-pair half
    bound on sum peaks waits for a registration with planted sums that respect it; `AxisGateTests`' known issue (offset and gain trade off
    on lines that span little of the axis) stands.

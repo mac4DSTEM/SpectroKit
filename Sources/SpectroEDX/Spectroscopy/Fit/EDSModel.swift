@@ -73,6 +73,16 @@ public nonisolated struct FitLineGroup: Sendable, Equatable {
     package let escapes: [FitLine]
 }
 
+/// Which table ties a family's sub-lines to its alpha line.
+public nonisolated enum EDSLineWeights: Sendable, Equatable {
+    /// eXSpy's `xray_lines.json` weights: the quantification fit (parity, D17).
+    case exspy
+    /// The identification fit (docs/design/auto-id-tem.md): the K family's Kβ from NIST EPQ `LineWeights.csv` (public domain), every K
+    /// transition other than K-L2 and K-L3 over those two (Al 0.0315 against eXSpy's 0.0132; the owner's 1339 and 1840 sums read 0.031 and
+    /// 0.034 with Kβ free). L and M families keep eXSpy's weights (EPQ's are per subshell, with no clean map onto eXSpy's lines).
+    case epqK
+}
+
 public nonisolated struct EDSLineModel: Sendable, Equatable {
     package static let siKEdge = 1.839
     package static let sigma2fwhm = 2 * (2 * log(2.0)).squareRoot()
@@ -90,7 +100,7 @@ public nonisolated struct EDSLineModel: Sendable, Equatable {
     /// Groups in alphabetical order of the alpha line (eXSpy `_get_lines_from_elements` sorts).
     public static func build(
         elements: [String], axis: EnergyAxis, beamEnergy: Double, resolutionMnKaEV: Double, escapePeaks: Bool = true,
-        lineTail: LineTail? = nil
+        lineTail: LineTail? = nil, lineWeights: EDSLineWeights = .exspy
     ) -> EDSLineModel {
         let mains = XRayLines.defaultLines(
             elements: elements, axis: axis, beamEnergy: beamEnergy, onlyOne: false, onlyLines: ["Ka", "La", "Ma"])
@@ -114,7 +124,11 @@ public nonisolated struct EDSLineModel: Sendable, Equatable {
             // eXSpy: `if line[0] in li and line != li` over the element's lines (table order), in range.
             let candidates = XRayLines.lines(of: alpha.element).filter { $0.name.contains(letter) && $0.name != alpha.name }
             let inRange = Set(XRayLines.linesInRange(candidates.map(\.id), axis: axis, beamEnergy: beamEnergy))
-            for l in candidates where inRange.contains(l.id) { if let f = fl(l, weight: l.weight) { lines.append(f) } }
+            for l in candidates where inRange.contains(l.id) {
+                var w = l.weight
+                if lineWeights == .epqK, letter == "K", let epq = EPQLineWeights.bundled?.kBetaOverKAlpha(element: alpha.element) { w = epq }
+                if let f = fl(l, weight: w) { lines.append(f) }
+            }
             var esc: [FitLine] = []
             if escapePeaks {
                 for l in lines where l.energy > siKEdge {

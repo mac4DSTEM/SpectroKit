@@ -58,8 +58,9 @@ struct SumColumnDedupTests {
 
     // MARK: P3: the failing case
 
-    /// Without the fix this throws `rankDeficient` (both pairs enter one pass as identical columns); with it the run scores,
-    /// the four elements are proposed, and the one column at 11.006 keV names both pairs.
+    /// Without the fix this throws `rankDeficient` (both pairs enter one pass as identical columns); with it the run scores and the four
+    /// elements are proposed. 0.11.0: the proposer is the identification loop; proactive pile-up columns per parent pair and their
+    /// dedup (one merged column naming both pairs) no longer exist. What stays: the run scores, and no two sum columns share an energy.
     @Test func testTwoCoincidingSumPairsScoreAndTheKeptColumnNamesBoth() throws {
         let e1 = XRayLines.line("Dy_La")!.energy + XRayLines.line("Ti_Ka")!.energy
         let e2 = XRayLines.line("Cs_La")!.energy + XRayLines.line("Ho_La")!.energy
@@ -67,38 +68,17 @@ struct SumColumnDedupTests {
         let r: ProposalResult
         do { r = try propose(Self.fourPlanted, pool: Self.fourPool, seed: 11) }
         catch { Issue.record("the run must score, not throw: \(error) (old code: rankDeficient)"); return }
-        for el in ["Dy", "Ti", "Cs", "Ho"] { #expect(r.candidates.first { $0.element == el }!.isProposed, "\(el) is proposed") }
-        let at = r.sumPeaks.filter { abs($0.energyKeV - e1) <= LineConflicts.sumPeakToleranceKeV }
-        #expect(at.count == 1, "one column at the coinciding energy, not two")
-        let col = try #require(at.first)
-        #expect(col.label.contains("Dy+Ti") && col.label.contains("Cs+Ho"), "the label names both pairs: \(col.label)")
-        #expect(Set(col.elements) == ["Dy", "Ti", "Cs", "Ho"])
+        // The L-only elements (Dy, Cs, Ho: their K alpha is above the 15 keV range) are found at their detection limit and stay "possible", as the
+        // confirmation rule says; Ti, a K line, is proposed.
+        #expect(r.candidates.first { $0.element == "Ti" }?.isProposed == true, "Ti is proposed")
+        for el in ["Dy", "Cs", "Ho"] {
+            let c = try #require(r.candidates.first { $0.element == el }, "\(el) is a candidate")
+            #expect(c.aboveDetectionLimit && c.possibleReason != nil && !c.isProposed, "\(el) is found, possible and not proposed")
+        }
+        #expect(r.sumPeaks.filter { abs($0.energyKeV - e1) <= LineConflicts.sumPeakToleranceKeV }.count <= 1, "at most one column at the coinciding energy")
     }
 
-    // MARK: A lone pair is unchanged
+    // 0.11.0: the proposer is the identification loop; "a lone pair keeps its plain label" (a proactive sum column for every parent pair) no longer exists.
 
-    /// One planted pair of parents (Al + Mg-like): every sum column is a lone pair, with the plain label and elements.
-    @Test func testALonePairKeepsItsPlainLabelAndElements() throws {
-        let r = try propose(["Dy_La": 40000, "Ti_Ka": 40000], pool: ["Dy", "Ti", "Mg", "Al"], seed: 12)
-        let dyTi = try #require(r.sumPeaks.first { $0.label == "Dy+Ti sum" }, "labels: \(r.sumPeaks.map(\.label))")
-        #expect(dyTi.elements == ["Dy", "Ti"])
-        #expect(!(r.sumPeaks.contains { $0.label.contains(" / ") }), "no merged column when no two pairs coincide")
-        let self2 = try #require(r.sumPeaks.first { $0.label == "Dy+Dy sum" })
-        #expect(self2.elements == ["Dy", "Dy"], "a self pair keeps both entries")
-    }
-
-    // MARK: Near is not equal
-
-    /// Si+Ti (6.2506 keV) and Ca+Ru (6.2502 keV) are 0.4 eV apart in the table: near, not equal. The exact rule keeps two
-    /// columns; a tolerance of 0.06 keV would merge them (the refuted rule, `sum-column-dedup-results-2026-10-08.md`).
-    @Test func testNearPairsFourHundredEVApartStayTwoColumns() throws {
-        let e1 = XRayLines.line("Si_Ka")!.energy + XRayLines.line("Ti_Ka")!.energy
-        let e2 = XRayLines.line("Ca_Ka")!.energy + XRayLines.line("Ru_La")!.energy
-        #expect(isEqual(abs(e1 - e2), 0.0004, accuracy: 1e-6), "the premise: the two pairs differ by 0.0004 keV")
-        let r = try propose(["Si_Ka": 40000, "Ti_Ka": 40000, "Ca_Ka": 40000, "Ru_La": 40000],
-                            pool: ["Si", "Ti", "Ca", "Ru", "Mg", "Al", "Fe"], seed: 13)
-        let cols = r.sumPeaks.filter { abs($0.energyKeV - e1) <= 0.01 }
-        #expect(cols.count == 2, "two columns, not one merged column: \(r.sumPeaks.map(\.label))")
-        #expect(!(cols.contains { $0.label.contains(" / ") }), "neither column names both pairs")
-    }
+    // 0.11.0: the proposer is the identification loop; "near pairs 0.4 eV apart stay two columns" (the exact-energy dedup of proactive sum columns) no longer exists.
 }

@@ -56,9 +56,9 @@ struct FamilyConsistencyTests {
         let ga = try #require(Self.candidate(r, "Ga"))
         #expect(!ga.isProposed && ga.aboveDetectionLimit)
         let note = try #require(ga.familyNote)
-        #expect(note.contains("Ga K\u{03B1}") && note.contains("below its detection limit"), "\(note)")
+        #expect(note.contains("Ga K\u{03B1}") && note.contains("below the 3 \u{03C3}"), "\(note)")
         #expect(!r.proposed.contains { $0.element == "Ga" })
-        #expect(r.notes.contains { $0.hasPrefix("Family consistency withheld Ga") })
+        #expect(r.notes.contains { $0.hasPrefix("Confirmation withheld Ga") })
         // A consumer sees it through the rules' result too.
         let ruled = ProposalRules.shipped.apply(r)
         // The rerun without Ga may withhold the next phantom its counts moved to, so Ga is among the withheld, not alone.
@@ -83,12 +83,13 @@ struct FamilyConsistencyTests {
         #expect(!hf.isProposed && hf.familyNote?.contains("Hf L\u{03B1}") == true, "\(hf.familyNote ?? "no note")")
     }
 
-    /// Below the overvoltage bar the companion is not demanded: at a 12 keV beam Ga Kα (9.25 keV) is less than twice below it, so a lone Ga L line stays.
+    /// Below the overvoltage bar the companion is not demanded: at a 12 keV beam Ga Kα (9.25 keV) is less than twice below it, so a lone Ga L line is not withheld.
+    /// 0.11.0: it is not proposed either: the confirmation cannot be checked, so the element carries `possibleReason` ("Found by its Lα alone").
     @Test func testACompanionBelowTheOvervoltageBarIsNotDemanded() throws {
         let settings = FitSettings.standard(elements: ["Al"], axis: Self.axis, resolutionMnKaEV: 130, beamEnergy: 12)
         let r = try ElementProposer().propose(counts: Self.loneGaL, axis: Self.axis, settings: settings)
         let ga = try #require(Self.candidate(r, "Ga"))
-        #expect(ga.familyNote == nil && ga.isProposed)
+        #expect(ga.familyNote == nil && !ga.isProposed && ga.unconfirmable && ga.possibleReason?.contains("alone") == true, "\(ga.possibleReason ?? "no reason")")
         let demanded = try ElementProposer(policy: ProposerPolicy(familyOvervoltage: 1.2)).propose(counts: Self.loneGaL, axis: Self.axis, settings: settings)
         #expect(Self.candidate(demanded, "Ga")?.familyNote != nil, "at 1.2 the 12 keV beam clears 9.25 keV and the K line is demanded")
     }
@@ -123,7 +124,8 @@ struct FamilyConsistencyTests {
             let cc = try #require(Self.candidate(c, cb.element), Comment(rawValue: cb.element))
             #expect(cb.net == cc.net && cb.detectionLimit == cc.detectionLimit && cb.criticalLevel == cc.criticalLevel && cb.isProposed == cc.isProposed, "\(cb.element)")
         }
-        #expect(b.notes.contains { $0.hasPrefix("Settled again without") && $0.contains("Ga") })
+        // 0.11.0: the rule runs at nomination time, so there is no "Settled again without" pass; the withheld element is named in the notes.
+        #expect(b.notes.contains { $0.hasPrefix("Confirmation withheld Ga") })
     }
 
     @Test func testTheNoteLineNamesTheFamilyFields() {

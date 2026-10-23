@@ -51,9 +51,10 @@ flank-misfit factor, which multiplied a neighbour's detection limit by the misfi
 - **Overvoltage.** At 200 kV every K line to 20 keV has an overvoltage above 10, so the confirmation rule can demand the
   K line of every element whose L or M line is proposed and whose K line is inside the fitted range; above the range
   (Au, Pt, Pb K at 70 to 80 keV) the rule cannot run and the pick stays "possible", as today.
-- **Line weights.** The NIST/EPQ table (public domain), which gives Al Kβ/Kα 0.0174 against eXSpy's 0.0132; the 1339
-  data reads about 0.019. The rest of the shape error is the 1 % model term's job, not a free Kβ (eXSpy's
-  `free_sub_xray_lines_weight` moves a sub-line by ±1 % of its height only; a ±45 % freedom would be our invention).
+- **Line weights.** The NIST/EPQ table (public domain): Al Kβ/Kα (K-M2 + K-M3 over K-L2 + K-L3) 0.0315 against eXSpy's
+  0.0132. Measured with Kβ free in a local fit (1.10 to 1.98 keV, free shift and width) on the whole-map sums: 0.031 on 1339
+  and 0.034 on 1840, so EPQ is right and eXSpy's table is low by half. (The 0.0174 quoted earlier on 2026-10-23 is EPQ's Mg,
+  one row off.) The rest of the shape error is the 1 % model term's job, not a free Kβ.
 - **Detector.** Four Super-X SDDs, no window: σ(E) from the Fiori–Newbury law at the refined Mn Kα width; the top hat's
   width follows it. No per-detector tail calibration yet (the measured tail on 1339 is nil on the refined axis).
 - **Thresholds.** AutoEMX's defaults as published, unchanged, until the three real files say otherwise; a changed
@@ -95,7 +96,33 @@ flank-misfit factor, which multiplied a neighbour's detection limit by the misfi
   with the numbers) and is never proposed. `ElementCandidate.isProposed` becomes net ≥ L_D, no family note and no possible
   reason. Additive public API.
 
-## 5. The oracle and the tests (red-first)
+## 5. What the first runs changed (2026-10-23, measured)
+
+Each a stated departure from the method as documented, with the case that forced it:
+
+- **The fit inside the loop is weighted** by the statistic's own variance, w = 1/max(ȳ + (0.01 ȳ)², 1) with ȳ the data smoothed
+  over one FWHM (raw y would down-weight every channel that fluctuates high, Neyman's bias of about a count per channel; fixed per
+  spectrum, so every candidate is fitted on the same footing and the problem stays linear; σ₀ is the weighted estimator's null
+  variance). Unweighted, a strong line's shape error dragged the continuum beside it (data over model 3.1 in 1 to 2.5 keV beside a
+  planted Al 5 % narrower than the model) and the hump became an element (Os M). With the weights the planted bands read 1.00 to 1.12.
+- **The candidate that explains the peak joins**, ranked by the statistic's fall within one FWHM of the peak, not over the whole
+  spectrum: on 1456 W Mα (1.775 keV) took the Si Kα peak by total gain (80 M against 47 M) because its L lines also soaked up
+  misfits elsewhere; Si wins at the peak. Ambiguity is judged on the same number.
+- **A confirmation line is a residual peak of its own**: a local maximum of 3 σ within one Gaussian σ of the line. The bare window
+  maximum let the flank of an unmodelled Cu Kα (106 eV away, 1.6 σ) confirm Ta Lα.
+- **An L or M find whose confirmation line is out of range stays possible** (In Lα on 1456: In Kα 24.2 keV, past the 20 keV fit).
+- **The background check demotes** a find whose peak lies in an unhealthy band, as the method's strong tier says; with the weighted fit
+  no band of the three files is unhealthy.
+- **Prune** drops a find only when both the final fit's statistic and the fall at its own peak (one FWHM) cost less than 100; a
+  pile-up column whose parent was pruned goes with it.
+- **Not yet:** the overlap check (step 6). Its finds are possible only, so it changes no proposal; an open item.
+
+Result on the three whole-map sums, refined axis: 1339 and 1840 propose O, Mg, Al, Si, Cu plus Zr, Mn (and Fe on 1840); 1456
+proposes O, Si, Ni, Ge, Pt plus Cu, Zr and Ga. Zr is on all three files (the instrument's); Mn reads 22 and 70 times its limit on
+the Al alloys (a 6xxx minor element by the numbers, the owner's word pending). Planted: Mg at 2 % beside a 5 %-misfit Al reads
+121 509 of 120 000 and is proposed; without Mg nothing new is proposed.
+
+## 6. The oracle and the tests (red-first)
 
 - AutoEMX 1.8.0 run on the whole-map sums of 1339, 1840 and 1456 in a Python 3.12 environment under the session's
   scratch folder (it refuses Python 3.14). Run A, its own fitter at 200 keV: the fit returns NaN on all three files

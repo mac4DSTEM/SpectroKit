@@ -167,14 +167,15 @@ struct SpectroscopyUnlistedLineSpectro {
         let c0 = UnlistedLineChecker.check(proposal: try UnlistedLineChecker.propose(counts: input0.counts.map { Double($0) }, quantification: q0),
                                            input: input0, quantification: q0)
         note("T2 split: " + c0.summary)
-        let lu0 = try #require(c0.candidates.first { $0.element == "Lu" }, "premise: the planted Lu is proposed: \(c0.summary)")
+        // 0.11.0: a Lu Mα planted without its Lα fails the confirmation rule, so the loop labels the excess by whatever line sits there (Rb Lα,
+        // Hf Mα); the rule under test is the same for any label: the excess beside Si Kα is named as an excess, never as an element.
+        let lu0 = try #require(c0.candidates.first { $0.besideLine == "Si K\u{03B1}" }, "premise: the planted excess is proposed: \(c0.summary)")
         #expect(lu0.besideLine == "Si K\u{03B1}", "\(c0.summary)")
         #expect(lu0.fractionOfNeighbour != nil)
         #expect(lu0.shownName.hasPrefix("unexplained excess beside Si K\u{03B1}: "), "\(lu0.shownName)")
         #expect(!(c0.names.contains { $0.contains("Lu") }), "\(c0.names)")
         #expect(!c0.elementNames.contains("Lu"))
         #expect(!c0.withholds, "\(c0.summary)")
-        #expect(c0.summary.contains("proposer's label Lu M\u{03B1}"), "\(c0.summary)")
         #expect(try #require(UnlistedLineChecker.withholding(q0, c0).abundanceCaveat).contains("excess beside Si K\u{03B1} (net "))
 
         // Planted: Al listed, Al K-alpha 100 000, Lu M-alpha 20 000 (20 %).

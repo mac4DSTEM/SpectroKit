@@ -258,17 +258,21 @@ loader was never run as an oracle (its `sparse` dependency is not installed in t
 
 ## In SpectroKit with no exSpy counterpart
 
-Not parity items, listed so nobody looks for a pin: the element proposer (Currie detection limit, joint non-negative fit),
+Not parity items, listed so nobody looks for a pin: the element proposer (the identification loop of docs/design/auto-id-tem.md, written
+from Newbury and Ritchie's published method with AutoEMX's documented defaults: `IdentificationThresholds`, every default as published;
+departures stated there: the weighted fit inside the loop, the choice by the gain at the peak, the confirmation line as a residual peak
+within one σ, the overlap check not yet; Currie detection limit on the fit's own null variance),
 Currie and Garwood counting statistics and sigma propagation, pooled quantification with computed k-factors (Bote-Salvat
 cross sections, Krause fluorescence yields, an EPQ detector efficiency), the four-detector absorption geometry, the empirical
 continuum with an Al K-edge step, Poisson maximum-likelihood and reference shapes in the fit, the unlisted-line check, the
 fit-range sensitivity check, and, in EELS, the ratio-method areal density (`EELSEdgeQuantification.ratioMethod`, Egerton's
 ratio method on exSpy's GOS), which exSpy does not have as a function.
 
-The proposer's family-consistency rule (R4, `ProposerPolicy.familyConsistency`, the field's confirmation-line rule) and its sum-peak plausibility bound
+The proposer's confirmation-line rule (R4, `ProposerPolicy.familyConsistency`) and its sum-peak plausibility bound
 (`sumPeakFraction`): no Python counterpart;
-the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured cuts), `validation: "none"`; tests `FamilyConsistencyTests` on planted
-spectra, the owner's three files in macTEM's real-data harness.
+the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured cuts), `validation: "none"`; tests `FamilyConsistencyTests` and
+`IdentificationLoopTests` on planted spectra, `RealFileAutoIDTests` (opt-in) on the owner's three files. The identification fit's Kβ weights are
+NIST EPQ's (`EDSLineWeights.epqK`), not eXSpy's; the quantification fit keeps eXSpy's, so no parity row moves.
 
 ## Where the source claims more than the tests show
 

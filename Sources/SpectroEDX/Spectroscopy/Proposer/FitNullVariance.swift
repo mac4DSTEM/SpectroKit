@@ -29,7 +29,10 @@ package nonisolated struct AmplitudeVariances: Sendable {
 
 package nonisolated enum FitNullVariance {
     /// nil when the design is numerically rank deficient (the same refusal as `EDSFit`'s covariance).
-    package static func compute(design: LinearDesign, result: EDSFitResult) -> AmplitudeVariances? {
+    /// `rowScale`: the design, data and `result.model` are rows of a WEIGHTED fit, each fitted channel multiplied by rowScale[i] = sqrt(w_i)
+    /// (the identification loop's fit). The estimator is then K = K' diag(rowScale) with K' the scaled design's, and Var(y_i) = mu_i, so every
+    /// term takes one more factor rowScale[i] on the scaled model and on the scaled own contribution: w_i mu_i and w_i mu_i^(g).
+    package static func compute(design: LinearDesign, result: EDSFitResult, rowScale: [Double]? = nil) -> AmplitudeVariances? {
         let nn = design.nonNegative, ff = design.free
         let nAreas = design.areaColumns.count
         let supportedCols = (0..<nn.cols).filter { $0 >= nAreas || design.areaColumns[$0].supported }
@@ -54,11 +57,12 @@ package nonisolated enum FitNullVariance {
             var vFit = 0.0, vOwn = 0.0
             for i in 0..<n {
                 let kk = kmat.data[i * k + ia], w = kk * kk
-                let m = max(mu[i], 0)
+                let r = rowScale?[i] ?? 1
+                let m = max(mu[i], 0) * r
                 vFit += w * m
                 var o = a * own[i]
                 if let esc { o += ae * esc[i] }
-                vOwn += w * min(max(o, 0), m)
+                vOwn += w * min(max(o * r, 0), m)
             }
             let s2 = norms[ia] * norms[ia]
             atFit[gi] = vFit / s2
