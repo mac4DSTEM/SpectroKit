@@ -28,6 +28,8 @@ SpectroKit follows semantic versions (0.x). Each release says what changed, and 
   generator integrates lines over the channel while the model samples the centre (eXSpy's convention), which reads Mg 0.3 % of N_Al low
   beside Al at 1e6 to 1e7 counts (Gate D4 measures it); the flank factor used to widen σ around that offset. M.s.N4.rho0p05 (461 Mg counts)
   is found in 77 to 80 % against the 90 % bar: the published 5 σ residual-peak bar, a registered known issue.
+- Golden baseline re-recorded on purpose for the identification loop (four scenarios and their array companions): only the proposal,
+  unlisted-line and withholding lines move; every Quantify line and array is byte-identical (checked key by key before the re-record).
 
 The rules below landed first in 0.11.0 and are kept in the loop's terms (the joint all-candidate fit they were written for is gone):
 - **Family consistency, R4** (`ProposerPolicy.familyConsistency`, default true; `familyOvervoltage`, default 2): an element nominated by an L or M line is withheld when its K (or L) alpha line, in the fitted range and with the beam at least `familyOvervoltage` times its energy, shows no residual peak of 3 σ (the field's confirmation-line rule: Goldstein ch. 18, Newbury 2005, AutoEMX, NIST EPQ's overvoltage rule); no Python counterpart; `validation: "none"`. A withheld candidate is in `candidates` and `withheld` with `ElementCandidate.familyNote` saying why, and never enters the model.
