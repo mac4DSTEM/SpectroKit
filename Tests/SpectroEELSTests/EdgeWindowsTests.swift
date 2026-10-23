@@ -198,4 +198,95 @@ struct EdgeWindowsTests {
         w = defaultWindows(); w[0].backgroundEV = 250 ... 251         // two channels
         #expect(throws: EELSModelError.self) { _ = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, edgeWindows: w) }
     }
+
+    // MARK: Intensity uncertainty
+
+    private struct SplitMix { var state: UInt64
+        mutating func next() -> Double { state &+= 0x9E3779B97F4A7C15; var z = state; z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9; z = (z ^ (z >> 27)) &* 0x94D049BB133111EB; z ^= z >> 31; return (Double(z >> 11) + 0.5) / 9007199254740992 }
+        mutating func normal() -> Double { sqrt(-2 * log(next())) * cos(2 * .pi * next()) }
+        /// Poisson: Knuth below 30, the normal approximation (mean, sqrt mean) above, where it is within a percent of the variance.
+        mutating func poisson(_ mean: Double) -> Double {
+            if mean >= 30 { return max(0, mean + mean.squareRoot() * normal()) }
+            let l = exp(-mean); var k = 0.0, p = 1.0
+            repeat { k += 1; p *= next() } while p > l
+            return k - 1
+        }
+    }
+
+    /// The reported 1 sigma of each windowed edge intensity against the scatter of the fitted intensity over 300 seeded Poisson realizations.
+    @Test func testIntensityStdMatchesTheScatter() throws {
+        let (clean, mic, _) = try planted(curved: false)
+        let edges: [CoreLossEdge] = [.carbonK, .nitrogenK, .oxygenK]
+        var rng = SplitMix(state: 20261023)
+        let runs = 300
+        var fitted = [[Double]](repeating: [], count: 3), reported = [[Double]](repeating: [], count: 3)
+        for _ in 0 ..< runs {
+            let noisy = clean.counts.map { rng.poisson($0) }
+            let core = try CoreLossSpectrumImage(nx: 1, ny: 1, channels: axis.size, counts: noisy, energyOffsetEV: 150, energyScaleEV: 0.75)
+            let r = try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, edgeWindows: defaultWindows())
+            for g in 0 ..< 3 {
+                let px = r.pixels[0][g]
+                let i = try #require(px.intensity), sd = try #require(px.intensityStd)
+                fitted[g].append(i); reported[g].append(sd)
+            }
+        }
+        for g in 0 ..< 3 {
+            let mean = fitted[g].reduce(0, +) / Double(runs)
+            let sample = (fitted[g].reduce(0) { $0 + ($1 - mean) * ($1 - mean) } / Double(runs - 1)).squareRoot()
+            let rep = reported[g].reduce(0, +) / Double(runs)
+            #expect(fitted[g].allSatisfy { $0 > 0 })
+            #expect(abs(rep / sample - 1) <= 0.15, Comment(rawValue: "edge \(g): sample \(sample) reported \(rep)"))
+        }
+    }
+
+    @Test func testJointFitHasNoIntensityStd() throws {
+        let (core, mic, _) = try planted(curved: false)
+        let r = try EELSModelFit.fit(coreLoss: core, edges: [.carbonK, .nitrogenK, .oxygenK], microscope: mic)
+        #expect(r.pixels[0].allSatisfy { $0.intensity != nil && $0.intensityStd == nil })
+    }
+
+    /// The algebra of `intensityStd` against a numerical propagation: sigma_ref^2 = sum_k (dI/dy_k)^2 max(y_k, 0), the derivative a central
+    /// difference of the refitted intensity over every background and signal channel of the edge (noise-free planted spectrum, strip off).
+    private func checkStdAgainstPerturbation(options: EELSModelOptions, expectBound: Bool) throws {
+        let (clean, mic, _) = try planted(curved: false)
+        let edges: [CoreLossEdge] = [.carbonK, .nitrogenK, .oxygenK]
+        let windows = defaultWindows()
+        func fit(_ counts: [Double]) throws -> EELSModelResult {
+            let core = try CoreLossSpectrumImage(nx: 1, ny: 1, channels: axis.size, counts: counts, energyOffsetEV: 150, energyScaleEV: 0.75)
+            return try EELSModelFit.fit(coreLoss: core, edges: edges, microscope: mic, options: options, edgeWindows: windows)
+        }
+        let base = try fit(clean.counts)
+        #expect(base.exponentAtBound[0] == expectBound)
+        for g in 0 ..< 3 {
+            let w = windows[g]
+            var rows = EdgeWindows.rows(w.backgroundEV, offset: 150, scale: 0.75, size: axis.size) .map { $0 }
+            rows += EdgeWindows.rows(w.signalEV, offset: 150, scale: 0.75, size: axis.size).map { $0 }
+            var variance = 0.0
+            for k in rows {
+                let y = clean.counts[k], delta = 1e-4 * y
+                var up = clean.counts, down = clean.counts
+                up[k] += delta; down[k] -= delta
+                let d = (try #require(fit(up).pixels[0][g].intensity) - #require(fit(down).pixels[0][g].intensity)) / (2 * delta)
+                variance += d * d * max(y, 0)
+            }
+            let reported = try #require(base.pixels[0][g].intensityStd)
+            #expect(try #require(base.pixels[0][g].intensity) > 0)
+            #expect(abs(reported / variance.squareRoot() - 1) <= 1e-3, Comment(rawValue: "edge \(g): reported \(reported) reference \(variance.squareRoot())"))
+        }
+    }
+
+    @Test func testIntensityStdEqualsTheNumericalPropagation() throws {
+        try checkStdAgainstPerturbation(options: EELSModelOptions(), expectBound: false)
+    }
+
+    /// r on a bound (the planted r = 3 lies below the range): r is fixed by the clamp, C is the variance of A alone.
+    @Test func testIntensityStdWithTheExponentOnABound() throws {
+        try checkStdAgainstPerturbation(options: EELSModelOptions(exponentRange: 3.5 ... 6), expectBound: true)
+    }
+
+    @Test func testIntensityStdIsNilAfterTheFirstEdgeWhenStripping() throws {
+        let (core, mic, _) = try planted(curved: true)
+        let r = try EELSModelFit.fit(coreLoss: core, edges: [.carbonK, .nitrogenK, .oxygenK], microscope: mic, options: EELSModelOptions(stripPrecedingEdges: true), edgeWindows: defaultWindows())
+        #expect(r.pixels[0][0].intensityStd != nil && r.pixels[0][1].intensityStd == nil && r.pixels[0][2].intensityStd == nil)
+    }
 }

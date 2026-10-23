@@ -2,6 +2,10 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## 0.12.0 (2026-10-23), EELS per-edge windows report a 1σ on each edge intensity
+
+- `EdgeIntensityPixel.intensityStd` (additive; nil on the joint fit, on failed or masked pixels, and for every edge after the first with `stripPrecedingEdges`): the signal window's Poisson counting noise plus the background power law's (A, r) sandwich covariance, the error propagation behind Egerton's h factor. Statistical only, of the unclamped estimator, for raw detected counts; areal density's σ is `intensityStd` × 1e10 on a convolved fit. `validation: "none"`. No intensity changes.
+
 ## 0.11.0 (2026-10-23), Auto ID is the identification loop of the published method; EELS per-edge windows
 
 - **Auto ID rebuilt** (docs/design/auto-id-tem.md). `ElementProposer.propose` keeps its signature and `ProposalResult`, and its search is now the

@@ -43,6 +43,16 @@ public struct EdgeIntensityPixel: Sendable, Equatable {
     /// 1e-10 nm^2. nil without a low loss (the dose is unknown).
     public let arealDensityPerNM2: Double?
     public let unavailable: EELSUnavailable?
+    /// The 1 sigma of `intensity`, in the same units, from the per-edge windowed fit's error propagation under Poisson counts: the signal
+    /// window's counting noise plus the background power law's (A, r) covariance (the concept behind Egerton's h factor). Statistical only (no
+    /// model bias), of the unclamped estimator (an intensity clamped at 0 keeps the unclamped estimator's sigma), and it assumes the counts are
+    /// raw detected counts (variance = mean). nil on the joint (non-windowed) fit, wherever `intensity` is nil (failed or masked pixels), and
+    /// for every edge after the first when `EELSModelOptions.stripPrecedingEdges` is on (the stripped spectrum is not Poisson and the earlier
+    /// edge's error is not carried). On a convolved fit the areal density's sigma is `intensityStd` x 1e10. `validation: "none"`.
+    public let intensityStd: Double?
+    init(intensity: Double?, arealDensityPerNM2: Double?, unavailable: EELSUnavailable?, intensityStd: Double? = nil) {
+        self.intensity = intensity; self.arealDensityPerNM2 = arealDensityPerNM2; self.unavailable = unavailable; self.intensityStd = intensityStd
+    }
 }
 
 /// The fit of an image: per pixel and edge.
@@ -340,8 +350,51 @@ public enum EELSModelFit {
         var failure: EELSUnavailable?
         var backgrounds: [PowerLawParameters?] = []
         var intensities: [Double] = []
+        var intensityStds: [Double?] = []
         var rss = 0.0
         var atBound = false
+    }
+
+    /// 1 sigma of a windowed edge intensity I = sum(c d) / sum(c^2), d = y - B, B = A E^-r s the fitted power law, under Poisson counts
+    /// (v = max(y, 0)): Var(I) = [sum_signal c^2 v + g^T C g] / (sum c^2)^2, C the sandwich covariance (J^T J)^-1 J^T diag(v) J (J^T J)^-1 of the
+    /// unweighted (A, r) fit over the background rows, g = sum_signal c dB/d(A, r). With r on a bound of the exponent range, or J^T J singular,
+    /// r is held fixed (C is the variance of A alone). The error propagation behind Egerton's h factor. validation: "none".
+    private static func intensityStd(
+        work: [Double], bgRows: [Range<Int>], logE: [Double], signalRows: Range<Int>, column: [Double], cc: Double, a: Double, r: Double, atBound: Bool,
+        energies: [Double], scale: Double
+    ) -> Double {
+        var signalNoise = 0.0
+        var g0 = 0.0, g1 = 0.0
+        for (i, k) in signalRows.enumerated() {
+            let c = column[i]
+            signalNoise += c * c * max(work[k], 0)
+            let b = Libm.pow(energies[k], -r) * scale
+            g0 += c * b; g1 += c * (-a * b * log(energies[k]))
+        }
+        var s00 = 0.0, s01 = 0.0, s11 = 0.0          // J^T J
+        var m00 = 0.0, m01 = 0.0, m11 = 0.0          // J^T diag(v) J
+        var n = 0          // index into the flattened background rows (`logE`)
+        for rr in bgRows { for k in rr {
+            let b = Libm.pow(energies[k], -r) * scale
+            let j0 = b, j1 = -a * b * logE[n], v = max(work[k], 0)
+            n += 1
+            s00 += j0 * j0; s01 += j0 * j1; s11 += j1 * j1
+            m00 += v * j0 * j0; m01 += v * j0 * j1; m11 += v * j1 * j1
+        } }
+        var backgroundVar = 0.0
+        let det = s00 * s11 - s01 * s01
+        if !atBound, det.isFinite, det > 1e-12 * s00 * s11, s00 > 0 {
+            // C = S^-1 M S^-1 with S^-1 = [[s11, -s01], [-s01, s00]] / det
+            let i00 = s11 / det, i01 = -s01 / det, i11 = s00 / det
+            let t00 = i00 * m00 + i01 * m01, t01 = i00 * m01 + i01 * m11
+            let t10 = i01 * m00 + i11 * m01, t11 = i01 * m01 + i11 * m11
+            let c00 = t00 * i00 + t01 * i01, c01 = t00 * i01 + t01 * i11
+            let c10 = t10 * i00 + t11 * i01, c11 = t10 * i01 + t11 * i11
+            backgroundVar = g0 * (c00 * g0 + c01 * g1) + g1 * (c10 * g0 + c11 * g1)
+        } else if s00 > 0 {
+            backgroundVar = g0 * g0 * m00 / (s00 * s00)
+        }
+        return max(0, (signalNoise + backgroundVar) / (cc * cc)).squareRoot()
     }
 
     private static func fitWindowed(
@@ -426,6 +479,9 @@ public enum EELSModelFit {
                     guard cc > 0 else { slots.set(p, WindowedPixel(failure: .fitFailed)); return }   // the window lies below the edge's onset
                     let intensity = max(0, cd / cc)
                     out.intensities.append(intensity)
+                    out.intensityStds.append(options.stripPrecedingEdges && g > 0 ? nil : intensityStd(
+                        work: work, bgRows: bgRows[g], logE: bgLogE[g], signalRows: rows, column: column, cc: cc, a: f.a, r: f.r, atBound: f.atBound,
+                        energies: basis.energies, scale: basis.scale))
                     for i in 0 ..< rows.count { let e = d[i] - intensity * column[i]; out.rss += e * e }
                     if options.stripPrecedingEdges, g + 1 < m, intensity > 0 {        // strip this edge, tail included, before the next one is fitted
                         let full = basis.column(group: g, pixel: p, rows: 0 ..< n)
@@ -445,7 +501,7 @@ public enum EELSModelFit {
                 continue
             }
             pixels.append((0 ..< m).map { g in
-                EdgeIntensityPixel(intensity: f.intensities[g], arealDensityPerNM2: basis.convolved ? f.intensities[g] * 1e10 : nil, unavailable: nil)
+                EdgeIntensityPixel(intensity: f.intensities[g], arealDensityPerNM2: basis.convolved ? f.intensities[g] * 1e10 : nil, unavailable: nil, intensityStd: f.intensityStds[g])
             })
             backgrounds.append(f.backgrounds[0]); perEdge.append(f.backgrounds); atBound.append(f.atBound); rss.append(f.rss)
         }
