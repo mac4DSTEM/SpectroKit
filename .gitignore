@@ -3,3 +3,7 @@
 .build/
 .swiftpm/
 .docs-site/
+
+# Local session rules, kept on disk only
+CLAUDE.md
+.claude/
