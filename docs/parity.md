@@ -4,7 +4,7 @@ What SpectroKit has of exSpy's and HyperSpy's EDS and EELS API, row by row, what
 source on disk on 2026-10-21 for 0.8.0 (the walk of every public method of `exspy/signals/{eds,eds_tem,eds_sem,eels,dielectric_function}.py`,
 `exspy/models/*`, `exspy/components/*`, `exspy/utils/*`, `exspy/material.py`, and the tests in `exspy/tests/` for tolerances).
 
-**Reference.** exSpy 0.3.2 and HyperSpy 2.4.0 in `References/python/hyperspy` (the suite folder's gitignored Python reference, `tools/setup-python-refs.sh`);
+**Reference.** exSpy 0.3.2 and HyperSpy 2.4.0 in `References/python/hyperspy` (a gitignored Python reference beside the kit);
 fixtures stay pinned to exSpy `7185a4d1` (`References/exspy-7185a4d1`) with RosettaSciIO 0.14.0, NumPy 2.5.4, SciPy 1.18.1, except the
 0.8.0 maps fixture, which is exSpy 0.3.2's own output (`tools/edx-quant-maps/pins.py`). The public methods were read from the installed
 modules; the tolerance column is what exSpy's own test files assert (`assert_allclose` defaults are rtol 1e-7).

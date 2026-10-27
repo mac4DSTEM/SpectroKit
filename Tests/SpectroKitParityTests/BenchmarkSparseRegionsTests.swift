@@ -2,7 +2,7 @@ import Foundation
 import Testing
 import SpectroCore
 
-/// Benchmark (not a test; runs only with SPECTRO_BENCH_SPARSE=1, under tools/memcap.sh): 300 disjoint regions of a 512 x 512 scan
+/// Benchmark (not a test; runs only with SPECTRO_BENCH_SPARSE=1, under a memory cap): 300 disjoint regions of a 512 x 512 scan
 /// transported onto a 512 x 512 spectrum grid through a rotated, scaled registration. Dense baseline: one
 /// `transport(labels:classCount: 300)`; sparse: `regions(...)`. Prints wall time (best of 3), result bytes and peak resident size.
 struct BenchmarkSparseRegionsTests {
