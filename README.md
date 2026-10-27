@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/banner.png" width="100%" alt="SpectroKit: EDS and EELS spectroscopy for the TEM, in Swift"></p>
+
 # SpectroKit
 
 A Swift library for X-ray (EDS) and electron energy-loss (EELS) spectroscopy in the transmission electron microscope: a
