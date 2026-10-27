@@ -133,7 +133,6 @@ public nonisolated enum ProposerError: Error, Equatable {
     case cancelled
 }
 
-
 public nonisolated struct ElementProposer: Sendable {
     package var currie: Currie
     /// The elements tested; nil is `defaultPool`.
