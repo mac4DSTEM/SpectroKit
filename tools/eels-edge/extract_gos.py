@@ -83,7 +83,7 @@ def dump(v, ind, out):
         out.append(scalar(v))
 
 
-# Every edge exSpy builds with GOS="dft" (Paul, 2026-10-23: "we need to put everything in"): each K, L and M subshell of exspy/material/eels_binding_energies.json
+# Every edge exSpy builds with GOS="dft": each K, L and M subshell of exspy/material/eels_binding_energies.json
 # whose GOSH subshell (metadata/edges_info) names a table the file holds for the element: 383 edges from 231 tables (K 17, L 126, M 240 edges). One pack, not
 # 231 JSON files (about 17 MB of float32 instead of about 100 MB of text): dft-gos-tables.bin holds, per table, free_energies (nE), q (nQ) and gos (nE x nQ,
 # exSpy's np.squeeze(data.T) layout, row-major) as float32 little-endian, exactly the stored values; dft-gos-index.json lists each table's element, name, byte
