@@ -3,7 +3,7 @@
 Suite ROADMAP task 16, SpectroKit 0.9.0. Written 2026-10-21 for a Mac session to implement without further design work.
 Reference: exSpy 0.3.2 (`exspy/signals/eels.py`, `exspy/models/eelsmodel.py`, `exspy/components/eels_cl_edge.py`) and
 HyperSpy 2.4.0 (`hyperspy/_signals/signal1d.py`, `hyperspy/misc/math_tools.py`, `hyperspy/_components/power_law.py`)
-in `../References/python/hyperspy` (suite `tools/setup-python-refs.sh hyperspy`; NumPy 2.5.4, SciPy 1.18.1). Line
+in `../References/python/hyperspy` (NumPy 2.5.4, SciPy 1.18.1). Line
 numbers below are from those files. Every result stays `validation: "none"`. No code beyond signatures; one screen per
 section.
 
@@ -346,6 +346,6 @@ Bluestein in SpectroKit was the alternative and is not worth a copy.
 7. The bundled L edges (Mg, Al, Si, Fe, Cu) are an engineering pick for the study's alloys; a different list is a
    one-line change in `extract_gos.py` plus a resources commit.
 
-Closeout for the implementing session (CLAUDE.md): fast target green per commit, full suite before the tag, `CHANGELOG.md`
+Closeout for the implementing session: fast target green per commit, full suite before the tag, `CHANGELOG.md`
 0.9.0 entry with a Migration paragraph (new dependency, `CoreLossEdge.subshell` values beyond `K1`), `docs/parity.md`
 rows per section 9, `docs/status.md` one line, open item 4 rewritten, hand-off paragraph in the last commit.
