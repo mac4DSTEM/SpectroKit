@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Extract the dft GOS tables of C, N, O K1 from the GOSH file: SpectroKit EELS slice 2, registration section 3.3.
 
-Run:  ../References/python/hyperspy/bin/python -I -B tools/eels-edge/extract_gos.py [--gosh FILE] [--exspy DIR] [--out DIR]
+Run:  References/python/bin/python -I -B tools/eels-edge/extract_gos.py [--gosh FILE] [--exspy DIR] [--out DIR]
 
 Reads  References/gos-dft-1.5.0.gosh (= exSpy's Segger_Guzzinati_Kohl_1.5.0.gosh, md5 7fee8891c147a4f769668403b54c529b,
        DOI 10.5281/zenodo.7645765, CC-BY-4.0; the md5 is CHECKED) and exSpy's exspy/material/eels_binding_energies.json.

@@ -10,7 +10,7 @@ the list, and runs the parsed list through the kit's Cliff-Lorimer against exSpy
 The sum/escape model, the sigma propagation and the region result have no Python counterpart: they are tested against planted truth
 only (Tests/SpectroEDXTests), not pinned here.
 
-    ../References/python/hyperspy/bin/python -I -B tools/edx-0100/pins.py
+    References/python/bin/python -I -B tools/edx-0100/pins.py
 """
 import json, pathlib, warnings
 import numpy as np

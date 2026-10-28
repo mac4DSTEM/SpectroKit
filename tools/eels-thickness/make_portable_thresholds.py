@@ -2,7 +2,7 @@
 """Pinned SciPy derivatives plus SpectroKit's documented numerical-tie policy.
 
 Run from SpectroKit (never on CI):
-../tools/memcap.sh -- ../References/python/hyperspy/bin/python -I -B tools/eels-thickness/make_portable_thresholds.py
+../tools/memcap.sh -- References/python/bin/python -I -B tools/eels-thickness/make_portable_thresholds.py
 Retains all raw exSpy/SciPy fixtures. This is a deliberate policy deviation, not
 an assertion that raw exSpy chooses the same channels on different CPUs.
 """

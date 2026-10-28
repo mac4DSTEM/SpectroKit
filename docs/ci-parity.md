@@ -60,7 +60,7 @@ with 20 deliberately changed thresholds. It records input SHA256s, raw/selected 
 It and t/lambda. Run from this repository:
 
 ```sh
-../tools/memcap.sh -- ../References/python/hyperspy/bin/python -I -B tools/eels-thickness/make_portable_thresholds.py
+../tools/memcap.sh -- References/python/bin/python -I -B tools/eels-thickness/make_portable_thresholds.py
 ```
 
 The original SG coefficient and derivative fixtures remain unchanged. Coefficients are bounded at `1e-13 * coefficient L1`,

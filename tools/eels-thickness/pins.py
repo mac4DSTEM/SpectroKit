@@ -6,7 +6,7 @@ Agreement with exSpy is agreement, not truth: the truth is make_planted.py and t
 Run (needs HyperSpy 2.4.0 and the pinned exSpy checkout, which is NOT installed: it is put first on sys.path and the
 signal classes are built directly, because HyperSpy's loader does not know exSpy's):
 
-    ../References/python/hyperspy/bin/python -I tools/eels-thickness/pins.py [--exspy DIR] [--fixtures DIR] [--out DIR]
+    References/python/bin/python -I tools/eels-thickness/pins.py [--exspy DIR] [--fixtures DIR] [--out DIR]
 
 Reads  planted-noiseless.f64 / planted-noisy.f64 (written by make_planted.py; run that first) from --fixtures, and exSpy's
 own line scan and zero-loss twin from the exSpy checkout (exspy/tests/signals/data/EELS_{LL,ZLP}_linescan_simulated_

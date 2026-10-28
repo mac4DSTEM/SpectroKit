@@ -12,7 +12,7 @@ Pins what HyperSpy 2.4.0 / exSpy 0.3.2 answer on deterministic synthetic spectru
 
 Run (the suite's HyperSpy 2.4.0 / exSpy 0.3.2 venv, NumPy 2.5.4, SciPy 1.18.1):
 
-    ../References/python/hyperspy/bin/python -I -B tools/eels-rl-mlls/pins.py [--gosh FILE] [--out DIR]
+    References/python/bin/python -I -B tools/eels-rl-mlls/pins.py [--gosh FILE] [--out DIR]
 
 Writes into --out (default Tests/SpectroEELSTests/Fixtures/):
 

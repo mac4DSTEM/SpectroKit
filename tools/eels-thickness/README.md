@@ -11,8 +11,8 @@ Nothing here makes a thickness validated: `validation: "none"` stays until a sam
 ## Run
 
 ```
-python3 tools/eels-thickness/make_planted.py          # NumPy only (the suite uses ../References/python/hyperspy/bin/python -I)
-../References/python/hyperspy/bin/python -I tools/eels-thickness/pins.py
+python3 tools/eels-thickness/make_planted.py          # NumPy only (the suite uses References/python/bin/python -I)
+References/python/bin/python -I tools/eels-thickness/pins.py
 ```
 
 Both take `--out`/`--fixtures` to write elsewhere (the reproducibility check does). `pins.py` needs the pinned exSpy checkout

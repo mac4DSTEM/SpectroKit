@@ -274,7 +274,7 @@ LM shortfall is 1e-4), and within the counting-statistics sigma of the planted t
 | `EELSModelFit.fit` | `eelsmodel.py:444-480`, `:594-671`; `eels_cl_edge.py:441-497` | component rtol 5e-7; fit: none upstream, kit rtol 1e-3 + planted sigma |
 | `CoreLossEdge` L tables | `gosh_gos.py` `read_gos_data`; `eels_binding_energies.json` | `test_gos.py::test_binding_energy_database` exact; tables bit for bit |
 
-Pin environment: exSpy 0.3.2 and HyperSpy 2.4.0 from `../References/python/hyperspy/bin/python -I -B` (Python 3.14,
+Pin environment: exSpy 0.3.2 and HyperSpy 2.4.0 from `References/python/bin/python -I -B` (Python 3.14,
 NumPy 2.5.4, SciPy 1.18.1), the dft GOSH 1.5.0 file by md5 `7fee8891c147a4f769668403b54c529b`, as the existing scripts.
 
 ## 8. Pin scripts and fixtures (existing layout: `tools/<slice>/pins.py` writes `Tests/SpectroEELSTests/Fixtures/`)

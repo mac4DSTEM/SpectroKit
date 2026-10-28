@@ -3,8 +3,8 @@
 
 Two parts, each run by the venv that has its reference (versions are asserted):
 
-    References/python/skimage/bin/python -I -B tools/spectrum-tools/pins.py --part lineprofile   # scikit-image 0.26.0, SciPy 1.18.1, NumPy 2.5.4
-    References/python/hyperspy/bin/python -I -B tools/spectrum-tools/pins.py --part smoothing    # HyperSpy 2.4.0, SciPy 1.18.1, NumPy 2.5.4
+    References/python/bin/python -I -B tools/spectrum-tools/pins.py --part lineprofile   # scikit-image 0.26.0, SciPy 1.18.1, NumPy 2.5.4
+    References/python/bin/python -I -B tools/spectrum-tools/pins.py --part smoothing    # HyperSpy 2.4.0, SciPy 1.18.1, NumPy 2.5.4
 
 Writes (default --out Tests/SpectroCoreTests/Fixtures/), floats as Python reprs (they round-trip exactly):
 

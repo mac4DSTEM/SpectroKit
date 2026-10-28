@@ -5,8 +5,8 @@ Covers zero-loss alignment and mask (design section 2), power-law extrapolation 
 Fourier-ratio and `optimal_fft_size` (section 4). Not covered: GOS tables, the edge model fit (section 6), Richardson-Lucy.
 
 ```
-python -m venv v && v/bin/pip install hyperspy==2.4.0 exspy==0.3.2      # the design's pins; NumPy 2.5.4, SciPy 1.18.1 were used
-v/bin/python -I -B tools/eels-task16/pins.py                             # --out DIR to write elsewhere
+tools/reference/setup.sh                                                  # HyperSpy 2.4.0, exSpy 0.3.2, NumPy 2.5.4, SciPy 1.18.1
+References/python/bin/python -I -B tools/eels-task16/pins.py                             # --out DIR to write elsewhere
 ```
 The script asserts the two versions. Output: `Tests/SpectroEELSTests/Fixtures/eels16-pins.json` (the layout is the script's
 docstring) and 58 `eels16-*.f64` arrays (float64 little-endian, C order, NaN kept; shape and sha256 under `files` in the JSON), 2.8 MB.

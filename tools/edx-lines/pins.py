@@ -1,6 +1,6 @@
 """Full X-ray line table pin: every (Z, element, line, energy, weight) row exSpy's own loader builds.
 
-Run: ../References/python/hyperspy/bin/python -I -B tools/edx-lines/pins.py
+Run: References/python/bin/python -I -B tools/edx-lines/pins.py
 Writes Tests/SpectroEDXTests/Fixtures/xray-lines-exspy-7185a4d1.json. Reference: exSpy 7185a4d1, HyperSpy 2.4.0.
 exSpy is not installed in the venv, so exspy/material/_elements.py is executed from the pinned checkout
 (it needs only hyperspy.misc.utils); the rows are what `exspy.material.elements` holds.
