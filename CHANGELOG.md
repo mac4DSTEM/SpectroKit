@@ -2,6 +2,11 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
+## Unreleased
+
+- Test fixtures: the eight EDX fixtures written by tools/edx-sim and tools/edx-exspy-pins name those scripts in their `generator` field
+  (they named paths outside this repo). No other byte changes; no test or number moves.
+
 ## 0.12.0 (2026-10-23), EELS per-edge windows report a 1σ on each edge intensity; every K, L and M edge of the dft GOS
 
 - **Every edge exSpy builds with the dft GOS** (additive). `CoreLossEdge.bundled` holds 383 edges of 95 elements (K 17, L 126, M 240): each K, L and M

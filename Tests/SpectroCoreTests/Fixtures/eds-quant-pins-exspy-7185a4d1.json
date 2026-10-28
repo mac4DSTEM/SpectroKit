@@ -1,5 +1,5 @@
 {
- "generator": "tools/edx-pins/quant_pins.py; exspy 7185a4d1 (2026-10-02), hyperspy 2.4.0, rosettasciio 0.14.0",
+ "generator": "tools/edx-exspy-pins/quant_pins.py; exspy 7185a4d1 (2026-10-02), hyperspy 2.4.0, rosettasciio 0.14.0",
  "minIntensity": 0.1,
  "cases": [
   {
