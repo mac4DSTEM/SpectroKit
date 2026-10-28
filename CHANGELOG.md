@@ -2,16 +2,6 @@
 
 SpectroKit follows semantic versions (0.x). Each release says what changed, and what a consumer must do (Migration).
 
-## Unreleased (0.13.0), removals: the deprecated scan alias, an unused export helper, the duplicate GOS JSON
-
-- **Removed** `SpectrumImageMetadata.sameScanAs4DCube`, deprecated since 0.8.0: use `sameScanAsCube`.
-- **Removed** `SpectroscopyExport.elementsLine(_:)`, unused: join `PooledQuantification.rows.map(\.element)` yourself.
-- **Smaller bundle.** The 16 per-table GOS JSON files (`Resources/GOS/dft-*-*.json`, about 6.8 MB) are gone: every edge now reads the
-  float32 pack, which held the same tables bit for bit (`GOSPackTests` checked the energy axis, q, gos and occupancy ratio of every edge
-  against them before the removal; `EdgePackPinsTests` keeps the sha256 of every table's bytes). No number changes. `CoreLossEdge.bundled` is empty, not the 20 named edges, if the pack cannot be read.
-- The source folders `SpectroCore/Spectroscopy/` and `SpectroEDX/Spectroscopy/` are flattened into their modules; no API change.
-- **Migration.** Replace `sameScanAs4DCube` with `sameScanAsCube`, and `elementsLine(q)` with `q.rows.map(\.element).joined(separator: ", ")`.
-
 ## 0.12.0 (2026-10-23), EELS per-edge windows report a 1σ on each edge intensity; every K, L and M edge of the dft GOS
 
 - **Every edge exSpy builds with the dft GOS** (additive). `CoreLossEdge.bundled` holds 383 edges of 95 elements (K 17, L 126, M 240): each K, L and M
