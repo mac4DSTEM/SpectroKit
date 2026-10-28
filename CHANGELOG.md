@@ -2,15 +2,13 @@
 
 All notable changes to SpectroKit are listed here, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [semantic versioning](https://semver.org) (0.x: a minor
-version may break the API). Each release says what a consumer must change under **Migration**. Release headings are bare versions
-(`## 0.12.0 - 2026-10-23`) because the release tooling reads them; the compare links are at the end.
+version may break the API). Each release says what a consumer must change under **Migration**. From 0.13.0 release-please writes
+each entry from the merged pull requests' titles; a breaking change's Migration is its `BREAKING CHANGE:` note.
 
 Every quantification and thickness result reports `validation: "none"`: agreement with exSpy and HyperSpy is not validation on a
 sample of known composition.
 
-## Unreleased
-
-## 0.12.0 - 2026-10-23
+## [0.12.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.11.0...0.12.0) (2026-10-23)
 
 ### Added
 - **Every K, L and M edge exSpy builds with the dft GOS.** `CoreLossEdge.bundled` holds 383 edges of 95 elements (K 17, L 126, M 240),
@@ -26,7 +24,7 @@ sample of known composition.
 A consumer that lists `CoreLossEdge.bundled` (a periodic table, a picker) now gets 383 edges, not 20: filter by the energies its
 spectrum covers.
 
-## 0.11.0 - 2026-10-23
+## [0.11.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.10.0...0.11.0) (2026-10-23)
 
 ### Changed
 - **Element identification is the published identification loop** (Newbury and Ritchie; AutoEMX documents its defaults; written from
@@ -73,7 +71,7 @@ only when the listed elements' own fit is rank deficient. `possible` no longer l
 `EELSModelFit.fit`'s new `edgeWindows` defaults to nil (the joint fit, unchanged); `EELSModelError` gains four cases, so an exhaustive
 `switch` needs a `default`.
 
-## 0.10.0 - 2026-10-22
+## [0.10.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.9.0...0.10.0) (2026-10-22)
 
 No existing number moves.
 
@@ -104,7 +102,7 @@ No existing number moves.
 `PooledQuantificationInput.init` gained a trailing defaulted `sumEscape` parameter: existing calls compile. Read
 `RegionQuantResult.Line.netCounts` and `netSigma` with `?? 0` or `if let`.
 
-## 0.9.0 - 2026-10-22
+## [0.9.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.8.2...0.9.0) (2026-10-22)
 
 The EELS chain beyond thickness, against exSpy 0.3.2 and HyperSpy 2.4.0 (`docs/parity.md`).
 
@@ -124,7 +122,7 @@ The EELS chain beyond thickness, against exSpy 0.3.2 and HyperSpy 2.4.0 (`docs/p
 ### Migration
 `CoreLossEdge.bundled` holds 20 edges, not 3 (the first three are unchanged). A consumer's build now also resolves ImagoKit.
 
-## 0.8.2 - 2026-10-21
+## [0.8.2](https://github.com/mac4DSTEM/SpectroKit/compare/0.8.1...0.8.2) (2026-10-21)
 
 ### Added
 - `PooledQuantification.kFactors` and `kFactorSourceDescription`: the k-factors the pooled fit used.
@@ -135,13 +133,13 @@ With these an app builds a per-pixel `EDXQuantificationSetup` from the pooled fi
 transmission over the four segments while the per-pixel call takes one angle, so a map with absorption differs slightly from the
 pooled number.
 
-## 0.8.1 - 2026-10-21
+## [0.8.1](https://github.com/mac4DSTEM/SpectroKit/compare/0.8.0...0.8.1) (2026-10-21)
 
 ### Changed
 - Tests only: the absorption runs of the quantification pins are held at exSpy's own tolerance (atol 1e-3 on percent; rtol 1e-5 on
   mass thickness and atoms), and the cross-section mass thickness is now pinned. No number moves.
 
-## 0.8.0 - 2026-10-21
+## [0.8.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.7.1...0.8.0) (2026-10-21)
 
 ### Added
 - `EDXQuantification.quantify` and `.quantifyMaps`: Cliff-Lorimer, zeta-factor and cross-section quantification, with or without
@@ -156,12 +154,12 @@ pooled number.
 ### Migration
 Replace `sameScanAs4DCube` with `sameScanAsCube`.
 
-## 0.7.1 - 2026-10-21
+## [0.7.1](https://github.com/mac4DSTEM/SpectroKit/compare/0.7.0...0.7.1) (2026-10-21)
 
 ### Changed
 - FormatoKit range `"0.4.0"..<"1.0.0"` (was `..<"0.6.0"`).
 
-## 0.7.0 - 2026-10-20
+## [0.7.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.6.1...0.7.0) (2026-10-20)
 
 ### Changed
 - FormatoKit range `"0.4.0"..<"0.6.0"` (was `"0.3.0"..<"0.5.0"`).
@@ -172,13 +170,13 @@ Replace `sameScanAs4DCube` with `sameScanAsCube`.
 ### Migration
 A consumer on FormatoKit 0.3.x stays on SpectroKit 0.6.x.
 
-## 0.6.1 - 2026-10-20
+## [0.6.1](https://github.com/mac4DSTEM/SpectroKit/compare/0.6.0...0.6.1) (2026-10-20)
 
 ### Changed
 - FormatoKit range `"0.3.0"..<"0.5.0"`, so an app on FormatoKit 0.4.0 resolves SpectroKit.
 - The X-ray line table is pinned on all 947 rows against exSpy's own loader.
 
-## 0.6.0 - 2026-10-16
+## [0.6.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.5.4...0.6.0) (2026-10-16)
 
 ### Changed
 - FormatoKit as a minor range, `.upToNextMinor(from: "0.3.0")` (was `exact: "0.2.1"`).
@@ -186,12 +184,12 @@ A consumer on FormatoKit 0.3.x stays on SpectroKit 0.6.x.
 ### Migration
 Use FormatoKit 0.3.x.
 
-## 0.5.4 - 2026-10-16
+## [0.5.4](https://github.com/mac4DSTEM/SpectroKit/compare/0.5.3...0.5.4) (2026-10-16)
 
 ### Fixed
 - The consumer check accepts Swift 6.3's path-form compiler notes. No library change.
 
-## 0.5.3 - 2026-10-16
+## [0.5.3](https://github.com/mac4DSTEM/SpectroKit/compare/0.5.2...0.5.3) (2026-10-16)
 
 ### Added
 - `GridRegistration`, `MaskTransport` (area-overlap label transport from the scan grid to the spectrum grid) and `PoolBuilder`.
@@ -200,7 +198,7 @@ Use FormatoKit 0.3.x.
 ### Fixed
 - The golden test's scalar bound is 1e-9 relative, which CI runners' CPUs need; arrays stay at 1e-12 of their peak.
 
-## 0.5.2 - 2026-10-16
+## [0.5.2](https://github.com/mac4DSTEM/SpectroKit/compare/0.5.1...0.5.2) (2026-10-16)
 
 ### Changed
 - `.estimated()` EELS thresholds treat Savitzky-Golay derivatives within a stated rounding bound as tied and choose the first
@@ -209,12 +207,12 @@ Use FormatoKit 0.3.x.
 ### Migration
 Recompute results obtained with `.estimated()` if numerical ties matter. Fixed thresholds and the zero-loss route are unchanged.
 
-## 0.5.1
+## [0.5.1](https://github.com/mac4DSTEM/SpectroKit/compare/0.5.0...0.5.1)
 
 ### Changed
 - Platforms: macOS 15 and iOS 18 (was macOS 27). FormatoKit pinned `exact: "0.2.1"`. No number moves.
 
-## 0.5.0
+## [0.5.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.4.0...0.5.0)
 
 ### Changed
 - The analysis policies are public parameters (`WindowRules`, `QuantificationPolicy`, `ProposerPolicy`, `UnlistedLineRules`,
@@ -232,19 +230,3 @@ Recompute results obtained with `.estimated()` if numerical ties matter. Fixed t
 ## 0.3.0, 0.2.0, 0.1.0
 
 EELS thickness (t/λ) and the C K ratio method; the EDX quantification stages; the first extraction from the mac4DSTEM application.
-
-[Unreleased]: https://github.com/mac4DSTEM/SpectroKit/compare/0.12.0...HEAD
-[0.12.0]: https://github.com/mac4DSTEM/SpectroKit/compare/0.11.0...0.12.0
-[0.11.0]: https://github.com/mac4DSTEM/SpectroKit/compare/0.10.0...0.11.0
-[0.10.0]: https://github.com/mac4DSTEM/SpectroKit/compare/0.9.0...0.10.0
-[0.9.0]: https://github.com/mac4DSTEM/SpectroKit/compare/0.8.2...0.9.0
-[0.8.2]: https://github.com/mac4DSTEM/SpectroKit/compare/0.8.1...0.8.2
-[0.8.1]: https://github.com/mac4DSTEM/SpectroKit/compare/0.8.0...0.8.1
-[0.8.0]: https://github.com/mac4DSTEM/SpectroKit/compare/0.7.1...0.8.0
-[0.7.1]: https://github.com/mac4DSTEM/SpectroKit/compare/0.7.0...0.7.1
-[0.7.0]: https://github.com/mac4DSTEM/SpectroKit/compare/0.6.1...0.7.0
-[0.6.1]: https://github.com/mac4DSTEM/SpectroKit/compare/0.6.0...0.6.1
-[0.6.0]: https://github.com/mac4DSTEM/SpectroKit/compare/0.5.4...0.6.0
-[0.5.4]: https://github.com/mac4DSTEM/SpectroKit/compare/0.5.3...0.5.4
-[0.5.3]: https://github.com/mac4DSTEM/SpectroKit/compare/0.5.2...0.5.3
-[0.5.2]: https://github.com/mac4DSTEM/SpectroKit/compare/0.5.1...0.5.2
