@@ -2,10 +2,16 @@
 
 # SpectroKit
 
+[![CI](https://github.com/mac4DSTEM/SpectroKit/actions/workflows/ci.yml/badge.svg)](https://github.com/mac4DSTEM/SpectroKit/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/tag/mac4DSTEM/SpectroKit?label=release)](https://github.com/mac4DSTEM/SpectroKit/tags)
+[![Docs](https://img.shields.io/badge/docs-DocC-blue)](https://mac4dstem.github.io/SpectroKit/documentation/)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+
 A Swift library for X-ray (EDS) and electron energy-loss (EELS) spectroscopy in the transmission electron microscope: a
 port of [exSpy](https://github.com/hyperspy/exspy), the EDS and EELS extension of [HyperSpy](https://hyperspy.org), to
 Swift for macOS. It opens a spectrum image, proposes which elements the spectrum supports, quantifies them in atomic percent
-with an uncertainty, and maps EELS thickness. No UI; headless; Swift 6.
+with an uncertainty, and on EELS maps thickness, aligns and deconvolves spectra and fits and quantifies core-loss edges. No UI;
+headless; Swift 6; macOS.
 
 **Status: pre-1.0, and nothing here is validated on a sample of known composition or thickness.** Every result says so
 (`validation: "none"`), see [Validation](#validation).
@@ -18,14 +24,14 @@ Three products, each a Swift module:
 |---|---|
 | `SpectroCore` | What EDS and EELS share: the spectrum image (dense and sparse), `EnergyAxis` (HyperSpy's channel rounding), opening a Velox `.emd` or a Gatan `.dm4` EDS spectrum image, linear least-squares and Poisson maximum-likelihood fits (Accelerate LAPACK), counting statistics and sigma propagation. |
 | `SpectroEDX` | The X-ray part: the line table, the EDS line and continuum model and its fit, the element proposer (Currie detection limit), Cliff-Lorimer quantification with computed k-factors, the four-detector absorption correction, export. Depends on `SpectroCore`. |
-| `SpectroEELS` | The thickness t/lambda by the log-ratio method (`EELSThickness.logRatio`), and the C K areal density by the ratio method with the dft generalised oscillator strengths. Depends on `SpectroCore`. |
+| `SpectroEELS` | The thickness t/lambda by the log-ratio method (`EELSThickness.logRatio`); zero-loss alignment; Fourier-log, Fourier-ratio and Richardson-Lucy deconvolution; the edge model fit (joint or per-edge windows, with a 1σ per edge), the MLLS fit and composition in at% and wt%; areal density by the ratio method. Cross sections from the dft generalised oscillator strengths for 383 K, L and M edges of 95 elements. Depends on `SpectroCore`. |
 
 The numerical methods follow exSpy's line by line, with deviations named in the code and compared against exSpy's own
 output in the tests. Agreement with exSpy is not the same as being right: see [Validation](#validation).
 
 ## Installation
 
-Requirements: macOS 15 (Apple silicon) and Swift 6.2 tools. In your `Package.swift`:
+Requirements: macOS 15 (Apple silicon) and Swift 6.2 tools. iOS is not supported (FormatoKit's readers use macOS-only Foundation API). In your `Package.swift`:
 
 ```swift
 // swift-tools-version: 6.2
@@ -35,7 +41,7 @@ let package = Package(
     name: "MyTool",
     platforms: [.macOS(.v15)],
     dependencies: [
-        .package(url: "https://github.com/mac4DSTEM/SpectroKit", from: "0.7.0"),
+        .package(url: "https://github.com/mac4DSTEM/SpectroKit", from: "0.12.0"),
     ],
     targets: [
         .executableTarget(name: "MyTool", dependencies: [
@@ -219,13 +225,13 @@ of this README and nothing else, and `check-readme.py` fails if the README and `
 - [`docs/parity.md`](docs/parity.md): SpectroKit against exSpy's documented API, row by row. Numbers are held to the Python
   reference within its own tolerance; `docs/parity.md` lists each function, its state and its tolerance.
 - [`docs/ci-parity.md`](docs/ci-parity.md): the audit of the cross-CPU differences found on the first CI run.
-- [`CHANGELOG.md`](CHANGELOG.md): each release, with a Migration paragraph where a consumer must change something. Consumer
-  notes for 0.0.1 to 0.5.0 are archived.
+- [API reference (DocC)](https://mac4dstem.github.io/SpectroKit/documentation/): one catalogue per module.
+- [`CHANGELOG.md`](CHANGELOG.md): each release, with a Migration paragraph where a consumer must change something.
 - [`NOTICE`](NOTICE): the licences and credits in full.
 
 ## Licence and credits
 
-GPL-3.0 ([`LICENSE`](LICENSE)); an application that links SpectroKit must be GPL-compatible. It is a port of, and is compared
+GPL-3.0-or-later ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)); an application that links SpectroKit must be GPL-compatible. It is a port of, and is compared
 against, the work of others, and is not affiliated with them:
 
 - **exSpy** and **HyperSpy** (GPL-3.0-or-later): the EDS and EELS methods, the line table, the element data, the channel
@@ -234,8 +240,8 @@ against, the work of others, and is not affiliated with them:
 - **NIST EPQ** (public domain, 17 USC 105): X-ray line weights, mass absorption coefficients (FFAST, Chantler et al.),
   Bote-Salvat ionisation cross sections, Krause fluorescence yields; **FFAST** and **Krause** terms are carried as a recorded risk.
 - **SciPy** and **NumPy** (BSD-3-Clause): the Savitzky-Golay derivative, Simpson rule, spline and summation order EELS reproduces.
-- The **dft generalised oscillator strengths** of Segger, Guzzinati and Kohl, v1.5.0, CC BY 4.0 (for C, N and O K), as exSpy
-  fetches them.
-- **HDF5**, libaec and libsz (BSD-style), shipped by FormatoKit.
+- The **dft generalised oscillator strengths** of Segger, Guzzinati and Kohl, v1.5.0, CC BY 4.0 (231 tables: every K, L and M
+  edge exSpy builds from them), as exSpy fetches them.
+- **HDF5**, libaec and libsz (BSD-style), shipped by FormatoKit, whose NOTICE carries their licences.
 
 Read [`NOTICE`](NOTICE) for the full texts, versions, commits and checksums.
