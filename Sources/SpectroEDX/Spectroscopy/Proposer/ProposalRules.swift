@@ -10,7 +10,7 @@
 //  R3 release          a candidate the proposer held back as a sum-peak question is released when net / L_D >= 10, and then
 //                      meets R1 and R2 like any other pick.
 //
-//  The cuts (3, 10 L_D, 1.5 FWHM) were read off 78 files of ONE operator, one detector, mostly Al-Mg-Si; CLAUDE.md: a threshold is
+//  The cuts (3, 10 L_D, 1.5 FWHM) were read off 78 files of ONE operator, one detector, mostly Al-Mg-Si; the kit's rule: a threshold is
 //  a property of the dataset until measured on every dataset it will touch. `UNVALIDATED` stays on the Auto ID row; the hold-out
 //  and the demo-edx ladder are reported in docs/archive/v5/wp4-autoid-results-2026-10-07.md. A rule that did not hold there is
 //  switched off in `shipped`, not retuned (a changed cut is a new registration): R1's actinide half ships, R1's beside-K half

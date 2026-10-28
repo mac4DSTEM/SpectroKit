@@ -1,7 +1,7 @@
 {
   "schema": "spectrokit.eels.pins/1",
   "generator": "tools/eels-thickness/pins.py",
-  "notTruth": "These are exSpy's answers. Agreement with exSpy is agreement, not truth (CLAUDE.md); the truth is planted-truth.json. A difference from a pin is a failure of the port, never a tolerance to widen.",
+  "notTruth": "These are exSpy's answers. Agreement with exSpy is agreement, not truth; the truth is planted-truth.json. A difference from a pin is a failure of the port, never a tolerance to widen.",
   "reference": {
     "exspyCommit": "7185a4d13d7d5c550b7bb8d1e9bd62af9cc4203e",
     "exspyCheckoutHeadVerified": true,

@@ -7,7 +7,7 @@ SciPy 1.18.1, h5py 3.16.0), run `-I -B`. Fixtures: `Tests/SpectroEDXTests/Fixtur
 1. `../References/python/hyperspy/bin/python -I -B tools/edx-stages/make_planted.py` (NumPy only; 0.4 s) -> `edx-planted*.{json,f64,i16}`, `edx-calibration*`.
 2. `../References/python/hyperspy/bin/python -I -B tools/edx-stages/make_velox_streams.py` (h5py) -> `velox-stream-*.emd`, `velox-streams-truth.json`.
 3. `../References/python/hyperspy/bin/python -I -B tools/edx-stages/pins.py` (about 110 s) -> `pins.json`, `edx-axis-e2.f64`, `edx-pins-intensity.f64`.
-4. `... tools/edx-stages/findings.py` printed the numbers below (not a fixture writer; archived 2026-10-15 to `../_archive/SpectroKit/tools/edx-stages/findings.py`).
+4. `... tools/edx-stages/findings.py` printed the numbers below (not a fixture writer; archived 2026-10-15).
 Docstrings of each script define every parameter; this file lists readings made and findings.
 
 ## Formats the Swift tests read
