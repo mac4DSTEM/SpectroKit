@@ -56,7 +56,7 @@ func task16Checks(_ r: inout Report) throws {
     r.check("one element is 100 at% and 100 wt%", abs(comp[0].atomicPercent[0] - 100) < 1e-9 && comp[0].unavailable == nil)
     let region = try image.sum(mask: [true, false, true, false])
     r.check("the region sum is one pixel of the added counts", region.nx == 1 && region.counts[3] == core[3] + core[2 * cn + 3])
-    r.check("the bundled edges include the L edges", CoreLossEdge.bundled("Cu", "L3") == .copperL3 && CoreLossEdge.bundled.count == 20)
+    r.check("the bundled edges include the L edges", CoreLossEdge.bundled("Cu", "L3") == .copperL3 && CoreLossEdge.bundled.count == 383)
 
     // initialisers opened for tests
     let segment = SpectrumDetectorSegment(name: "A", azimuthDegrees: 45, elevationDegrees: 20)

@@ -73,7 +73,13 @@ struct EdgeWindowsTests {
         #expect(back == w)
     }
 
-    /// Without windows the joint fit is the one it was: the bits recorded from the code before `edgeWindows` existed.
+    /// Without windows the joint fit is the one it was: the values recorded from the code before `edgeWindows` existed.
+    ///
+    /// Same platform, the two calls agree bit for bit. Across platforms the recorded intensities are compared at a relative 1e-9,
+    /// not bit for bit: the fit's grid + Brent search on the exponent runs through libm's `pow`, `log` and `exp`, whose last bits
+    /// differ between macOS releases, and the search turns that into a spread of up to 7e-11 relative (recorded on macOS 27,
+    /// Apple M5; the macOS 15 and macOS 26 CI runners give `ciRunners`, the same on both). A change to the fit moves the
+    /// intensities far more than 1e-9 (the kit's planted noise-free recovery is checked at 1e-9 in `EELSModelFitTests`).
     @Test func testFitWithoutWindowsIsUnchanged() throws {
         let all = ModelFixtures.pins["cases"] as! [String: [String: Any]]
         let c = try ModelFixtures.make("fel", all["fel"]!)
@@ -81,8 +87,25 @@ struct EdgeWindowsTests {
         let b = try EELSModelFit.fit(coreLoss: c.core, edges: c.edges, microscope: c.microscope, edgeWindows: nil)
         #expect(a.pixels == b.pixels && a.backgrounds == b.backgrounds && a.residualSumOfSquares == b.residualSumOfSquares)
         #expect(a.edgeWindows == nil && a.fitRangeEV == nil && a.edgeBackgrounds == nil)
-        let recorded: [UInt64] = [0x41286a2cbb917b26, 0x412d4c1e4b6979d8, 0x41311731d63b4f29, 0x413387d3d451918f, 0x4135f90b32d7e1fc, 0x41386a15123b16ed]
-        #expect(a.pixels.prefix(recorded.count).map { $0[0].intensity!.bitPattern } == recorded)
+        let got = a.pixels.prefix(Self.recorded.count).map { $0[0].intensity! }
+        #expect(Self.agrees(got, Self.recorded), Comment(rawValue: "\(got.map { String($0.bitPattern, radix: 16) })"))
+    }
+
+    /// The comparison itself: the CI runners' intensities agree with the recorded ones, a change of 1e-8 relative does not.
+    @Test func testRecordedFitComparisonAbsorbsThePlatformSpreadOnly() {
+        let ci = Self.ciRunners.map { Double(bitPattern: $0) }
+        #expect(Self.agrees(ci, Self.recorded))
+        #expect(!Self.agrees(Self.recorded.map { $0 * (1 + 1e-8) }, Self.recorded))
+        #expect(!Self.agrees(Array(Self.recorded.dropLast()), Self.recorded))
+    }
+
+    private static let recorded: [Double] = [0x41286a2cbb917b26, 0x412d4c1e4b6979d8, 0x41311731d63b4f29, 0x413387d3d451918f, 0x4135f90b32d7e1fc, 0x41386a15123b16ed]
+        .map { Double(bitPattern: $0) }
+    /// The same six intensities from the macOS 15 (Xcode 26.0) and macOS 26 (newest Xcode) runners, CI run 40527509985.
+    private static let ciRunners: [UInt64] = [4695119351891256641, 4696493679414801175, 4697561389139202842, 4698248180147518689, 4698935612723774201, 4699622849893547472]
+
+    private static func agrees(_ got: [Double], _ want: [Double]) -> Bool {
+        got.count == want.count && zip(got, want).allSatisfy { abs($0 - $1) <= 1e-9 * abs($1) }
     }
 
     @Test func testWindowsRecoverThePlantedRatioAndTheGlobalFitDoesNot() throws {
