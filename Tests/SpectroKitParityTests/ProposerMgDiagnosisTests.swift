@@ -1,5 +1,5 @@
 //
-//  GateDTests.swift
+//  ProposerMgDiagnosisTests.swift
 //  Role: The registered Gate D diagnosis of the Mg auto-ID miss (docs/edx-stage-gates-registration.md section 8), D0 to D5,
 //        run in that order against the SHIPPED `ElementProposer` on the planted spectra. D6 (the owner's real files) is not run:
 //        they are not on this Mac.
@@ -16,7 +16,7 @@ import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
-struct GateDTests {
+struct ProposerMgDiagnosisTests {
 
     private func ratio(_ r: MgRun, _ truth: Double) -> Double { truth > 0 ? r.net / truth : .nan }
     private func f(_ x: Double, _ digits: Int = 2) -> String { String(format: "%.\(digits)f", x) }

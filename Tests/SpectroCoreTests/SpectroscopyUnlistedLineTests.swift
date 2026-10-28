@@ -11,9 +11,9 @@ import SpectroEDX
 /// (generator `tools/edx-pins/unlisted_sim.py`, the refuter's S2c recipe), seeded Poisson noise here. The assertions are
 /// the DECISIONS (named, withheld), not exact nets, so a continuum change (lane F23) does not re-band them.
 @MainActor
-struct SpectroscopyUnlistedLineSpectro {
+struct SpectroscopyUnlistedLineTests {
 
-    private typealias Q = SpectroscopyQuantifySpectro
+    private typealias Q = SpectroscopyQuantifyTests
 
     /// The measured outcomes for the lane report ($UNLISTED_NOTES via TEST_RUNNER_UNLISTED_NOTES); silent otherwise.
     private func note(_ s: String) {

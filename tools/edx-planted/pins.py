@@ -8,7 +8,7 @@ planted draws) and the planted-truth readings in README.md.
 Run (reference venv, isolated; exSpy is NOT installed, its pinned checkout is put first on sys.path and the signal classes
 are built directly, as tools/eels-thickness/pins.py does). Run make_planted.py and make_velox_streams.py first:
 
-    References/python/bin/python -I -B tools/edx-stages/pins.py [--fixtures DIR] [--out DIR]
+    References/python/bin/python -I -B tools/edx-planted/pins.py [--fixtures DIR] [--out DIR]
 
 Reads  edx-planted*.{json,f64,i16}, edx-calibration*.{json,u32}, velox-stream-*.emd, velox-streams-truth.json from --fixtures
 (default Tests/SpectroEDXTests/Fixtures) and, from the pinned RosettaSciIO checkout, the public Velox files (the four zips,

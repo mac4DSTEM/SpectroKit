@@ -6,7 +6,7 @@ values are ASSERTED against exSpy by pins.py, they are not read from it); a Laws
 in-family continuum (check_surrogate.py compares it with SciPy's).
 
 Run:
-    python3 tools/edx-stages/make_planted.py [--out DIR]          (DIR defaults to Tests/SpectroEDXTests/Fixtures)
+    python3 tools/edx-planted/make_planted.py [--out DIR]          (DIR defaults to Tests/SpectroEDXTests/Fixtures)
 Writes into DIR:
     edx-planted-means.f64    noise-free expected counts, one row per cell, float64 little-endian, C order, (ncell, NWIN)
     edx-planted-resid.i16    Poisson realisations as RESIDUALS, int16 little-endian, C order, (nreal_total, NWIN):
@@ -436,7 +436,7 @@ def main():
         "counts": files["edx-calibration-counts.u32"]})
 
     manifest = {
-        "what": "planted Al-Mg-Si spectra, registration section 5.2; see tools/edx-stages/make_planted.py for every definition",
+        "what": "planted Al-Mg-Si spectra, registration section 5.2; see tools/edx-planted/make_planted.py for every definition",
         "axis": {"offset_keV": srepr(OFF), "scale_keV": srepr(SC), "channels": NCH}, "k0": K0, "nwin": NWIN,
         "seed0": SEED0, "decode": "counts = rint(means[mean_row]) + resid[resid_row0 + j], j = 0..n_real-1 (rint: half to even)",
         "line_tables": {"table": {k: [[srepr(e), srepr(w)] for e, w in v] for k, v in TABLE.items()},

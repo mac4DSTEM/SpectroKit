@@ -14,7 +14,7 @@ import SpectroCore
 import SpectroEDX
 
 @MainActor
-struct SpectroscopyDriveL12Spectro {
+struct ProposalRulesTests {
     /// net / L_D = `significance` exactly (L_D 300).
     private func candidate(_ element: String, _ group: String, energy: Double? = nil, significance: Double,
                            conflicts: [LineConflict] = []) -> ElementCandidate {

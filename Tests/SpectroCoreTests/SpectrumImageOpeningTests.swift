@@ -13,7 +13,7 @@ import FormatoEMD
 /// truth beside it) and `velox-tiny.emd` (3 rows x 2 columns, 8 channels, 2 frames: the main file of
 /// `tools/velox-parity/make-tiny-fixture.py`, the same bytes VeloxEMDReaderTests embeds). Each test names its mutation.
 @MainActor
-struct SpectrumImageOpeningSpectro {
+struct SpectrumImageOpeningTests {
 
     private static let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
     private static var dm4: String { dir.appendingPathComponent("demo-edx-tiny.dm4").path }

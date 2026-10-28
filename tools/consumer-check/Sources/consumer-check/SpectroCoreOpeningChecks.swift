@@ -5,7 +5,7 @@
 //        EMD. Only SpectroCore's public API is named (`SpectrumImageOpener.kind(ofFileAt:)`, `.open(path:kind:cancelled:)`,
 //        `.openGMSEDS(path:)`, `LoadedSpectrumImage`, `EnergyAxis`, `SpectrumImageMetadata`, `SpectroCancelled`); no FormatoKit
 //        type is named. Expected values are those SpectroKit's own tests assert for the same two fixtures
-//        (SpectrumImageOpeningTests+Spectro.swift; spectro-golden/velox-tiny.txt and demo-edx-tiny-dm4.txt).
+//        (SpectrumImageOpeningTests.swift; spectro-golden/velox-tiny.txt and demo-edx-tiny-dm4.txt).
 //
 
 import Foundation

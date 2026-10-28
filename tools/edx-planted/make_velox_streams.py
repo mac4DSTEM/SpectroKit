@@ -6,7 +6,7 @@
         velox-streams-truth.json            the truth of every case (below), sorted keys, Python-repr floats
 
 Run it with the reference venv's interpreter, isolated (h5py 3.16.0, numpy 2.5.4, HDF5 2.0.0):
-    References/python/bin/python -I -B tools/edx-stages/make_velox_streams.py
+    References/python/bin/python -I -B tools/edx-planted/make_velox_streams.py
 (References/python, tools/reference/setup.sh; any h5py 3.x writes the same bytes. Datasets are written with track_times=False.)
 
 THE TRUTH IS THE DRAW. The generator draws the events itself (numpy.random.default_rng([20261017, 200, case_index])), per

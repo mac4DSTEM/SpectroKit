@@ -1,7 +1,7 @@
 //
 //  EdgeTablePinsTests.swift
 //  Role: EELS task 16 step 3 (docs/design/eels-task-16.md section 6.1): the K and L edges added to the bundled GOS tables against
-//        exSpy 7185a4d1's pins in Fixtures/eels16-edges-pins.json (tools/eels-task16/edges.py). The tables are bit-exact
+//        exSpy 7185a4d1's pins in Fixtures/eels16-edges-pins.json (tools/eels-chain/edges.py). The tables are bit-exact
 //        (sha256 of the float32 bytes); qint, the effective angle and function(E) follow the registered edge bounds
 //        (EdgePinsTests: angle 1e-14, qint 1e-12, function 1e-10).
 //

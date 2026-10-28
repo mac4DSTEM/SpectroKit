@@ -1,4 +1,4 @@
-# tools/eels-task16: exSpy / HyperSpy pins for EELS task 16, sections 2, 3 and 4
+# tools/eels-chain: exSpy / HyperSpy pins for EELS task 16, sections 2, 3 and 4
 
 Written before the Swift code, so the Mac session that implements `docs/design/eels-task-16.md` starts with numbers.
 Covers zero-loss alignment and mask (design section 2), power-law extrapolation and Hanning taper (section 3), Fourier-log,
@@ -6,7 +6,7 @@ Fourier-ratio and `optimal_fft_size` (section 4). Not covered: GOS tables, the e
 
 ```
 tools/reference/setup.sh                                                  # HyperSpy 2.4.0, exSpy 0.3.2, NumPy 2.5.4, SciPy 1.18.1
-References/python/bin/python -I -B tools/eels-task16/pins.py                             # --out DIR to write elsewhere
+References/python/bin/python -I -B tools/eels-chain/pins.py                             # --out DIR to write elsewhere
 ```
 The script asserts the two versions. Output: `Tests/SpectroEELSTests/Fixtures/eels16-pins.json` (the layout is the script's
 docstring) and 58 `eels16-*.f64` arrays (float64 little-endian, C order, NaN kept; shape and sha256 under `files` in the JSON), 2.8 MB.

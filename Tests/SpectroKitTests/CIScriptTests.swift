@@ -48,5 +48,4 @@ struct CIScriptTests {
         try FileManager.default.createDirectory(at: temp.appendingPathComponent(".build/out/Intermediates.noindex/A/B/SpectroCore.build"), withIntermediateDirectories: true)
         #expect(try run("/bin/zsh", script: "set -uo pipefail\n" + inventory + "[[ $built == *SpectroCore* ]]", in: temp) == 0)
     }
-
 }

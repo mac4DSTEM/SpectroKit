@@ -12,7 +12,7 @@ import SpectroCore
 import SpectroEDX
 
 @MainActor
-struct QuantificationMethodSpectro {
+struct QuantificationMethodTests {
 
     private func richMethod() -> QuantificationMethod {
         var m = QuantificationMethod()

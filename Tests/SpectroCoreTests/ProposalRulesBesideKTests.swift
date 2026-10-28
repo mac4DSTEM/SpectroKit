@@ -1,5 +1,5 @@
 //
-//  AutoIDRulesWP4bTests.swift
+//  ProposalRulesBesideKTests.swift
 //  Lane W (WP4b): the beside-K guard option of `ProposalRules` on hand-built `ProposalResult`s. Registration:
 //  docs/archive/v5/wp4b-autoid-rules-preregistration-2026-10-07.md (R1b: an L/M pick within 1.5 FWHM of another PROPOSED candidate's
 //  K alpha is dropped only when its net / L_D is at or below that K candidate's). The option is off in none / registered / shipped.
@@ -12,7 +12,7 @@ import Testing
 import SpectroEDX
 
 @MainActor
-struct AutoIDRulesWP4bTests {
+struct ProposalRulesBesideKTests {
     /// net / L_D = `significance` exactly (L_D 300).
     private func candidate(_ element: String, _ group: String, energy: Double? = nil, significance: Double) -> ElementCandidate {
         ElementCandidate(element: element, group: group, energyKeV: energy ?? XRayLines.line(group)!.energy, net: significance * 300, sigma: 30, sigmaZero: 90,

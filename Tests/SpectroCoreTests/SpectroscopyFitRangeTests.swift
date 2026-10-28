@@ -15,9 +15,9 @@ import SpectroEDX
 /// `plantSn` for P6); lines added with the app's own shapes, Poisson counts from SplitMix64 per seed (platform independent).
 /// The pinned numbers were measured by the lane's harness on the pristine and the new Core (lane C report, logs P1-P6).
 @MainActor
-struct SpectroscopyFitRangeSpectro {
+struct SpectroscopyFitRangeTests {
 
-    private typealias Q = SpectroscopyQuantifySpectro
+    private typealias Q = SpectroscopyQuantifyTests
 
     // MARK: The synthetic pool
 
@@ -33,7 +33,7 @@ struct SpectroscopyFitRangeSpectro {
         mutating func uniform() -> Double { Double(next() >> 11) / Double(1 << 53) }
     }
 
-    /// PTRS above 10, inversion below (as SpectroscopyUnlistedLineSpectro).
+    /// PTRS above 10, inversion below (as SpectroscopyUnlistedLineTests).
     private static func poisson(_ lam: Double, _ rng: inout SplitMix64) -> UInt64 {
         if lam <= 0 { return 0 }
         if lam < 10 {

@@ -17,7 +17,7 @@ import FormatoDM
 /// still refuses) is archived beside the Slot 4⅞ record. These tests drive the
 /// reader through an injected liveness check, and the real descriptor check
 /// through what a healthy disk can still do (a rename, an unlink).
-final class FinalPolishDSpectro {
+final class DM4VolumeGoneTests {
 
     private let directory: URL
 

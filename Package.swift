@@ -121,7 +121,7 @@ let package = Package(
             ]
         ),
         // EDX stage gates (docs/edx-stage-gates-registration.md): counts, energy axis and peak identification on pins (exSpy,
-        // HyperSpy, RosettaSciIO) and planted truth (Fixtures/, tools/edx-stages/), and the Gate D diagnosis of the Mg auto-ID
+        // HyperSpy, RosettaSciIO) and planted truth (Fixtures/, tools/edx-planted/), and the Gate D diagnosis of the Mg auto-ID
         // miss. Its own target (registration Q6), so SpectroCoreTests stays the moved names (190 since 0.4.0).
         .testTarget(
             name: "SpectroEDXTests",

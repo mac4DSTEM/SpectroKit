@@ -7,7 +7,7 @@ of `quantify`. Planted truth (background A and r, edge intensities) is stored be
 
 Run (HyperSpy 2.4.0 venv):
 
-    python -I -B tools/eels-task16/model.py [--exspy DIR] [--gosh FILE] [--out DIR]
+    python -I -B tools/eels-chain/model.py [--exspy DIR] [--gosh FILE] [--out DIR]
 
 Writes into --out (default Tests/SpectroEELSTests/Fixtures/):
     eels16-model-<case>-core.f64, -ll.f64 (where used), -curve.f64   float64 little-endian, C order, (ny, nx, channels)

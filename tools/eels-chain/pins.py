@@ -8,7 +8,7 @@ Richardson-Lucy. Agreement with exSpy is agreement, not truth; the planted truth
 
 Run (any venv with `pip install hyperspy==2.4.0 exspy==0.3.2`; NumPy 2.5.4, SciPy 1.18.1 were used):
 
-    python -I -B tools/eels-task16/pins.py [--out DIR]
+    python -I -B tools/eels-chain/pins.py [--out DIR]
 
 Writes into --out (default Tests/SpectroEELSTests/Fixtures/):
 
@@ -398,7 +398,7 @@ with open(__file__, "rb") as fh:
     PINS["environment"] = {
         "exspy": exspy.__version__, "hyperspy": hyperspy.__version__, "numpy": np.__version__, "scipy": scipy.__version__,
         "python": platform.python_version(), "scriptSha256": hashlib.sha256(fh.read()).hexdigest(),
-        "command": "python -I -B tools/eels-task16/pins.py",
+        "command": "python -I -B tools/eels-chain/pins.py",
         "note": "spectra are synthetic and deterministic; HyperSpy ran without numba (non-accelerated paths, identical results)",
     }
 PINS["files"] = FILES

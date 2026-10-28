@@ -16,7 +16,7 @@
 //  SpectroKit S2: the same file, run against the extracted library and compared with the first host app's committed baseline
 //  (Tests/SpectroCoreTests/Fixtures/spectro-golden, copied at 5ba712a0, unchanged). Six of its seven scenarios: the seventh,
 //  `demo-spectrum-fixture`, opens the app's `DemoSpectrumImageSource` (4D demo data), which stays in the app and is compared
-//  there. `Q` is a copy of the statics of `SpectroscopyQuantifySpectro` (another test target). Record with
+//  there. `Q` is a copy of the statics of `SpectroscopyQuantifyTests` (another test target). Record with
 //  `SPECTRO_GOLDEN_DIR=<dir> swift test --filter SpectroGoldenTests.testRecordBaseline`.
 //
 //  SpectroKit 0.2.0: `velox-tiny.txt` re-recorded on purpose for the six new Velox metadata fields (a consumer's five and
@@ -141,7 +141,7 @@ enum GoldenDump {
 
 // MARK: - Scenarios
 
-/// The statics of `SpectroscopyQuantifySpectro` (= the host app's `SpectroscopyQuantifyTests`) that the scenarios use, verbatim
+/// The statics of `SpectroscopyQuantifyTests` (= the host app's `SpectroscopyQuantifyTests`) that the scenarios use, verbatim
 /// apart from the paths.
 @MainActor
 enum GoldenQ {

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Writes the tiny synthetic Velox EMDs. The main file (no flag) is Tests/SpectroCoreTests/Fixtures/velox-tiny.emd, byte for byte:
-  References/python/bin/python -I -B tools/edx-stages/make_velox_tiny.py Tests/SpectroCoreTests/Fixtures/velox-tiny.emd
+  References/python/bin/python -I -B tools/edx-planted/make_velox_tiny.py Tests/SpectroCoreTests/Fixtures/velox-tiny.emd
 The other modes write the variants FormatoKit's Velox reader tests embed (VeloxEMDReaderTests there). Prints the raw-deflate base64 (what Foundation's `.zlib`
 decompression expects):
 

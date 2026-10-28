@@ -166,7 +166,7 @@ struct EELSModelFitTests {
     }
 }
 
-/// The pins file of `tools/eels-task16/model.py`, shared by the fast and the parity targets.
+/// The pins file of `tools/eels-chain/model.py`, shared by the fast and the parity targets.
 struct ModelCase {
     let edges: [CoreLossEdge]
     let microscope: EELSMicroscope

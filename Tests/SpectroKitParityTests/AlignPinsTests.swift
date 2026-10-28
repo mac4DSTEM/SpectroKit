@@ -1,6 +1,6 @@
 //
 //  AlignPinsTests.swift
-//  Role: Task 16 step 1 (docs/design/eels-task-16.md sections 2 and 7) against exSpy 0.3.2 / HyperSpy 2.4.0 (tools/eels-task16/pins.py ->
+//  Role: Task 16 step 1 (docs/design/eels-task-16.md sections 2 and 7) against exSpy 0.3.2 / HyperSpy 2.4.0 (tools/eels-chain/pins.py ->
 //        Fixtures/eels16-pins.json): the zero-loss peak centre and mask, `estimate_shift1D`, `shift1D` and the eleven `align_zero_loss_peak`
 //        variants (offset, size, scale, data, the shifts applied, `also_align`).
 //

@@ -6,7 +6,7 @@ K of Mg, Al, Si and the L edges of Mg, Al, Si, Fe, Cu (Mg, Si, Fe, Cu: L1, L2, L
 
 Run (HyperSpy 2.4.0 venv):
 
-    References/python/bin/python -I -B tools/eels-task16/edges.py [--gosh FILE] [--exspy DIR] [--out DIR]
+    References/python/bin/python -I -B tools/eels-chain/edges.py [--gosh FILE] [--exspy DIR] [--out DIR]
 
 Writes into --out (default Tests/SpectroEELSTests/Fixtures/):
     eels16-edges-pins.json    per edge: element, subshell, table, onsetEV, subshell_factor (occupancy ratio), and per microscope setting the effective angle,

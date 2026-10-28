@@ -122,7 +122,7 @@ struct EELSAlignmentTests {
         #expect(result.keptChannels == 0..<600)
     }
 
-    /// PLANTED TRUTH (tools/eels-task16/pins.py: the ZLP of pixel p is planted at CENTRES[p], none on a channel): after alignment every pixel's
+    /// PLANTED TRUTH (tools/eels-chain/pins.py: the ZLP of pixel p is planted at CENTRES[p], none on a channel): after alignment every pixel's
     /// zero-loss peak is at the same place within a tenth of a channel (subpixel: the cross-correlation refines to 1/6 channel), the total shift
     /// differences recover the planted centre differences within a quarter channel (0.025 eV: the correlation is quantised to 1/(points + 1) channel and linear upsampling biases a Gaussian's peak; the pins show the port reproduces exSpy's own shifts to 1e-9 eV, so this is exSpy's accuracy on this set; the coarse step alone is within half a channel, 0.05 eV), and with `calibrate` the common peak sits within a channel of 0 eV.
     @Test func testPlantedShiftsAreRecovered() throws {

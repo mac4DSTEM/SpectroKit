@@ -13,9 +13,9 @@ import SpectroEDX
 private let suppliedCube = BeamEnergySource.supplied(label: "the 4D cube, same run")
 
 @MainActor
-struct SpectroscopyLaneUSpectro {
+struct SpectroscopyProvenanceExportTests {
 
-    private typealias Q = SpectroscopyQuantifySpectro
+    private typealias Q = SpectroscopyQuantifyTests
 
     // MARK: 3 - the beam energy and where it came from
 
