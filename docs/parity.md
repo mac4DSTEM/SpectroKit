@@ -39,11 +39,11 @@ calibration and `rebin`, the EELS model fit and what it stands on); **useful** =
 
 The macos-26 runner at `0653404` refuted cross-CPU bit parity for the Savitzky–Golay coefficients and edge fits.
 0.5.2 keeps the LAPACK SVD solve (as SciPy) and adds a documented automatic-tolerance tie rule. The raw SciPy and exSpy fixtures are retained;
-`portable-thresholds.json` adds the pinned Python policy oracle. [The CI audit](ci-parity.md) records the original gaps.
+`portable-thresholds.json` adds the pinned Python policy oracle.
 
 | Check | Status | Evidence |
 |---|---|---|
-| CI gate exit and consumer target inventory | regression tested | `CIScriptTests`: propagate a failing test through `tee`; tolerate absent build backend directories; gap-audit controls |
+| CI gate exit and consumer target inventory | regression tested | `CIScriptTests`: propagate a failing test through `tee`; tolerate absent build backend directories |
 | Scan-to-spectrum mask transport and pooling (`MaskTransport`, `PoolBuilder`) | regression tested | no exSpy counterpart; pinned to a NumPy transcription of the app source: `RegistrationTests.numpyTranscriptionPins`, 2e-12 bound, measured gap 0; sparse form `MaskTransport.regions` equal to the dense transport of each region (overlap, footprints exact; inside-grid area 1e-12), SparseMaskTransportTests |
 | Line-profile pooling (`SpectrumLineProfile`, hard) | pinned | scikit-image 0.26.0 `measure.profile_line(order=0, linewidth=w)` on axis-parallel lines, odd width on a pixel line and even width on a half-pixel line: exact (gap 0); oblique, polyline, fractional and off-grid paths pinned to a NumPy transcription of the kit's geometry (gap 0); `SpectrumToolsPinsTests` |
 | Line-profile pooling (`.bilinear`) | pinned | `profile_line(order=1, linewidth=w)`, integer width, oblique line inside the image, `spacing = length / (n - 1)`: 2.4e-15 relative (bound 1e-12) |
