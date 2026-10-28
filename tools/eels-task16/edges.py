@@ -33,7 +33,7 @@ ap.add_argument("--gosh", default=os.path.join(REPO, "..", "References", "Spectr
 ap.add_argument("--exspy", default=os.path.join(REPO, "..", "References", "SpectroKit", "exspy-7185a4d1"))
 ap.add_argument("--out", default=os.path.join(REPO, "Tests", "SpectroEELSTests", "Fixtures"))
 ap.add_argument("--all", action="store_true",
-                help="the every-edge pack (extract_gos.py --all): the sha256 of all 231 tables, and one edge per shell and table kind (B K; Ti L1, L2, L3; "
+                help="the every-edge pack (extract_gos.py): the sha256 of all 231 tables, and one edge per shell and table kind (B K; Ti L1, L2, L3; "
                      "Zr M2, M3; Ba M4, M5) against exSpy, into eelsall-edges-pins.json and eelsall-edge-*.f64")
 ARGS = ap.parse_args()
 EXSPY = os.path.abspath(ARGS.exspy)

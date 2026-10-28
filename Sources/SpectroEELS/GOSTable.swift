@@ -72,7 +72,7 @@ public nonisolated struct CoreLossEdge: Sendable, Equatable, CustomStringConvert
     public static let copperL3 = CoreLossEdge(element: "Cu", subshell: "L3", onsetEV: 931.0)
 
     /// The edges whose GOS ships with SpectroKit: every K, L and M edge exSpy builds with the dft GOS (its eels_binding_energies.json against the GOSH file's
-    /// tables): 383 edges of 95 elements, K 17, L 126, M 240 (`Resources/GOS/dft-gos-index.json`, tools/eels-edge/extract_gos.py --all). The 20 named edges
+    /// tables): 383 edges of 95 elements, K 17, L 126, M 240 (`Resources/GOS/dft-gos-index.json`, tools/eels-edge/extract_gos.py). The 20 named edges
     /// above are among them, with the same onsets. Ordered by element symbol, then subshell.
     public static let bundled: [CoreLossEdge] = GOSPack.shared?.edges ?? []
 
@@ -135,7 +135,7 @@ package nonisolated struct GOSTable: Sendable {
     private static let cacheLock = NSLock()
 }
 
-/// The pack of every K, L and M table (tools/eels-edge/extract_gos.py --all): `dft-gos-index.json` lists each table's element, name, byte offset and
+/// The pack of every K, L and M table (tools/eels-edge/extract_gos.py): `dft-gos-index.json` lists each table's element, name, byte offset and
 /// sizes and the edges that read it; `dft-gos-tables.bin` holds per table free_energies, q and gos (energy-major) as float32 little-endian, the GOSH file's
 /// stored values. Read once, mapped, never copied whole; a table is cut out when an edge first asks for it.
 package nonisolated final class GOSPack: Sendable {

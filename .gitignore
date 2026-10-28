@@ -7,3 +7,4 @@
 # Local session rules, kept on disk only
 CLAUDE.md
 .claude/
+__pycache__/

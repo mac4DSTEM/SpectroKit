@@ -5,7 +5,7 @@ Run:  ../References/python/hyperspy/bin/python -I -B tools/eels-edge/extract_gos
 
 Reads  References/gos-dft-1.5.0.gosh (= exSpy's Segger_Guzzinati_Kohl_1.5.0.gosh, md5 7fee8891c147a4f769668403b54c529b,
        DOI 10.5281/zenodo.7645765, CC-BY-4.0; the md5 is CHECKED) and exSpy's exspy/material/eels_binding_energies.json.
-Writes Sources/SpectroEELS/Resources/GOS/dft-gos-tables.bin and dft-gos-index.json (layout below, at main).
+Writes Sources/SpectroEELS/Resources/GOS/dft-gos-tables.bin and dft-gos-index.json (the layout is in the comment above main()).
 
 THE ORIENTATION. The file stores /X/<table>/data as (q, energy, 1). exSpy (gosh_gos.py read_gos_data) does
 `gos = np.squeeze(gos.T)` = (energy, q) and uses `gos_array[ienergy, :]` (base_gos.py get_qaxis_and_gos); that is the layout
