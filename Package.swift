@@ -17,7 +17,7 @@ import PackageDescription
 
 let package = Package(
     name: "SpectroKit",
-    platforms: [.macOS(.v15), .iOS(.v18)],
+    platforms: [.macOS(.v15)],
     products: [
         .library(name: "SpectroCore", targets: ["SpectroCore"]),
         .library(name: "SpectroEELS", targets: ["SpectroEELS"]),
