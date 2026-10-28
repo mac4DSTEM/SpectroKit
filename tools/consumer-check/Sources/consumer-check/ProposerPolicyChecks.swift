@@ -28,7 +28,8 @@ func proposerPolicyChecks(_ r: inout Report) throws {
         return out
     }
     let settings = FitSettings.standard(elements: ["Al"], axis: axis, resolutionMnKaEV: 130, beamEnergy: 200)
-    let counts = expected(["Al_Ka": 9000, "Mg_Ka": 90, "Ga_La": 900])
+    // Ga Ka with its La: since 0.11.0 the confirmation-line rule withholds an L-line nomination whose K alpha is in range and absent.
+    let counts = expected(["Al_Ka": 9000, "Mg_Ka": 90, "Ga_La": 900, "Ga_Ka": 900])
     func propose(_ p: ProposerPolicy) throws -> ProposalResult { try ElementProposer(policy: p).propose(counts: counts, axis: axis, settings: settings) }
     let plain = try ElementProposer().propose(counts: counts, axis: axis, settings: settings)
     let named = try propose(.default)
