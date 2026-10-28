@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compare
         run: |
-          top=$(grep -m1 -E '^## [0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | sed -E 's/^## ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          top=$(grep -m1 -E '^## \[?v?[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | sed -E 's/^## \[?v?([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
           tag=${GITHUB_REF_NAME#v}
           [ "$top" = "$tag" ] || { echo "CHANGELOG top is $top, tag is $tag"; exit 1; }
   # 0.5.1: the macOS 15 floor. Xcode 26.0 (Swift 6.2) pinned the way FormatoKit's CI pins it; a macos-15 image's default Xcode may
@@ -94,3 +94,14 @@ jobs:
           swift --version | grep -E "Swift version 6\.([2-9]|[1-9][0-9])" || { echo "Swift 6.2 or newer needed"; exit 1; }
       - name: Gate (tools/test.sh, release)
         run: tools/test.sh
+
+  private-refs:
+    name: No private references
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan tracked files
+        run: |
+          if git grep -n -I -E '_archive|CLAUDE\.md|memcap|macEM-suite|setup-python-refs' -- ':!.gitignore' ':!.github/workflows/ci.yml'; then
+            echo "Private references above; this repo is public."; exit 1
+          fi

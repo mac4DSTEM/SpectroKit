@@ -40,7 +40,7 @@ Five golden first differences:
 ## Backend constraint
 
 The pinned SciPy wheel itself links Accelerate (checked with the pinned venv's `scipy.show_config()`, under
-`../tools/memcap.sh`). The logged coefficient arrays show a CPU/toolchain-dependent small residual at a mathematically zero coefficient.
+a memory cap). The logged coefficient arrays show a CPU/toolchain-dependent small residual at a mathematically zero coefficient.
 `ElasticThreshold` compares derivative magnitudes with an exact `<=`, then chooses a discrete channel. The observed tiny
 coefficient differences can therefore produce large changes in thickness; the reduction to only edge mismatches when
 pinned coefficients are supplied isolates the coefficient solve as the main suspected cause. A more accurate scalar solver alone does not
@@ -54,13 +54,13 @@ The SG coefficients and edge fits stay on LAPACK's SVD (`dgelsd`), as in SciPy's
 retain their exact comparisons. The selected threshold channel remains an exact assertion against the new policy oracle.
 
 `tools/eels-thickness/make_portable_thresholds.py` runs pinned SciPy 1.18.1, NumPy 2.5.4 and HyperSpy 2.4.0 in
-`../References/python/hyperspy` under `../tools/memcap.sh`. It applies the declared tie policy to SciPy's derivatives, retaining the
+`../References/python/hyperspy` under a memory cap. It applies the declared tie policy to SciPy's derivatives, retaining the
 raw exSpy `7185a4d1` answers alongside it. Its committed `portable-thresholds.json` is about 42 KB: 18 routes / 138 pixels,
 with 20 deliberately changed thresholds. It records input SHA256s, raw/selected thresholds, derivative minima, slack, I0,
 It and t/lambda. Run from this repository:
 
 ```sh
-../tools/memcap.sh -- ../References/python/hyperspy/bin/python -I -B tools/eels-thickness/make_portable_thresholds.py
+../References/python/hyperspy/bin/python -I -B tools/eels-thickness/make_portable_thresholds.py
 ```
 
 The original SG coefficient and derivative fixtures remain unchanged. Coefficients are bounded at `1e-13 * coefficient L1`,
