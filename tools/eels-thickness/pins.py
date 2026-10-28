@@ -632,7 +632,7 @@ def main():
     pins = {
         "schema": "spectrokit.eels.pins/1",
         "generator": "tools/eels-thickness/pins.py",
-        "notTruth": "These are exSpy's answers. Agreement with exSpy is agreement, not truth (CLAUDE.md); "
+        "notTruth": "These are exSpy's answers. Agreement with exSpy is agreement, not truth; "
                     "the truth is planted-truth.json. A difference from a pin is a failure of the port, never a tolerance to widen.",
         "reference": {"exspyCommit": EXSPY_COMMIT, "exspyCheckoutHeadVerified": commit_ok,
                       "hyperspy": hyperspy.__version__, "rsciio": rsciio.__version__, "numpy": np.__version__,
