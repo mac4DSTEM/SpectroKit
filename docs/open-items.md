@@ -1,6 +1,6 @@
 # Open items
 
-Slowest against Python first (diagnose before changing a number, `../CLAUDE.md`).
+Slowest against Python first (diagnose before changing a number).
 
 1. **t/lambda with a fixed threshold is 2x slower than HyperSpy at 64 x 64 x 2048** (9.1 ms against 4.5 ms, `docs/benchmarks.md`). Hypothesis
    to test, not yet tested: the per-pixel pairwise sums (bit-faithful to NumPy, required by the pins) and the zero-loss-centre argmax run single-threaded,

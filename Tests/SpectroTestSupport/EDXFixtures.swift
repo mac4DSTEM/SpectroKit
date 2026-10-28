@@ -149,7 +149,7 @@ package extension Dictionary where Key == String, Value == Any {
     func s(_ k: String) -> String { self[k] as! String }
 }
 
-// MARK: parallel helper (at most 8 workers: suite CLAUDE.md, heavy CPU work)
+// MARK: parallel helper (at most 8 workers: the heavy-CPU limit)
 
 package final class ResultBox<T: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
