@@ -225,7 +225,7 @@ of this README and nothing else, and `check-readme.py` fails if the README and `
 
 ## Licence and credits
 
-GPL-3.0 ([`LICENSE`](LICENSE)); an application that links SpectroKit must be GPL-compatible. It is a port of, and is compared
+GPL-3.0-only ([`LICENSE`](LICENSE)); an application that links SpectroKit must be GPL-compatible. It is a port of, and is compared
 against, the work of others, and is not affiliated with them:
 
 - **exSpy** and **HyperSpy** (GPL-3.0-or-later): the EDS and EELS methods, the line table, the element data, the channel

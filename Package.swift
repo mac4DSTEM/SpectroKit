@@ -1,4 +1,5 @@
 // swift-tools-version: 6.2
+// SPDX-License-Identifier: GPL-3.0-only
 // SpectroKit — a spectroscopy library (a Swift port of exSpy), extracted from an application's source at 5ba712a0.
 //
 // Library targets (SpectroCore the shared part, SpectroEDX first, SpectroEELS later):
