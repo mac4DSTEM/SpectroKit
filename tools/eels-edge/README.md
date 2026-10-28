@@ -4,7 +4,7 @@ Written before the Swift code, as the EELS slice 2 design note (archived in the 
 
 | script | needs | writes |
 |---|---|---|
-| `extract_gos.py` (h5py) | `References/gos-dft-1.5.0.gosh` (md5 checked), exSpy's `eels_binding_energies.json` | `Sources/SpectroEELS/Resources/GOS/dft-{C,N,O}-K1.json` (~425 KB each, JSON, sorted keys, float32 values widened, gos[iEnergy][iQ] as exSpy's `np.squeeze(gos.T)`) |
+| `extract_gos.py` (h5py) | `References/gos-dft-1.5.0.gosh` (md5 checked), exSpy's `eels_binding_energies.json` | `Sources/SpectroEELS/Resources/GOS/dft-gos-tables.bin` (231 tables, float32 as stored, gos[iEnergy][iQ] as exSpy's `np.squeeze(gos.T)`) and `dft-gos-index.json` |
 | `pins.py --sigma-only` (phase A) | exSpy venv | `edge-sigma-CK.f64/.json`: exSpy's `function(E)` for C K, 200 keV / 10 / 20 mrad, 0.25 eV, E = 150 + 0.25 k, 2040 channels |
 | `make_planted.py` (NumPy only) | phase A's fixture, slice 1's `planted-noiseless.f64` | `edge-{core,low}-{ss,ps03,ps07,ps13}-{noiseless,noisy}.f64`, `edge-planted.json` (manifest), `edge-planted-truth.json`; and the R set: `edge-{core,low}-R-*.f64`, `edge-planted-R.json`, `edge-planted-truth-R.json` |
 | `pins.py` (phase B) | everything above, pinned exSpy / pyEELSMODEL / HyperSpy | `edge-pins.json` (14.8 MB) |

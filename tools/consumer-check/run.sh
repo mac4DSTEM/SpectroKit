@@ -85,15 +85,15 @@ built=$({ find .build/out/Intermediates.noindex -mindepth 3 -maxdepth 3 -type d 
           find .build/debug -maxdepth 1 -type d -name '*.build' 2>/dev/null || true; } | sed 's|.*/||; s|\.build$||; s|-[a-z]$||' | sort -u | tr '\n' ' ')
 print "consumer-check: targets built: ${built}"
 
-# SpectroEELS's GOS tables are its Bundle.module resources: the bundle must sit next to the consumer binary, with the three
-# tables (C, N, O K) inside; without it the cross section cannot load and Bundle.module traps at run time.
+# SpectroEELS's GOS tables are its Bundle.module resources: the bundle must sit next to the consumer binary, with the pack
+# (dft-gos-tables.bin and its index) inside; without it the cross section cannot load and Bundle.module traps at run time.
 gosbundle=$bin/SpectroKit_SpectroEELS.bundle
 [[ -d $gosbundle ]] || die "SpectroKit_SpectroEELS.bundle was not produced next to the consumer binary ($bin)"
-for el in C N O; do
-  [[ -n $(find $gosbundle -type f -name "dft-${el}-K1.json" -size +1k 2>/dev/null | head -1) ]] \
-    || die "SpectroKit_SpectroEELS.bundle has no GOS table dft-${el}-K1.json"
+for f in dft-gos-tables.bin dft-gos-index.json; do
+  [[ -n $(find $gosbundle -type f -name "$f" -size +1k 2>/dev/null | head -1) ]] \
+    || die "SpectroKit_SpectroEELS.bundle has no GOS file $f"
 done
-print "consumer-check: SpectroKit_SpectroEELS.bundle next to the binary, with the C, N and O K GOS tables"
+print "consumer-check: SpectroKit_SpectroEELS.bundle next to the binary, with the GOS pack"
 
 # FormatoKit (0.4.0 on) ships libhdf5, libsz and libaec as binary xcframeworks: the consumer binary must load
 # FormatoLibHDF5 through @rpath, and each framework must sit next to the binary, or the Velox open finds no library at run time.
