@@ -2,7 +2,7 @@
 
 Written 2026-10-21 for 0.8.0. Harness: `tools/benchmarks/run.sh [small,typical]` (Swift: `Tests/SpectroEDXTests/BenchmarkQuantificationTests.swift`,
 `Tests/SpectroEELSTests/BenchmarkThicknessTests.swift`, built by `swift test -c release`, enabled by `SPECTRO_BENCH_OUT`; Python: `tools/benchmarks/bench.py`),
-under `tools/memcap.sh` (8 GB; measured Swift peak 1.3 GB at the typical size). Inputs are closed-form on both sides (formulas in the harness headers), float64.
+under an 8 GB memory cap (measured Swift peak 1.3 GB at the typical size). Inputs are closed-form on both sides (formulas in the harness headers), float64.
 One warm-up, then five runs, median and (min-max).
 
 Machine: Apple M5 Pro, 64 GB, macOS 27.0.1 (26A434), Swift 6.4 (swiftlang-6.4.0.34.1), Python 3.12.14, NumPy 2.5.4, HyperSpy 2.4.0, exSpy 0.3.2

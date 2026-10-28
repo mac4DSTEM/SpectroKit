@@ -294,6 +294,6 @@ FormatoHDF5.
 ## 0.3.0, 0.2.0, 0.1.0
 
 EELS thickness (t/λ) and the C K ratio method; the EDX quantification stage gates; the first extraction from the source
-application (`../_archive/SpectroKit/docs/history.md`).
+application (its history is archived).
 
 Consumer notes for 0.0.1 to 0.5.0 are archived.
