@@ -1,6 +1,6 @@
 //
 //  SeededPoisson.swift
-//  Role: A seeded Poisson sampler for the noise tests (registration section 7 gate 3: 200 realisations, seeds 1 to 200,
+//  Role: A seeded Poisson sampler for the noise tests (200 realisations, seeds 1 to 200,
 //        generated in the test, not stored). Written here, not NumPy's stream: the realisations differ from the ones
 //        tools/eels-thickness/pins.py drew, and the claim tested (standard deviation of t/lambda against sigma_counting) does
 //        not depend on which stream.

@@ -1,10 +1,8 @@
-# Auto ID for TEM EDS: the identification loop, rebuilt for thin foils (design, 2026-10-23)
+# Auto ID for TEM EDS: the identification loop for thin foils (design note, 0.11.0)
 
-Paul's decision (2026-10-23 08:27 UTC): rebuild the automated element identification the way the one complete open
-implementation does it (AutoEMX, Giunto et al. 2025, Lawrence Berkeley National Laboratory; the loop is the NIST
-Newbury–Ritchie "automatic qualitative analysis" loop), for TEM, in Swift, Metal where it pays. Written by us from the
-published method and its documented default thresholds; no AutoEMX code is copied (its licence is non-commercial). The
-comparison that led here: https://claude.ai/artifact/AAb17m1fu7ps2dWEa6jFgi.
+`ElementProposer` identifies elements the way the one complete open implementation does it (AutoEMX, Giunto et al. 2025, Lawrence Berkeley National Laboratory; the loop is the NIST
+Newbury–Ritchie "automatic qualitative analysis" loop), adapted to TEM thin foils. Written from the
+published method and its documented default thresholds; no AutoEMX code is copied (its licence is non-commercial).
 
 ## 1. What the loop does (the method, step by step)
 
@@ -67,7 +65,7 @@ flank-misfit factor, which multiplied a neighbour's detection limit by the misfi
 - MLX has no place here: there is no learned part. A learned peak-shape or background model would need labelled
   spectra we do not have; it stays a later idea, not part of this.
 
-## 4. Where it lands in the code (decided 2026-10-23)
+## 4. Where it lives in the code
 
 - **One loop, the old public call.** `ElementProposer.propose(counts:axis:settings:holeCounts:cancelled:progress:)` keeps its
   signature and its `ProposalResult`, so both apps call it unchanged; its body becomes the loop above. The all-candidate joint
@@ -83,7 +81,7 @@ flank-misfit factor, which multiplied a neighbour's detection limit by the misfi
   √(Σ k_j² max(y_j, 1)). The width follows σ(E), so the filter is recomputed per channel from the law; at 4000 channels this
   is microseconds, CPU.
 - **Line weights.** The identification fit uses the NIST EPQ weights (`LineWeights.csv`, already bundled for the k-factors)
-  through a `lineWeights` choice on `EDSLineModel.build`; the quantification fit keeps eXSpy's table (D17: the parity numbers
+  through a `lineWeights` choice on `EDSLineModel.build`; the quantification fit keeps eXSpy's table (the parity numbers
   do not move). Stated in the proposer's notes.
 - **Thresholds.** Named constants in `IdentificationThresholds` (public, on `ProposerPolicy`): peak 5 σ, ×1.5 below 1 keV,
   candidate window 2.5 σ + 25 eV, weight ≥ 0.1, confirmation 3 σ, Δχ²₁ ≥ 100, local share ≥ 0.2, contradiction 9 and 5 %,
@@ -117,28 +115,26 @@ Each a stated departure from the method as documented, with the case that forced
   pile-up column whose parent was pruned goes with it.
 - **Not yet:** the overlap check (step 6). Its finds are possible only, so it changes no proposal; an open item.
 
-Result on the three whole-map sums, refined axis: 1339 and 1840 propose O, Mg, Al, Si, Cu plus Zr, Mn (and Fe on 1840); 1456
+Result on three measured whole-map sums (two Al-Mg-Si alloys, files 1339 and 1840, and a FIB lamella, 1456), refined axis: 1339 and 1840 propose O, Mg, Al, Si, Cu plus Zr, Mn (and Fe on 1840); 1456
 proposes O, Si, Ni, Ge, Pt plus Cu, Zr and Ga. Zr is on all three files (the instrument's); Mn reads 22 and 70 times its limit on
-the Al alloys (a 6xxx minor element by the numbers, the owner's word pending). Planted: Mg at 2 % beside a 5 %-misfit Al reads
+the Al alloys (a 6xxx minor element by the numbers; the alloy's specification is not yet known). Planted: Mg at 2 % beside a 5 %-misfit Al reads
 121 509 of 120 000 and is proposed; without Mg nothing new is proposed.
 
 ## 6. The oracle and the tests (red-first)
 
-- AutoEMX 1.8.0 run on the whole-map sums of 1339, 1840 and 1456 in a Python 3.12 environment under the session's
-  scratch folder (it refuses Python 3.14). Run A, its own fitter at 200 keV: the fit returns NaN on all three files
+- AutoEMX 1.8.0 run on the whole-map sums of 1339, 1840 and 1456 in a Python 3.12 environment (it refuses Python
+  3.14). Run A, its own fitter at 200 keV: the fit returns NaN on all three files
   with and without the truth elements (its bulk SEM model and the Phenom XL detector calibration do not reach a
   200 kV thin foil); with SEM-like parameters (30 keV, range to 10 keV) it ran 11 minutes on 1339 without finishing.
   Run B, its loop with an exSpy EDS model as the plug-in fitter, finds every real peak (Mg at 100 to 120 σ, Si at 31 to
   40 σ) and then prunes them, because the exSpy fit (polynomial background, unconstrained) fails its own background check
   (0.52 in 1 to 2.5 keV on 1339). With exSpy underneath the pruning means nothing; with our fitter it is the test.
 - The bar is therefore the known answers, not Run B's lists: 1339 and 1840 propose O, Mg, Al, Si, Cu (Fe and Zr allowed
-  where found), 1456 proposes O, Si, Ni, Ge, Pt; nothing else is proposed on any of the three (opt-in, the owner's files,
-  `SPECTRO_REAL_DATA=1`).
-- Planted (in the gate): Mg at 2 % beside a misfit Al is proposed (today's `FlankMisfitCoreTests` known issue turns into
+  where found), 1456 proposes O, Si, Ni, Ge, Pt; nothing else is proposed on any of the three (`RealFileAutoIDTests`, opt-in with
+  `SPECTRO_REAL_DATA=1` and the files under `$MACEM_DATA`).
+- Planted (in the gate): Mg at 2 % beside a misfit Al is proposed (the former `FlankMisfitCoreTests` known issue became
   a plain expectation); the same spectrum without Mg proposes no Mg; the thresholds as named constants with one test each;
   the top hat filters a straight line to zero; χ²₁ of a perfect model is Σ 0.
-- Own numerics commit under "moved numbers, review before tag"; Sonnet review before it; SpectroKit 0.11.0's Auto ID
-  before the freeze and tag.
 
 ## Sources
 

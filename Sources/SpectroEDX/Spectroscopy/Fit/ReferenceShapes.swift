@@ -1,7 +1,7 @@
 //
 //  ReferenceShapes.swift
-//  Role: The slot for components MEASURED once on a pure sample and tied to the fit (ADR 054
-//        V5-Q7, corrected by flag 2). It ships EMPTY and every result says "reference shapes: none".
+//  Role: The slot for components MEASURED once on a pure sample and tied to the fit.
+//        It ships EMPTY and every result says "reference shapes: none".
 //
 //  Two ties exist, because the physics differs:
 //   * `.lineAmplitude`: the Al K-alpha incomplete-charge tail follows Al K-alpha, so its measured

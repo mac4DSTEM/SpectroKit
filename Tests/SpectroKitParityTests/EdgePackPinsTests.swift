@@ -3,7 +3,7 @@
 //  Role: every K, L and M edge exSpy builds with the dft GOS (0.12.0, Paul 2026-10-23: "we need to put everything in") against exSpy 7185a4d1's pins in
 //        Fixtures/eelsall-edges-pins.json (tools/eels-task16/edges.py --all): all 231 tables of the pack bit-exact (sha256 of the float32 bytes), and
 //        one edge per shell and table kind (B K; Ti L1, L2, L3; Zr M2, M3; Ba M4, M5) with qint, the effective angle and function(E) inside the
-//        registered edge bounds (EdgePinsTests: angle 1e-14, qint 1e-12, function 1e-10).
+//        edge bounds (EdgePinsTests: angle 1e-14, qint 1e-12, function 1e-10).
 //
 
 import CryptoKit

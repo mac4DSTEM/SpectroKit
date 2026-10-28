@@ -52,8 +52,8 @@ public nonisolated struct ThicknessPixel: Sendable, Equatable {
     /// clipped: I_t <= I_0 is reported as t/λ <= 0. nil with `unavailable` where the method cannot answer.
     public let tOverLambda: Double?
     /// The counting-statistics standard deviation of t/λ, sqrt(1/I_0 - 1/I_t), when the stored counts are Poisson counts and
-    /// I_0 is a part of I_t (registration section 6). It is a FIRST-ORDER (delta-method) value, not exact: a Monte Carlo by the Gate B
-    /// refuter gave actual/formula standard deviation of 1.0009 at I_0 = 1000 (I_t/I_0 near 300), 1.009 at I_0 = 100 (20), 1.055
+    /// I_0 is a part of I_t. It is a FIRST-ORDER (delta-method) value, not exact: an independent Monte Carlo
+    /// gave actual/formula standard deviation of 1.0009 at I_0 = 1000 (I_t/I_0 near 300), 1.009 at I_0 = 100 (20), 1.055
     /// at I_0 = 20 (5) and 1.129 at I_0 = 10 (3): the formula is about 13 % low at I_0 near 10 counts and good above I_0 near 100.
     /// I_0 = I_t gives 0. It does NOT include the threshold's variability (with the estimated rule
     /// on noisy data the standard deviation of t/λ was 1.0 to 3.2 times larger), the λ model, or the angular correction's inputs.
@@ -89,12 +89,12 @@ public nonisolated enum ZeroLossSource: Sendable, Equatable {
 /// (`estimate_thickness`, `_eels.py:755-868`).
 ///
 /// **Validation: none.** `validation` stays "none": agreement with exSpy and recovery of planted t/λ do not make a thickness
-/// right on a real specimen (registration section 8). The method has its own bias (the plasmon below the threshold counts
+/// right on a real specimen. The method has its own bias (the plasmon below the threshold counts
 /// as zero loss; the loss tail past the axis is missing from I_t), about 5e-4 at the planted t/λ = 2 with the estimated threshold
 /// and more with a fixed one.
 ///
 /// **`sigmaCounting` is the counting error at a given threshold, nothing more.** It leaves out the threshold's variability,
-/// which, with the estimated rule on noisy data, made the standard deviation of t/λ 1.0 to 3.2 times larger on the registered
+/// which, with the estimated rule on noisy data, made the standard deviation of t/λ 1.0 to 3.2 times larger on the
 /// planted images (the estimated threshold is set by one global `tol`, which the noisiest pixel decides). Noisy data want a fixed threshold.
 /// The stored counts are also not electron counts unless the detector's conversion has been applied; a consumer must carry the
 /// λ source and its own uncertainty separately.
@@ -113,7 +113,7 @@ public nonisolated struct ThicknessMap: Sendable {
     public let angularCorrection: Double?
     /// The global `tol` (counts/eV) the estimated rule used; nil for other rules.
     public let estimatedTolerance: Double?
-    /// "none" until a sample of known thickness has been measured (registration section 8).
+    /// "none" until a sample of known thickness has been measured.
     public let validation: String
 
     public subscript(x: Int, y: Int) -> ThicknessPixel { pixels[y * nx + x] }

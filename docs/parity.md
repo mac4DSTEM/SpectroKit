@@ -4,7 +4,7 @@ What SpectroKit has of exSpy's and HyperSpy's EDS and EELS API, row by row, what
 source on disk on 2026-10-21 for 0.8.0 (the walk of every public method of `exspy/signals/{eds,eds_tem,eds_sem,eels,dielectric_function}.py`,
 `exspy/models/*`, `exspy/components/*`, `exspy/utils/*`, `exspy/material.py`, and the tests in `exspy/tests/` for tolerances).
 
-**Reference.** exSpy 0.3.2 and HyperSpy 2.4.0 in `References/python/hyperspy` (the suite folder's gitignored Python reference, `tools/setup-python-refs.sh`);
+**Reference.** exSpy 0.3.2 and HyperSpy 2.4.0 in `References/python` (gitignored; `tools/reference/setup.sh` builds it from `tools/reference/requirements.txt`);
 fixtures stay pinned to exSpy `7185a4d1` (`References/exspy-7185a4d1`) with RosettaSciIO 0.14.0, NumPy 2.5.4, SciPy 1.18.1, except the
 0.8.0 maps fixture, which is exSpy 0.3.2's own output (`tools/edx-quant-maps/pins.py`). The public methods were read from the installed
 modules; the tolerance column is what exSpy's own test files assert (`assert_allclose` defaults are rtol 1e-7).
@@ -26,13 +26,13 @@ against planted truth, the evidence column says so.
 | code | meaning |
 |---|---|
 | BIT | bit-identical to the pin (a measured fact, not a requirement: numerics are held to the tolerance the Python package's own tests use; readers, I/O, indices and metadata exact, D17) |
-| TOL | within a registered tolerance (the measured value is often far smaller) |
-| DEV | ported with a registered deviation (named in the code or the evidence) |
+| TOL | within a stated tolerance (the measured value is often far smaller) |
+| DEV | ported with a stated deviation (named in the code or the evidence) |
 | NOPIN | ported, but no exSpy output is compared (truth, constants or source reading only) |
 | PART / NO / NP | partial / not ported / not planned |
 
 Priority: **study** = on Paul's path (the TEM study, the two apps' open kit asks: public quantification, the EDX fit accuracy, EDS
-calibration and `rebin`, the EELS model fit and what it stands on); **useful** = worth porting while a session lasts; **not planned: reason**.
+calibration and `rebin`, the EELS model fit and what it stands on); **useful** = worth porting soon; **not planned: reason**.
 "package" in the SpectroKit column means the code exists and is tested but is not public API: a consumer cannot call it.
 
 ## CI portability
@@ -271,7 +271,7 @@ ratio method on exSpy's GOS), which exSpy does not have as a function.
 The proposer's confirmation-line rule (R4, `ProposerPolicy.familyConsistency`) and its sum-peak plausibility bound
 (`sumPeakFraction`): no Python counterpart;
 the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured cuts), `validation: "none"`; tests `FamilyConsistencyTests` and
-`IdentificationLoopTests` on planted spectra, `RealFileAutoIDTests` (opt-in) on the owner's three files. The identification fit's Kβ weights are
+`IdentificationLoopTests` on planted spectra, `RealFileAutoIDTests` (opt-in) on three measured files. The identification fit's Kβ weights are
 NIST EPQ's (`EDSLineWeights.epqK`), not eXSpy's; the quantification fit keeps eXSpy's, so no parity row moves.
 
 ## Where the source claims more than the tests show

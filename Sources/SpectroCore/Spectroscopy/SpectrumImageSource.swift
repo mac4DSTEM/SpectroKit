@@ -6,8 +6,8 @@
 //        protocol carries dimensions, axis, metadata and the compute (decision of lane R, taken by R2).
 //
 //  The metadata is the file's own, as read. Live and real times are stored as recorded and are NOT interpreted:
-//  their meaning differs by file (cumulative in one Velox file, per frame in another, 0 on the owner's:
-//  formats.md §2.2), so nothing computes with them.
+//  their meaning differs by file (cumulative in one Velox file, per frame in another,
+//  0 in a third), so nothing computes with them.
 //
 
 import Foundation
@@ -46,7 +46,7 @@ public nonisolated struct SpectrumImageMetadata: Equatable, Sendable {
     /// Energy channels per spectrum.
     public var channelCount: Int
     /// The energy axis as the file states it: E(i) = offset + i · dispersion. Refinement on the pooled spectrum
-    /// (ADR 054 item 4) is shown beside it, never written over it.
+    /// is shown beside it, never written over it.
     public var energyOffsetEV: Double
     public var energyDispersionEV: Double
     /// Real-space pixel size, when the file carries one.

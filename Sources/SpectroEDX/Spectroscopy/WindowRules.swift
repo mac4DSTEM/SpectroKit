@@ -2,7 +2,6 @@
 //  WindowRules.swift
 //  Role: The rules behind the window-based line intensities and the default line of an element, as one value. Every field's
 //        default is the value the windows have always used; a different value is a different, named choice, never a hidden one.
-//        Registered: docs/generality-0.5.0-registration.md (W1-W7).
 //
 
 import Foundation

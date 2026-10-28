@@ -1,8 +1,8 @@
 //
 //  EdgeTruthTests.swift
-//  Role: EELS slice 2, gates 3 to 5 (docs/eels-slice-2-registration.md section 7 with amendment 1): the port against the
+//  Role: The ratio method against the
 //        planted truth of tools/eels-edge/make_planted.py (NumPy only; the cross section's shape is exSpy's, so this tests
-//        the background, the windows and the ratio), on the registered set and set R.
+//        the background, the windows and the ratio), on the first planted set and set R.
 //
 //  Gate 3: noiseless single scattering, |n − (n_true + predicted bias)| ≤ 1e-9 n_true on both sets, every window and Δ;
 //  set R: |n − n_true| ≤ 2 % n_true at Δ 50 with the default window. Gate 4: plural scattering, the same exact-bias clause

@@ -61,7 +61,7 @@ public nonisolated enum SpectrumImageOpener {
     }
 
     /// Opens a file of a spectrum kind. For `.other` it throws `notASpectrumImage`.
-    /// Cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` at a step boundary with nothing kept; `progress` 0...1, ends at 1.
+    /// Cancellable: `SpectroCancelled` at a step boundary with nothing kept; `progress` 0...1, ends at 1.
     public static func open(path: String, kind: SpectrumFileKind,
                              cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                              progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage {

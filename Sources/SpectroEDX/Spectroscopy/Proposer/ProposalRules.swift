@@ -1,6 +1,6 @@
 //
 //  ProposalRules.swift
-//  Role: The three cuts WP4 pre-registered on 2026-10-07 (docs/archive/v5/wp4-autoid-velox-preregistration-2026-10-07.md), as a
+//  Role: Three cuts on the proposer's picks (fixed on 2026-10-07 before they were measured), as a
 //        separate, named post-selection step on a `ProposalResult`. The proposer's own output is never altered: `apply` returns
 //        a `RuledProposal` that holds the raw result beside the picks, so the room can say which rule picked or withheld what.
 //
@@ -10,11 +10,10 @@
 //  R3 release          a candidate the proposer held back as a sum-peak question is released when net / L_D >= 10, and then
 //                      meets R1 and R2 like any other pick.
 //
-//  The cuts (3, 10 L_D, 1.5 FWHM) were read off 78 files of ONE operator, one detector, mostly Al-Mg-Si; CLAUDE.md: a threshold is
-//  a property of the dataset until measured on every dataset it will touch. `UNVALIDATED` stays on the Auto ID row; the hold-out
-//  and the demo-edx ladder are reported in docs/archive/v5/wp4-autoid-results-2026-10-07.md. A rule that did not hold there is
-//  switched off in `shipped`, not retuned (a changed cut is a new registration): R1's actinide half ships, R1's beside-K half
-//  is held by the independent refuter (2026-10-07): the sample never met a true L/M element beside a proposed K, and the line
+//  The cuts (3, 10 L_D, 1.5 FWHM) were read off 78 files of ONE operator, one detector, mostly Al-Mg-Si; a threshold is a
+//  property of the dataset until measured on every dataset it will touch, so `UNVALIDATED` stays on the Auto ID row. A rule
+//  that did not hold on the hold-out files and the synthetic dose ladder is switched off in `shipped`, not retuned: R1's
+//  actinide half ships; R1's beside-K half is off because an independent review found that the sample never met a true L/M element beside a proposed K, and the line
 //  table has pairs where it would drop a real one (Hf Lα 1.0 FWHM from Cu Kα on a Cu grid, Pt Lα 1.2 from Ga Kα on a FIB
 //  lamella, Pb Lα 0.04 from As Kα); the proposer keeps one group per element, so the element would vanish. R2 and R3 are off.
 //
@@ -37,9 +36,9 @@ public nonisolated struct ProposalRules: Equatable, Sendable {
     public var hygiene: Bool
     /// R1's second half, separately switchable: the beside-K drop. Off in `shipped` (see the header).
     public var besideK: Bool
-    /// WP4b (docs/archive/v5/wp4b-autoid-rules-preregistration-2026-10-07.md), an OPTION that is off in `none`, `registered` and `shipped`:
+    /// An OPTION that is off in `none`, `registered` and `shipped`:
     /// with `besideK`, an L or M pick beside a proposed K alpha is dropped only when its net / L_D is at or below that K candidate's;
-    /// a stronger L/M stays. Measured, not shipped: turning it on anywhere is the registration's ship rule, not this flag's existence.
+    /// a stronger L/M stays. Measured, not shipped (see `shipped`).
     public var besideKGuard: Bool
     public var corroboration: Bool
     public var release: Bool
@@ -58,18 +57,17 @@ public nonisolated struct ProposalRules: Equatable, Sendable {
 
     /// No rule: `apply` returns the proposer's own picks.
     public static let none = ProposalRules(hygiene: false, corroboration: false, release: false)
-    /// The three cuts exactly as registered, 2026-10-07.
+    /// The three cuts as fixed on 2026-10-07.
     public static let registered = ProposalRules(hygiene: true, corroboration: true, release: true)
-    /// What the room applies: R1 only. R3 was refuted on the demo-edx dose ladder (the Al+Al sum peak at 100 counts/px, 19.9 x L_D,
-    /// was released as Ar, an element absent from truth) and R2 missed its hold-out bar (precision 38.7 % under 45 % on the nine June
-    /// 2026 files); per the registration a cut that does not hold ships as the shown quantity (net / L_D beside each pick) and no
-    /// rule. docs/archive/v5/wp4-autoid-results-2026-10-07.md. Changing a cut or turning a rule back on is a new registration.
-    /// The beside-K half of R1 is off too (the refuter's finding above). WP4b (ADR 062) tested it with the evidence guard on true
+    /// What the room applies: R1 only. R3 failed on the synthetic dose ladder (the Al+Al sum peak at 100 counts/px, 19.9 x L_D,
+    /// was released as Ar, an element absent from truth) and R2 missed its hold-out bar (precision 38.7 % under 45 % on nine
+    /// hold-out files); a cut that does not hold ships as the shown quantity (net / L_D beside each pick) and no rule.
+    /// The beside-K half of R1 is off too (the review finding above). A later test with the evidence guard on true
     /// L/M + K pairs and refuted it: an L family's L_D is larger than a nearby K line's at equal area, so the guard still drops true Hf
     /// beside Cu and Pt beside Ga. R2 was refuted in-sample there too. A new beside-K test needs a different evidence term.
     public static let shipped = ProposalRules(hygiene: true, besideK: false, corroboration: false, release: false)
     /// Where the cuts come from (said in the notes, never hidden).
-    public static let source = "registered 2026-10-07 (WP4), cuts read off 78 Velox-session files: unvalidated"
+    public static let source = "fixed 2026-10-07, cuts read off 78 Velox-session files: unvalidated"
     public var isNone: Bool { !hygiene && !besideK && !corroboration && !release }   // besideKGuard alone acts only with besideK
 
     public nonisolated struct Withheld: Equatable, Sendable {

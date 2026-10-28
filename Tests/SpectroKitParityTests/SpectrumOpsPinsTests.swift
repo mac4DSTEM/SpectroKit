@@ -1,6 +1,6 @@
 //
 //  SpectrumOpsPinsTests.swift
-//  Role: Task 16 step 2 against exSpy 0.3.2 / HyperSpy 2.4.0 (Fixtures/eels16-pins.json): the power-law extrapolation (binned axis; A and r by
+//  Role: Power-law extrapolation and taper against exSpy 0.3.2 / HyperSpy 2.4.0 (Fixtures/eels16-pins.json): the power-law extrapolation (binned axis; A and r by
 //        the two-area method, the continuation) and the Hanning taper (channels returned, data). Tolerances: A and r rtol 1e-7 (`test_power_law.py`
 //        allclose defaults), the continuation rtol 1e-9, the taper exact to 1e-15 relative (a product with `np.hanning`'s own formula).
 //        The UNBINNED power-law cases of the pins are not offered (the kit's spectra are per-channel counts); exSpy's two-area estimate on them
