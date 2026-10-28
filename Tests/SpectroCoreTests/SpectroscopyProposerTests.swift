@@ -292,7 +292,7 @@ struct SpectroscopyProposerTests {
         #expect(r.proposed.contains { $0.element == "Mg" }, "Mg is proposed (so the proposer had every reason to add it)")
         #expect(settings.elements == ["Al", "Si"])
         let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Sources/SpectroEDX/Spectroscopy/Proposer")
+            .appendingPathComponent("Sources/SpectroEDX/Proposer")
         let files = try FileManager.default.contentsOfDirectory(atPath: dir.path).filter { $0.hasSuffix(".swift") }
         #expect(Set(files) == ["ElementProposer.swift", "FitNullVariance.swift", "IdentificationLoop.swift", "LineConflicts.swift", "ProposalRules.swift"])   // ProposalRules (WP4, lane L12) is a post-selection on a result, never an edit of an element list: the scan below covers it too
         for f in files {

@@ -22,7 +22,7 @@ self-reports validation "none".
 eXSpy and HyperSpy (EDX spectroscopy)
 ================================================================================
 
-The X-ray line table (Sources/SpectroEDX/Spectroscopy/XRayLineData.swift: line
+The X-ray line table (Sources/SpectroEDX/XRayLineData.swift: line
 energies from Chantler 2005, relative line weights from the EPQ library, both as
 eXSpy ships them), the detector line-width law, the integration and background
 window rules, the spectrum fit and Cliff-Lorimer quantification are ported from
@@ -36,7 +36,7 @@ with eXSpy is not validation.
     Copyright (C) The HyperSpy developers
     Both licensed under the GNU General Public License v3.0 or later
 
-The element table in Sources/SpectroEDX/Spectroscopy/Quant/QuantElementData.swift
+The element table in Sources/SpectroEDX/Quant/QuantElementData.swift
 (atomic weights and densities) comes from eXSpy's elements data (GPL-3.0-or-later).
 
 The file readers (the Velox EMD reader, the DM4 reader with its EDS and EELS spectrum images, the HDF5 lock) moved
@@ -148,7 +148,7 @@ unclear by mac4DSTEM's v5.0 research and are carried here as a recorded risk.
 PyMca (line-shape tail formula)
 ================================================================================
 
-The opt-in low-energy tail of the EDS line shape (LineTail, Sources/SpectroEDX/Spectroscopy/Fit/EDSModel.swift) uses the
+The opt-in low-energy tail of the EDS line shape (LineTail, Sources/SpectroEDX/Fit/EDSModel.swift) uses the
 formula of PyMca's Hypermet short tail (PyMca, V. A. Sole et al., ESRF, MIT licence). The formula only; no PyMca code is
 copied or ported.
 
