@@ -23,10 +23,10 @@ let eelsFixtures = tests.appendingPathComponent("SpectroEELSTests/Fixtures")
 var report = Report()
 report.section("SpectroCore through FormatoKit") { try spectroCoreOpeningChecks(&$0, fixtures) }
 report.section("SpectroEELS thickness map") { try spectroEELSChecks(&$0, eelsFixtures) }
-report.section("SpectroEELS areal density (slice 2)") { try edgeQuantificationChecks(&$0, eelsFixtures) }
+report.section("SpectroEELS areal density (edge quantification)") { try edgeQuantificationChecks(&$0, eelsFixtures) }
 report.section("SpectroEDX windows (WindowRules)") { windowRulesChecks(&$0) }
 report.section("SpectroEDX quantification policy") { try quantificationPolicyChecks(&$0) }
 report.section("SpectroEDX proposer policy") { try proposerPolicyChecks(&$0) }
 report.section("SpectroCore smoothing kernels and the ratio method's default window") { kernelAndWindowChecks(&$0) }
-report.section("SpectroEELS task 16 and the 0.9.0 test initialisers") { try task16Checks(&$0) }
+report.section("Spectrothe EELS chain and the 0.9.0 test initialisers") { try eelsChainChecks(&$0) }
 exit(report.finish())

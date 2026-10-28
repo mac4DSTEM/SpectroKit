@@ -1,6 +1,6 @@
-# tools/eels-chain: exSpy / HyperSpy pins for EELS task 16, sections 2, 3 and 4
+# tools/eels-chain: exSpy / HyperSpy pins for the EELS chain, sections 2, 3 and 4
 
-Written before the Swift code, so the Mac session that implements `docs/design/eels-task-16.md` starts with numbers.
+Written before the Swift code, so the port of `docs/design/eels-chain.md` started with numbers.
 Covers zero-loss alignment and mask (design section 2), power-law extrapolation and Hanning taper (section 3), Fourier-log,
 Fourier-ratio and `optimal_fft_size` (section 4). Not covered: GOS tables, the edge model fit (section 6), Richardson-Lucy.
 
@@ -43,7 +43,7 @@ The pins use exSpy 0.3.2 from PyPI, not the `7185a4d1` checkout the older EELS p
 8. **`power_law_extrapolation` `fix_neg_r`** zeroes A where r <= 0: the JSON has `A` (estimate) and `AUsed`. A, r come from
    `PowerLaw.estimate_parameters` on the zero-extended signal, so they depend on the window only, not on the extrapolation size (checked).
 
-## Not pinned here (left to the implementing session)
+## Not pinned here (not covered by these pins)
 
 `estimate_peak_width` on pathological spectra (not exactly two roots gives NaN; only the planted ZLP is pinned, in `fwhmAllPixelsEV`
 and each Fourier-ratio case's `fwhmEV`); `richardson_lucy_deconvolution`; the lazy (dask) code paths; Poisson-noisy inputs (the old

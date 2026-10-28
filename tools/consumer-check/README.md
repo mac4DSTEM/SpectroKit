@@ -63,7 +63,7 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
   `EELSMicroscope` (init, three fields); `LowLossIntensity`; `CoreLossEdge` (`.element .subshell .onsetEV`,
   `.carbonK .nitrogenK .oxygenK`, `.bundled`, `description`, `Equatable`); `ArealDensityMap` (fifteen fields);
   `ArealDensityPixel` (eight fields); `EdgeUnavailable` (four cases); `EELSEdgeError`. Section: `EdgeQuantificationChecks`.
-- **SpectroEDX policies and SpectroCore kernels (0.5.0, 37 checks).** The 0.5.0 policy parameters (design note, archived in the suite's private folder) used
+- **SpectroEDX policies and SpectroCore kernels (0.5.0, 37 checks).** The 0.5.0 policy parameters used
   from outside the package, each with its default (no change against the call that names none) and one non-default value that
   moves the result as predicted: `WindowRules` through `ElementWindows.build(rules:)` and `defaultFamily(of:rules:)` (9, section
   `windowRulesChecks`); `QuantificationPolicy` (`FitPolicy`, `AbundancePolicy`, `DetectorLayers`, `SingleLineRule`, `IRLSSettings`,

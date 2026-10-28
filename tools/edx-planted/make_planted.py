@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Planted Al-Mg-Si EDX spectra with known areas: SpectroKit EDX stage gates, registration section 5.2.
+"""Planted Al-Mg-Si EDX spectra with known areas: the EDX checks, design note section 5.2.
 
 NumPy only (no HyperSpy, no exSpy, no SciPy): the truth. Line energies and weights are typed in below (the exSpy table
 values are ASSERTED against exSpy by pins.py, they are not read from it); a Lawson-Hanson NNLS is written out for the
@@ -19,7 +19,7 @@ Writes into DIR:
                              the calibration set (E3): rows of RAW counts, uint32 little-endian, window [CAL_K0, CAL_K0+CAL_NWIN)
 Floats in JSON are Python reprs (they round-trip exactly). Everything is deterministic: two runs write identical bytes.
 
-THE AXIS: the owner's Super-X header, E_k = -1.93221348 + 0.02 k keV, k = 0..4095 (OffsetEnergy -1932.21348 eV,
+THE AXIS: a measured Super-X header, E_k = -1.93221348 + 0.02 k keV, k = 0..4095 (OffsetEnergy -1932.21348 eV,
 Dispersion 20 eV). The expected counts of channel k are the model's mass over [E_k - 0.01, E_k + 0.01) keV: E_k is the
 channel's CENTRE (rsciio's convention; the "half channel" set HALF takes the bin as [E_k, E_k + 0.02) instead).
 Only channels [K0, K0+NWIN) = [96, 1152) (E = -0.012 .. 21.1 keV, the proposer's 0.2-20 keV range inside) are stored; the
@@ -35,7 +35,7 @@ THE MODEL (all lines Gaussian; every area is exact, in counts; N_Al = Al Ka + Kb
   widths  'fn'  : exSpy's Fiori-Newbury law FWHM = sqrt(2.5 (E - 5.8987) 1000 + R^2) / 1000, R = R_MnKa (the model's law;
                   the model runs at 130);
           'fano': FWHM^2 = 8 ln2 (s_n^2 + eps F E), eps 3.76 eV, F 0.11, s_n^2 so FWHM(Mn Ka 5898.7 eV) = R_MnKa.
-                  (READING: the registration writes 2.3548^2; 8 ln2 = 5.545177 is the exact constant, relative difference
+                  (READING: the design note writes 2.3548^2; 8 ln2 = 5.545177 is the exact constant, relative difference
                   1.6e-5 of the FWHM slope; the registered 79.0 / 82.3 / 85.8 eV at R = 130 reproduce, see README.)
   continuum  Kramers (E0 - E)/E, E0 = 200 keV, times a roll-off, zero below 0.15 keV, sampled at the channel energy,
           scaled so the raw sum over 0.2-20 keV is frac x N_Al: frac = 0.03 (family 's', rho_c = 0.0008 in +-1 FWHM around
@@ -43,7 +43,7 @@ THE MODEL (all lines Gaussian; every area is exact, in counts; N_Al = Al Ka + Kb
           'realA': roll-off 1 - exp(-(E/0.30)^2.5)   (the physical stand-in);
           'realC': roll-off 1 - exp(-(E/0.5)^2.4)    (set C1: the shape Continuum.swift's comment says orders (9,5) were tuned on);
           'realAabs': realA times 0.92 for E >= 1.5596 keV (set C2: an 8 % Al K absorption step on the continuum shape, BEFORE
-                  the normalisation to frac x N_Al: READING, the registration does not say before or after);
+                  the normalisation to frac x N_Al: READING, the design note does not say before or after);
           'family': the realA shape projected (non-negative least squares on unit-norm columns, 0.2-20 keV channels) onto the
                   model's own family: Kramers x Bernstein, orders (9, 5) split at 1.5596 keV, the t of a channel
                   (E - a)/(b - a) at its centre energy: in the model's cone by construction (the "in-family" continuum).
@@ -436,7 +436,7 @@ def main():
         "counts": files["edx-calibration-counts.u32"]})
 
     manifest = {
-        "what": "planted Al-Mg-Si spectra, registration section 5.2; see tools/edx-planted/make_planted.py for every definition",
+        "what": "planted Al-Mg-Si spectra, design note section 5.2; see tools/edx-planted/make_planted.py for every definition",
         "axis": {"offset_keV": srepr(OFF), "scale_keV": srepr(SC), "channels": NCH}, "k0": K0, "nwin": NWIN,
         "seed0": SEED0, "decode": "counts = rint(means[mean_row]) + resid[resid_row0 + j], j = 0..n_real-1 (rint: half to even)",
         "line_tables": {"table": {k: [[srepr(e), srepr(w)] for e, w in v] for k, v in TABLE.items()},

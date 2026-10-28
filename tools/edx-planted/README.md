@@ -1,13 +1,13 @@
-# tools/edx-planted: generators and pins for the EDX stage gates
+# tools/edx-planted: generators and pins for the the EDX checks
 
-Contract: the EDX stage-gates design note (archived in the suite's private folder) (23fa2af). Reference venv `References/python` (tools/reference/setup.sh; HyperSpy 2.4.0, NumPy 2.5.4,
+Written before the Swift tests, from the EDX design note. Reference venv `References/python` (tools/reference/setup.sh; HyperSpy 2.4.0, NumPy 2.5.4,
 SciPy 1.18.1, h5py 3.16.0), run `-I -B`. Fixtures: `Tests/SpectroEDXTests/Fixtures/` (15 MB).
 
 ## Run order (all deterministic; two full runs wrote identical bytes, sha256 compared)
 1. `References/python/bin/python -I -B tools/edx-planted/make_planted.py` (NumPy only; 0.4 s) -> `edx-planted*.{json,f64,i16}`, `edx-calibration*`.
 2. `References/python/bin/python -I -B tools/edx-planted/make_velox_streams.py` (h5py) -> `velox-stream-*.emd`, `velox-streams-truth.json`.
 3. `References/python/bin/python -I -B tools/edx-planted/pins.py` (about 110 s) -> `pins.json`, `edx-axis-e2.f64`, `edx-pins-intensity.f64`.
-4. `... tools/edx-planted/findings.py` printed the numbers below (not a fixture writer; archived 2026-10-15 to `../_archive/SpectroKit/tools/edx-planted/findings.py`).
+4. `... tools/edx-planted/findings.py` printed the numbers below (not a fixture writer; not kept).
 Docstrings of each script define every parameter; this file lists readings made and findings.
 
 ## Formats the Swift tests read
@@ -17,12 +17,12 @@ Docstrings of each script define every parameter; this file lists readings made 
 - `pins.json` (2 MB, structure in the pins.py docstring), `edx-axis-e2.f64` (float64 query values; indices in pins.json axis.e2.index, null where HyperSpy raises), `edx-pins-intensity.f64` (float64, 2190 x 6; row map in pins.json lines.intensity.cells).
 - Public Velox files are NOT copied: pins.json holds their decode (per-stream sparse channel sums, pixel totals, `dense_sha256` of the summed uint32 (y,x,channel) cube). The Swift test must unzip them from `References/rosettasciio` itself.
 
-## Readings made (registration silent or ambiguous)
+## Readings made (design note silent or ambiguous)
 - Matched set M uses exSpy's table energies/weights (asserted equal to exSpy in pins.py), not the booklet ones (5.2 says booklet; criterion 3 needs table). Booklet lines are in U, B and the calibration set.
 - Fano constant 8 ln2 (registration: 2.3548^2). Reproduces 79.0 / 82.3 / 85.8 eV and FN 72.7 / 76.6 / 80.6 eV at R 130.
 - "In-family" continuum = the realistic (roll-off A) shape projected by NNLS onto the Kramers x Bernstein (9,5) cone (own Lawson-Hanson; equals SciPy's to 2e-16). Measured rho_c: family s 0.00083, L 0.0082.
 - C2 absorption step applied to the shape before normalising; HALF evaluated at E_k + 0.01 (identical to S-10 for the lines).
-- Realisation budget (15 MB): M/s 100 at all 28 cells; M/L 20 at N 1e6, 1e7 x rho {0,.002,.01,.05}; U130 20 (s and L) over N {1e5,1e6,1e7} x rho {0,.002,.01,.05}; U125/140/150 20 at N 1e7 x rho>0; all other sets 5 at N 1e7 x rho {.002,.01,.05}; every set also has noise-free means (N 1e5..1e7 x rho {0,.002,.01,.05}). Not full-pool-5 on a "reduced grid" of the registration's own choosing; the lead may widen it (cost 2 KB per spectrum).
+- Realisation budget (15 MB): M/s 100 at all 28 cells; M/L 20 at N 1e6, 1e7 x rho {0,.002,.01,.05}; U130 20 (s and L) over N {1e5,1e6,1e7} x rho {0,.002,.01,.05}; U125/140/150 20 at N 1e7 x rho>0; all other sets 5 at N 1e7 x rho {.002,.01,.05}; every set also has noise-free means (N 1e5..1e7 x rho {0,.002,.01,.05}). Not full-pool-5 on a "reduced grid" of the design note's own choosing; the lead may widen it (cost 2 KB per spectrum).
 - Extra sets W1..W6 (7.3's width rows) and B were added; calibration set uses 3 realisations at N 1e6 and 1 at N 1e7.
 - Pile-up truth: Ar = 0, `sum_AlAl` = 1e-3 N_Al.
 - Grid of the public files = ScanSize x ScanArea (as VeloxEMDReader), rsciio's last-image grid recorded beside it.

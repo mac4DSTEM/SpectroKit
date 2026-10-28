@@ -1,6 +1,6 @@
 //
 //  SpectroEELSChecks.swift
-//  Role: the public surface of the SpectroEELS product (EELS slice 1, the t/lambda thickness map) used from outside the
+//  Role: the public surface of the SpectroEELS product (EELS thickness, the t/lambda thickness map) used from outside the
 //        package: `EELSThickness.logRatio` and `.methodName`, `LowLossSpectrumImage` (both initialisers, every field),
 //        `ThresholdRule`, `MeanFreePathSource`, `InelasticMeanFreePath.iakoubovskii` / `.angularCorrection`, `ThicknessMap` and
 //        `ThicknessPixel` (every field), `ZeroLossSource`, `ThicknessUnavailable`, `SigmaUnavailable`, `EELSThicknessError`.

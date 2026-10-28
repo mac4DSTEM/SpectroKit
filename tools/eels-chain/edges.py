@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""exSpy pins for SpectroKit EELS task 16 step 3 (docs/design/eels-task-16.md section 6.1): the GOS tables and cross sections of the new edges.
+"""exSpy pins for SpectroKit the EELS chain, step 3 (docs/design/eels-chain.md section 6.1): the GOS tables and cross sections of the new edges.
 
 Pins what exSpy 7185a4d1 (put first on sys.path, as tools/eels-edge/pins.py does) / HyperSpy 2.4.0 answer for the bundled edges beyond C, N, O K:
 K of Mg, Al, Si and the L edges of Mg, Al, Si, Fe, Cu (Mg, Si, Fe, Cu: L1, L2, L3; Al: L1 and the combined L2,3).

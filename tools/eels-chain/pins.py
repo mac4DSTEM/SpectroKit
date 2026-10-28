@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""exSpy / HyperSpy pins for SpectroKit EELS task 16, sections 2, 3 and 4 of docs/design/eels-task-16.md.
+"""exSpy / HyperSpy pins for SpectroKit the EELS chain, sections 2, 3 and 4 of docs/design/eels-chain.md.
 
 Written before the Swift code. Pins what exSpy 0.3.2 / HyperSpy 2.4.0 answer on deterministic synthetic spectrum images with
 known shifts: zero-loss alignment and mask (section 2), power-law extrapolation and Hanning taper (section 3),

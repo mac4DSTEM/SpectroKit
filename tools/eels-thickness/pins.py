@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""exSpy pins for SpectroKit's EELS slice 1 (registration section 4): what exSpy 7185a4d1 answers, written before the port.
+"""exSpy pins for SpectroKit's EELS thickness (design note section 4): what exSpy 7185a4d1 answers, written before the port.
 
 Agreement with exSpy is agreement, not truth: the truth is make_planted.py and the planted-truth fixture.
 
@@ -632,7 +632,7 @@ def main():
     pins = {
         "schema": "spectrokit.eels.pins/1",
         "generator": "tools/eels-thickness/pins.py",
-        "notTruth": "These are exSpy's answers. Agreement with exSpy is agreement, not truth (CLAUDE.md); "
+        "notTruth": "These are exSpy's answers. Agreement with exSpy is agreement, not truth; "
                     "the truth is planted-truth.json. A difference from a pin is a failure of the port, never a tolerance to widen.",
         "reference": {"exspyCommit": EXSPY_COMMIT, "exspyCheckoutHeadVerified": commit_ok,
                       "hyperspy": hyperspy.__version__, "rsciio": rsciio.__version__, "numpy": np.__version__,

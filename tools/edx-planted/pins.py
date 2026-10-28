@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""exSpy / HyperSpy / RosettaSciIO pins for SpectroKit's EDX stage gates (registration section 4), written before the Swift tests.
+"""exSpy / HyperSpy / RosettaSciIO pins for the EDX checks (design note section 4), written before the Swift tests.
 
 Agreement with exSpy is agreement, not truth: the truth is make_planted.py and make_velox_streams.py. The only absolute
 statements here are the NumPy decode of the Velox streams (asserted equal to RosettaSciIO's published constants and to the

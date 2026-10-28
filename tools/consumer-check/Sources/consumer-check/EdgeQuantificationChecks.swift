@@ -1,6 +1,6 @@
 //
 //  EdgeQuantificationChecks.swift
-//  Role: the public surface of EELS slice 2 (the C K areal density by the ratio method) used from outside the package:
+//  Role: the public surface of EELS edge quantification (the C K areal density by the ratio method) used from outside the package:
 //        `EELSEdgeQuantification` (`ratioMethod` with every parameter and both `LowLossIntensity` routes,
 //        `differentialCrossSection`, `methodName`, `defaultBackgroundWindow`), `CoreLossSpectrumImage` (both initialisers, every
 //        field, `pixelCount`), `EELSMicroscope`, `LowLossIntensity`, `CoreLossEdge`, `ArealDensityMap`, `ArealDensityPixel`,
@@ -156,7 +156,7 @@ func edgeQuantificationChecks(_ r: inout Report, _ eelsFixtures: URL) throws {
                         structural = structural && px.unavailable == nil
                         compared += 1
                     }
-                    // The I_0 route: slice 1's fixed-threshold thickness map as the low-loss intensity (Egerton eq. 4.65).
+                    // The I_0 route: the thickness fixtures' fixed-threshold thickness map as the low-loss intensity (Egerton eq. 4.65).
                     for (theta, tv) in dd.d("i0Route") {
                         let t = tv as! [String: Any]
                         let tm = try EELSThickness.logRatio(l, threshold: .fixed(Double(theta)!))

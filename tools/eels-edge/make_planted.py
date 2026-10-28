@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Planted core-loss EELS images with a known areal density: SpectroKit EELS slice 2, registration section 5.
+"""Planted core-loss EELS images with a known areal density: SpectroKit EELS edge quantification, design note section 5.
 
 NumPy only (no HyperSpy, no exSpy, no SciPy): the truth. The one thing taken from exSpy is the cross-section SHAPE, read
 from the fixture pins.py --sigma-only wrote (edge-sigma-CK.f64): it is the same on both sides by construction, so this
@@ -7,7 +7,7 @@ truth tests the background, the windows and the ratio, not the GOS.
 
 Run (after extract_gos.py and `pins.py --sigma-only`):
     python3 tools/eels-edge/make_planted.py [--fixtures DIR] [--out DIR]
-Reads  edge-sigma-CK.f64/.json and slice 1's planted-noiseless.f64/.json from --fixtures (default Tests/SpectroEELSTests/Fixtures).
+Reads  edge-sigma-CK.f64/.json and the thickness fixtures' planted-noiseless.f64/.json from --fixtures (default Tests/SpectroEELSTests/Fixtures).
 Writes into --out (default --fixtures):
     edge-core-{case}-{noiseless,noisy}.f64   15 core-loss spectra, shape (3, 5, 2000)
     edge-low-{case}-{noiseless,noisy}.f64    the same pixels' low-loss spectra, shape (3, 5, 3400)
@@ -21,7 +21,7 @@ Writes into --out (default --fixtures):
 THE MODEL
 ---------
 Core-loss axis: E_k = 150 + 0.25 k eV, k = 0..1999 (150 to 649.75 eV). Counts are per channel (binned axis). Channel k is
-the energy bin [E_k, E_k + 0.25) eV (READING, --bin left, the default: the registration does not say whether E_k is a
+the energy bin [E_k, E_k + 0.25) eV (READING, --bin left, the default: the design note does not say whether E_k is a
 channel's centre or its left edge. HyperSpy's two-area estimator treats the sum of channels [i1, i3) as the integral from
 x1 = E_i1 to x3 = E_i3, i.e. E_k is the LEFT edge; with that reading the method is exact for a power law up to the
 point-sample-for-integral term, which is what "channel sums standing in for integrals" describes. --bin centre makes the
@@ -36,15 +36,15 @@ Pixels: 3 backgrounds x 5 densities. Row r: (A, r) in [(1e9, 3.0), (5e8, 2.5), (
   (to 659.75 eV) because the zero-loss peak's negative-energy tail pulls channels beyond 650 eV into the convolution.
   UNITS: 1 barn = 1e-28 m^2 = 1e-10 nm^2. An areal density n [atoms/nm^2] and a low-loss intensity I_low [counts] give
         edge counts per channel = I_low * n * sigma_ch[k] [barn] * 1e-10 [nm^2/barn]
-  (registration section 5's "n_true * I_low * sigma(E) * scale" with the barn -> nm^2 factor made explicit; section 3.4's
+  (design note section 5's "n_true * I_low * sigma(E) * scale" with the barn -> nm^2 factor made explicit; section 3.4's
   n = I_k / (I_low sigma_k) * 1e10 is the inverse).
   With I_0 = 1e7 and n <= 50 the edge is a few counts per channel on a background of tens to hundreds: see README Findings.
 
 CASES
   ss : single scattering. Low-loss = a delta of I_0 = 1e7 counts at 0 eV (fine channel 200). Edge = I_0 n sigma_ch 1e-10.
-  ps03/ps07/ps13 : plural scattering. Low-loss = slice 1's planted low-loss pixel of tau 0.3 / 0.7 / 1.3 (pixel 3 / 5 / 7
+  ps03/ps07/ps13 : plural scattering. Low-loss = the thickness fixtures' planted low-loss pixel of tau 0.3 / 0.7 / 1.3 (pixel 3 / 5 / 7
        of planted-noiseless.f64), normalised to its own total and scaled so the TOTAL low-loss counts are I_t = 1e7 (READING:
-       the registration fixes I_0 = 1e7 for single scattering only; here the total, not the zero-loss, is 1e7).
+       the design note fixes I_0 = 1e7 for single scattering only; here the total, not the zero-loss, is 1e7).
        Edge = (low-loss) convolved with the unit response n sigma_ch 1e-10 (so a flat sum over a long window gives
        n sigma_k I_t; Egerton eq. 4.66 divides by the part of I_t below Delta instead).
   All 15 pixels of an image share the case's low-loss spectrum.
@@ -317,7 +317,7 @@ def run_set(tag, dens, seed, manifest_name, truth_name):
              "sigmaFixture": {"file": "edge-sigma-CK.f64", "sha256": hashlib.sha256(open(os.path.join(fx, "edge-sigma-CK.f64"), "rb").read()).hexdigest()}}
     write_json(os.path.join(OUT, manifest_name), {
         "schema": "spectrokit.eels.edge-planted/1", "generator": "tools/eels-edge/make_planted.py",
-        "numpyVersion": np.__version__, "registration": "docs/eels-slice-2-registration.md section 5",
+        "numpyVersion": np.__version__, "registration": "the EELS edge design note section 5",
         "coreLossAxis": axis_c, "lowLossAxis": axis_l, **layout, "cases": [c[0] for c in CASES],
         "tauByCase": {c[0]: c[1] for c in CASES}, "model": model,
         "noise": {"seed": seed, "order": "for case in (ss, ps03, ps07, ps13): poisson(core) then poisson(low), "

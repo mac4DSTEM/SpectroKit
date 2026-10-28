@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""exSpy pins for SpectroKit EELS task 16 step 5 (docs/design/eels-task-16.md section 6.2): the edge model.
+"""exSpy pins for SpectroKit the EELS chain, step 5 (docs/design/eels-chain.md section 6.2): the edge model.
 
 Pins what exSpy 0.3.2 / HyperSpy 2.4.0 answer on deterministic synthetic core-loss images: `two_area_background_estimation`, `fit_background`,
 `multifit(kind="smart")` (the cascade; its final stage is the whole model over the whole range), the model curve (`as_signal`), and the text

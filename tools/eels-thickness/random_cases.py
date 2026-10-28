@@ -1,5 +1,5 @@
-"""Gate B refuter, 2026-10-14: generator of the refuter cases (synthetic low-loss images and exSpy 7185a4d1 / HyperSpy 2.4.0 answers).
-Credit: the Gate B refuter of EELS slice 1. Copied unchanged except this header and the output/root paths. The committed regression
+"""Generator of the threshold edge cases (synthetic low-loss images and exSpy 7185a4d1 / HyperSpy 2.4.0 answers).
+Credit: an independent review of the thickness port (2026-10-14). Copied unchanged except this header and the output/root paths. The committed regression
 fixtures (Tests/SpectroEELSTests/Fixtures/refuter/) are cases of its output: R22, R26, R52, R58 (random cases R00..R59, seed 424242).
 Run: References/python/bin/python -I -B tools/eels-thickness/random_cases.py OUTDIR
 """

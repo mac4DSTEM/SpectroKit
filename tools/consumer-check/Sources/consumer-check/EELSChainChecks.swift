@@ -1,6 +1,6 @@
 //
-//  Task16Checks.swift
-//  Role: the public surface task 16 and 0.9.0 add, used from outside the package (only public API is named): zero-loss alignment, the
+//  EELSChainChecks.swift
+//  Role: the public surface the EELS chain (0.9.0) add, used from outside the package (only public API is named): zero-loss alignment, the
 //        spectrum operations, Fourier-log and Fourier-ratio deconvolution, the edge model fit with composition and model curve, the region sum,
 //        the bundled L edges, the per-pixel take-off angle, and the initialisers 0.9.0 opens for tests (windows, detector segments,
 //        proposer results). Synthetic data only; the numbers are pinned in the package's own tests.
@@ -11,7 +11,7 @@ import SpectroCore
 import SpectroEDX
 import SpectroEELS
 
-func task16Checks(_ r: inout Report) throws {
+func eelsChainChecks(_ r: inout Report) throws {
     // a 2 x 2 low loss: a zero-loss peak, a plasmon, a tail
     let n = 400, scale = 0.1, offset = -10.0
     func gauss(_ e: Double, _ c: Double, _ w: Double, _ a: Double) -> Double { a * exp(-0.5 * pow((e - c) / w, 2)) }

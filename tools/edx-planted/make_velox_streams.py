@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Planted Velox spectrum-stream EMD files: SpectroKit EDX stage gates, registration section 5.1 (counts C1/C2, axis E1).
+"""Planted Velox spectrum-stream EMD files: the EDX checks, design note section 5.1 (counts C1/C2, axis E1).
 
     make_velox_streams.py [--out DIR]       DIR defaults to Tests/SpectroEDXTests/Fixtures; writes
         velox-stream-<case>.emd             one file per case
@@ -24,11 +24,11 @@ Layout copied from Tests/SpectroCoreTests/Fixtures/velox-tiny.emd (itself a copy
   Data/SpectrumStream/<id>/AcquisitionSettings   vlen string {"bincount": "4096", "StreamEncoding": "uint16"}
   Data/SpectrumImage/si00/SpectrumImageSettings  vlen string {"startFramePosition": "1", "endFramePosition": "<frames>"}
   Data/Image/img0/{Data (y, x, frames) uint16, Metadata}   the HAADF image (BinaryResult.Detector "HAADF")
-The grid is Scan.ScanSize x Scan.ScanArea of column 0 (the owner's files; rsciio instead takes the last image's shape).
-Axis of the analytical detectors: Dispersion 20 eV, OffsetEnergy -1932.21348 eV, 4096 bins (the owner's header, registration
+The grid is Scan.ScanSize x Scan.ScanArea of column 0 (measured files; rsciio instead takes the last image's shape).
+Axis of the analytical detectors: Dispersion 20 eV, OffsetEnergy -1932.21348 eV, 4096 bins (a measured header, registration
 section 9); LiveTime and RealTime "0" (his files).
 
-CASES (the extremes registration 5.1 lists):
+CASES (the extremes design note 5.1 lists):
   1stream-1frame    ONE stream (Super-X pre-summed: BinaryResult.Detector "SuperXG1" = SuperXG11..G14), 1 frame, grid 3 x 4
                     from ScanSize 8 x 6 and ScanArea (.25,0)-(.75,.5); pixel 0 holds channel 0 (x2) and channel 4095 (x3);
                     pixel 1 holds ZERO events; LiveTime = RealTime = 0
@@ -71,7 +71,7 @@ def det(key, name, kind, dispersion=None, offset=None, extra=None):
     return key, d
 
 
-def owner_detectors():
+def measured_detectors():
     return [det("Detector-0", "HAADF", "ScanningDetector")] + [
         det(f"Detector-{i}", f"SuperXG1{i}", "AnalyticalDetector", DISP, OFFSET) for i in range(1, 5)]
 
@@ -125,11 +125,11 @@ def build_case(index, name, spec):
 
 CASES = [
     ("1stream-1frame", dict(grid=(3, 4), frames=1, partial=True, streams=[dict(id="aaaa", detector="SuperXG1")],
-                            detectors=lambda: owner_detectors(), terminated=True,
+                            detectors=lambda: measured_detectors(), terminated=True,
                             forced={0: {(0, 0): {0: 2, 4095: 3}, (0, 1): {}}},
                             expect_axis_ev=[("20", "-1932.21348")], agrees=True)),
     ("1stream-3frames", dict(grid=(3, 4), frames=3, partial=False, streams=[dict(id="aaaa", detector="SuperXG1")],
-                             detectors=lambda: owner_detectors(), terminated=True,
+                             detectors=lambda: measured_detectors(), terminated=True,
                              forced={0: {(0, 7): {2000: 30000}, (1, 7): {2000: 25000}, (2, 7): {2000: 15000}, (1, 2): {}}},
                              expect_axis_ev=[("20", "-1932.21348")], agrees=True)),
     ("4streams-2frames", dict(grid=(4, 4), frames=2, partial=False,
@@ -140,7 +140,7 @@ CASES = [
                               terminated=True, forced={},
                               expect_axis_ev=[("20", "-1000"), ("20", "-1000"), ("20", "-996"), ("20", "-1000")], agrees=False)),
     ("unterminated", dict(grid=(3, 4), frames=2, partial=False, streams=[dict(id="aaaa", detector="SuperXG1")],
-                          detectors=lambda: owner_detectors(), terminated=False,
+                          detectors=lambda: measured_detectors(), terminated=False,
                           forced={0: {(1, 11): {7: 4, 4000: 1, 4095: 2}}}, expect_axis_ev=[("20", "-1932.21348")], agrees=True)),
     ("axis-decoy", dict(grid=(2, 2), frames=1, partial=False, streams=[dict(id="aaaa", detector="SuperXG1")],
                         detectors=lambda: [det("Detector-0", "HAADF", "ScanningDetector"),
