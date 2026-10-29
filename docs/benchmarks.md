@@ -1,12 +1,22 @@
 # Benchmarks: SpectroKit against HyperSpy and exSpy
 
-Written 2026-10-21 for 0.8.0. Harness: `tools/benchmarks/run.sh [small,typical]` (Swift: `Tests/SpectroEDXTests/BenchmarkQuantificationTests.swift`,
-`Tests/SpectroEELSTests/BenchmarkThicknessTests.swift`, built by `swift test -c release`, enabled by `SPECTRO_BENCH_OUT`; Python: `tools/benchmarks/bench.py`),
-under an 8 GB memory cap (measured Swift peak 1.3 GB at the typical size). Inputs are closed-form on both sides (formulas in the harness headers), float64.
+Written 2026-10-21 for 0.8.0. Harness: Swift `Tests/SpectroKitParityTests/BenchmarkQuantificationTests.swift` and
+`Tests/SpectroKitParityTests/BenchmarkThicknessTests.swift` (built by `swift test -c release`, enabled by `SPECTRO_BENCH_OUT`), Python
+`tools/benchmarks/bench.py`, merged by `tools/benchmarks/table.py`. The Swift side peaks at 1.3 GB at the typical size. Inputs are closed-form on both sides (formulas in the harness headers), float64.
 One warm-up, then five runs, median and (min-max).
 
 Machine: Apple M5 Pro, 64 GB, macOS 27.0.1 (26A434), Swift 6.4 (swiftlang-6.4.0.34.1), Python 3.12.14, NumPy 2.5.4, HyperSpy 2.4.0, exSpy 0.3.2
 (no Numba). **Other jobs were running on the machine**, so the Python spreads are wide; read ratios within about 30 %.
+
+Re-run from a fresh clone of the kit, on a quiet Mac, one benchmark at a time:
+
+```sh
+python3.12 -m venv .venv-bench && .venv-bench/bin/pip install hyperspy==2.4.0 exspy==0.3.2
+OUT="$PWD/.build/benchmarks"; mkdir -p "$OUT"
+SPECTRO_BENCH_OUT="$OUT" SPECTRO_BENCH_SIZES=small,typical swift test -c release --filter Benchmark   # Swift side
+.venv-bench/bin/python -I -B tools/benchmarks/bench.py "$OUT" small,typical                         # Python side
+.venv-bench/bin/python -I -B tools/benchmarks/table.py "$OUT"                                       # prints the table below
+```
 
 ## Results
 
@@ -28,13 +38,13 @@ Machine: Apple M5 Pro, 64 GB, macOS 27.0.1 (26A434), Swift 6.4 (swiftlang-6.4.0.
 | t/lambda log ratio: estimated | typical | 4096 | 16.34 (16.29-17.02) | 87.30 (82.73-123.58) | 5.34 |
 
 Sizes: quantification small 8 x 8, typical 256 x 256 (3 elements), large 1024 x 1024; thickness small 8 x 8, typical 64 x 64 (2048 channels), large 256 x 256.
-**Large: nightly** (not run here).
+**Large: not measured yet** (`large` in the size list adds it).
 
 ## Backend decision per function (CPU float64 reference, Metal float32 where size pays)
 
 | function | decision | why |
 |---|---|---|
-| quantification maps, all methods (the Python column converts to weight percent only; Swift returns both) | CPU only (parallel over pixels since 0.8.0) | 9 to 40 ms for 65 536 pixels; per pixel the work is 10 to 500 ns of arithmetic, so a Metal dispatch pays only above about 1e6 pixels; the break-even is **not measured** (large size is nightly). Not a work item until the nightly shows a slow large image |
+| quantification maps, all methods (the Python column converts to weight percent only; Swift returns both) | CPU only (parallel over pixels since 0.8.0) | 9 to 40 ms for 65 536 pixels; per pixel the work is 10 to 500 ns of arithmetic, so a Metal dispatch pays only above about 1e6 pixels; the break-even is **not measured** (the large size is not measured yet). Not a work item until a large-size run shows a slow large image |
 | t/lambda log ratio, fixed threshold | CPU only; **slower than Python on the typical size** (0.49x), first in `docs/open-items.md` | single-threaded scalar passes against NumPy's vectorised axis sums |
 | t/lambda log ratio, estimated threshold | CPU only | 5x faster than Python at the typical size (Python's per-pixel Savitzky-Golay search dominates) |
 | EDX line fit, auto ID, EELS background fit, edge quantification | not benchmarked in 0.8.0 | need a Velox spectrum image or a planted EELS image on both sides; listed in `docs/open-items.md` |
