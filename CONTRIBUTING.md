@@ -36,7 +36,7 @@ describe results as validated in code, documentation, or issues until they have 
 - Add or update tests that fail without your change and pass with it.
 - Update the documentation and the supported-features table in [`docs/parity.md`](docs/parity.md) when behaviour changes.
 - Keep the public API free of application-specific types.
-- By contributing you agree that your work is licensed under GPL-3.0-or-later, the licence of this project.
+- By contributing you agree that your work is licensed under GPL-3.0-only, the licence of this project.
 
 ## Reporting issues
 

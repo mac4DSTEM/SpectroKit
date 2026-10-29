@@ -5,7 +5,7 @@
 [![CI](https://github.com/mac4DSTEM/SpectroKit/actions/workflows/ci.yml/badge.svg)](https://github.com/mac4DSTEM/SpectroKit/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/tag/mac4DSTEM/SpectroKit?label=release)](https://github.com/mac4DSTEM/SpectroKit/tags)
 [![Docs](https://img.shields.io/badge/docs-DocC-blue)](https://mac4dstem.github.io/SpectroKit/documentation/)
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+[![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)](LICENSE)
 
 A Swift library for X-ray (EDS) and electron energy-loss (EELS) spectroscopy in the transmission electron microscope: a
 port of [exSpy](https://github.com/hyperspy/exspy), the EDS and EELS extension of [HyperSpy](https://hyperspy.org), to
@@ -231,7 +231,7 @@ of this README and nothing else, and `check-readme.py` fails if the README and `
 
 ## Licence and credits
 
-GPL-3.0-or-later ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)); an application that links SpectroKit must be GPL-compatible. It is a port of, and is compared
+GPL-3.0-only ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)); an application that links SpectroKit must be GPL-compatible. It is a port of, and is compared
 against, the work of others, and is not affiliated with them:
 
 - **exSpy** and **HyperSpy** (GPL-3.0-or-later): the EDS and EELS methods, the line table, the element data, the channel
