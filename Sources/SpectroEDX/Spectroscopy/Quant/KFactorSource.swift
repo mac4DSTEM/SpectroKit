@@ -21,7 +21,7 @@ package nonisolated struct KFactorSet: Sendable, Equatable {
     /// ISO date the factors were typed/computed ("2026-10-05").
     package var date: String
     /// Relative 1-sigma per factor (0.20 = 20 %), one per element. Velox's rule and
-    /// the pre-registered default; editable.
+    /// the default; editable.
     package var relativeSigma: [Double]
     /// The element whose k is fixed at 1 (Velox style, k_i relative to it). Its factor
     /// carries sigma_k = 0 by default, so a ratio against it has only the OTHER

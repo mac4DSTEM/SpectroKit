@@ -1,6 +1,6 @@
 //
 //  EdgeEdgeCaseTests.swift
-//  Role: EELS slice 2's inputs the method refuses and pixels it cannot answer (registration section 1), the dose ratio, and
+//  Role: The ratio method's inputs it refuses and pixels it cannot answer, the dose ratio, and
 //        what every result says about itself.
 //
 
@@ -178,7 +178,7 @@ struct EdgeEdgeCaseTests {
 }
 
 struct PowerLawWindowRuleTests {
-    /// HyperSpy's parity rule (`power_law.py:127-132`): i1 + i2 odd gives i2 − 1; the registered windows all have an even sum,
+    /// HyperSpy's parity rule (`power_law.py:127-132`): i1 + i2 odd gives i2 − 1; the default windows all have an even sum,
     /// so this window (234 to 279.25 eV on the planted axis: channels 336 and 517) is the one that exercises it.
     @Test func testParityRuleAndMidpoint() throws {
         let axis = try EELSAxis(offset: 150, scale: 0.25, size: 2000)

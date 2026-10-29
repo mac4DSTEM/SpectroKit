@@ -8,7 +8,7 @@ import SpectroEDX
 /// Every expected number in `Fixtures/eds-pins-exspy-7185a4d1.json` was produced by RUNNING eXSpy
 /// (generator: the lane's `gen/pins.py`), together with the two bundled spectra they were computed
 /// from (EDS_TEM_FePt_nanoparticles, EDS_SEM_TM002; both GPL-3.0 eXSpy test data, 992 / 1024 channels).
-/// Integer pins are compared exactly; the FWHM to float32 as pre-registered (C1), in fact to 1e-15.
+/// Integer pins are compared exactly; the FWHM to float32, in fact to 1e-15.
 struct SpectroscopyCoreTests {
 
     // MARK: Fixture
@@ -312,7 +312,7 @@ struct SpectroscopyCoreTests {
         #expect(img.sum(mask: [true, false, false, true]) == s.counts.map { $0 * 2 })
     }
 
-    // MARK: Review additions (Gate B round 1)
+    // MARK: Review additions
 
     /// S3. C Kα (0.2774 keV) at 110 eV: 2.5 (E - 5.8987) 1000 + 110² < 0, eXSpy's math.sqrt raises ValueError.
     /// Mutation: drop the `guard fwhmE >= 0` in `XRayLines.fwhm` -> NaN, red.

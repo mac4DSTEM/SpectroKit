@@ -1,7 +1,7 @@
 //
 //  ProposerPolicy.swift
 //  Role: The choices behind the element proposer and the unlisted-line check, as values with the library's choice as the
-//        default. Registered: docs/generality-0.5.0-registration.md (E1-E11, U1-U3).
+//        default (0.5.0).
 //
 
 import Foundation

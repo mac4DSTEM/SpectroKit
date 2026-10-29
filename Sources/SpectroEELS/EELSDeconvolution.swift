@@ -1,6 +1,6 @@
 //
 //  EELSDeconvolution.swift
-//  Role: exSpy's Fourier-log and Fourier-ratio deconvolution (docs/design/eels-task-16.md section 4; `_eels.py:870-1097` at 7185a4d1) on
+//  Role: exSpy's Fourier-log and Fourier-ratio deconvolution (docs/design/eels-chain.md section 4; `_eels.py:870-1097` at 7185a4d1) on
 //        ImagoCore's exact-length FFT, and HyperSpy's `estimate_peak_width` (`signal1d.py:1612-1725`) that the ratio method uses for its
 //        Gaussian. CPU float64 only.
 //

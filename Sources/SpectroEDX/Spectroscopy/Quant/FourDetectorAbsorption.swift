@@ -3,8 +3,7 @@
 //  Role: Self-absorption for a multi-segment EDS system (Super-X: four SDD
 //        segments around the specimen) as ONE correction for the summed spectrum.
 //
-//  Not in eXSpy (it has one scalar take-off angle). Design: WP3 pre-registration
-//  flag 1 / ADR 054 addendum. The summed stream is sum_d I0 * Omega_d * T_d(E),
+//  Not in eXSpy (it has one scalar take-off angle). The summed stream is sum_d I0 * Omega_d * T_d(E),
 //  so the exact correction for the sum is 1/Tbar with the SOLID-ANGLE-WEIGHTED
 //  MEAN TRANSMISSION  Tbar = sum_d Omega_d' T_d / sum_d Omega_d'  (Omega_d' =
 //  Omega_d (1 - holder shadow fraction)), T_d = (1 - e^-x_d)/x_d,

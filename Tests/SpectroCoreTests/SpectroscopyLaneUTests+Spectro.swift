@@ -1,12 +1,10 @@
-// SpectroKit S1 test partition (ADR 064 section 3.3): the methods of SpectroscopyLaneUTests that move with the EDX core;
-// the rest stay in SpectroscopyLaneUTests.swift. Helpers are duplicated, not shared, across the split.
 import Foundation
 import Testing
 import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
-/// v5.0 lane U: the first drive's wiring, text and presentation findings (docs/archive/v5/room-drive-2026-10-06.md, 3-13).
+/// v5.0 lane U: the first drive's wiring, text and presentation findings.
 /// Each test names the mutation that must turn it red.
 /// The app labels a voltage supplied by the same run's 4D cube this way (Core/Data/GMSFourDRegistration.swift, which stays in
 /// the app); the library sees only `.supplied(label:)`, so these moving tests name the value, not the app's constant.

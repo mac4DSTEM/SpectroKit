@@ -1,6 +1,6 @@
 //
 //  DefaultWindowTests.swift
-//  Role: docs/generality-0.5.0-registration.md, family 4 (L2): the default pre-edge window of the ratio method as two numbers,
+//  Role: the default pre-edge window of the ratio method as two numbers,
 //        (50, 5) eV below the onset today. The default call is the old call; another pair moves the window and the answer.
 //
 

@@ -1,6 +1,6 @@
 //
 //  ThicknessPinsTests.swift
-//  Role: Gate 1 of the registration (docs/eels-slice-1-registration.md sections 4, 7 and 9): the port against what exSpy
+//  Role: The thickness port against what exSpy
 //        7185a4d1 answered (tools/eels-thickness/pins.py -> Fixtures/pins.json), on the planted noiseless and noisy images and
 //        exSpy's own line scan: thresholds, I_0, I_t, t/lambda for every route, absolute thicknesses, lambda and the angular
 //        correction.

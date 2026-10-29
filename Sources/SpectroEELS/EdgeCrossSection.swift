@@ -4,7 +4,7 @@
 //        computes it: the effective collection angle (`exspy/utils/eels/effective_angle.py:23-80`, Egerton 2nd ed. p. 420),
 //        the q integration (`exspy/_misc/eels/base_gos.py`, `get_qaxis_and_gos` and `integrateq`), the interpolating
 //        spline between tabulated energies and the power law beyond them (`components/_eels_cl_edge.py:436-494`).
-//        EELS slice 2, registration section 3.3.
+//       
 //
 //  Precision as exSpy runs on NumPy 2.5.4: the GOS arrays are float32 and, by NEP 50, a Python float meeting a float32
 //  scalar or array is cast to float32, so the q limits, the GOS interpolated to q_max, the prefactor and the

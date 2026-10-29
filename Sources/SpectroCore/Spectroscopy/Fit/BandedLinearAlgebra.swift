@@ -2,7 +2,7 @@
 //  BandedLinearAlgebra.swift
 //  Role: A general banded linear solve on Accelerate's LAPACK `dgbsv_` (LU with partial pivoting), the routine SciPy 1.18.1's
 //        `make_interp_spline` calls for its collocation system (`interpolate/_bsplines.py:1898-1909`). For SpectroEELS's
-//        interpolating spline (EELS slice 2); SpectroEDX does not use it.
+//        interpolating spline; SpectroEDX does not use it.
 //
 
 internal import CSpectroLAPACK

@@ -225,7 +225,7 @@ package final class Worst: @unchecked Sendable {
     }
 }
 
-/// SciPy derivatives with the portable auto-SG tie policy; raw exSpy pins stay in pins.json/refuter/.
+/// SciPy derivatives with the portable auto-SG tie policy; raw exSpy pins stay in pins.json and refuter/.
 package struct PortableThresholds: Decodable {
     package struct Route: Decodable {
         package let name: String
