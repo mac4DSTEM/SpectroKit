@@ -22,14 +22,21 @@ concurrency:
 
 jobs:
   test:
-    runs-on: macos-26
+    # The org's Mac runner while the org variable MACEM_MAC_RUNNER is set (never for a fork PR); else GitHub's macos-26.
+    runs-on: ${{ vars.MACEM_MAC_RUNNER && !github.event.pull_request.head.repo.fork && fromJSON(vars.MACEM_MAC_RUNNER) || 'macos-26' }}
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
       - name: Select the newest Xcode
         run: |
-          xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
-          sudo xcode-select -s "$xcode"
+          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then
+            # The Mac runner: the macos-26 image's Xcode 26.6, chosen per job, never by xcode-select on that Mac.
+            export DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer
+            echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          else
+            xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+            sudo xcode-select -s "$xcode"
+          fi
           xcodebuild -version
           swift --version
       - name: Gate (tools/test.sh, release)
