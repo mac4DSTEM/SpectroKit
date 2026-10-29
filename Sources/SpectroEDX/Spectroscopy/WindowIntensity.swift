@@ -182,7 +182,7 @@ package nonisolated enum WindowIntensity {
         try! maps(image: image, windows: windows, cancelled: { false }, progress: nil)
     }
 
-    /// The same maps, cancellable (ADR 064 amendment 2 §2): the window sums are the long step and carry `cancelled`/`progress`.
+    /// The same maps, cancellable: the window sums are the long step and carry `cancelled`/`progress`.
     package static func maps(image: some SpectrumImage, windows: [ResolvedWindow],
                              cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                              progress: (@Sendable (Double) -> Void)? = nil) throws -> [[Double]] {

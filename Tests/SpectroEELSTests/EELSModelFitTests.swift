@@ -1,6 +1,6 @@
 //
 //  EELSModelFitTests.swift
-//  Role: Task 16 step 5, fast target: the edge model against planted truth (Fixtures/eels16-model-*), its refusals, the twin rule, masks,
+//  Role: The edge model, fast target: the edge model against planted truth (Fixtures/eels16-model-*), its refusals, the twin rule, masks,
 //        composition and the summed region. The exSpy pins are in SpectroKitParityTests/ModelPinsTests.
 //
 

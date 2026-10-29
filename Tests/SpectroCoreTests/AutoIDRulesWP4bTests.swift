@@ -1,7 +1,6 @@
 //
 //  AutoIDRulesWP4bTests.swift
-//  Lane W (WP4b): the beside-K guard option of `ProposalRules` on hand-built `ProposalResult`s. Registration:
-//  docs/archive/v5/wp4b-autoid-rules-preregistration-2026-10-07.md (R1b: an L/M pick within 1.5 FWHM of another PROPOSED candidate's
+//  The beside-K guard option of `ProposalRules` on hand-built `ProposalResult`s (R1b: an L/M pick within 1.5 FWHM of another PROPOSED candidate's
 //  K alpha is dropped only when its net / L_D is at or below that K candidate's). The option is off in none / registered / shipped.
 //  Every test names the mutation it catches.
 //
@@ -32,7 +31,7 @@ struct AutoIDRulesWP4bTests {
         let cu = XRayLines.line("Cu_Ka")!.energy
         let hfLa = XRayLines.line("Hf_La")!.energy
         let w = XRayLines.fwhm(resolutionMnKaEV: 130, atEnergy: hfLa)!
-        #expect(abs(hfLa - cu) <= (1.5 * w), "the test pair is inside the registered window")
+        #expect(abs(hfLa - cu) <= (1.5 * w), "the test pair is inside the beside-K window")
         let weakCu = candidate("Cu", "Cu_Ka", significance: 5), strongCu = candidate("Cu", "Cu_Ka", significance: 40)
         let hf = candidate("Hf", "Hf_La", significance: 12)
         #expect(picked(r1b, [weakCu, hf]) == ["Cu", "Hf"], "12 x L_D Hf beside 5 x L_D Cu: stays")
@@ -79,10 +78,10 @@ struct AutoIDRulesWP4bTests {
         #expect(ProposalRules.registered.besideK)
         let cu = candidate("Cu", "Cu_Ka", significance: 5), hf = candidate("Hf", "Hf_La", significance: 12)
         #expect(picked(ProposalRules.shipped, [cu, hf]) == ["Cu", "Hf"])
-        #expect(picked(ProposalRules.registered, [cu, hf]) == ["Cu"], "registered drops Hf however strong, as registered in WP4")
+        #expect(picked(ProposalRules.registered, [cu, hf]) == ["Cu"], "registered drops Hf however strong")
         let plain = r1.apply(proposal([cu, hf]))
         #expect(plain.picks.map(\.element) == ["Cu"], "R1 unguarded: dropped regardless of significance")
-        #expect(plain.withheld.first?.why == "within 1.5 FWHM of Cu K\u{03B1}", "the unguarded text is the registered one")
+        #expect(plain.withheld.first?.why == "within 1.5 FWHM of Cu K\u{03B1}", "the unguarded text is unchanged")
         #expect(picked(.none, [cu, hf]) == ["Cu", "Hf"])
     }
 }

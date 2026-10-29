@@ -656,7 +656,7 @@ struct SpectroscopyFitTests {
         }
     }
 
-    // MARK: 11. Round 2: weak-line recovery on two generators, the registered selection, the tail finding
+    // MARK: 11. Weak-line recovery on two generators, the form selection, the tail finding
 
     /// One (form, generator) cell: Mg fitted over `seeds` Poisson draws of each level's expected spectrum.
     private struct Cell { var bias: Double; var se: Double; var sigma: Double }
@@ -700,7 +700,7 @@ struct SpectroscopyFitTests {
         return (a, s)
     }
 
-    /// The registered criterion (docs: report2.md, written before the runs). Gate 1: no false positive at Mg = 0
+    /// The criterion, fixed before the runs. Check 1: no false positive at Mg = 0
     /// (mean <= 0.399 sigma_sandwich + 1 se: NNLS clamps, so an unbiased estimator has mean +0.399 sigma);
     /// selection: smallest max |bias| at 0.3 % and 1 % over both generators; if not <= 1 se at 0.3 % on both, badge.
     @Test func testWeakLineRecoveryRegisteredSelection() throws {
@@ -730,14 +730,14 @@ struct SpectroscopyFitTests {
         // The measured band the badge quotes (counts): a deficit of 150-450 on both generators at 0.3 % and 1 %.
         for cell in [c.a[2], c.a[3], c.s[2], c.s[3]] { #expect((-450 ... -150).contains(cell.bias), "bias \(cell.bias)") }
         #expect(ContinuumForm.weakLineBiasNote.contains("eak-line bias measured on synthetic data"))
-        // The badge quotes the measured numbers (rounded): the registered table's Kramers (9,5) cells.
+        // The badge quotes the measured numbers (rounded): the selection table's Kramers (9,5) cells.
         for v in [c.a[2].bias, c.a[3].bias, c.s[2].bias, c.s[3].bias] {
             #expect(ContinuumForm.weakLineBiasNote.contains(String(format: "\u{2212}%.0f \u{00B1}", abs(v))), "badge lacks \(v)")
         }
     }
 
     /// The finding behind the bias on the simulator: with its Al K-alpha tail supplied as a reference shape the Mg bias
-    /// collapses (noise-free fit of the 1 % pool). The slot, not the continuum, is where the owner's pure-Al spectrum helps.
+    /// collapses (noise-free fit of the 1 % pool). The slot, not the continuum, is where a measured pure-Al spectrum helps.
     @Test func testTailReferenceShapeRemovesTheSimulatorWeakLineBias() throws {
         let sim = Self.simPools, axis = sim.axis
         let level = sim.levels[3]

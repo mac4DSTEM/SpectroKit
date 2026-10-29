@@ -1,6 +1,6 @@
 //
 //  EELSAlignment.swift
-//  Role: Task 16 step 1 (docs/design/eels-task-16.md section 2): zero-loss peak alignment and mask, a port of exSpy 0.3.2
+//  Role: Zero-loss peak alignment and mask, a port of exSpy 0.3.2
 //        `align_zero_loss_peak` (`eels.py:318-483`), `estimate_zero_loss_peak_centre` (`:275-316`), `get_zero_loss_peak_mask`
 //        (`:485-511`) and HyperSpy 2.4.0 `Signal1D.shift1D` (`signal1d.py:423-551`, `_shift1D :252-274`), `estimate_shift1D`
 //        (`:626-736`, `_estimate_shift1D :236-249`, `interpolate1D :220-233`) and `align1D` (`:738-853`).

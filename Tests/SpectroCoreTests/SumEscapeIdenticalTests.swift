@@ -6,9 +6,9 @@ import SpectroEDX
 
 /// Auto ID failed with `ProposerError.rankDeficient` on a pile-up pair whose energy equals a ONE-COMPONENT column of a candidate:
 /// V K-alpha escape 3.2125 keV = Tb M-alpha + Ir M-alpha, on a spectral axis ending at 5.115 keV. There V's group is V K-alpha
-/// alone, so its escape column is one Gaussian at 3.2125 keV, and the pile-up column is the same Gaussian. Registered fix:
-/// `docs/archive/v5/sum-escape-only-preregistration-2026-10-12.md` (a pair is not added as a column when a group of the design the
-/// fit serves has a one-component ESCAPE column at its energy; one-line LINE groups are not compared, owner card A1 option a). The spectra are generated from the fit's own line model with seeded
+/// alone, so its escape column is one Gaussian at 3.2125 keV, and the pile-up column is the same Gaussian. The fix
+/// (a pair is not added as a column when a group of the design the
+/// fit serves has a one-component ESCAPE column at its energy; one-line LINE groups are not compared by choice). The spectra are generated from the fit's own line model with seeded
 /// Gaussian-approximated counting noise, as in `SumColumnDedupTests`.
 struct SumEscapeIdenticalTests {
 
@@ -66,7 +66,7 @@ struct SumEscapeIdenticalTests {
     /// V K-alpha escape 3.2125 keV = Tb M-alpha 1.2326 + Ir M-alpha 1.9799. Without the fix every amplitude throws `rankDeficient`
     /// (the pile-up column and V's escape column are identical design columns); with it the run scores. At 40 000 V claims the
     /// energy and no pile-up column sits there. At 0 and 300 V is not in the final design, so the pair is compared with nothing and
-    /// keeps its own column (registration: docs/archive/v5/sum-escape-only-preregistration-2026-10-12.md, P1 and P2).
+    /// keeps its own column.
     @Test func testVKaEscapeEqualToTbMaPlusIrMaScoresOnAShortAxis() throws {
         let sum = XRayLines.line("Tb_Ma")!.energy + XRayLines.line("Ir_Ma")!.energy
         let escape = XRayLines.line("V_Ka")!.energy - XRayLines.line("Si_Ka")!.energy
@@ -113,8 +113,8 @@ struct SumEscapeIdenticalTests {
     /// La K-alpha 33.4419 keV = Cd K-alpha 23.1737 + Tl L-alpha 10.2682, and La's K group is the single line K-alpha on an axis that
     /// tops out between K-alpha and K-beta (33.5 to 37.8 keV; here 35.98; the fit range must be the Expert one, to the axis top).
     /// The held patch's LINE branch would have dropped the pile-up pair at La's energy and let La's column take its counts (a false
-    /// La); the owner chose against it (card A1, option a), so the rule compares ESCAPE columns only. Measured on HEAD before the
-    /// change (registration, addendum): a planted pile-up of 120 to 200 counts, which La absorbs without reaching L_D (not claiming),
+    /// La); that was decided against, so the rule compares ESCAPE columns only. Measured on HEAD before the
+    /// change: a planted pile-up of 120 to 200 counts, which La absorbs without reaching L_D (not claiming),
     /// throws `rankDeficient`; with the line branch the same runs complete with La at net 106 to 185. Pinned: 160 counts throws the
     /// clear error; with none planted the Cd + Tl pair keeps its column (net 0) beside La (net 54, below L_D); at 2 000 La claims
     /// the energy and is a sum-peak question. La is never in `proposed`.
