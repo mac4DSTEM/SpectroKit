@@ -39,7 +39,7 @@ struct PlantedTruthTests {
                 let comp = truthComponent(p, theta)
                 let t = map.pixels[p].tOverLambda.orFail()
                 let error = t - truth.tau
-                // the registered inequality
+                // the stated inequality
                 #expect(abs(error) <= (abs(comp.bias) + 1e-9), "tau \(truth.tau) theta \(theta)")
                 // and the signed equality (a sign error or a bias twice as large cannot hide under the inequality)
                 #expect(isEqual(error, comp.bias, accuracy: 1e-9), "tau \(truth.tau) theta \(theta): error against the predicted bias")

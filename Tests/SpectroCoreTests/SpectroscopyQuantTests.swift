@@ -4,10 +4,9 @@ import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
-/// WP3 lane K: k-factors, Cliff-Lorimer / zeta / cross-section quantification and
+/// k-factors, Cliff-Lorimer / zeta / cross-section quantification and
 /// absorption. Every expected number below was produced by running eXSpy 7185a4d1
-/// + hyperspy 2.4.0 (venv under the research scratchpad; logs in
-/// docs/archive/v5/edx-research-2026-10-05/) -- full precision where the upstream
+/// + hyperspy 2.4.0 -- full precision where the upstream
 /// test's own tolerance is looser. The Al-Zn window intensities are the values the
 /// synthetic image in eXSpy's test_eds_tem.py yields from `get_lines_intensity()`.
 struct SpectroscopyQuantTests {
@@ -102,9 +101,8 @@ struct SpectroscopyQuantTests {
         // Order invariance (eXSpy test_quant_lorimer_ac reversed lists).
         let r = try CliffLorimer.weightFractions(intensities: alZnIntensities.reversed(), kFactors: alZnK.reversed())
         assertRel(r[1], w[0], 1e-12)
-        // FePt, k [1.450226, 5.075602]. NOTE the pre-registration pairs 15.409297 at% with
-        // the raw windows 3710/15872; eXSpy's own run (fept_quant-2026-10-05.log) gets it
-        // from the BACKGROUND-SUBTRACTED windows 2754/15090. Raw windows give 18.9171866.
+        // FePt, k [1.450226, 5.075602]. eXSpy gets 15.409297 at% from the
+        // BACKGROUND-SUBTRACTED windows 2754/15090. Raw windows give 18.9171866.
         func feAt(_ i: [Double]) throws -> (wt: Double, at: Double) {
             let f = try CliffLorimer.weightFractions(intensities: i, kFactors: [1.450226, 5.075602])
             let a = try CompositionConversion.weightToAtomic(f.map { $0 * 100 }, elements: ["Fe", "Pt"])

@@ -1,7 +1,7 @@
 //
 //  LiveTimeNormalisation.swift
-//  Role: Put regions with different dead time on a common footing (ADR 054,
-//        V5-Q5). Route 1: per-pixel live time, when the file carries it, gives a
+//  Role: Put regions with different dead time on a common footing.
+//        Route 1: per-pixel live time, when the file carries it, gives a
 //        rate = net counts / summed live time. Route 2: no live time, so the net
 //        count of a line is expressed relative to the Al K-alpha net count of the
 //        same region (the internal reference). The result NAMES the route.

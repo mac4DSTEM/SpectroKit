@@ -1,8 +1,8 @@
 //
 //  DeconvolutionPinsTests.swift
-//  Role: Task 16 step 4 against exSpy 0.3.2 / HyperSpy 2.4.0 (Fixtures/eels16-pins.json): `optimal_fft_size`, `estimate_peak_width`, Fourier-log
+//  Role: Fourier-log and Fourier-ratio deconvolution against exSpy 0.3.2 / HyperSpy 2.4.0 (Fixtures/eels16-pins.json): `optimal_fft_size`, `estimate_peak_width`, Fourier-log
 //        and Fourier-ratio deconvolution. Upstream has no tolerance for the deconvolutions (`test_running` only runs), so the kit's decision
-//        stands (docs/design/eels-task-16.md section 4): per pixel rtol 1e-7 + atol 1e-7 x max|pinned result|; sizes and channel counts exact.
+//        stands (docs/design/eels-chain.md section 4): per pixel rtol 1e-7 + atol 1e-7 x max|pinned result|; sizes and channel counts exact.
 //
 
 import Foundation

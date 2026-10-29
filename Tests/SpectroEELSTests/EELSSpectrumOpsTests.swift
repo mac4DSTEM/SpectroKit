@@ -1,6 +1,6 @@
 //
 //  EELSSpectrumOpsTests.swift
-//  Role: Task 16 step 2, the fast target: hand-derived rules (np.hanning's values and symmetry, the default taper width with Python's round, the
+//  Role: Power-law extrapolation and taper, fast target: hand-derived rules (np.hanning's values and symmetry, the default taper width with Python's round, the
 //        taper's slices and offsets, an exact power law continued exactly, `fixNegativeR`, a window sum that is not positive) and the refusals.
 //        The pins against exSpy are SpectroKitParityTests/SpectrumOpsPinsTests.
 //

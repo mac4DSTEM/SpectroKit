@@ -1,11 +1,11 @@
 //
 //  RealFileAutoIDTests.swift
-//  Role: the known answers of Auto ID on the owner's three labelled spectrum images (opt-in: SPECTRO_REAL_DATA=1 and the files under
+//  Role: the known answers of Auto ID on three labelled spectrum images of the maintainer's (opt-in: SPECTRO_REAL_DATA=1 and the files under
 //        $MACEM_DATA/stem-edx; the files stay out of the repo). The whole-map sum is proposed on the file's axis, the axis is refined on
 //        the first proposal's K lines as the apps do, and the proposal on the refined axis must name every true element and nothing
 //        else. Allowed, never required: Cu (the grid), Zr (found on all three files at Zr Kα 15.8 keV, 5 000 to 30 000 counts: the
 //        instrument's), Fe and Mn on the Al alloys (minor alloying elements of a 6xxx alloy: Mn reads 8 000 and 64 000 counts, 22 and 70 times
-//        its limit; the owner's word on the alloy is pending), Ga on the FIB lamella.
+//        its limit; the alloy's specification is not yet known), Ga on the FIB lamella.
 //
 
 import Foundation
@@ -27,7 +27,7 @@ struct RealFileAutoIDTests {
         }.joined(separator: "; ")
     }
 
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["SPECTRO_REAL_DATA"] == "1", "set SPECTRO_REAL_DATA=1 with the owner's files"),
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["SPECTRO_REAL_DATA"] == "1", "set SPECTRO_REAL_DATA=1 with the files under $MACEM_DATA/stem-edx"),
           arguments: 0..<3)
     func testKnownAnswers(_ index: Int) throws {
         let file = Self.files[index]

@@ -1,8 +1,8 @@
 //
 //  ZetaFactor.swift
 //  Role: zeta-factor and ionisation-cross-section quantification, doses, and the
-//        zeta <-> cross-section conversion. Core only: ADR 054 keeps zeta out of
-//        the menu; it is here for eXSpy parity.
+//        zeta <-> cross-section conversion. Not offered in the
+//        pooled method; it is here for eXSpy parity.
 //
 //  Port of eXSpy utils/eds/_quantification.py `quantification_zeta_factor`
 //  (153-199), `quantification_cross_section` (238-290), `cross_section_to_zeta`

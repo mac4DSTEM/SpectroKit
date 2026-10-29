@@ -1,6 +1,6 @@
 //
 //  EdgeFixtures.swift
-//  Role: edge-pins.json and edge-planted.json (EELS slice 2) as plain dictionaries, and the planted core-loss and low-loss
+//  Role: edge-pins.json and edge-planted.json as plain dictionaries, and the planted core-loss and low-loss
 //        images built from them. Shared by the edge edge-case tests and the edge pins.
 //
 
@@ -30,7 +30,7 @@ package enum EdgeFixtures {
                                          energyOffsetEV: ax["offset"] as! Double, energyScaleEV: ax["scale"] as! Double)
     }
 
-    /// A planted low-loss image (slice 1's axis, -10 eV + 0.05 eV x 3400).
+    /// A planted low-loss image (the thickness fixtures' axis, -10 eV + 0.05 eV x 3400).
     package static func low(_ file: String) throws -> LowLossSpectrumImage {
         let ax = planted["lowLossAxis"] as! [String: Any]
         return try LowLossSpectrumImage(nx: 5, ny: 3, channels: ax["size"] as! Int, counts: EELSFixtures.doubles(file),

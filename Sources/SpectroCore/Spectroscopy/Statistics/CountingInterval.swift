@@ -1,8 +1,8 @@
 //
 //  CountingInterval.swift
 //  Role: Poisson counting statistics for window counts: the Garwood exact
-//        interval at EVERY count (ADR 054 addendum: the "~20 counts" switch was a
-//        threshold and is dropped), and the net count N = G - s*B with
+//        interval at EVERY count (no switch to a normal approximation at some
+//        count), and the net count N = G - s*B with
 //        Var = G + s^2*B. Inputs are plain numbers (gross G, background B, scale
 //        s = signal-window / background-window channel ratio), so the layer does
 //        not depend on the spectrum-image types.
