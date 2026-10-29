@@ -35,31 +35,31 @@ import Foundation
 import SpectroCore
 
 public nonisolated struct UnlistedLineCheck: Sendable, Equatable {
-    package struct Candidate: Sendable, Equatable {
-        package var element: String
+    public struct Candidate: Sendable, Equatable {
+        public var element: String
         /// The proposer's best group, e.g. "Ge_Ka".
-        package var group: String
-        package var net: Double
-        package var detectionLimit: Double
+        public var group: String
+        public var net: Double
+        public var detectionLimit: Double
         /// The proposer filed it as "sum peak or this element?": counted, because a real line can sit there (Cu, Ga; D6).
-        package var sumPeakQuestion: Bool
+        public var sumPeakQuestion: Bool
         /// The listed line (or "the continuum split at 1.560 keV") the candidate sits beside, e.g. "Al K\u{03B1}"; nil when it
         /// is clear of every listed line. A beside candidate is an unexplained excess, not an element (never refitted).
-        package var besideLine: String?
+        public var besideLine: String?
         /// Candidate net / the neighbour group's net; nil without a line neighbour or when its net is 0.
-        package var fractionOfNeighbour: Double?
+        public var fractionOfNeighbour: Double?
 
-        package init(element: String, group: String, net: Double, detectionLimit: Double, sumPeakQuestion: Bool,
-                     besideLine: String? = nil, fractionOfNeighbour: Double? = nil) {
+        public init(element: String, group: String, net: Double, detectionLimit: Double, sumPeakQuestion: Bool,
+                    besideLine: String? = nil, fractionOfNeighbour: Double? = nil) {
             self.element = element; self.group = group; self.net = net; self.detectionLimit = detectionLimit
             self.sumPeakQuestion = sumPeakQuestion; self.besideLine = besideLine; self.fractionOfNeighbour = fractionOfNeighbour
         }
 
         /// "Lu M\u{03B1}" for group "Lu_Ma".
-        package var proposerLabel: String { UnlistedLineChecker.displayName(group) }
+        public var proposerLabel: String { UnlistedLineChecker.displayName(group) }
 
         /// What is shown: the element symbol, or for a beside candidate the excess it is.
-        package var shownName: String {
+        public var shownName: String {
             guard let b = besideLine else { return element }
             var t = "unexplained excess beside \(b): \(UnlistedLineChecker.grouped(net)) counts"
             if let f = fractionOfNeighbour { t += String(format: ", %.1f %% of %@", 100 * f, b) }
@@ -68,23 +68,27 @@ public nonisolated struct UnlistedLineCheck: Sendable, Equatable {
     }
 
     /// A quantified element whose net moved by more than its reported sigma when the candidates were fitted.
-    package struct Move: Sendable, Equatable {
-        package var element: String
-        package var before: Double
-        package var after: Double
-        package var sigma: Double
+    public struct Move: Sendable, Equatable {
+        public var element: String
+        public var before: Double
+        public var after: Double
+        public var sigma: Double
+
+        public init(element: String, before: Double, after: Double, sigma: Double) {
+            self.element = element; self.before = before; self.after = after; self.sigma = sigma
+        }
     }
 
-    package var candidates: [Candidate]
-    package var moves: [Move]
+    public var candidates: [Candidate]
+    public var moves: [Move]
     /// The quantified row with the largest |delta net| / sigma in the refit, whether or not it crossed the bar (the quantity is
     /// shipped so a reader sees the margin, not only the verdict); nil when nothing was refitted.
-    package var largest: Move?
+    public var largest: Move?
     /// Why the check could not run (the proposer or the refit failed). The candidates found, if any, are still named; at% is
     /// not withheld on a failure of the check, and the line says it was not checked.
     public var failure: String?
 
-    package init(candidates: [Candidate], moves: [Move], largest: Move? = nil, failure: String? = nil) {
+    public init(candidates: [Candidate], moves: [Move], largest: Move? = nil, failure: String? = nil) {
         self.candidates = candidates; self.moves = moves; self.largest = largest; self.failure = failure
     }
 
