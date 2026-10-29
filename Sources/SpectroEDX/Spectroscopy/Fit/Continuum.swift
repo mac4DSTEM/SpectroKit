@@ -1,11 +1,11 @@
 //
 //  Continuum.swift
 //  Role: The default background of the spectrum fit: an empirical whole-spectrum continuum
-//        with an absorption step at the Al K edge, fitted jointly with the lines (ADR 054
-//        V5-Q2). It sits in the SAME linear design as the lines (free-sign coefficients), so
+//        with an absorption step at the Al K edge, fitted jointly with the lines.
+//        It sits in the SAME linear design as the lines (free-sign coefficients), so
 //        lines and continuum are fitted together and no separate background pass exists.
 //
-//  FUNCTIONAL FORM (goes to Fable's review):
+//  FUNCTIONAL FORM:
 //
 //      B(E) = K(E) * P_s(E),     K(E) = (E0 - E) / E,
 //      P_s(E) = sum_k c_{s,k} b_{k,n_s}(t),  t = (E - lo_s) / (hi_s - lo_s),  c_{s,k} >= 0,
@@ -37,8 +37,8 @@
 //  generator, a different functional form from the fit), orders (5, 4) left a systematic misfit of up to
 //  10 sigma at 0.2-0.5 keV that leaked to ~2.5 sigma into 1.0-1.5 keV (F3 refuted: 2 of 30 seeds had all
 //  |r| <= 3 in 1.1-1.9 keV, against 24 of 30 for the true model); (8, 5) gave 22, (9, 5) 25, (10, 5) 26.
-//  The roll-off of the owner's Super-X is not known here: the continuum's acceptance is Q2 on his pooled
-//  spectra, and the orders are exposed so that measurement can move them.
+//  The roll-off of a given Super-X detector is not known here: the orders are exposed so that a measurement
+//  on real pooled spectra can move them.
 //
 
 import Foundation
@@ -72,7 +72,7 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
     package var nonNegative: Bool
     /// Round 2: an optional detector efficiency epsilon(E) multiplying the whole form (B = K x epsilon x P_s), so the detector
     /// roll-off is modelled and P_s only carries what epsilon does not. nil: the round-1 form. The model is generic
-    /// (`DetectorEfficiency`), not the owner's Super-X calibration.
+    /// (`DetectorEfficiency`), not a measured Super-X calibration.
     package var efficiency: (any DetectorEfficiency)?
 
     package static let alKEdge = FitPolicy.alKEdgeKeV
@@ -140,7 +140,7 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
         return "continuum: Kramers\(eps)\u{00D7}\(nonNegative ? "Bernstein" : "poly")(\(ord)), \(split); orders chosen on synthetic data"
     }
 
-    /// Badge text the room shows beside any weak-line result (registered criterion 3: no form met |bias| <= 1 se at 0.3 %
+    /// Badge text the room shows beside any weak-line result (no form met |bias| <= 1 se at 0.3 %
     /// on both generators, so the bias is stated, never asserted away). Numbers: `testWeakLineRecoveryRegisteredSelection`,
     /// 30 seeds, Al K-alpha ~3e5 counts pooled, default form Kramers (9,5): the numbers below are that test's run.
     /// Wording after the tail experiment: supplying the true Al K-alpha tail as a reference shape on generator S takes the

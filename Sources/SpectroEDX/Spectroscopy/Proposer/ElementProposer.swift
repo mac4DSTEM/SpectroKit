@@ -1,7 +1,7 @@
 //
 //  ElementProposer.swift
-//  Role: Propose elements from a pooled spectrum. It RETURNS candidates and never touches an element list: nothing is added silently
-//        (ADR 054, V5-Q6). Since 0.11.0 the search is the identification loop of docs/design/auto-id-tem.md, written from the published
+//  Role: Propose elements from a pooled spectrum. It RETURNS candidates and never touches an element list: nothing is added silently.
+//        Since 0.11.0 the search is the identification loop of docs/design/auto-id-tem.md, written from the published
 //        method (Newbury and Ritchie's automatic qualitative analysis, as AutoEMX documents its defaults; no code copied):
 //
 //   1. fit the listed elements (the landed `EDSFit`: Kramers x Bernstein continuum with the Al K step, Si-escape columns, unweighted
@@ -21,7 +21,7 @@
 //   candidate with `possibleReason` (or `familyNote` for the confirmation rule) and is never proposed.
 //
 //  What went (0.11.0): the all-candidate joint fit with its L_C pruning and single-candidate forward step, and the flank-misfit factor that
-//  scaled a candidate's sigma_0 by its neighbour's misfit (x33 for Mg beside Al on the owner's file 1339, where Mg's own window fitted to
+//  scaled a candidate's sigma_0 by its neighbour's misfit (x33 for Mg beside Al on a measured Al-alloy map, where Mg's own window fitted to
 //  ±3 σ). The 1 % model term does that job in the published way.
 //  Not yet: the method's overlap check (elements whose every peak sits under a modelled one); such an element leaves no residual peak and
 //  is not reported. An open item, not a proposal changer: the method reports its finds as possible only.
@@ -310,7 +310,7 @@ public nonisolated struct ElementProposer: Sendable {
     ///   - settings: the fit as the room runs it. `elements` is the CURRENT set (always fitted, never changed);
     ///     range, background, escape setting and reference shapes are used as given, the method is forced to LS.
     ///   - holeCounts: optional pooled spectrum of a hole region on the same axis, for the Cu grid check.
-    ///   - cancelled: asked before every round of fits (ADR 064 amendment 2 §2); default Swift task cancellation. The proposer keeps
+    ///   - cancelled: asked before every round of fits; default Swift task cancellation. The proposer keeps
     ///     its own `ProposerError.cancelled`; nothing partial is returned.
     ///   - progress: monotone in 0...1, ends at 1. The number of fits is not known in advance, so it is fits done over fits done plus the
     ///     fits the current step still has planned, clamped never to fall.
@@ -521,7 +521,7 @@ public nonisolated struct ElementProposer: Sendable {
                 if !k.key.hasPrefix("sum:") && found[k.key] == nil { trials[k.key] = trial }
             }
             // The candidate that explains THIS peak best joins (its gain within one FWHM of the peak): a heavy element whose other families
-            // also soak up misfits elsewhere must not take a peak that a K line sits on exactly (W Mα took Si Kα on the owner's 1456 by total gain).
+            // also soak up misfits elsewhere must not take a peak that a K line sits on exactly (W Mα took Si Kα on a measured map by total gain).
             guard let best = eligible.max(by: { $0.peakGain < $1.peakGain }), let p = best.pass else { continue }
             let rivals = eligible.filter { $0.key != best.key && $0.peakGain >= best.peakGain - t.ambiguityGain }.map(\.key)
             for e in eligible where e.key != best.key && !e.key.hasPrefix("sum:") {

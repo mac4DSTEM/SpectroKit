@@ -7,9 +7,9 @@
 //  STATUS (round 2, 2026-10-05): the shipped cross-section is Bote-Salvat 2008
 //  (BoteSalvatCrossSection, from NIST EPQ), omega is Krause 1979
 //  (KrauseFluorescenceYield) and epsilon the generic SDD model (SDDEfficiency). There
-//  is NO Brown-Powell here -- no licence-clean source exists (ADR 054 addendum) -- so
+//  is NO Brown-Powell here -- no licence-clean source exists -- so
 //  nothing in this file is called Brown-Powell and Velox parity is not claimed. The
-//  file name is kept from the WP3 plan. Any model that conforms to
+//  file name is historical. Any model that conforms to
 //  `IonisationCrossSection` / `FluorescenceYield` plugs in.
 //
 //  The k algebra below is derived, not ported. For a thin film the line intensity
@@ -18,8 +18,7 @@
 //      k_i = A_i / (sigma_i omega_i a_i eps(E_i))      (per element, up to one
 //  common factor; `kFactors(reference:)` normalises the reference element to 1).
 //  The ratio k_A/k_B = (A_A sigma_B omega_B a_B eps_B)/(A_B sigma_A omega_A a_A eps_A).
-//  NOTE: the WP3 pre-registration prints this ratio with sigma_A and sigma_B
-//  exchanged relative to this derivation; the closed-loop test (forward intensities
+//  The closed-loop test (forward intensities
 //  from a known composition, then Cliff-Lorimer) takes the version here.
 //
 

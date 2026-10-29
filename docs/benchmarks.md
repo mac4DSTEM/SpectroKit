@@ -40,7 +40,7 @@ SPECTRO_BENCH_OUT="$OUT" SPECTRO_BENCH_SIZES=small,typical swift test -c release
 Sizes: quantification small 8 x 8, typical 256 x 256 (3 elements), large 1024 x 1024; thickness small 8 x 8, typical 64 x 64 (2048 channels), large 256 x 256.
 **Large: not measured yet** (`large` in the size list adds it).
 
-## Backend decision per function
+## Backend decision per function (CPU float64 reference, Metal float32 where size pays)
 
 | function | decision | why |
 |---|---|---|

@@ -1,15 +1,19 @@
 # Status
 
-SpectroKit 0.11.0 (2026-10-22, local main until tagged; 0.10.0 tagged), on FormatoKit `"0.4.0"..<"1.0.0"` and ImagoKit `"0.6.1"..<"1.0.0"`, against HyperSpy 2.4.0 and exSpy 0.3.2. Live: EDX (the line table, peak identification, net counts, Cliff-Lorimer, zeta and
-cross-section quantification with the absorption iteration, per pixel over a spectrum image) and EELS (t/lambda thickness, zero-loss alignment, power-law extrapolation, Fourier-log and Fourier-ratio deconvolution, the multi-edge model fit on 20 K and L edges with at% and wt%, Richardson-Lucy deconvolution, the MLLS fit, region sums); in EDX also sum and escape peaks in the fit, k-factor import, sigma on wt% and at%, and the per-region result; in SpectroCore line-profile pooling, smoothing (display only) and sparse regions. Every quantification (including the sum/escape model, sigma and MLLS, none of which has a Python reference or a standard) says
-`validation: "none"` until a standard of known composition is measured. Parity: `docs/parity.md`; timings against Python: `docs/benchmarks.md`; parity numbers (2026-10-22, recounted from the rows): 100 rows, 58 present, 11 partial, 23 missing, 8 not planned; study rows 52 of 67 present; what is open (EELS fine structure, Richardson-Lucy speed on large images, weighted MLLS, EDS
-calibration, the t/lambda loop speed): `docs/open-items.md`.
+SpectroKit 0.12.0 (tagged 2026-10-23), on FormatoKit `"0.4.0"..<"1.0.0"` and ImagoKit `"0.6.1"..<"1.0.0"`, against HyperSpy 2.4.0 and
+exSpy 0.3.2 / 7185a4d1. macOS 15 and later.
 
-Tests (2026-10-21): the pinned Python comparisons (golden baseline, exSpy/HyperSpy/pyEELSMODEL pins, benchmarks, the PeakGate and Gate D runs) sit in `SpectroKitParityTests`; helpers and fixture loaders shared with the fast targets are in `SpectroTestSupport`. 360 tests before and after the split (309 fast + 51 parity). Mac, release, `--parallel`: fast target (`--skip SpectroKitParityTests`) 30 s, full suite 1 min 54 s; before the split, 1 min 45 s for the one full suite. CI keeps running the full suite.
+Live:
+- **EDX**: the line table, element identification (the published identification loop, `ElementProposer`), net counts, the EDS fit with
+  sum and escape peaks, Cliff-Lorimer, zeta and cross-section quantification with the absorption iteration, per pixel over a spectrum
+  image, k-factor import, sigma on wt% and at%, the per-region result.
+- **EELS**: t/lambda thickness, zero-loss alignment, power-law extrapolation, Fourier-log, Fourier-ratio and Richardson-Lucy
+  deconvolution, the edge model fit (joint, or per-edge windows with a 1σ per edge intensity) on 383 bundled K, L and M edges, the MLLS
+  fit, composition in at% and wt%, region sums.
+- **SpectroCore**: line-profile pooling, display smoothing, sparse regions.
 
-0.11.0 makes Auto ID the identification loop of the published method (docs/design/auto-id-tem.md: residual peaks, the statistic with the 1 %
-model term, confirmation lines, prune; the flank-misfit factor is gone): on the owner's three files it proposes every true element
-(`RealFileAutoIDTests`, opt-in). It also adds the sum-peak plausibility bound, the end of the pool at Bi and an opt-in low-energy tail of the
-line shape (`LineTail`, `TailEstimate`, off by default). The parity target runs before the tag.
+Every quantification says `validation: "none"` until a standard of known composition is measured. Parity row by row: `docs/parity.md`;
+timings against Python: `docs/benchmarks.md`; what is open: `docs/open-items.md`; fixtures and their generators: `Tests/Fixtures/README.md`.
 
-EELS per-edge windows (0.11.0, unreleased): `EELSModelFit.fit(edgeWindows:)` fits each edge's power law on its own background window and its amplitude on its own signal window (`EdgeWindows.defaults` holds the field's rules); `EELSBackground.preview` is the live power-law estimate; planted tests only, `validation: "none"`.
+Tests: the fast targets run per change (`swift test -c release --parallel --skip SpectroKitParityTests`); the pinned Python comparisons
+(golden baseline, exSpy/HyperSpy/pyEELSMODEL pins, the planted EDX runs) are `SpectroKitParityTests`, run in CI on every push and before a tag.

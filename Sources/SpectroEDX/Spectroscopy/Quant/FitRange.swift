@@ -1,6 +1,6 @@
 //
 //  FitRange.swift
-//  Role: WP3c, "the default fit range, not the continuum" (docs/archive/v5/wp3c-fit-range-preregistration-2026-10-06.md).
+//  Role: WP3c, "the default fit range, not the continuum".
 //        The Quantify fit's upper energy limit as one value with its provenance (`FitRangeChoice`, the footer's "fit range"
 //        line), and the range-sensitivity statement (`FitRangeSensitivity`): when the axis runs past the default range, one
 //        extra fit to the axis end, reported per quantified element as a named statement, never as a sigma term.
@@ -157,7 +157,7 @@ public nonisolated enum FitRangeSensitivityCheck {
         try! run(input: input, quantification: q, alternativeToKeV: alternativeToKeV, cancelled: { false }, progress: nil)
     }
 
-    /// The same extra fit, cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` is thrown (never folded into `failure`),
+    /// The same extra fit, cancellable: `SpectroCancelled` is thrown (never folded into `failure`),
     /// nothing is returned. `progress` is monotone in 0...1 and ends at 1.
     public static func run(input: PooledQuantificationInput, quantification q: PooledQuantification,
                             alternativeToKeV: Double? = nil,
