@@ -2,7 +2,7 @@
 //  ScipySimpson.swift
 //  Role: SciPy 1.18.1's `scipy.integrate.simpson(y, x=x)` for one vector on a non-uniform grid (`integrate/_quadrature.py:
 //        358-388` `_basic_simpson`, `:392-527` `simpson`), which exSpy's GOS integration over ln((a0 q)^2) calls
-//        (`exspy/_misc/eels/base_gos.py`, `integrateq`). EELS slice 2 (docs/eels-slice-2-registration.md, section 3.3).
+//        (`exspy/_misc/eels/base_gos.py`, `integrateq`).
 //
 //  An odd number of points: the composite rule over pairs of intervals. An even number: the composite rule over the first
 //  N - 3 points and Cartwright's correction for the last interval (`:486-524`); two points: the trapezoid. The per-pair

@@ -1,7 +1,7 @@
 //
 //  SDDEfficiency.swift
 //  Role: A GENERIC silicon-drift-detector efficiency model with every layer named.
-//        It is NOT the owner's Super-X calibration (Thermo publishes no layer data we hold).
+//        It is NOT a Super-X calibration (Thermo publishes no layer data we hold).
 //
 //  eps(E) = exp(-mu_Au rho t_Au) exp(-mu_Al rho t_Al) exp(-mu_Si rho t_dead)
 //           (1 - exp(-mu_Si rho t_Si))

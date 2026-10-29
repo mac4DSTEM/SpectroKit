@@ -1,10 +1,10 @@
 //
 //  EdgePinsTests.swift
-//  Role: EELS slice 2, gate 1 and gate 2 (docs/eels-slice-2-registration.md sections 4.1, 4.3, 7): the port against exSpy
+//  Role: The edge cross section and the ratio method against exSpy
 //        7185a4d1's pins in Fixtures/edge-pins.json (written by tools/eels-edge/pins.py before the Swift code), and against
 //        pyEELSMODEL eed9f072's cross sections.
 //
-//  Bounds, registered: effective angle relative 1e-14; qint 1e-12; function(E) and sigma_k 1e-10; background indices equal;
+//  Bounds: effective angle relative 1e-14; qint 1e-12; function(E) and sigma_k 1e-10; background indices equal;
 //  I1, I2, r, A, the background, I_k, I_b 1e-12; n 1e-10. pyEELSMODEL: within 3 %.
 //
 
@@ -16,7 +16,7 @@ import SpectroEELS
 
 struct EdgePinsTests {
 
-    // Gate 1: the cross section on the whole registered grid (192 edge cases x 3 scales x 4 widths).
+    // The cross section on the whole pinned grid (192 edge cases x 3 scales x 4 widths).
     @Test func testCrossSectionEqualsExSpyOnTheGrid() throws {
         let grid = EdgeFixtures.pins["grid"] as! [[String: Any]]
         #expect(grid.count == 192)
@@ -122,7 +122,7 @@ struct EdgePinsTests {
                         dens.record(relativeDifference(px.atomsPerNM2.orFail(), dd.a("n")[p]), tag)
                         compared += 1
                     }
-                    // The I_0 route (slice 1's fixed thresholds).
+                    // The I_0 route (the thickness map's fixed thresholds).
                     for (theta, tv) in dd.d("i0Route") {
                         let t = tv as! [String: Any]
                         let tm = try EELSThickness.logRatio(low, threshold: .fixed(Double(theta)!))

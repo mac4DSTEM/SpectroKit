@@ -1,6 +1,6 @@
 //
 //  EELSDeconvolutionTests.swift
-//  Role: Task 16 step 4, fast target: Fourier-log and Fourier-ratio against the planted plural-scattering truth, `optimal_fft_size`, the
+//  Role: Fourier-log and Fourier-ratio deconvolution, fast target: Fourier-log and Fourier-ratio against the planted plural-scattering truth, `optimal_fft_size`, the
 //        half-maximum width, and the refusals. The exSpy pins are in SpectroKitParityTests/DeconvolutionPinsTests.
 //
 

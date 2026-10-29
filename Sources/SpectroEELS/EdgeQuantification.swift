@@ -1,6 +1,6 @@
 //
 //  EdgeQuantification.swift
-//  Role: EELS slice 2 (docs/eels-slice-2-registration.md): the areal density of one element from a core-loss spectrum
+//  Role: The areal density of one element from a core-loss spectrum
 //        image by the ratio method (Egerton, EELS in the Electron Microscope, 3rd ed., eqs. 4.65 and 4.66): the power-law
 //        background (`PowerLawBackground`), the edge counts over [E_k, E_k + Δ), the partial cross section from exSpy's dft
 //        GOS (`EdgeCrossSection`), and the low-loss intensity, per pixel; with the counting-statistics σ.
@@ -64,7 +64,7 @@ public nonisolated enum LowLossIntensity: Sendable {
     /// (registration amendment 1: −7.6, −17.6 and −30.7 % at t/λ 0.3, 0.7 and 1.3; −1.6 to −7.1 % at Δ = 150 eV): use a wide
     /// Δ where the data allow.
     case integratedToWidth(LowLossSpectrumImage)
-    /// I_0 of slice 1's thickness map (the zero-loss sum), Egerton eq. 4.65, for single scattering only.
+    /// I_0 of the thickness map (the zero-loss sum), Egerton eq. 4.65, for single scattering only.
     case zeroLoss(ThicknessMap)
 }
 
@@ -81,7 +81,7 @@ public nonisolated enum EdgeUnavailable: String, Error, Sendable, Equatable, Cus
 public nonisolated struct ArealDensityPixel: Sendable, Equatable {
     /// Atoms per nm²; nil with `unavailable` set.
     public let atomsPerNM2: Double?
-    /// Counting-statistics standard deviation of `atomsPerNM2` (registration section 6; not the model, cross-section,
+    /// Counting-statistics standard deviation of `atomsPerNM2` (not the model, cross-section,
     /// angle, dose-ratio or onset errors). First order: trustworthy while it is small against n; where σ_n / n is large
     /// (above about 0.3) the estimate of n itself is no longer near-Gaussian (a review's Monte Carlo at σ_n / n > 5 found
     /// the mean off by 17 to 74 %).
@@ -117,7 +117,7 @@ public nonisolated struct ArealDensityMap: Sendable {
     public let lowLossRoute: String
     public let coreLossToLowLossDose: Double
     public let method: String
-    /// Always "none": agreement with exSpy and planted truth are not validation (registration section 9).
+    /// Always "none": agreement with exSpy and planted truth are not validation.
     public let validation: String
     /// What the registration says a reader must know about this edge (N K and O K: their background sits on a preceding
     /// edge's extended tail, which a power law fitted below the edge misjudges); nil for C K.
@@ -135,7 +135,7 @@ public nonisolated enum EELSEdgeError: Error, Equatable, Sendable {
     case backgroundWindowTooNarrow(fromEV: Double, toEV: Double)
     case backgroundWindowNotPositive(fromEV: Double)
     /// The requested pre-edge window is not inside the core-loss axis. HyperSpy would clamp it (to the whole spectrum when it
-    /// lies below the axis): a departure registered after review, since that fit crosses the edge and gives a wrong n silently.
+    /// lies below the axis): a departure from HyperSpy, since that fit crosses the edge and gives a wrong n silently.
     case backgroundWindowOutsideAxis(fromEV: Double, toEV: Double, axisFromEV: Double, axisToEV: Double)
     /// The partial cross section over the edge window is 0 (the window lies below the edge's onset): n would be infinite.
     case crossSectionZero(edgeWindowFromEV: Double, toEV: Double)
@@ -151,7 +151,7 @@ public nonisolated enum EELSEdgeQuantification {
         "power law (two-area, HyperSpy 2.4.0) + ratio method (Egerton eq. 4.65/4.66), cross section exSpy 7185a4d1 dft GOS (Segger, Guzzinati and Kohl 1.5.0)"
 
     /// The default pre-edge background window: `[E_k − belowOnsetEV, E_k − gapEV]`, by default [E_k − 50, E_k − 5] eV. The library's
-    /// choice, registered with the method (exSpy has no default: its user picks the window); 50 eV is wide enough to estimate a power
+    /// choice (exSpy has no default: its user picks the window); 50 eV is wide enough to estimate a power
     /// law and 5 eV keeps the window clear of the edge's onset. `ratioMethod(backgroundWindowEV:)` takes any window.
     public static func defaultBackgroundWindow(onsetEV: Double, belowOnsetEV: Double = 50, gapEV: Double = 5) -> ClosedRange<Double> {
         (onsetEV - belowOnsetEV)...(onsetEV - gapEV)
@@ -244,7 +244,7 @@ public nonisolated enum EELSEdgeQuantification {
             effectiveCollectionMrad: xs.effectiveAngleMrad, crossSectionBarn: sigma,
             backgroundWindowEV: window.x1...window.x2, edgeWindowEV: onset ..< edgeEnd, edgeChannels: channels,
             lowLossRoute: route, coreLossToLowLossDose: coreLossToLowLossDose, method: methodName, validation: "none",
-            caveat: edge == .carbonK ? nil : "background under a preceding edge's tail: the power law fitted below \(edge) is not trusted (registration section 1)")
+            caveat: edge == .carbonK ? nil : "background under a preceding edge's tail: the power law fitted below \(edge) is not trusted")
     }
 
     private static func crossSection(edge: CoreLossEdge, microscope m: EELSMicroscope) throws -> EdgeCrossSection {

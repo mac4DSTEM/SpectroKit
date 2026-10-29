@@ -1,13 +1,13 @@
 //
 //  EELSSpectrumOps.swift
-//  Role: Task 16 step 2 (docs/design/eels-task-16.md section 3): power-law extrapolation to the right and the Hanning taper, ports of exSpy 0.3.2
+//  Role: Power-law extrapolation to the right and the Hanning taper, ports of exSpy 0.3.2
 //        `EELSSpectrum.power_law_extrapolation` (`eels.py:1236-1331`) and HyperSpy 2.4.0 `Signal1D.hanning_taper` (`signal1d.py:1453-1531`),
 //        the engines of the Fourier deconvolutions.
 //
 //  The extrapolation estimates A and r by HyperSpy's two-area method (`PowerLaw.estimate_parameters`, the existing `PowerLawFit`) over the last
 //  `windowChannels` channels of each spectrum, adds `A * x^-r` times the channel width (a binned axis) at the new channels. Counts are per channel
 //  (a BINNED axis); exSpy's UNBINNED branch (Simpson integral, no channel-width factor) is not offered. `add_noise` (a random draw) is not offered.
-//  Departure registered: where a window sum is not positive or A, r are not finite, HyperSpy's `nan_to_num` (or its whole call failing) is replaced
+//  Departure from HyperSpy: where a window sum is not positive or A, r are not finite, HyperSpy's `nan_to_num` (or its whole call failing) is replaced
 //  by a nil fit and zeros at the new channels, as the rest of the kit does.
 //
 

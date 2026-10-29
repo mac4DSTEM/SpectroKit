@@ -1,6 +1,6 @@
 //
 //  EnergyAxisRefinement.swift
-//  Role: Refine the energy axis on the POOLED spectrum (ADR 054 V5-Q4): an offset correction, a
+//  Role: Refine the energy axis on the POOLED spectrum: an offset correction, a
 //        relative gain correction and the detector resolution (FWHM at Mn K-alpha), keeping the
 //        file's values beside the refined ones.
 //

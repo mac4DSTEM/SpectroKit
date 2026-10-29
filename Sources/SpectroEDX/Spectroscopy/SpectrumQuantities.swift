@@ -160,7 +160,7 @@ public nonisolated enum ElementWindows {
     ///
     /// DEVIATION from eXSpy (`_get_lines_from_elements`, `XRayLines.defaultLines`: "the first alpha line below the beam energy / 2"):
     /// at 200 kV on an 80 keV axis that picks Kα for Hf (55.8 keV) where the instrument vendor's software uses Lα. That software's
-    /// own table (one instrument's 200 kV file, `docs/archive/v5/velox-family-table-200kV-2026-10-07.json`) gives K for Z <= 44
+    /// own table (read from one instrument's 200 kV file) gives K for Z <= 44
     /// (Ru Kα 19.28 keV) and L for Z >= 45 (Rh Kα 20.22 keV), never M; the 20 keV limit is the boundary that table shows, measured
     /// on 200 kV files only. It changes which line a map or marker uses by default, never the fit, which takes whole families.
     public static func defaultFamily(of symbol: String) -> XRayFamily { defaultFamily(of: symbol, rules: .default) }
@@ -312,7 +312,7 @@ public nonisolated enum ElementWindows {
         try! maps(image: image, windows: windows, cancelled: { false }, progress: nil)
     }
 
-    /// The same maps, cancellable (ADR 064 amendment 2 §2): `SpectroCancelled` with nothing returned; `progress` 0...1, ends at 1.
+    /// The same maps, cancellable: `SpectroCancelled` with nothing returned; `progress` 0...1, ends at 1.
     public static func maps(image: some SpectrumImage, windows: [LineWindow],
                              cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                              progress: (@Sendable (Double) -> Void)? = nil) throws -> [[Double]?] {
@@ -373,7 +373,7 @@ public nonisolated enum ElementWindows {
 
     /// "background overlaps Si Kα": one line for the conflicts of one result, at most two named. Lines whose INTEGRATION
     /// window the background reaches come first (a peak in the background), then those it only touches on a flank (a tail):
-    /// on the owner's file Mg's windows touch Cu Lα's flank and sit on Si Kα's peak, and the peak is the one to say.
+    /// on a measured Al-alloy file Mg's windows touch Cu Lα's flank and sit on Si Kα's peak, and the peak is the one to say.
     public static func conflictNote(_ conflicts: [WindowConflict]) -> String? {
         var names: [String] = []
         for c in conflicts.filter(\.reachesIntegrationWindow) + conflicts.filter({ !$0.reachesIntegrationWindow }) {

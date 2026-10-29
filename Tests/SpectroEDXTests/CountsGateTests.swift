@@ -1,6 +1,6 @@
 //
 //  CountsGateTests.swift
-//  Role: EDX stage gate G-C (docs/edx-stage-gates-registration.md section 3): the Velox stream decode and the spectrum-image
+//  Role: The Velox stream decode and the spectrum-image
 //        sums equal an independent decode, exactly (integer equality, no tolerance).
 //
 //  C1: `SpectrumImageOpener` / `VeloxEMDReader` against pins.json's NumPy decode of RosettaSciIO's public files (the decode

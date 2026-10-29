@@ -5,7 +5,7 @@
 //  A count-conserving spatial filter for element maps (Velox 3.15 "pre-filter": Average or Gaussian, "counts are
 //  redistributed and the total is conserved", UM pp. 64-68). Here it is display only: the controller applies it to the signed
 //  net-count map before the display clamp, the raw map stays what the file gave, the export writes the raw map, and every
-//  tile names the kernel. Nothing a quantification reads passes through it (ADR 054: at% on pooled spectra only).
+//  tile names the kernel. Nothing a quantification reads passes through it: at% is computed on pooled spectra only.
 //
 //  Conservation: a normalised kernel conserves the total wherever its whole window is inside the map; at the border the
 //  weights are renormalised over the in-bounds taps, so a flat map stays flat to the edge (no dark rim, the mean per pixel is
