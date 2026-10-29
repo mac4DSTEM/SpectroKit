@@ -1,7 +1,9 @@
-# SpectroKit CI: the gate (tools/test.sh: `swift test -c release --parallel`, failing on any warning), the consumer check, and
-# the tag check. Two macOS jobs, each on a pinned image and Xcode: `test` on macos-26 with Xcode 26.6 (Swift 6.3), and
-# `test-macos15` on macos-15 with Xcode 26.0 (Swift 6.2), the floor Package.swift declares (macOS 15, tools 6.2).
-# The dependencies (FormatoKit, ImagoKit) are public packages the runner resolves with no token.
+# SpectroKit CI: the gate (tools/test.sh: `swift test -c release --parallel`, failing on any warning), the consumer check,
+# the dependency floors and the tag check. Every macOS job pins its image and Xcode through DEVELOPER_DIR, never the newest
+# installed one: `test` and `test-floors` on macos-26 (or the org's Mac runner, which has the same path) with Xcode 26.6
+# (Swift 6.3), and `test-macos15` on macos-15 with Xcode 26.0 (Swift 6.2), the floor Package.swift declares (macOS 15,
+# tools 6.2). No Package.resolved is tracked: `test` gets the newest FormatoKit and ImagoKit in range, `test-floors` the
+# lower bounds. Both are public packages the runner resolves with no token.
 # Never `swift build --build-tests -c release` (fails on this toolchain's Swift Build backend); tools/test.sh is the gate.
 name: CI
 
@@ -18,7 +20,8 @@ concurrency:
 
 jobs:
   test:
-    runs-on: macos-26
+    # The org's Mac runner while the org variable MACEM_MAC_RUNNER is set (never for a fork PR); else GitHub's macos-26.
+    runs-on: ${{ vars.MACEM_MAC_RUNNER && !github.event.pull_request.head.repo.fork && fromJSON(vars.MACEM_MAC_RUNNER) || 'macos-26' }}
     timeout-minutes: 90
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
@@ -33,6 +36,32 @@ jobs:
         run: tools/test.sh --parallel
       - name: Consumer check
         run: tools/consumer-check/run.sh
+  # The dependency floors: no Package.resolved is tracked, so `test` resolves the newest FormatoKit and ImagoKit in range, as a
+  # consumer does; this job pins each dependency to the lower bound Package.swift declares (read from the manifest, so it follows
+  # a raised floor) and runs the same gate.
+  test-floors:
+    # The org's Mac runner while the org variable MACEM_MAC_RUNNER is set (never for a fork PR); else GitHub's macos-26.
+    runs-on: ${{ vars.MACEM_MAC_RUNNER && !github.event.pull_request.head.repo.fork && fromJSON(vars.MACEM_MAC_RUNNER) || 'macos-26' }}
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+      - name: Resolve the floor versions
+        run: |
+          swift package resolve
+          swift package dump-package | jq -r '.dependencies[].sourceControl[0] | "\(.identity) \(.requirement.range[0].lowerBound)"' |
+            while read -r name floor; do
+              echo "pinning $name to $floor"
+              swift package resolve "$name" --version "$floor"
+            done
+          grep -E '"(identity|version)"' Package.resolved
+      - name: Gate (tools/test.sh, release)
+        run: tools/test.sh --parallel
   version:
     name: CHANGELOG version matches the tag
     runs-on: ubuntu-latest
