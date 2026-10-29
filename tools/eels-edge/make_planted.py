@@ -323,7 +323,7 @@ def run_set(tag, dens, seed, manifest_name, truth_name):
         "noise": {"seed": seed, "order": "for case in (ss, ps03, ps07, ps13): poisson(core) then poisson(low), "
                                          "each once on the whole (3, 5, N) float64 array"},
         "files": files,
-        "licence": "SpectroKit's own (GPL-3.0); generated; the cross-section shape is exSpy's dft-GOS result (CC-BY-4.0 data)"})
+        "licence": "SpectroKit's own (GPL-3.0-only); generated; the cross-section shape is exSpy's dft-GOS result (CC-BY-4.0 data)"})
     truth = {"schema": "spectrokit.eels.edge-planted-truth/1", "generator": "tools/eels-edge/make_planted.py",
              "numpyVersion": np.__version__,
              "image": {"rows": ROWS, "cols": COLS, "order": "row-major; row = background, col = density"},
