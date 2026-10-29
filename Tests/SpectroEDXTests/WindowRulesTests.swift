@@ -1,6 +1,6 @@
 //
 //  WindowRulesTests.swift
-//  Role: docs/generality-0.5.0-registration.md, family 1 (W1-W7): the window rules as one value. The default reproduces what
+//  Role: the window rules as one value. The default reproduces what
 //        `ElementWindows.build` has always built (equality with the call that names no rules; asserted exactly today as D12's quick check); each non-default
 //        field moves the windows or the counts as the registration's section 5 predicted before the code was written. Planted,
 //        noise-free spectra (Gaussian lines at the detector's line width on a stated continuum, rounded to integer counts).

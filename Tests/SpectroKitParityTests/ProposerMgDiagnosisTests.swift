@@ -1,13 +1,12 @@
 //
 //  ProposerMgDiagnosisTests.swift
-//  Role: The registered Gate D diagnosis of the Mg auto-ID miss (docs/edx-stage-gates-registration.md section 8), D0 to D5,
-//        run in that order against the SHIPPED `ElementProposer` on the planted spectra. D6 (the owner's real files) is not run:
-//        they are not on this Mac.
+//  Role: The diagnosis of the Mg auto-ID miss, experiments D0 to D5, run in that order against the SHIPPED `ElementProposer`
+//        on the planted spectra. D6 (measured files) is not run here.
 //
-//  These are experiments, not gates: each prints (EDX_GATE_LOG) the observation, the registered refuting observation and the
-//  registered prediction, and the verdict computed from them. The assertions are the structural facts an experiment rests on
+//  These are experiments, not gates: each prints (EDX_GATE_LOG) the observation, the refuting observation stated beforehand and the
+//  prediction, and the verdict computed from them. The assertions are the structural facts an experiment rests on
 //  (the runs return; the matched control behaves as a control), so a broken proposer or loader still fails them. The method of
-//  every number is in the test; the outcomes are recorded in the registration's results section.
+//  every number is in the test; the outcomes are in the log it prints.
 //
 
 import Foundation
@@ -50,7 +49,7 @@ struct ProposerMgDiagnosisTests {
         gateNote("EDX D0: \(ids.count) cells, \(spectra) spectra (noise-free mean + first 10 realisations): single and full pool differ by a decision in \(decisionDiffers), by more than 10 % of the net in \(netDiffers); full pool loses a Mg the single test proposes in \(fullLoses). \(examples)")
         gateNote("EDX D0 verdict: \(fullLoses == 0 ? "REFUTED (no pruning loss: the full pool and the single-candidate design agree where it matters)" : "SUPPORTED on \(fullLoses) spectra")  [registered prediction: same net in both, D0 refuted: \(netDiffers == 0 && decisionDiffers == 0 ? "met" : "NOT met in \(netDiffers + decisionDiffers) cases")]")
         #expect(spectra > 100)
-        // measured outcome guarded (not a registered bound): the full pool loses Mg on some spectra the single test proposes (9 here)
+        // measured outcome guarded (not an upstream bound): the full pool loses Mg on some spectra the single test proposes (9 here)
         #expect(fullLoses >= 1, "D0 measured: pruning by the pool costs Mg on some spectra")
         // the control: on matched, strongly detectable data both designs find Mg
         let ctl = RunStore.shared.full("M.s.N6.rho0p05", reals: 10)
@@ -150,7 +149,7 @@ struct ProposerMgDiagnosisTests {
                 gateNote("EDX D2 refine-then-propose \(id), net/truth (P = proposed): " + parts.joined(separator: "; "))
             }
         }
-        // measured outcome guarded (not a registered bound): refining axis and R_MnKa first brings Mg back on a +3 eV axis error
+        // measured outcome guarded (not an upstream bound): refining axis and R_MnKa first brings Mg back on a +3 eV axis error
         let c3 = cell("S+3.s.N7.rho0p01")
         let refined = try #require(refineThenPropose(EDXFixtures.meanSpectrum(c3), elements: ["Mg", "Al", "Si"], useRefinedResolution: true))
         #expect(ratio(refined, c3.truth["Mg"]!) > 0.9, "refine-then-propose recovers Mg on S+3 (measured 0.99)")
@@ -197,7 +196,7 @@ struct ProposerMgDiagnosisTests {
                 let withRef = PlantedRuns.run(EDXFixtures.meanSpectrum(c), reference: ref)
                 let without = RunStore.shared.single(id).mean
                 if t == "T2" && rho == "0p01" {
-                    // measured outcome guarded (not a registered bound): the true tail as a reference shape brings Mg back (0.64 -> 0.84)
+                    // measured outcome guarded (not an upstream bound): the true tail as a reference shape brings Mg back (0.64 -> 0.84)
                     #expect(ratio(withRef, truth) > (ratio(without, truth) + 0.1), "the true tail supplied as a reference shape recovers Mg")
                 }
                 gateNote("EDX D3 reference shape \(id): net/truth without \(f(ratio(without, truth))) with the true tail supplied \(f(ratio(withRef, truth))) (flank factor \(f(without.misfit, 1)) -> \(f(withRef.misfit, 1)), L_D \(f(without.ld, 0)) -> \(f(withRef.ld, 0)))")
@@ -212,7 +211,7 @@ struct ProposerMgDiagnosisTests {
     /// A noise-free matched spectrum whose line shapes are sampled at the channel centre (the fit model's convention, hyperspy's)
     /// instead of integrated over the channel (the generator's, registration 5.2): the stored mean with its bin-integrated Mg, Al
     /// and Si lines taken out and the same lines, same areas and widths, put back centre-sampled. The continuum is the generator's.
-    /// Not a registered set: the control that separates the line-shape sampling convention from every other misfit.
+    /// Not a planted set of the diagnosis: the control that separates the line-shape sampling convention from every other misfit.
     private func centreSampledMatched(_ c: EDXFixtures.Cell) -> [Double] {
         var out = EDXFixtures.meanSpectrum(c)
         let table: [(String, [(Double, Double)], Double)] = [
@@ -240,8 +239,8 @@ struct ProposerMgDiagnosisTests {
     }
 
     /// D4. Too little Mg in the pooled spectrum (the recorded explanation). Registration: refuted if the planted spectra with a
-    /// right model (set M) detect at the level a Mg/Al ratio of 0.002 to 0.01 would deliver (by 20 to 50 times), AND the owner's
-    /// alloy is nominally >= 0.3 wt % Mg, AND the real Al Ka misfit is small. The last two need the owner (Q2, D6) and are not run.
+    /// right model (set M) detect at the level a Mg/Al ratio of 0.002 to 0.01 would deliver (by 20 to 50 times), AND the measured
+    /// alloy is nominally >= 0.3 wt % Mg, AND the real Al Ka misfit is small. The last two need measured files (D6) and are not run.
     /// What is measured here: the margin (planted Mg / L_D(M)) of the shipped proposer on set M, and the same on the centre-sampled
     /// control, which separates the line-shape sampling convention of the model from the rest.
     @Test func testD4TooLittleMgMargin() throws {

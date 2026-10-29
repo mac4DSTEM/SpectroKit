@@ -1,31 +1,9 @@
-# EELS task 16: zero-loss alignment, background, deconvolution, edge fit (design note)
+# The EELS chain: zero-loss alignment, background, deconvolution, edge fit (design note)
 
-Suite ROADMAP task 16, SpectroKit 0.9.0. Written 2026-10-21 for a Mac session to implement without further design work.
-Reference: exSpy 0.3.2 (`exspy/signals/eels.py`, `exspy/models/eelsmodel.py`, `exspy/components/eels_cl_edge.py`) and
-HyperSpy 2.4.0 (`hyperspy/_signals/signal1d.py`, `hyperspy/misc/math_tools.py`, `hyperspy/_components/power_law.py`)
-in `../References/python/hyperspy` (NumPy 2.5.4, SciPy 1.18.1). Line
-numbers below are from those files. Every result stays `validation: "none"`. No code beyond signatures; one screen per
-section.
-
-## 0. Scope and order
-
-What the apps need first (macTEM task 8, then mac4DSTEM): the EELS room opens a spectrum image, shows the t/lambda map
-and the zero-loss diagnostic. t/lambda exists; the room's first new need is **zero-loss alignment** (real data is never
-at 0 eV) and the **zero-loss mask**. Everything else is composition from EELS, which the room offers only once the fit
-lands. Implementation order, each step its own commit with a test that fails before and passes after:
-
-1. Zero-loss alignment and mask (section 2). Unblocks macTEM task 8.
-2. Power-law extrapolation and Hanning taper (section 3). Small; the deconvolutions stand on them.
-3. L-subshell GOS tables and the edge database rows the fit needs (section 6.1).
-4. Fourier-log and Fourier-ratio deconvolution (section 4).
-5. Edge model fit, background fit, quantify (section 6.2).
-6. Richardson-Lucy (section 5), only if the session has time: the ROADMAP lists it out of scope, the coordinator asked
-   for its API, so it is designed and ordered last.
-
-Out of scope (ROADMAP): fine-structure fitting, Kramers-Kronig, `rebin`, EDS calibration, hydrogenic and Dirac GOS.
-Dependencies: one new package dependency, ImagoKit `"0.6.0"..<"1.0.0"` for `ImagoCore.FFT2DDouble` used as a 1-D plan
-(`nx: size, ny: 1`; vDSP for 2^n × {1,3,5,15}, Bluestein for the rest; DiffractoKit precedent; sections 4 and 11 say why).
-`ImagoFFT.FFT1DDouble` is power-of-two only and does not fit `next_fast_len` sizes. Readers unchanged.
+How SpectroEELS ports exSpy 0.3.2 (`exspy/signals/eels.py`, `exspy/models/eelsmodel.py`, `exspy/components/eels_cl_edge.py`) and
+HyperSpy 2.4.0 (`hyperspy/_signals/signal1d.py`, `hyperspy/misc/math_tools.py`, `hyperspy/_components/power_law.py`), as installed by
+`tools/reference/setup.sh` (NumPy 2.5.4, SciPy 1.18.1). Line numbers are from those files. Every result stays `validation: "none"`.
+Written for 0.9.0 (2026-10-21); the code is the reference where they differ, and `docs/parity.md` holds each function's state and tolerance.
 
 ## 1. Shared types (SpectroEELS)
 
@@ -165,12 +143,12 @@ The FFT runs on `ImagoCore.FFT2DDouble(nx: size, ny: 1)` (vDSP for 2^n × {1,3,5
 `next_fast_len` size is exact in length (if the `ny: 1` plan proves awkward, an any-length `FFT1DDouble` is a one-task
 ImagoKit change, not a SpectroKit copy); `irfft` of a half spectrum follows NumPy's Hermitian rule (imaginary parts of bins 0 and N/2 dropped).
 
-Tolerances: upstream has none (`TestFourierRatioDeconvolution::test_running` only runs). D17 fallback: `assert_allclose`
+Tolerances: upstream has none (`TestFourierRatioDeconvolution::test_running` only runs). Fallback: `assert_allclose`
 defaults are rtol 1e-7 with atol 0, which a deconvolved channel near zero can never meet across two FFT libraries. Kit
 decision, recorded in `parity.md`: rtol 1e-7 **and** atol 1e-7 × max|pinned result| per pixel; `fftSize`, `taperedChannels`
 and the FWHM root positions exact to 1e-9 eV (`UnivariateSpline` roots are a cubic solve; port `scipy`'s `sproot`-free
 route: cubic not-a-knot spline through the points, roots per interval by Cardano, as `InterpolatingSpline` already builds
-the spline). The planted truth test (section 8) checks that deconvolving a planted plural-scattering spectrum returns
+the spline). The planted truth test checks that deconvolving a planted plural-scattering spectrum returns
 the planted single-scattering distribution within its counting noise.
 
 ## 5. Richardson-Lucy deconvolution (ordered last)
@@ -195,10 +173,9 @@ rule as section 4 (rtol 1e-7, atol 1e-7 × max|result|); `iterations < 1` refuse
 
 ### 6.1 Tables and edges
 
-`CoreLossEdge` grows `subshell` beyond K1: `tools/eels-edge/extract_gos.py --subshells L1,L2,L3` writes
-`Resources/GOS/dft-<El>-<sub>.json` the same way (float32 kept, sorted keys, md5 of the GOSH file checked). Bundle for
-0.9.0 (the study's alloys and the usual contaminants; a pure engineering pick): K1 for C, N, O, Mg, Al, Si; L1, L2, L3 for
-Mg, Al, Si, Fe, Cu. Onsets from exSpy's `eels_binding_energies.json` (exact, `tests/misc/test_gos.py::test_binding_energy_database`).
+`CoreLossEdge` carries any subshell: `tools/eels-edge/extract_gos.py` writes every K, L and M table exSpy builds with the
+dft GOS into one float32 pack (`Resources/GOS/dft-gos-tables.bin` with `dft-gos-index.json`; the GOSH file's md5 checked):
+383 edges of 95 elements since 0.12.0 (0.9.0 bundled 20). Onsets from exSpy's `eels_binding_energies.json` (exact, `tests/misc/test_gos.py::test_binding_energy_database`).
 `EdgeCrossSection` already integrates any subshell's table (`_integrate_GOS`, `function(E)` at rtol 5e-7, `test_eels_cl_edge.py`);
 the only new rule is exSpy's twin: the subshells of one element share one intensity, the master is the lexicographically
 last name (`L3` over `L2` over `L1`, `eelsmodel.py:283-327`), the others' onsets ride on the master's with the fixed
@@ -227,7 +204,7 @@ public struct EELSModelOptions: Sendable, Equatable {
 }
 public struct EdgeIntensityPixel: Sendable, Equatable {
     public let intensity: Double?                       // exSpy's intensity.value (counts × barn⁻¹ scale); nil with `unavailable`
-    public let arealDensityPerNM2: Double?              // n from intensity by the ratioMethod unit rule (1 barn = 1e-10 nm²); see the pin, section 8
+    public let arealDensityPerNM2: Double?              // n from intensity by the ratioMethod unit rule (1 barn = 1e-10 nm²); see the pin
     public let background: PowerLawParameters?; public let unavailable: EELSUnavailable?
 }
 public struct EELSModelResult: Sendable {
@@ -250,7 +227,7 @@ minimiser (Brent, `r ∈ [0, 10]`, start from the two-area estimate) with intens
 HyperSpy's LM stops short of the minimum by 1e-4 relative) and is the `DEVIATION` to write inline. Low-loss convolution:
 exSpy convolves each component with the raw low-loss counts over the model's convolution axis; port that convolution
 (linear, `vDSP_convD`, axis as `set_convolution_axis`) and record the factor between exSpy's `intensity` and `n` on the
-planted set before fixing `arealDensityPerNM2` (the pin script writes both numbers, section 8).
+planted set before fixing `arealDensityPerNM2` (the pin script writes both numbers).
 
 Tolerances: `test_eelsmodel.py::test_two_area_powerlaw_estimation_{BC,C,no_edge}` A and r at defaults (pinned numbers
 2.1451237089380295 / 3.0118980767392736 and the two others); `test_fit_background_{B_C,C}` offset at defaults;
@@ -274,78 +251,29 @@ LM shortfall is 1e-4), and within the counting-statistics sigma of the planted t
 | `EELSModelFit.fit` | `eelsmodel.py:444-480`, `:594-671`; `eels_cl_edge.py:441-497` | component rtol 5e-7; fit: none upstream, kit rtol 1e-3 + planted sigma |
 | `CoreLossEdge` L tables | `gosh_gos.py` `read_gos_data`; `eels_binding_energies.json` | `test_gos.py::test_binding_energy_database` exact; tables bit for bit |
 
-Pin environment: exSpy 0.3.2 and HyperSpy 2.4.0 from `References/python/bin/python -I -B` (Python 3.14,
+Pin environment: exSpy 0.3.2 and HyperSpy 2.4.0 from `References/python/bin/python -I -B` (`tools/reference/setup.sh`; Python 3.14,
 NumPy 2.5.4, SciPy 1.18.1), the dft GOSH 1.5.0 file by md5 `7fee8891c147a4f769668403b54c529b`, as the existing scripts.
 
-## 8. Pin scripts and fixtures (existing layout: `tools/<slice>/pins.py` writes `Tests/SpectroEELSTests/Fixtures/`)
-
-| script | writes | holds |
-|---|---|---|
-| `tools/eels-align/make_planted.py` (NumPy only) | `align-planted.f64`, `align-planted.json` | 4×4×400 low loss, ZLP Gaussian FWHM 1.2 eV at planted shifts (−0.9…+1.3 eV, incl. the exact `TestAlignZLP` grid), background 2, a 20-count spike at channel 300, mask pixels [3, 5]; truth shifts |
-| `tools/eels-align/pins.py` | `align-pins.json` | per option set (calibrate × subpixel × signal_range × crop × mask): zlpc before, shifts, new offset, kept channel range, aligned data (f64 sidecar), `get_zero_loss_peak_mask` for widths 2, 5, 10; `estimate_shift1D` raw |
-| `tools/eels-deconv/make_planted.py` | `deconv-ssd.f64`, `deconv-zlp.f64`, `deconv-plural.f64`, `deconv-core.f64`, `.json` | planted single-scattering distribution, ZLP, plural spectrum = ZLP ⊛ exp(SSD) (Poisson series to order 6), core loss = SSD ⊛ edge; noiseless and `default_rng(20261021)` Poisson copies |
-| `tools/eels-deconv/pins.py` | `deconv-pins.json` (+ `.f64` results) | `power_law_extrapolation` (20/100, 100/100, fix_neg_r), `hanning_taper` channels, `optimal_fft_size` for 1…5000 both rules, Fourier-log (add_zlp × crop), Fourier-ratio (fwhm given / estimated × extrapolate flags × threshold fixed / estimated) with `fftSize`, FWHM roots, I0; Richardson-Lucy 1, 5, 15 iterations |
-| `tools/eels-edge/extract_gos.py --subshells` | `Resources/GOS/dft-<El>-<sub>.json` | the L tables, section 6.1 |
-| `tools/eels-model/make_planted.py` | `model-core-*.f64`, `model-low-*.f64`, `model-planted.json`, `model-truth.json` | 3×5 pixels: power law × {3 backgrounds} with C K + O K (two K) and Fe L2,3 + O K (L twins) at planted n, low loss from `edge-low-ps07`; noiseless and noisy |
-| `tools/eels-model/pins.py` | `model-pins.json` | `two_area_background_estimation` (A, r) incl. the three `test_eelsmodel` cases, `fit_background` range and parameters, `smart_fit` per pixel: every parameter, the fit range per edge, `quantify` text, and the intensity → n factor (exSpy `intensity`, I_low, σ per edge) |
-
-Every script records versions, its own sha256 and the GOSH md5 (as `tools/eels-edge/pins.py` does), writes byte-identical
-output on a second run, and gets a `README.md` with the run lines. The exSpy-internal truth (`test_eelsmodel` numbers)
-is copied into the pin, not retyped in Swift.
-
-## 9. `docs/parity.md` rows to move or add
-
-Zero-loss peak section: `estimate_zero_loss_peak_centre` partial → present TOL (mask and `signal_range` now held);
-`align_zero_loss_peak`, `get_zero_loss_peak_mask` missing → present TOL / exact; new rows for HyperSpy `shift1D`,
-`estimate_shift1D`, `align1D` under "Shared numerics" (TOL; note the `max_shift` no-op). Deconvolution section:
-`fourier_log_deconvolution`, `fourier_ratio_deconvolution`, `richardson_lucy_deconvolution`, `power_law_extrapolation`
-missing → present TOL, tolerance column "none upstream; kit rtol 1e-7 + atol 1e-7·max (decision, design note eels-task-16
-section 4)"; new rows `hanning_taper` (exact), `optimal_fft_size` (exact), `estimate_peak_width` (TOL). Model section:
-`create_model` / `EELSModel` row splits into `two_area_background_estimation` (TOL defaults), `fit_background` (TOL
-defaults), `smart_fit` / `fit` (DEV: variable projection + NNLS, rtol 1e-3, planted sigma), `quantify` (exact text
-reproduced by a formatter test); `EELSCLEdge` L edges row → present for the bundled L elements, M and other K stay missing;
-edges database row → partial with the new onsets. Summary table counts updated; "largest gaps" item 1 rewritten to what
-remains (fine structure, Kramers-Kronig, hydrogenic/Dirac GOS, free onset energy).
-
-## 10. Tests: fast target against parity target
-
-`SpectroEELSTests` (fast, per session, must stay under a few seconds): refusals and shapes for every new error case;
-hand-derived rules (`optimalFFTSize` against a list of 5-smooth numbers, Hanning window values, `next_fast_len` real vs
-complex, twin master selection, `preEdgeSafeWindow`); planted truth tests (alignment recovers planted shifts within
-0.5 channel coarse / atol 1e-3 eV subpixel; Fourier-log of the planted plural spectrum returns the SSD within noise;
-model fit recovers planted n within the counting sigma); the `quantify` formatter against the exact text.
-
-`SpectroKitParityTests` (before a tag and nightly, CI on push): one `*PinsTests` class per fixture (`AlignPinsTests`,
-`DeconvPinsTests`, `ModelPinsTests`) comparing against exSpy's numbers at the section 7 tolerances; the `.f64` results
-loaded through `SpectroTestSupport` (`FixtureDirs.fixtures(of: "SpectroEELSTests")`, a `DeconvFixtures.swift` beside
-`EELSFixtures.swift`). Benchmarks (`tools/benchmarks/bench.py`, nightly): alignment and Fourier-ratio at 64×64×2048 against
-exSpy, with the Python side timed in the same venv.
-
-## 11. Performance: Accelerate, no Metal
+## 8. Performance: Accelerate, no Metal
 
 Every path is per pixel on a 1-D axis of 1k to 4k channels: linear interpolation, one correlation, two FFTs and a
-division, an NNLS of three to six columns. At the study's size (64×64×2048, 8 M values) that is tens of milliseconds
+division, an NNLS of three to six columns. At a typical map size (64×64×2048, 8 M values) that is tens of milliseconds
 per step on the CPU in float64 with the pixel loop parallel over chunks (the pattern of `EDXQuantification.quantifyMaps`,
-at most 8 threads). A Metal float32 path would spend its dispatch and copy on work smaller than the copy; D16's "where
-size pays" does not hold for anything in this task, so no kernel, no `.metal` option, and the result records
-`backend: "cpu"` only. Richardson-Lucy at 15 iterations is the heaviest (about 1 s at the study size); if a spectrum
+at most 8 threads). A Metal float32 path would spend its dispatch and copy on work smaller than the copy; the "where
+size pays" rule does not hold for anything in this task, so no kernel, no `.metal` option, and the result records
+`backend: "cpu"` only. Richardson-Lucy at 15 iterations is the heaviest (about 1 s at that size); if a spectrum
 image ten times larger arrives, the FFT-based convolution on the same plan is the first step, Metal the second. The FFT comes
 from ImagoKit (`FFT2DDouble`, vDSP for 2^n × {1,3,5,15}, Bluestein for the other `next_fast_len` sizes); writing a second
 Bluestein in SpectroKit was the alternative and is not worth a copy.
 
-## 12. Decisions a reviewer should see
+## 9. Decisions a reviewer should see
 
 1. ImagoKit becomes a dependency of SpectroKit (FFT only). Reverse by vendoring the Bluestein plan; nothing else changes.
-2. Deconvolution tolerance: rtol 1e-7 plus atol 1e-7 × max|result| where exSpy tests nothing numerically (D17 fallback
+2. Deconvolution tolerance: rtol 1e-7 plus atol 1e-7 × max|result| where exSpy tests nothing numerically (the `assert_allclose` default
    with an atol, because allclose's atol 0 is unattainable across FFT libraries for near-zero channels).
 3. The model fit is an exact minimiser (variable projection + NNLS), not HyperSpy's LM; pinned at rtol 1e-3, truth at
    the planted sigma. Same deviation as the EDX fit, same inline `DEVIATION` note.
 4. Non-finite per-pixel outcomes are nil with a reason (`EELSUnavailable`), never NaN, as every EELS result today.
 5. `max_shift` and `add_noise` are not offered (a no-op and a random draw in the reference).
-6. Richardson-Lucy is designed but ordered last; the ROADMAP lists it out of scope, so skipping it is not a gap.
-7. The bundled L edges (Mg, Al, Si, Fe, Cu) are an engineering pick for the study's alloys; a different list is a
-   one-line change in `extract_gos.py` plus a resources commit.
-
-Closeout for the implementing session: fast target green per commit, full suite before the tag, `CHANGELOG.md`
-0.9.0 entry with a Migration paragraph (new dependency, `CoreLossEdge.subshell` values beyond `K1`), `docs/parity.md`
-rows per section 9, `docs/status.md` one line, open item 4 rewritten, hand-off paragraph in the last commit.
+6. Richardson-Lucy came last (0.10.0).
+7. Since 0.12.0 every edge exSpy builds with the dft GOS is bundled, so there is no list to pick.

@@ -1,6 +1,6 @@
 //
 //  EELSParallel.swift
-//  Role: the pixel loop of task 16 (design section 11): pixels are independent, so the loop runs in chunks on all cores, a wave at a time,
+//  Role: the EELS pixel loop: pixels are independent, so the loop runs in chunks on all cores, a wave at a time,
 //        asking `cancelled` and reporting progress between waves. Each chunk writes its own slots; results are assembled in pixel order,
 //        so an answer never depends on the schedule. CPU float64 only (no Metal: the work per pixel is smaller than a copy).
 //

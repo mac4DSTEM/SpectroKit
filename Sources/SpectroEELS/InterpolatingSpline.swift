@@ -2,7 +2,7 @@
 //  InterpolatingSpline.swift
 //  Role: SciPy 1.18.1's `make_interp_spline(x, y, k=3)` with its default not-a-knot condition, and the resulting
 //        `BSpline`'s evaluation with `extrapolate=True`, which exSpy uses for the energy-differential cross section between
-//        the tabulated GOS energies (`base_gos.py`, end of `integrateq`). EELS slice 2, registration section 3.3.
+//        the tabulated GOS energies (`base_gos.py`, end of `integrateq`).
 //
 //  Knots (`interpolate/_bsplines.py:1278-1297`, `_not_a_knot`, odd k): x[0] four times, x[2 ..< n-2], x[n-1] four times.
 //  The collocation matrix (`_dierckx._coloc`): row j holds the k+1 non-zero B-splines at x[j] in the knot interval l

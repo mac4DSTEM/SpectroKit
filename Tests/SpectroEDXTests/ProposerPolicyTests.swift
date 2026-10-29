@@ -1,6 +1,6 @@
 //
 //  ProposerPolicyTests.swift
-//  Role: docs/generality-0.5.0-registration.md, family 3 (E1-E11, U1-U3): `ProposerPolicy` and `UnlistedLineRules`. The default
+//  Role: `ProposerPolicy` and `UnlistedLineRules`. The default
 //        policy reproduces the proposer built without one; each non-default field moves the candidates the way section 5 predicted
 //        before the code was written. Noise-free planted spectra (the fit's own line model plus a continuum), so every
 //        statement is about the policy, not about a draw.

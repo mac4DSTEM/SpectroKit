@@ -1,6 +1,6 @@
 //
 //  EDXFixtures.swift
-//  Role: Loaders for the EDX stage gates (docs/edx-stage-gates-registration.md): pins.json, the planted Velox streams and
+//  Role: Loaders for the EDX pins and planted fixtures: pins.json, the planted Velox streams and
 //        their truth, the planted Al-Mg-Si spectra (means plus int16 residuals), the calibration set, and RosettaSciIO's
 //        public Velox files. Formats: tools/edx-planted/README.md. Nothing here is the code under test.
 //
@@ -149,7 +149,7 @@ package extension Dictionary where Key == String, Value == Any {
     func s(_ k: String) -> String { self[k] as! String }
 }
 
-// MARK: parallel helper (at most 8 workers: the heavy-CPU limit)
+// MARK: parallel helper (at most 8 workers, so heavy CPU work leaves the machine usable)
 
 package final class ResultBox<T: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
@@ -170,7 +170,7 @@ package func parallelMap<T: Sendable>(_ n: Int, _ body: @Sendable (Int) -> T) ->
     return box.values
 }
 
-/// Lines of `EDX_GATE_LOG` (if set) and stdout: the numbers the gates and the Gate D experiments report.
+/// Lines of `EDX_GATE_LOG` (if set) and stdout: the numbers the EDX checks and the Mg diagnosis report.
 package func gateNote(_ s: String) {
     print(s)
     guard let path = ProcessInfo.processInfo.environment["EDX_GATE_LOG"] else { return }

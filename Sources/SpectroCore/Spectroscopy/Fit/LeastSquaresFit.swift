@@ -1,7 +1,7 @@
 //
 //  LeastSquaresFit.swift
 //  Role: Unweighted least squares with non-negative line areas: the NAMED DEFAULT of the
-//        spectrum fit (ADR 054, V5-Q1). Every result carries `LeastSquaresFit.label`.
+//        spectrum fit. Every result carries `LeastSquaresFit.label`.
 //
 //  Lawson and Hanson, "Solving Least Squares Problems" (1974), Algorithm 23.10 (NNLS), with
 //  the passive-set subproblem solved by Accelerate's QR-based `dgelsy_` (see
@@ -14,14 +14,14 @@
 //  DEVIATION (eXSpy/hyperspy): `Model1D.fit` with its default "ls" loss is an UNBOUNDED
 //  Levenberg-Marquardt on the line areas (`ext_force_positive` acts only with `bounded=True`),
 //  and it stops short of the least-squares minimum: on EDS_TEM_FePt_nanoparticles it returns
-//  2800.0213 / 14921.183 where the exact minimiser is 2800.2296 / 14920.805 (docs/archive/v5 fixture,
-//  7e-5 and 3e-5 relative). Here the minimum is exact and areas cannot go negative.
+//  2800.0213 / 14921.183 where the exact minimiser is 2800.2296 / 14920.805 (7e-5 and 3e-5
+//  relative). Here the minimum is exact and areas cannot go negative.
 //
 
 import Foundation
 
 package nonisolated enum LeastSquaresFit {
-    /// Printed beside every least-squares result (pre-registration flag 4).
+    /// Printed beside every least-squares result.
     package static let label = "least squares, unweighted"
 
     package struct Solution: Sendable, Equatable {

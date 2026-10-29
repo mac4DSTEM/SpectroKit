@@ -108,7 +108,7 @@ struct SpectroscopyProposerTests {
     // MARK: 1. Realistic continuum: no false Mg at Mg = 0, the detection rate at 0.3 % and 1 %
 
     /// A joint fit tests ~115 line groups, so about one spectrum in twenty shows a chance element at L_D (alpha = beta = 0.05 per
-    /// candidate, the registered rule; the proposal says so). Tests therefore assert on the NAMED elements (Mg, Si, Na, never
+    /// candidate, by rule; the proposal says so). Tests therefore assert on the NAMED elements (Mg, Si, Na, never
     /// proposed) and give chance elements a budget that a modelling fault (a continuum misfit) would exceed.
     private static let chanceBudgetPer50 = 5
 
@@ -249,7 +249,7 @@ struct SpectroscopyProposerTests {
         return (r, Self.sim.regions[region].components)
     }
 
-    /// The registered T2 core, on lane S's simulator at 10, 100 and 300 counts/px: where the truth sum peak is above 1.5 L_D it is
+    /// The T2 core, on the EDX forward model (tools/edx-sim) at 10, 100 and 300 counts/px: where the truth sum peak is above 1.5 L_D it is
     /// NAMED (a candidate on its energy carries the sum conflict, or the sum column itself is detected); where it is below
     /// 0.5 L_D nothing is named at its energy. L_D is the limit of whatever sits at that energy in the same proposal.
     @Test func testSumPeaksAreNamedExactlyWhereTruthExceedsTheDetectionLimit() throws {
@@ -397,7 +397,7 @@ struct SpectroscopyProposerTests {
         #expect(look.contains("candidates were tested"), "\(look)")
     }
 
-    /// Lane Sigma (Gate D): the REPORTED covariance is a passive-set sandwich, so the fit's own sigma predicts the scatter of the
+    /// The REPORTED covariance is a passive-set sandwich, so the fit's own sigma predicts the scatter of the
     /// Al K-alpha area over 200 Poisson draws (the SD of an SD at 200 draws is 5 %). Before: the full-design pseudo-inverse counted the
     /// bound-active Mg column as free and gave ratio 0.81 (P9); predicted after: [0.85, 1.15], pinned [0.90, 1.15]; measured 1.03 (seeds 9000+s).
     /// NOT claimed: conservatism on weak lines. Fable's review measured empirical SD / sigma on a weak Mg line at 1.05 / 1.06 / 1.08 (LS, Mg 1/3/10 %),

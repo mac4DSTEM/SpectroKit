@@ -9,7 +9,7 @@
 //  itself and its covariance, so an overlap is no longer a reason to doubt a proposal; what remains are the causes a
 //  fit cannot tell apart from an element: a pile-up peak, a contaminant from the preparation, a grid.
 //  Sum peaks are no longer a fixed list: every pair of detected parents is a candidate sum energy.
-//  Sources: docs/archive/v5/edx-dossier-2026-10-05.md section 6 (spurious peaks), ADR 054 (V5-Q6). Energies in keV.
+//  Energies in keV.
 //
 
 import Foundation
@@ -26,7 +26,7 @@ public nonisolated struct LineConflict: Equatable, Sendable {
     package let energiesKeV: [Double]
     /// Elements that must be detected for the conflict to apply (a sum peak's parents).
     package let requires: [String]
-    /// The question shown to the owner.
+    /// The question shown to the user.
     public let question: String
     /// What can settle it.
     package let remedy: String

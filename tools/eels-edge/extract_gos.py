@@ -90,7 +90,7 @@ def dump(v, ind, out):
         out.append(scalar(v))
 
 
-# Task 16 (docs/design/eels-task-16.md section 6.1): one file per element AND TABLE, dft-<El>-<table>.json, listing the edges that read it.
+# Task 16 (docs/design/eels-chain.md section 6.1): one file per element AND TABLE, dft-<El>-<table>.json, listing the edges that read it.
 # L2 and L3 share the L23 table and differ only in their occupancy ratio (exSpy's `subshell_factor`: 0.333 and 0.667); Al has the single "L2,3"
 # (factor 1.0). The onsets are exSpy's eels_binding_energies.json. Same float32-exact number writing and key sorting as the K1 files.
 TASK16 = {

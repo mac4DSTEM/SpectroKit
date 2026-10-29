@@ -1,6 +1,6 @@
 //
 //  SmoothingKernelTests.swift
-//  Role: docs/generality-0.5.0-registration.md, family 4 (M1): `SmoothingKernel`, any box width or Gaussian sigma and truncation.
+//  Role: `SmoothingKernel`, any box width or Gaussian sigma and truncation.
 //        The menu entries are the same kernels as before (asserted bit for bit today, D12's quick check); a non-default kernel spreads an impulse as predicted.
 //
 

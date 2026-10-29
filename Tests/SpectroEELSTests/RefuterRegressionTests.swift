@@ -1,6 +1,6 @@
 //
 //  RefuterRegressionTests.swift
-//  Role: Images on which the Gate B refuter (2026-10-14) found the estimated-threshold route picking another channel than exSpy
+//  Role: Images on which an independent review (2026-10-14) found the estimated-threshold route picking another channel than exSpy
 //        7185a4d1 (the port's Savitzky-Golay derivative was not bit-equal to SciPy's). Each case has the image (data.f64), the
 //        routes asked (spec.json) and exSpy's answers at every pixel (exspy.json); the generators are
 //        tools/eels-thickness/edge_cases.py and random_cases.py. B1: negative counts; B3, B5: flat and ramp spectra, where
@@ -86,7 +86,7 @@ struct RefuterRegressionTests {
                 routesChecked += 1
             }
         }
-        print("EELS-REPORT refuter regression: \(cases.count) images, \(routesChecked) routes (\(estimatedRoutes) estimated), \(pixelsChecked) pixel-route answers, \(nanPixels) NaN-threshold pixels")
+        print("EELS-REPORT threshold regression: \(cases.count) images, \(routesChecked) routes (\(estimatedRoutes) estimated), \(pixelsChecked) pixel-route answers, \(nanPixels) NaN-threshold pixels")
         #expect(nanPixels > 0)
     }
 }

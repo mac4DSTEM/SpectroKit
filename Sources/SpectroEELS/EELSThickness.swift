@@ -1,6 +1,6 @@
 //
 //  EELSThickness.swift
-//  Role: EELS slice 1 (docs/eels-slice-1-registration.md): the t/λ thickness map of a low-loss spectrum image by the
+//  Role: The t/λ thickness map of a low-loss spectrum image by the
 //        log-ratio method, a port of exSpy 7185a4d1's `estimate_thickness` (`exspy/signals/_eels.py:755-868`) with its
 //        threshold (`:641-753`) and zero-loss sum (`:566-639`).
 //

@@ -1,14 +1,12 @@
-// SpectroKit S1 test partition (ADR 064 section 3.3): the methods of SpectroscopyUnlistedLineTests that move with the EDX core;
-// the rest stay in SpectroscopyUnlistedLineTests.swift. Helpers are duplicated, not shared, across the split.
 import Foundation
 import Testing
 import SpectroCore
 import SpectroEDX
 
-/// WP3b F1 (docs/archive/v5/wp3b-fit-robustness-preregistration-2026-10-06.md, P4 and P5): after a Quantify fit the
+/// WP3b F1: after a Quantify fit the
 /// proposer names every unlisted line at or above L_D (sum-peak questions included), and at% is withheld only when fitting
 /// them moves a quantified net by more than its reported sigma. Synthetic pool: `Fixtures/eds-unlisted-sim.json`
-/// (generator `tools/edx-pins/unlisted_sim.py`, the refuter's S2c recipe), seeded Poisson noise here. The assertions are
+/// (generator `tools/edx-sim/unlisted_sim.py`), seeded Poisson noise here. The assertions are
 /// the DECISIONS (named, withheld), not exact nets, so a continuum change (lane F23) does not re-band them.
 @MainActor
 struct SpectroscopyUnlistedLineTests {
@@ -129,7 +127,7 @@ struct SpectroscopyUnlistedLineTests {
         #expect(namedSomewhere || check.names.contains("Ca"))
     }
 
-    // MARK: A2 (Gate D 2026-10-06: ship the quantity, label what is beside a listed line)
+    // MARK: ship the quantity, label what is beside a listed line
 
     private func groups(_ elements: [String]) -> [FitLineGroup] {
         EDSLineModel.build(elements: elements, axis: Self.pool.axis, beamEnergy: Self.pool.beam, resolutionMnKaEV: 130, escapePeaks: false).groups

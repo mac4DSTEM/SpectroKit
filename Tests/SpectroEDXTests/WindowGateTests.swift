@@ -1,6 +1,6 @@
 //
 //  WindowGateTests.swift
-//  Role: The window method against exSpy (registration section 4, item 3 "lines", and Gate D5): integration and background
+//  Role: The window method against exSpy: integration and background
 //        windows, merged and unmerged, and `get_lines_intensity` on every planted spectrum (430 noise-free means and 3950
 //        realisations), with and without background windows. Agreement required: windows exact, intensities relative <= 1e-12.
 //
@@ -108,7 +108,7 @@ struct WindowGateTests {
 
     // MARK: D5
 
-    /// Gate D5 (the window method for the maps, a separate fault): the window net for Mg at rho_Mg = 0 on set U130 at N_Al 1e6.
+    /// The window method for the maps (a separate fault from the proposer's): the window net for Mg at rho_Mg = 0 on set U130 at N_Al 1e6.
     /// Registration: "Refuted if the SpectroKit window net for Mg at rho_Mg = 0 is within +-2 sd of zero at 1e6 (exSpy's is
     /// -9.6 sd). Predicted: equals exSpy's". The numbers are reported; the equality with exSpy is the assertion
     /// (testLineIntensitiesEqualExSpyOnEveryPlantedSpectrum), here the per-cell mean and sd.

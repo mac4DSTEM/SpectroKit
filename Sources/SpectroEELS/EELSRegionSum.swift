@@ -1,6 +1,6 @@
 //
 //  EELSRegionSum.swift
-//  Role: the summed spectrum of a region (docs/design/eels-task-16.md section 12, the macTEM design 2.3 ask): the counts of every masked-in
+//  Role: the summed spectrum of a region: the counts of every masked-in
 //        pixel added channel by channel, as a one-pixel image on the same energy axis.
 //
 

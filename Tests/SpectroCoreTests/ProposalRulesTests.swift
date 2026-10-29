@@ -1,10 +1,8 @@
-// SpectroKit S1 test partition (ADR 064 section 3.3): the methods of SpectroscopyDriveL12Tests that move with the EDX core;
-// the rest stay in SpectroscopyDriveL12Tests.swift. Helpers are duplicated, not shared, across the split.
 //
 //  SpectroscopyDriveL12Tests.swift
-//  Lane L12 (WP4): the three registered Auto ID rules (`ProposalRules`, Core) on hand-built `ProposalResult`s, and how
+//  The three Auto ID rules (`ProposalRules`, Core) on hand-built `ProposalResult`s, and how
 //  `AutoIDPresentation.outcome(rules:)` shows them. No compute, no app driving. Every test names the mutation it catches.
-//  Registration: docs/archive/v5/wp4-autoid-velox-preregistration-2026-10-07.md (H1 never Z >= 89 and drop an L/M pick within
+//  The rules: (H1 never Z >= 89 and drop an L/M pick within
 //  1.5 FWHM of another proposed candidate's K alpha; H2 an L/M pick needs net / L_D >= 3; H3 a held sum-peak candidate at
 //  net / L_D >= 10 is released).
 //
@@ -138,7 +136,7 @@ struct ProposalRulesTests {
         #expect(picked(s, [candidate("Eu", "Eu_La", significance: 1.5), held("Ar", "Ar_Ka", significance: 20)]) == ["Eu"], "shipped: no 3 x L_D bar, no release")
     }
 
-    /// A mixed result through the registered rules: K untouched, L/M cut at 3, actinide gone, strong hold released; the proposer's own result is unchanged.
+    /// A mixed result through the `registered` rules: K untouched, L/M cut at 3, actinide gone, strong hold released; the proposer's own result is unchanged.
     /// Mutation: `apply` rebuilds `raw` with the picks (the raw proposed list would shrink).
     @Test func testRegisteredOnAMixedResultAndTheRawProposalIsUntouched() {
         let cs = [candidate("Cu", "Cu_Ka", significance: 27), candidate("Ho", "Ho_La", significance: 1.9), candidate("In", "In_La", significance: 11.7),
@@ -155,11 +153,11 @@ struct ProposalRulesTests {
         #expect(ProposalRules.none.apply(r).picks.map(\.element) == r.proposed.map(\.element))
     }
 
-    /// Supervisor, after the refuter (2026-10-07): the shipped set drops an actinide but keeps an L pick beside a proposed Kα (Hf Lα
+    /// After an independent review (2026-10-07): the shipped set drops an actinide but keeps an L pick beside a proposed Kα (Hf Lα
     /// 1.0 FWHM from Cu Kα: real on a Cu grid). Mutation: `shipped.besideK` true → red.
     @Test func testTheShippedSetKeepsAnLPickBesideAProposedK() throws {
         #expect(ProposalRules.shipped.hygiene); #expect(!ProposalRules.shipped.besideK)
-        #expect(ProposalRules.registered.besideK, "the registration had both halves")
+        #expect(ProposalRules.registered.besideK, "the fixed rule set had both halves")
         let hf = candidate("Hf", "Hf_La", significance: 4)
         let cu = candidate("Cu", "Cu_Ka", significance: 30)
         let th = candidate("Th", "Th_Ma", significance: 5)

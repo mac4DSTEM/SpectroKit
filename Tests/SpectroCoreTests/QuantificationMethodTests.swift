@@ -1,8 +1,6 @@
-// SpectroKit S1 test partition (ADR 064 section 3.3): the methods of QuantificationMethodTests that move with the EDX core;
-// the rest stay in MethodTests.swift. Helpers are duplicated, not shared, across the split.
 //
 //  MethodTests.swift
-//  v5.0 WP3 lane M (prediction M1, first half): the quantification method as a byte-stable value with a hash,
+//  The quantification method as a byte-stable value with a hash,
 //  and the replay step "quantification" with its input edges and its rewind. Each test names the mutation it
 //  catches; each was broken once.
 //

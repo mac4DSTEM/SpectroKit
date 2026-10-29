@@ -2,7 +2,7 @@
 //  PoissonMLFit.swift
 //  Role: Poisson maximum likelihood on the same linear design as the least-squares fit, by
 //        iteratively reweighted least squares (Fisher scoring) with non-negative line areas. It sits
-//        under Expert (ADR 054 V5-Q1); the cap and tolerance are recorded in every result.
+//        under Expert; the cap and tolerance are recorded in every result.
 //
 //  The model is mu = D theta + offset (identity link), the data y_i ~ Poisson(mu_i). The score is
 //  s_j = sum_i D_ij (y_i - mu_i) / mu_i and the expected information F_jk = sum_i D_ij D_ik / mu_i, so
@@ -18,7 +18,7 @@
 //  infinite weight or an infinite deviance. The number of clamped channels is reported.
 //
 //  Convergence: relative decrease of D below `tolerance` or `maxIterations` reached.
-//  The cap and tolerance are chosen by the session (pre-registration: "decides alone, recorded in the method").
+//  The cap and tolerance are chosen by the session.
 //
 
 import Foundation

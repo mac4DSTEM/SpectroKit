@@ -1,6 +1,6 @@
 //
 //  EELSAlignmentTests.swift
-//  Role: Task 16 step 1, the fast target (docs/design/eels-task-16.md section 10): refusals and shapes for every error case, rules derived by
+//  Role: Refusals and shapes for every error case, rules derived by
 //        hand (linear shifts of a ramp are exact, the crop indices, the mask width, floor and ceil value2index), and the planted truth
 //        (the planted zero-loss shifts are recovered). The pins against exSpy are SpectroKitParityTests/AlignPinsTests.
 //

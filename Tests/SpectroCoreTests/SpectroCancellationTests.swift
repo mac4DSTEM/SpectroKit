@@ -3,7 +3,7 @@ import Testing
 import SpectroCore
 import SpectroEDX
 
-/// SpectroKit S0 (ADR 064 amendment 2 §2): the long spectroscopy calls take `cancelled` (default `SpectroCancellation.task`) and an
+/// SpectroKit S0: the long spectroscopy calls take `cancelled` (default `SpectroCancellation.task`) and an
 /// optional `progress`. Per family: cancel at the first step and cancel INSIDE the call both throw `SpectroCancelled` and return
 /// nothing; progress is monotone and ends at 1; the default arguments reproduce the plain call's numbers. Each test names its mutation.
 @MainActor

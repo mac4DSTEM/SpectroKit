@@ -3,7 +3,7 @@ import Testing
 import SpectroCore
 import FormatoEMD
 
-/// Lane L10 (the owner's drive findings, build 2): Velox's own element selection, read from the file (`VeloxEMDReader.storedElementSelection`).
+/// Velox's own element selection, read from the file (`VeloxEMDReader.storedElementSelection`).
 /// The files are 600 to 700 byte synthetic Velox EMDs (a Version dataset and one quantification-settings group of variable-length JSON
 /// strings, the layout rsciio's `_parse_metadata_group` reads), written with h5py: `Operations/ImageQuantificationOperation` (version 9)
 /// and `SharedProperties/EDSSpectrumQuantificationSettings` (version 11), each entry the JSON `{"elementSelection": [atomic numbers], ...}`.

@@ -1,6 +1,6 @@
 //
 //  PooledQuantification.swift
-//  Role: The Quantify verb's computation (v5.0 R3, ADR 054): one pooled spectrum + a `QuantificationMethod`
+//  Role: The Quantify verb's computation: one pooled spectrum + a `QuantificationMethod`
 //        -> the fit (EDSFit), the energy axis refinement, net areas with sigma, the k-free ratios, and, ONLY
 //        when a k source exists, at%/wt% with sigma as named terms. Nothing here draws or reads a view; the
 //        room's controller calls it off the main actor and puts the answer in the model.
@@ -13,19 +13,19 @@
 //      a missing tilt or segment value, or no typed thickness -> `absorption == .refused(reason)`. The at%
 //      is then computed WITHOUT the correction and the result says so; it never pretends.
 //
-//  DEVIATIONS (named, ADR 054 corrections):
+//  DEVIATIONS (named):
 //    * Absorption is iterated to 1e-7 % (eXSpy stops at 0.5 %): the sigma terms are finite differences of
 //      the composition, and a loop that stops at 0.5 % would put steps into them.
 //    * The absorption "model spread" is |at%(geometric-mean transmission) - at%(weighted-mean transmission)|. The
-//      weighted mean is the method and the geometric mean only a comparison (ADR 054 corrections), so the spread is
+//      weighted mean is the method and the geometric mean only a comparison, so the spread is
 //      a proxy for how much the averaging rule matters, NOT an uncertainty: it is printed beside the sigma as
 //      "absorption model spread (AM vs GM)" and is kept OUT of `SigmaTerms.combined` and of the shown sigma. The real
-//      absorption uncertainty would be a mass-absorption-coefficient term with a sourced sigma_mu; that is not in this lane.
+//      absorption uncertainty would be a mass-absorption-coefficient term with a sourced sigma_mu; that is not here.
 //    * Counting term: the fit covariance of the quantified areas propagated through Cliff-Lorimer (+
 //      absorption) by central differences. The k term: each non-reference k moved by +-sigma_k (20 % flat,
 //      the reference carries 0), the effects added in quadrature. The thickness term: central difference
 //      of the whole correction over thickness +- sigma (`ThicknessPropagation`).
-//    * Live-time normalisation (ADR 054 item 5) is a REGION-COMPARISON control and is not applied here: every pixel's
+//    * Live-time normalisation is a REGION-COMPARISON control and is not applied here: every pixel's
 //      lines share that pixel's live time and a pool is the counts-weighted mean of its pixels, so it does not change
 //      the at% of a single pool.
 //    * The k term moves each non-reference k independently by sigma_k; it ignores the correlation a computed set has
@@ -178,7 +178,7 @@ public nonisolated struct PooledQuantification: Sendable {
     public var hasAbundance: Bool { abundanceRefusal == nil }
     /// "\u{03C7}\u{00B2}\u{1D63} 54.8 (Pearson)" or "reduced deviance 1.02": shown beside the at% always (R7).
     public var qualityText: String { PooledQuantifier.qualityText(label: qualityLabel, value: quality) }
-    /// "unvalidated" whenever an at% was produced (ADR 054 item 3): the cross-section source is validation "none".
+    /// "unvalidated" whenever an at% was produced: the cross-section source is validation "none".
     public static let abundanceValidation = "none"
 }
 
@@ -186,7 +186,7 @@ public nonisolated enum PooledQuantifier {
 
     // MARK: Entry
 
-    /// Cancellable (ADR 064 amendment 2 §2): `cancelled` is asked at the step boundaries (before the axis refinement, inside it
+    /// Cancellable: `cancelled` is asked at the step boundaries (before the axis refinement, inside it
     /// once per simplex iteration, before the fit and before the rows); `SpectroCancelled` propagates, never swallowed into a
     /// warning or a refusal, and nothing partial is returned. `progress` is monotone in 0...1 and ends at 1.
     public static func run(_ input: PooledQuantificationInput, tables: QuantificationTables?,
@@ -334,7 +334,7 @@ public nonisolated enum PooledQuantifier {
             rows.append(row)
         }
 
-        // The k-free ratio: area / reference area (ADR 054 item 3: above at%, and independent of k). Reference: kReference, else Al when
+        // The k-free ratio: area / reference area (shown above at%, and independent of k). Reference: kReference, else Al when
         // it is quantified and measured, else the largest area.
         let valid = rows.indices.filter { rows[$0].failure == nil && rows[$0].net > 0 }
         var referenceIndex: Int?
