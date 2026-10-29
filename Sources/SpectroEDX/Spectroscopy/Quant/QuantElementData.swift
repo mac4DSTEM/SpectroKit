@@ -5,8 +5,7 @@
 //
 //  Values are eXSpy 7185a4d1 `material/elements_general_properties.json` (GPL-3.0,
 //  upstream provenance "unknown" in its own metadata), Z = 1...95, copied so the
-//  pins in docs/archive/v5/edx-research-2026-10-05/reports/validation.md §1b hold
-//  exactly. They are the older IUPAC weights (Al 26.9815386), not the 2013+ ones.
+//  exSpy pins hold exactly. They are the older IUPAC weights (Al 26.9815386), not the 2013+ ones.
 //  Density is nil where eXSpy stores "NaN" (At, Fr).
 //
 

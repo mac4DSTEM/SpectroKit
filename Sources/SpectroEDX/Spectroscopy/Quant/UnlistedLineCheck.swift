@@ -1,12 +1,12 @@
 //
 //  UnlistedLineCheck.swift
-//  Role: WP3b F1, "name what is missing before at%" (docs/archive/v5/wp3b-fit-robustness-preregistration-2026-10-06.md).
+//  Role: Name what is missing before at%.
 //        After a Quantify fit the element proposer runs on the SAME pooled spectrum with the listed set; every candidate it
-//        finds at or above Currie's L_D is named. At% is NEVER blanked by the check (A2, Gate D 2026-10-06): when candidates
+//        finds at or above Currie's L_D is named. At% is NEVER blanked by the check: when candidates
 //        exist the result carries `abundanceCaveat` (what is unlisted, the largest move) and the export carries it too.
 //        Nothing here edits an element list.
 //
-//  A2 (docs/archive/v5, Gate D on the real Al-alloy fit): the "> sigma" bar that used to blank at% was measured on synthetic
+//  Why (measured 2026-10-06 on a real Al-alloy fit): the "> sigma" bar that used to blank at% was measured on synthetic
 //  pools (0.3-0.9 sigma harmless, 27-33 sigma missing) and did not separate on the real ones (1.1 sigma to 25 sigma on pools with
 //  nothing wrong a person could name), so by the threshold rule the quantity ships and the reader judges. The blanking was one
 //  function (`withholding`); it now sets the caveat instead.
@@ -204,7 +204,7 @@ public nonisolated enum UnlistedLineChecker {
         guard let fwhm = XRayLines.fwhm(resolutionMnKaEV: resolutionMnKaEV, atEnergy: e) else { return nil }
         // The STRONGEST (alpha, the group's first) line of each listed group is the reference, the nearest in FWHM units wins; the
         // net it carries (and the fraction against it) is that group's alpha area. Never a beta line: the shape misfit the label
-        // stands for lives at the strong line (Gate D 2026-10-06, beside-decision).
+        // stands for lives at the strong line.
         var best: (group: String, d: Double)?
         for g in listedGroups {
             guard let l = g.lines.first else { continue }
@@ -231,7 +231,7 @@ public nonisolated enum UnlistedLineChecker {
         try! check(proposal: proposal, input: input, quantification: q, rules: rules, cancelled: { false }, progress: nil)
     }
 
-    /// The same decision, cancellable (ADR 064 amendment 2 §2): the refit is the long step; `SpectroCancelled` is thrown (never
+    /// The same decision, cancellable: the refit is the long step; `SpectroCancelled` is thrown (never
     /// folded into the check's `failure`) and nothing is returned. `progress` is monotone in 0...1 and ends at 1.
     public static func check(proposal: ProposalResult, input: PooledQuantificationInput, quantification q: PooledQuantification,
                               rules: UnlistedLineRules = .default,

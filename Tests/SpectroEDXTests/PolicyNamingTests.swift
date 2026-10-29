@@ -1,6 +1,6 @@
 //
 //  PolicyNamingTests.swift
-//  Role: docs/generality-0.5.0-registration.md, section 11 "Gate B fixes" (findings 1 and 2): a non-default policy is named in full,
+//  Role: a non-default policy is named in full,
 //        nil fields and arrays included, on one line; the proposer names its Currie rates and its policy. The default adds nothing.
 //
 

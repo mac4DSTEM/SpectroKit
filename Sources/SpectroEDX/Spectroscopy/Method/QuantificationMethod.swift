@@ -1,15 +1,14 @@
 //
 //  QuantificationMethod.swift
-//  Role: The quantification method as ONE value (v5.0 WP3 lane M, ADR 054 items 1-3, 6, 9 and the
-//        addendum): estimator, background, element roles, where k comes from, the absorption
-//        correction and the thickness. Nothing here computes a number; the fit (lane F), the k-factors
-//        and absorption (lane K) and the statistics (lane T) read it.
+//  Role: The quantification method as ONE value: estimator, background, element roles, where k comes from, the absorption
+//        correction and the thickness. Nothing here computes a number; the fit, the k-factors
+//        and absorption and the statistics read it.
 //
 //  Codable with sorted keys, so encoding a decoded method gives the same bytes (`canonicalJSON`), and
 //  `hash` is the SHA-256 of those bytes: two methods are the same method exactly when their hashes
 //  are equal. The replay step "quantification" (`QuantificationStep`) records the JSON and the hash.
 //
-//  The defaults are ADR 054's and are those `SpectroscopySession.method` always had: least squares,
+//  The defaults: least squares,
 //  unweighted; empirical continuum with the Al K-edge step; computed k; four-detector absorption on;
 //  no thickness assumed.
 //
@@ -55,7 +54,7 @@ public nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
         /// The element symbol, e.g. "Mg".
         public var symbol: String
         public var role: ElementRole
-        /// Picked by the user; the proposer never drops a manual pick (ADR 054).
+        /// Picked by the user; the proposer never drops a manual pick.
         package var isManual: Bool
 
         public var id: String { symbol }
@@ -123,8 +122,8 @@ public nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     public var beamEnergyKeV: Double?
     /// Expert: the order of the whole-range polynomial background (`.wholeRangePolynomial6`); nil is 6, eXSpy's.
     public var polynomialOrder: Int?
-    /// Expert: keep the file's energy axis instead of refining offset, gain and width on the pooled spectrum (ADR 054
-    /// item 4); nil is "refine".
+    /// Expert: keep the file's energy axis instead of refining offset, gain and width on the pooled spectrum;
+    /// nil is "refine".
     public var lockEnergyAxis: Bool?
     /// Expert (WP3c): the upper end of the fitted range, keV; nil is the default, min(axis end, beam energy, 20 keV)
     /// (`FitSettings.defaultFitTo`). A typed value past the axis end or the beam energy is clamped to them, and the footer says so.

@@ -6,7 +6,7 @@ under an 8 GB memory cap (measured Swift peak 1.3 GB at the typical size). Input
 One warm-up, then five runs, median and (min-max).
 
 Machine: Apple M5 Pro, 64 GB, macOS 27.0.1 (26A434), Swift 6.4 (swiftlang-6.4.0.34.1), Python 3.12.14, NumPy 2.5.4, HyperSpy 2.4.0, exSpy 0.3.2
-(no Numba). **Other sessions were running on the machine**, so the Python spreads are wide; read ratios within about 30 %.
+(no Numba). **Other jobs were running on the machine**, so the Python spreads are wide; read ratios within about 30 %.
 
 ## Results
 
@@ -28,9 +28,9 @@ Machine: Apple M5 Pro, 64 GB, macOS 27.0.1 (26A434), Swift 6.4 (swiftlang-6.4.0.
 | t/lambda log ratio: estimated | typical | 4096 | 16.34 (16.29-17.02) | 87.30 (82.73-123.58) | 5.34 |
 
 Sizes: quantification small 8 x 8, typical 256 x 256 (3 elements), large 1024 x 1024; thickness small 8 x 8, typical 64 x 64 (2048 channels), large 256 x 256.
-**Large: nightly** (not run in the session).
+**Large: nightly** (not run here).
 
-## Backend decision per function (D16)
+## Backend decision per function (CPU float64 reference, Metal float32 where size pays)
 
 | function | decision | why |
 |---|---|---|

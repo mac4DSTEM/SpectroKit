@@ -7,8 +7,8 @@
 //        the Velox event store.
 //
 //  Counts are integers and every sum here is an exact `UInt64` sum, so a window map
-//  from the sparse store and from the same data densified is identical bit for bit
-//  (pre-registration C2): the only floating-point step is the net-count formula in
+//  from the sparse store and from the same data densified is identical bit for bit:
+//  the only floating-point step is the net-count formula in
 //  `WindowIntensity`, which both paths share.
 //
 //  Joining Velox (lane A, `VeloxEventStore`, not in this tree): it already has
@@ -40,7 +40,7 @@ public nonisolated protocol SpectrumImage: Sendable {
     /// (outer index = range, inner = pixel, row-major). Ranges are half-open and may overlap.
     func windowSums(_ ranges: [Range<Int>]) -> [[UInt64]]
 
-    /// The same sums, cancellable (ADR 064 amendment 2 §2): `cancelled` is asked once per block of pixels, never per value, and
+    /// The same sums, cancellable: `cancelled` is asked once per block of pixels, never per value, and
     /// `SpectroCancelled` is thrown with nothing kept; `progress` is monotone in 0...1 and ends at 1. A conformer that does not
     /// implement it gets the default below (one check before the plain call). The default `cancelled` of the concrete types
     /// and of `ElementWindows` is `SpectroCancellation.task`; a protocol requirement cannot carry it, so a caller through

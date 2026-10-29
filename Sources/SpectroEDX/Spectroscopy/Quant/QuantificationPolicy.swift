@@ -2,7 +2,7 @@
 //  QuantificationPolicy.swift
 //  Role: The choices behind a pooled quantification that the library made rather than took from the reference, as values with
 //        the library's choice as the default. `FitPolicy` shapes the spectrum fit, `AbundancePolicy` the step from nets to
-//        at% and its uncertainty terms. Registered: docs/generality-0.5.0-registration.md (F1-F13, Q3-Q7).
+//        at% and its uncertainty terms. Since 0.5.0.
 //
 //  A policy is NOT part of `QuantificationMethod` (its canonical JSON and hash stay what they were for every method recorded
 //  before). A non-default policy is named in the result's footer, one line, so a number never travels without the choice that
@@ -18,10 +18,10 @@ public nonisolated struct DetectorLayers: Sendable, Equatable, Codable {
     /// Gold contact layer, nm. Default 0 (EPQ `getDefaultSDDProperties`). More gold absorbs low-energy X-rays more.
     public var goldNm: Double
     /// Aluminium layer, nm. Default 10 (EPQ `getDefaultSDDProperties`). The Al K edge (1.560 keV) lies between Mg K alpha (1.254) and
-    /// Si K alpha (1.740 keV), so a thicker layer absorbs Si K alpha more and lowers the computed k_Mg / k_Si (measured, registered Q4).
+    /// Si K alpha (1.740 keV), so a thicker layer absorbs Si K alpha more and lowers the computed k_Mg / k_Si (measured).
     public var aluminiumNm: Double
     /// Silicon dead layer in front of the active volume, micrometres. Default 0 (EPQ `getDefaultSDDProperties`). The Si K edge
-    /// (1.839 keV) lies above both Mg and Si K alpha, so a thicker one raises the computed k_Mg / k_Si (measured, registered Q4).
+    /// (1.839 keV) lies above both Mg and Si K alpha, so a thicker one raises the computed k_Mg / k_Si (measured).
     public var deadLayerMicrons: Double
     /// Active silicon thickness, micrometres. Default 450 (EPQ `getDefaultSDDProperties`). A thinner one lets
     /// more high-energy X-rays pass undetected, lowering the efficiency there.

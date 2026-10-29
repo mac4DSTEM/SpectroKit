@@ -2,7 +2,7 @@
 //  CSpectroLAPACK.h
 //  Plain-C wrappers over the Accelerate LAPACK routines SpectroCore calls: the four of `FitLinearAlgebra` (SpectroKit S3,
 //  replacing a `-DACCELERATE_NEW_LAPACK` unsafe compiler flag), `dgelsd_` (SciPy's least squares, for the Savitzky-Golay port) and `dgbsv_` (SciPy's
-//  interpolating spline, EELS slice 2). This header includes no Accelerate: Swift sees only `int` and `double *`, so the
+//  interpolating spline). This header includes no Accelerate: Swift sees only `int` and `double *`, so the
 //  library needs neither `import Accelerate` nor the `-DACCELERATE_NEW_LAPACK` unsafe flag. The define lives in
 //  lapack_shim.c, the only file that sees Accelerate's LAPACK declarations.
 //

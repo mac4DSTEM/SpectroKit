@@ -4,7 +4,7 @@ import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
-/// eXSpy quantification pins (oracle 1), pre-registered in docs/archive/v5/edx-quant-pins-preregistration-2026-10-07.md.
+/// eXSpy quantification pins (tools/edx-exspy-pins/quant_pins.py).
 /// Every expected number in `Fixtures/eds-quant-pins-exspy-7185a4d1.json` is what eXSpy 7185a4d1 + hyperspy 2.4.0 returned
 /// from `EDSTEMSpectrum.quantification` (generator `tools/edx-pins/quant_pins.py`): Cliff-Lorimer and zeta, with and without the
 /// absorption correction, on eXSpy's FePt example and on synthetic 2-, 3- and 4-element and near-zero intensity sets. This file

@@ -1,6 +1,6 @@
 //
 //  SpectroCancellation.swift
-//  The one cancellation contract of the long spectroscopy calls (ADR 064, amendment (2) §2): a `cancelled` closure with the
+//  The one cancellation contract of the long spectroscopy calls: a `cancelled` closure with the
 //  default `SpectroCancellation.task`, an optional `progress` closure (fraction 0…1), and `SpectroCancelled` thrown when the
 //  closure answers true — nothing partial is kept.
 //

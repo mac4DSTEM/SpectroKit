@@ -1,7 +1,7 @@
 //
 //  PlantedRuns.swift
 //  Role: Runs of the shipped `ElementProposer` on the planted Al-Mg-Si spectra (registration 5.2), shared by gate P2 and the
-//        Gate D experiments. Cached per process: every (cell, realisation, design) runs once.
+//        Mg diagnosis experiments. Cached per process: every (cell, realisation, design) runs once.
 //
 
 import Foundation
@@ -27,7 +27,7 @@ package enum PlantedRuns {
     package static let axis = EDXFixtures.axis
 
     /// The design of the single-candidate test (registration P2): `pool: ["Mg"]`, `settings.elements = [Al, Si]`.
-    /// Sets the Mn Ka resolution of the model (130 eV unless a Gate D experiment scans it) and the fit range.
+    /// Sets the Mn Ka resolution of the model (130 eV unless a diagnosis experiment scans it) and the fit range.
     package static func run(_ counts: [Double], pool: [String]? = ["Mg"], current: [String] = ["Al", "Si"], resolution: Double = 130,
                     axis: EnergyAxis = PlantedRuns.axis, reference: ReferenceShapes = .none) -> MgRun {
         var settings = FitSettings.standard(elements: current, axis: axis, resolutionMnKaEV: resolution, beamEnergy: 200)
@@ -64,7 +64,7 @@ package extension Array where Element == MgRun {
     }
 }
 
-/// Runs cached for the process (the gates and the Gate D experiments read the same spectra; every run happens once).
+/// Runs cached for the process (the checks and the diagnosis experiments read the same spectra; every run happens once).
 package final class RunStore: @unchecked Sendable {
     package static let shared = RunStore()
     private let lock = NSLock()

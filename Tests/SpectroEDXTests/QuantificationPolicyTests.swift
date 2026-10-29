@@ -1,6 +1,6 @@
 //
 //  QuantificationPolicyTests.swift
-//  Role: docs/generality-0.5.0-registration.md, family 2 (F1-F13, Q3-Q7): `FitPolicy` and `AbundancePolicy` on planted,
+//  Role: `FitPolicy` and `AbundancePolicy` on planted,
 //        noise-free spectra (the fit's own line model plus a Kramers-type continuum, rounded to integer counts). The default
 //        policy reproduces the call that names none; each non-default field moves the result as section 5 of the registration
 //        predicted before the code was written.
