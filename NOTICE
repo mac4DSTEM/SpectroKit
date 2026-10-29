@@ -161,5 +161,4 @@ The Velox reader SpectroCore's spectrum-image opener calls is FormatoKit's Forma
 (https://www.hdfgroup.org/, copyright The HDF Group and the Board of Trustees of the University of Illinois,
 BSD-style license) through dlopen. Since SpectroKit 0.4.0 the libhdf5 a consumer gets is the one FormatoKit ships
 inside FormatoHDF5 (HDF5 2.1.1 with libaec and libsz), unless the host supplies its own first; FormatoKit's NOTICE
-carries those binaries' notice and checksums. SpectroKit itself neither links nor ships libhdf5. The license texts
-stay in Licenses/ for hosts: Licenses/HDF5-LICENSE.txt, Licenses/libaec-LICENSE.txt.
+carries those binaries' notice, checksums and license texts. SpectroKit itself neither links nor ships libhdf5.
