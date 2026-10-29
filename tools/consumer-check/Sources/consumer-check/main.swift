@@ -29,4 +29,5 @@ report.section("SpectroEDX quantification policy") { try quantificationPolicyChe
 report.section("SpectroEDX proposer policy") { try proposerPolicyChecks(&$0) }
 report.section("SpectroCore smoothing kernels and the ratio method's default window") { kernelAndWindowChecks(&$0) }
 report.section("SpectroEELS task 16 and the 0.9.0 test initialisers") { try task16Checks(&$0) }
+report.section("SpectroEDX unlisted-line check from outside") { unlistedLineCheckChecks(&$0) }
 exit(report.finish())
