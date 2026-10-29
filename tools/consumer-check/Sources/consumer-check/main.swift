@@ -28,5 +28,6 @@ report.section("SpectroEDX windows (WindowRules)") { windowRulesChecks(&$0) }
 report.section("SpectroEDX quantification policy") { try quantificationPolicyChecks(&$0) }
 report.section("SpectroEDX proposer policy") { try proposerPolicyChecks(&$0) }
 report.section("SpectroCore smoothing kernels and the ratio method's default window") { kernelAndWindowChecks(&$0) }
-report.section("Spectrothe EELS chain and the 0.9.0 test initialisers") { try eelsChainChecks(&$0) }
+report.section("SpectroEELS chain and the 0.9.0 test initialisers") { try eelsChainChecks(&$0) }
+report.section("SpectroEDX unlisted-line check from outside") { unlistedLineCheckChecks(&$0) }
 exit(report.finish())

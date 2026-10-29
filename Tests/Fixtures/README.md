@@ -5,7 +5,7 @@ One row per committed fixture under `Tests/*/Fixtures/` (304 files): its size an
 (`References/python`), from the repo root, as each script's header says.
 
 Licence: every fixture is generated from this kit's code and its pinned Python reference and ships under the kit's
-GPL-3.0-or-later licence, except the 7 rows marked *third party*: keep their licence line when the files move. No
+GPL-3.0-only licence, except the 7 rows marked *third party*: keep their licence line when the files move. No
 fixture holds anyone's measured data; real datasets are read from `$MACEM_DATA` and never copied into the repo.
 
 A moved fixture is its own commit with the reason and a CHANGELOG line.

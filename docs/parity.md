@@ -89,7 +89,7 @@ differ from raw SciPy where the CPU-dependent tie rule says so.
    background-window parameters (`line_width`, `windows_width`, `integration_window_factor`), `vacuum_mask` (the mask is an input now).
 4. **EDX fit accuracy on real Al alloys** (Mg K alpha about 300 counts low, Si 8.7 % low, sigma 5 to 12 % small; auto ID misses Mg in 37 of 38
    Al-Mg-Si files): the diagnosis needs the pure-Al standard; `docs/open-items.md` carries the cause as far as it is known.
-5. **The app-side `@testable` reach**: 0.9.0 opened `PooledQuantificationInput`'s fields and the window, segment and proposal initialisers; `UnlistedLineCheck.Candidate` stays `package`.
+5. **The app-side `@testable` reach**: 0.9.0 opened `PooledQuantificationInput`'s fields and the window, segment and proposal initialisers; the next release opens `UnlistedLineCheck.Candidate` and `.Move` (fields and initialisers) and `UnlistedLineCheck.init` with its stored fields (SpectroKit#13). Nothing the apps reach stays `package`.
 
 ## EDS
 

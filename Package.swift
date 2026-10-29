@@ -1,4 +1,5 @@
 // swift-tools-version: 6.2
+// SPDX-License-Identifier: GPL-3.0-only
 // SpectroKit: EDS and EELS spectroscopy for the TEM, a Swift port of exSpy.
 //
 // `SpectroCore` is what EDS and EELS share (the spectrum image, the energy axis, the least-squares and Poisson fits, the counting
