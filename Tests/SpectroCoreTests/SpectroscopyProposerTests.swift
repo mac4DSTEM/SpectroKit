@@ -7,7 +7,7 @@ import SpectroEDX
 /// v5.0 WP3 lane P: the element proposer rebuilt on the model fit. The cases are Fable's round-2 failures
 /// (`reviewT2/glm.py`: Kramers x window-absorption continuum, a Ga L-alpha tail, an unlisted O K-alpha, an Al K step),
 /// generated here from the fit's own line model with Poisson noise, plus lane S's simulator pools
-/// (`Fixtures/eds-proposer-sim.json`, generator `tools/edx-pins/proposer_sim.py`) for the sum-peak conflicts.
+/// (`Fixtures/eds-proposer-sim.json`, generator `tools/edx-sim/proposer_sim.py`) for the sum-peak conflicts.
 /// Statistical cells use a fixed seed list; each assertion states the cell it covers.
 struct SpectroscopyProposerTests {
 

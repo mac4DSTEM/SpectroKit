@@ -56,7 +56,7 @@ struct SpectroscopyFitTests {
     /// EPQ's default SDD efficiency (main's lane-K model) on the shipped FFAST table: the continuum's detector model.
     private static let sdd = SDDEfficiency(table: try! MassAbsorptionTable(contentsOf: resources.appendingPathComponent("FFastMAC.csv")))
 
-    /// Lane S's forward model, pooled matrix spectra with Mg planted (tools/edx-pins/weakline_sim.py): EXPECTED counts + truth.
+    /// Lane S's forward model, pooled matrix spectra with Mg planted (tools/edx-sim/weakline_sim.py): EXPECTED counts + truth.
     private struct SimPools: Decodable {
         struct Level: Decodable { let fraction: Double; let expected: [Double]; let mgKa: Double; let alKa: Double; let alTail: Double }
         let offset: Double, scale: Double, size: Int

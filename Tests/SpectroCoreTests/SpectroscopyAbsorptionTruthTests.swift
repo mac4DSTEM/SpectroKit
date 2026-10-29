@@ -5,9 +5,9 @@ import SpectroCore
 import SpectroEDX
 
 /// v5.0 lane A4: the absorption correction against the simulator's TRUTH geometry (open item "The absorption test checks
-/// plumbing only"). Pool: 1e4 identical recipe-A matrix pixels of `tools/demo-edx/forward.py` (Al 98.8 / Mg 0.6 / Si 0.6 at%,
+/// plumbing only"). Pool: 1e4 identical recipe-A matrix pixels of `tools/edx-sim/forward.py` (Al 98.8 / Mg 0.6 / Si 0.6 at%,
 /// 80 nm, 2.70 g/cm3, the simulator's four segments with unequal solid angles 0.4/0.2/0.1/0.3, alpha -16.87, elevation 22,
-/// depth weight beta 0.2, oxide O in the medium); `tools/edx-pins/absorption_truth_sim.py` wrote the fixture.
+/// depth weight beta 0.2, oxide O in the medium); `tools/edx-sim/absorption_truth_sim.py` wrote the fixture.
 ///
 /// k: the simulator's "true k" (Gp x sensitivity x eps, absorption-free) is NOT the app's Bote-Salvat k (sensitivities
 /// Al 1.0 / Mg 0.55 / Si 1.2 are arbitrary), so the SIMULATOR's k is typed, converted to the Cliff-Lorimer weight convention
@@ -168,7 +168,7 @@ final class SpectroscopyAbsorptionTruthTests {
         m.beamEnergyKeV = 200
         m.lockEnergyAxis = true                       // the generator's own axis: the refinement is not under test here
         m.kFactorSource = .typed
-        m.kSource = "tools/demo-edx/forward.py true k (Gp x s x eps), weight convention"; m.kDate = "2026-10-06"; m.kReference = "Al"
+        m.kSource = "tools/edx-sim/forward.py true k (Gp x s x eps), weight convention"; m.kDate = "2026-10-06"; m.kReference = "Al"
         m.typedK = typedK.map { .init(element: $0.0, k: $0.1, relativeSigma: 0) }
         m.thickness = .init(nanometres: p.thicknessNm, sigmaNanometres: 0)
         m.absorptionCorrection = absorption

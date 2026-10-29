@@ -9,7 +9,7 @@ import FormatoEMD
 
 /// v5.0 WP2 lane R2: from a file to a spectrum image in the room. Fixtures: `demo-edx-tiny.dm4` (6 x 4 scan, 512 channels,
 /// truth beside it) and `velox-tiny.emd` (3 rows x 2 columns, 8 channels, 2 frames: the main file of
-/// `tools/velox-parity/make-tiny-fixture.py`, the same bytes VeloxEMDReaderTests embeds). Each test names its mutation.
+/// `tools/edx-planted/make_velox_tiny.py`, the same bytes VeloxEMDReaderTests embeds). Each test names its mutation.
 @MainActor
 struct SpectrumImageOpeningTests {
 
