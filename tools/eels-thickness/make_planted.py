@@ -330,7 +330,7 @@ def main():
         "generator": "tools/eels-thickness/make_planted.py",
         "registration": "the EELS thickness design note section 5.1",
         "numpyVersion": np_ver,
-        "licence": "SpectroKit's own (GPL-3.0); generated, no third-party data",
+        "licence": "SpectroKit's own (GPL-3.0-only); generated, no third-party data",
         "tauRowMajor": TAUS, "countsN": N_COUNTS,
         "model": "Poisson plural scattering of a Gaussian zero-loss peak (sigma 0.25 eV at 0 eV) and a Drude "
                  "single-scattering distribution (Ep 15.0 eV, Gamma 0.8 eV, unit sum); see the generator's docstring",
