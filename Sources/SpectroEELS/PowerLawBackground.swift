@@ -3,7 +3,7 @@
 //  Role: The pre-edge background A E^-r by HyperSpy 2.4.0's two-area estimate (`_components/power_law.py:100-187`,
 //        `PowerLaw.estimate_parameters`), evaluated as `remove_background(fast=True)` evaluates it on a binned axis
 //        (`_signals/signal1d.py:1102-1152`; `models/model1d.py:375-390`: the component's value times the channel width).
-//       
+//
 //
 //  Departure from HyperSpy: where a window sum is not positive or A, r come out non-finite,
 //  HyperSpy's `nan_to_num` (or, on a zero sum, the whole image's estimate failing) is replaced by a nil pixel with its

@@ -2,7 +2,7 @@
 //  GOSTable.swift
 //  Role: The generalised oscillator strength of one K shell, as exSpy 7185a4d1 reads it from the GOSH database
 //        (`exspy/_misc/eels/gosh_gos.py`, `read_gos_data`; `base_gos.py`, `TabulatedGOS`), and the edges SpectroKit ships.
-//       
+//
 //
 //  The tables are the dft GOS of Segger, Guzzinati and Kohl (GOSH 1.5.0, DOI 10.5281/zenodo.7645765, CC-BY-4.0; md5 of the
 //  file exSpy fetches 7fee8891c147a4f769668403b54c529b), the groups C/K1, N/K1 and O/K1, extracted by
