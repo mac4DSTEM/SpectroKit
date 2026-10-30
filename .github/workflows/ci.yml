@@ -1,12 +1,9 @@
-# SpectroKit CI: the gate (tools/test.sh = `swift test -c release`), the consumer check, and the tag check.
-#
-# Written 2026-10-14; enabling it (Actions on the repository) is the owner's. The package declares macOS 15 / iOS 18 and a
-# Swift 6.2 toolchain (Package.swift: `.macOS(.v15)`, tools 6.2).
-# Jobs (0.5.1): `test` on the `macos-26` image (Swift 6.3.3, newest Xcode, printed by the job) and `test-macos15` on macos-15
-# with Xcode 26.0, the floor the package now declares (macOS 15, iOS 18; FormatoKit 0.2.1's dylibs are built for 15).
-# No Package.resolved is tracked (0.12.x): `test` gets the newest FormatoKit and ImagoKit in range, `test-floors` the lower bounds.
-# Since 0.4.0 the readers are FormatoKit's, a package dependency fetched from github.com/mac4DSTEM/FormatoKit, which ships
-# libhdf5 inside FormatoHDF5: no libhdf5 step. FormatoKit is public (2026-10-15), so the runner fetches it with no token.
+# SpectroKit CI: the gate (tools/test.sh: `swift test -c release --parallel`, failing on any warning), the consumer check,
+# the dependency floors and the tag check. Every macOS job pins its image and Xcode through DEVELOPER_DIR, never the newest
+# installed one: `test` and `test-floors` on macos-26 (or the org's Mac runner, which has the same path) with Xcode 26.6
+# (Swift 6.3), and `test-macos15` on macos-15 with Xcode 26.0 (Swift 6.2), the floor Package.swift declares (macOS 15,
+# tools 6.2). No Package.resolved is tracked: `test` gets the newest FormatoKit and ImagoKit in range, `test-floors` the
+# lower bounds. Both are public packages the runner resolves with no token.
 # Never `swift build --build-tests -c release` (fails on this toolchain's Swift Build backend); tools/test.sh is the gate.
 name: CI
 
@@ -26,30 +23,17 @@ jobs:
     # The org's Mac runner while the org variable MACEM_MAC_RUNNER is set (never for a fork PR); else GitHub's macos-26.
     runs-on: ${{ vars.MACEM_MAC_RUNNER && !github.event.pull_request.head.repo.fork && fromJSON(vars.MACEM_MAC_RUNNER) || 'macos-26' }}
     timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
       - uses: actions/checkout@v7
-      - name: Select the newest Xcode
+      - name: Toolchain
         run: |
-          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then
-            # The Mac runner: the macos-26 image's Xcode 26.6, chosen per job, never by xcode-select on that Mac.
-            export DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer
-            echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
-          else
-            xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
-            sudo xcode-select -s "$xcode"
-          fi
           xcodebuild -version
           swift --version
+      # tools/test.sh exits with swift test's status and fails on any warning; its log is .build/test-results/test.log.
       - name: Gate (tools/test.sh, release)
-        shell: bash
-        run: tools/test.sh 2>&1 | tee test.log
-      - name: No warnings
-        run: |
-          # tools/test.sh already fails on any warning but the three FormatoKit's signed dylibs cause; this step is kept as
-          # a second look at the log.
-          if sed 's/warning:/\nwarning:/g' test.log | grep "warning:" | grep -v "not stripping binary because it is signed" | grep -q .; then
-            sed 's/warning:/\nwarning:/g' test.log | grep "warning:" | head -20; exit 1
-          fi
+        run: tools/test.sh --parallel
       - name: Consumer check
         run: tools/consumer-check/run.sh
   # The dependency floors: no Package.resolved is tracked, so `test` resolves the newest FormatoKit and ImagoKit in range, as a
@@ -59,18 +43,13 @@ jobs:
     # The org's Mac runner while the org variable MACEM_MAC_RUNNER is set (never for a fork PR); else GitHub's macos-26.
     runs-on: ${{ vars.MACEM_MAC_RUNNER && !github.event.pull_request.head.repo.fork && fromJSON(vars.MACEM_MAC_RUNNER) || 'macos-26' }}
     timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
-      - uses: actions/checkout@v4
-      - name: Select the newest Xcode
+      - uses: actions/checkout@v7
+      - name: Toolchain
         run: |
-          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then
-            # The Mac runner: the macos-26 image's Xcode 26.6, chosen per job, never by xcode-select on that Mac.
-            export DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer
-            echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
-          else
-            xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
-            sudo xcode-select -s "$xcode"
-          fi
+          xcodebuild -version
           swift --version
       - name: Resolve the floor versions
         run: |
@@ -82,7 +61,7 @@ jobs:
             done
           grep -E '"(identity|version)"' Package.resolved
       - name: Gate (tools/test.sh, release)
-        run: tools/test.sh
+        run: tools/test.sh --parallel
   version:
     name: CHANGELOG version matches the tag
     runs-on: ubuntu-latest
@@ -94,20 +73,30 @@ jobs:
           top=$(grep -m1 -E '^## \[?v?[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | sed -E 's/^## \[?v?([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
           tag=${GITHUB_REF_NAME#v}
           [ "$top" = "$tag" ] || { echo "CHANGELOG top is $top, tag is $tag"; exit 1; }
-  # 0.5.1: the macOS 15 floor. Xcode 26.0 (Swift 6.2) pinned the way FormatoKit's CI pins it; a macos-15 image's default Xcode may
-  # carry an older Swift than the manifests' tools-version 6.2. No Test.cancel anywhere (missing on this toolchain).
+  # The macOS 15 floor with the oldest Swift the manifest allows (tools-version 6.2). No Test.cancel anywhere (missing there).
   test-macos15:
     runs-on: macos-15
     timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.0.app/Contents/Developer
     steps:
       - uses: actions/checkout@v7
-      - name: Select Xcode 26.0 (Swift 6.2)
+      - name: Toolchain
         run: |
-          sudo xcode-select -s /Applications/Xcode_26.0.app
           swift --version
           swift --version | grep -E "Swift version 6\.([2-9]|[1-9][0-9])" || { echo "Swift 6.2 or newer needed"; exit 1; }
       - name: Gate (tools/test.sh, release)
-        run: tools/test.sh
+        run: tools/test.sh --parallel
+
+  lint:
+    name: Lint (shared SwiftLint and SwiftFormat config)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: SwiftLint
+        run: docker run --rm -v "$PWD:/work" -w /work --entrypoint swiftlint ghcr.io/realm/swiftlint:0.65.1 lint --strict --quiet
+      - name: SwiftFormat
+        run: docker run --rm -v "$PWD:/work" -w /work --entrypoint swiftformat ghcr.io/nicklockwood/swiftformat:0.64.4 --lint .
 
   private-refs:
     name: No private references

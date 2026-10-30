@@ -28,7 +28,7 @@ public enum EELSQuantification {
         var columns: [Int] = []
         if let dup = symbols.enumerated().first(where: { i, s in symbols[..<i].contains(s) })?.element { throw EELSModelError.symbolNotFitted(dup + " (listed twice)") }
         for s in symbols {
-            guard let g = result.edges.firstIndex(where: { $0.element == s }), let _ = atomicMasses[s] else { throw EELSModelError.symbolNotFitted(s) }
+            guard let g = result.edges.firstIndex(where: { $0.element == s }), atomicMasses[s] != nil else { throw EELSModelError.symbolNotFitted(s) }
             columns.append(g)
         }
         let masses = symbols.map { atomicMasses[$0]! }

@@ -26,7 +26,7 @@ body:
   - type: input
     id: env
     attributes:
-      label: macOS or iOS version, Xcode version
+      label: macOS version, Xcode version
       placeholder: "macOS 26.0, Xcode 26.0"
     validations:
       required: true
