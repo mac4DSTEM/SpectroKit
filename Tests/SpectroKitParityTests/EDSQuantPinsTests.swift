@@ -196,7 +196,6 @@ struct EDSQuantPinsTests {
         #expect(compared >= 20)
     }
 
-
     /// Where eXSpy's signed maximum stops early (the criterion_split cases: 3 and 4 elements), the default `.absolute` rule runs on
     /// and ends nearer the fixed point; the difference is bounded by the stopping error. Without these two cases the comparison above
     /// would hold trivially (every two-element set, and every other set here, stops on the same iteration under both rules).

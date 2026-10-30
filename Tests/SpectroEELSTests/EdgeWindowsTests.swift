@@ -124,7 +124,6 @@ struct EdgeWindowsTests {
         #expect((1.5 ... 4).contains(w.exponent(pixel: 0, edge: 0)!))   // between the tail (3) and the shallower part (1)
     }
 
-
     /// The real-file case: the N K default background window (319 to 396 eV) lies in the tail of C K, which dominates a weak background.
     @Test func testStrippingRecoversNKInsideTheCTail() throws {
         let (core, mic, ratio) = try planted(curved: true, backgroundScale: 0.02, ratio: [100, 1, 2])
