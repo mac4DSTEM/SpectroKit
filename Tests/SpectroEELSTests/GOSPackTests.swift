@@ -1,15 +1,15 @@
 //
 //  GOSPackTests.swift
-//  Role: every bundled edge reads the same table from the pack (dft-gos-tables.bin with dft-gos-index.json) as `GOSTable.bundled`
-//        returns: the energy axis, q, gos and occupancy ratio bit for bit. While the 16 per-table JSON files shipped beside the pack,
-//        this compared the pack with them; it holds the pack as the only source since.
+//  Role: every bundled edge loads from the pack (dft-gos-tables.bin with dft-gos-index.json), and `GOSTable.bundled` returns the
+//        pack's table unchanged. While the 16 per-table JSON files shipped beside the pack, this compared the pack with them bit
+//        for bit; the values themselves are pinned by sha256 in EdgeTablePinsTests and EdgePackPinsTests (parity target).
 //
 
 import Testing
 import SpectroEELS
 
 struct GOSPackTests {
-    @Test func testPackEqualsBundledTableForEveryEdge() throws {
+    @Test func testEveryBundledEdgeLoadsFromThePack() throws {
         let pack = try #require(GOSPack.shared)
         #expect(CoreLossEdge.bundled.count == 383)
         for edge in CoreLossEdge.bundled {
