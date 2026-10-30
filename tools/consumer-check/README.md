@@ -84,7 +84,7 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
   (the Velox open installs it); `run.sh` requires exit status 0 and no "quit barrier passed its bound" line. That the bound
   works is FormatoKit's test.
 - **The resource bundles.** The GOS tables are SpectroEELS's `Bundle.module` resources: `run.sh` fails unless
-  `SpectroKit_SpectroEELS.bundle` sits next to the consumer binary with `dft-C-K1.json`, `dft-N-K1.json` and `dft-O-K1.json`
+  `SpectroKit_SpectroEELS.bundle` sits next to the consumer binary with the GOS pack (`dft-gos-tables.bin`, `dft-gos-index.json`)
   inside. libhdf5 is FormatoKit's: `run.sh` fails unless the binary loads `@rpath/FormatoLibHDF5.framework` (`otool -L`) and the
   `FormatoLibHDF5`, `FormatoLibSZ` and `FormatoLibAEC` frameworks sit next to it.
 

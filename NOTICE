@@ -21,7 +21,7 @@ self-reports validation "none".
 eXSpy and HyperSpy (EDX spectroscopy)
 ================================================================================
 
-The X-ray line table (Sources/SpectroEDX/Spectroscopy/XRayLineData.swift: line
+The X-ray line table (Sources/SpectroEDX/XRayLineData.swift: line
 energies from Chantler 2005, relative line weights from the EPQ library, both as
 eXSpy ships them), the detector line-width law, the integration and background
 window rules, the spectrum fit and Cliff-Lorimer quantification are ported from
@@ -35,7 +35,7 @@ with eXSpy is not validation.
     Copyright (C) The HyperSpy developers
     Both licensed under the GNU General Public License v3.0 or later
 
-The element table in Sources/SpectroEDX/Spectroscopy/Quant/QuantElementData.swift
+The element table in Sources/SpectroEDX/Quant/QuantElementData.swift
 (atomic weights and densities) comes from eXSpy's elements data (GPL-3.0-or-later).
 
 The file readers (the Velox EMD reader, the DM4 reader with its EDS and EELS spectrum images, the HDF5 lock) moved
@@ -77,19 +77,18 @@ Tests/SpectroEELSTests/Fixtures/exspy-linescan-*.f64 are eXSpy's simulated test 
 Generalised oscillator strengths (EELS core-loss cross sections, SpectroEELS)
 ================================================================================
 
-Sources/SpectroEELS/Resources/GOS/dft-*.json hold the K1, L1 and L23 tables (C, N, O, Mg, Al, Si, Fe, Cu), and
-Sources/SpectroEELS/Resources/GOS/dft-gos-tables.bin with dft-gos-index.json the 231 K1, L1, L23, M23 and M45 tables of
+Sources/SpectroEELS/Resources/GOS/dft-gos-tables.bin with dft-gos-index.json hold the 231 K1, L1, L23, M23 and M45 tables of
 95 elements that eXSpy builds its K, L and M edges from (0.12.0), of the GOSH database of Segger, Guzzinati and
 Kohl, version 1.5.0, as eXSpy fetches it (Segger_Guzzinati_Kohl_1.5.0.gosh, md5 7fee8891c147a4f769668403b54c529b),
 extracted unchanged (every stored float32 value read back bit for bit) by tools/eels-edge/extract_gos.py
-(--task16 for the L tables, --all for the pack) into JSON and into raw float32:
+into raw float32:
 
     L. Segger, G. Guzzinati, H. Kohl, "A set of Generalised Oscillator Strengths
     for the simulation of EELS spectra", version 1.5.0, Zenodo,
     https://doi.org/10.5281/zenodo.7645765
     Licensed under the Creative Commons Attribution 4.0 International licence
     (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/
-    Changes: groups of the HDF5 file re-written as JSON and as raw little-endian float32 with a JSON index;
+    Changes: groups of the HDF5 file re-written as raw little-endian float32 with a JSON index;
     no value changed.
 
 The cross section computed from them (Sources/SpectroEELS/EdgeCrossSection.swift)
@@ -148,7 +147,7 @@ unclear by mac4DSTEM's v5.0 research and are carried here as a recorded risk.
 PyMca (line-shape tail formula)
 ================================================================================
 
-The opt-in low-energy tail of the EDS line shape (LineTail, Sources/SpectroEDX/Spectroscopy/Fit/EDSModel.swift) uses the
+The opt-in low-energy tail of the EDS line shape (LineTail, Sources/SpectroEDX/Fit/EDSModel.swift) uses the
 formula of PyMca's Hypermet short tail (PyMca, V. A. Sole et al., ESRF, MIT licence). The formula only; no PyMca code is
 copied or ported.
 

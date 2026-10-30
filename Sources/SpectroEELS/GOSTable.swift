@@ -1,13 +1,12 @@
 //
 //  GOSTable.swift
-//  Role: The generalised oscillator strength of one K shell, as exSpy 7185a4d1 reads it from the GOSH database
+//  Role: The generalised oscillator strength of one K, L or M subshell, as exSpy 7185a4d1 reads it from the GOSH database
 //        (`exspy/_misc/eels/gosh_gos.py`, `read_gos_data`; `base_gos.py`, `TabulatedGOS`), and the edges SpectroKit ships.
 //
-//
 //  The tables are the dft GOS of Segger, Guzzinati and Kohl (GOSH 1.5.0, DOI 10.5281/zenodo.7645765, CC-BY-4.0; md5 of the
-//  file exSpy fetches 7fee8891c147a4f769668403b54c529b), the groups C/K1, N/K1 and O/K1, extracted by
-//  tools/eels-edge/extract_gos.py into `Resources/GOS/dft-<element>-K1.json` with every stored float32 written so that it
-//  reads back bit for bit. Never Gatan's Hartree-Slater tables. Attribution: NOTICE.
+//  file exSpy fetches 7fee8891c147a4f769668403b54c529b), extracted by tools/eels-edge/extract_gos.py into one float32 pack
+//  (`Resources/GOS/dft-gos-tables.bin` with `dft-gos-index.json`), every stored value bit for bit. Never Gatan's
+//  Hartree-Slater tables. Attribution: NOTICE.
 //
 //  The arrays stay float32, as exSpy holds them: NumPy 2.5 keeps several of exSpy's intermediates in float32 (NEP 50: a
 //  Python float beside a float32 scalar is cast to float32), and the port reproduces that (`EdgeCrossSection`).
@@ -73,13 +72,9 @@ public nonisolated struct CoreLossEdge: Sendable, Equatable, CustomStringConvert
     public static let copperL3 = CoreLossEdge(element: "Cu", subshell: "L3", onsetEV: 931.0)
 
     /// The edges whose GOS ships with SpectroKit: every K, L and M edge exSpy builds with the dft GOS (its eels_binding_energies.json against the GOSH file's
-    /// tables): 383 edges of 95 elements, K 17, L 126, M 240 (`Resources/GOS/dft-gos-index.json`, tools/eels-edge/extract_gos.py --all). The 20 named edges
+    /// tables): 383 edges of 95 elements, K 17, L 126, M 240 (`Resources/GOS/dft-gos-index.json`, tools/eels-edge/extract_gos.py). The 20 named edges
     /// above are among them, with the same onsets. Ordered by element symbol, then subshell.
-    public static let bundled: [CoreLossEdge] = GOSPack.shared?.edges ?? [
-        .carbonK, .nitrogenK, .oxygenK, .magnesiumK, .aluminiumK, .siliconK,
-        .magnesiumL1, .magnesiumL2, .magnesiumL3, .aluminiumL1, .aluminiumL23, .siliconL1, .siliconL2, .siliconL3,
-        .ironL1, .ironL2, .ironL3, .copperL1, .copperL2, .copperL3,
-    ]
+    public static let bundled: [CoreLossEdge] = GOSPack.shared?.edges ?? []
 
     /// The bundled edge of this element and GOSH subshell ("K1", "L3", "L2,3"), or nil.
     public static func bundled(_ element: String, _ subshell: String) -> CoreLossEdge? {
@@ -125,52 +120,13 @@ package nonisolated struct GOSTable: Sendable {
         self.gos = gos
     }
 
-    /// The file of one edge as the first three slices wrote it: `dft-<El>-K1.json`, one edge per file (C, N, O).
-    private struct Stored: Decodable {
-        let element: String
-        let subshell: String
-        let onsetEV: Double
-        let occupancyRatio: Double
-        let freeEnergies: [Double]
-        let q: [Double]
-        let gos: [[Double]]
-    }
-
-    /// A per-TABLE file (task 16): `dft-<El>-<table>.json` with the edges that read it and their own onset and occupancy ratio.
-    private struct StoredTable: Decodable {
-        struct Edge: Decodable { let subshell: String; let onsetEV: Double; let occupancyRatio: Double }
-        let element: String
-        let table: String
-        let edges: [Edge]
-        let freeEnergies: [Double]
-        let q: [Double]
-        let gos: [[Double]]
-    }
-
     /// The table shipped for `edge`, or nil when SpectroKit ships none for it.
     package static func bundled(_ edge: CoreLossEdge) -> GOSTable? {
         cacheLock.lock(); defer { cacheLock.unlock() }
         let key = edge.element + "_" + edge.subshell
         if let t = cache[key] { return t }
         guard CoreLossEdge.bundled.contains(edge) else { return nil }
-        func data(_ name: String) -> Data? {
-            Bundle.module.url(forResource: name, withExtension: "json", subdirectory: "GOS").flatMap { try? Data(contentsOf: $0) }
-        }
-        let made: GOSTable?
-        if let d = data("dft-\(edge.element)-\(edge.subshell)"), let s = try? JSONDecoder().decode(Stored.self, from: d) {
-            guard s.element == edge.element, s.subshell == edge.subshell, s.onsetEV == edge.onsetEV,
-                  s.gos.count == s.freeEnergies.count, s.gos.allSatisfy({ $0.count == s.q.count }) else { return nil }
-            made = GOSTable(edge: edge, occupancyRatio: Float(s.occupancyRatio), freeEnergies: s.freeEnergies.map { Float($0) },
-                            q: s.q.map { Float($0) }, gos: s.gos.map { $0.map { Float($0) } })
-        } else if let d = data("dft-\(edge.element)-\(edge.table)"), let s = try? JSONDecoder().decode(StoredTable.self, from: d),
-                  s.element == edge.element, s.table == edge.table,
-                  let e = s.edges.first(where: { $0.subshell == edge.subshell }), e.onsetEV == edge.onsetEV,
-                  s.gos.count == s.freeEnergies.count, s.gos.allSatisfy({ $0.count == s.q.count }) {
-            made = GOSTable(edge: edge, occupancyRatio: Float(e.occupancyRatio), freeEnergies: s.freeEnergies.map { Float($0) },
-                            q: s.q.map { Float($0) }, gos: s.gos.map { $0.map { Float($0) } })
-        } else {
-            made = GOSPack.shared?.table(for: edge)
-        }
+        let made = GOSPack.shared?.table(for: edge)
         if let made { cache[key] = made }
         return made
     }
@@ -179,7 +135,7 @@ package nonisolated struct GOSTable: Sendable {
     private static let cacheLock = NSLock()
 }
 
-/// The pack of every K, L and M table (tools/eels-edge/extract_gos.py --all): `dft-gos-index.json` lists each table's element, name, byte offset and
+/// The pack of every K, L and M table (tools/eels-edge/extract_gos.py): `dft-gos-index.json` lists each table's element, name, byte offset and
 /// sizes and the edges that read it; `dft-gos-tables.bin` holds per table free_energies, q and gos (energy-major) as float32 little-endian, the GOSH file's
 /// stored values. Read once, mapped, never copied whole; a table is cut out when an edge first asks for it.
 package nonisolated final class GOSPack: Sendable {

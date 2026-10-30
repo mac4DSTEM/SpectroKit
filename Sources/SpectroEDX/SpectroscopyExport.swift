@@ -60,8 +60,7 @@ public nonisolated enum SpectroscopyExport {
         "{\"method\":\(m.canonicalJSON),\"sha256\":\"\(m.hash)\"}\n"
     }
 
-    /// The inspector's readouts of what the step will write: the elements of the table and the method's short hash.
-    public static func elementsLine(_ q: PooledQuantification) -> String { q.rows.map(\.element).joined(separator: ", ") }
+    /// The method's short hash, as an inspector shows it.
     public static func shortHash(_ m: QuantificationMethod) -> String { String(m.hash.prefix(8)) }
 
     /// The default file name: the spectrum image's stem, the region, what it is.

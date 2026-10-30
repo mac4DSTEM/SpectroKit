@@ -71,8 +71,4 @@ package nonisolated struct NetCounts: Equatable, Sendable {
     package var net: Double { gross - scale * background }
     package var variance: Double { gross + scale * scale * background }
     package var sigma: Double { variance.squareRoot() }
-
-    package func grossInterval(confidence: Double = 0.95) -> CountingInterval {
-        CountingInterval.garwood(count: gross, confidence: confidence)
-    }
 }

@@ -15,13 +15,6 @@ public nonisolated protocol DetectorEfficiency: Sendable {
     func efficiency(energyKeV: Double) -> Double
 }
 
-/// epsilon = 1 everywhere. Honest default for an "efficiency not applied" k.
-package nonisolated struct UnityEfficiency: DetectorEfficiency {
-    package let sourceName = "none (efficiency = 1)"
-    package init() {}
-    package func efficiency(energyKeV: Double) -> Double { 1 }
-}
-
 /// Piecewise log-linear (ln epsilon against ln E) interpolation of typed points,
 /// ascending in energy. It never extrapolates or clamps: `efficiency` traps
 /// outside the points, so callers check `covers(_:)` first.

@@ -70,9 +70,6 @@ public nonisolated struct SpectrumImageMetadata: Equatable, Sendable {
     /// The stored name (and `registrationNote`'s position) is pinned by the S0 golden baseline, which dumps this struct by
     /// reflection; renamed to `sameScanAsCube` at 0.8.0 with the golden re-baselined.
     public var sameScanAsCube = false
-    /// The name before 0.8.0 (the stored property was renamed; the golden baseline moved with it).
-    @available(*, deprecated, renamed: "sameScanAsCube")
-    public var sameScanAs4DCube: Bool { get { sameScanAsCube } set { sameScanAsCube = newValue } }
     /// Why the image was not registered to the object beside it, when the caller tried and it was not (shown, never hidden).
     public var registrationNote: String?
 
