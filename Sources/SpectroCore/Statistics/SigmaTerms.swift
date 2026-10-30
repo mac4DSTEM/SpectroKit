@@ -44,12 +44,6 @@ package nonisolated struct SigmaTerms: Equatable, Sendable {
         return parts.joined(separator: " ⊕ ") + String(format: " = %.1f %%", combined * 100)
     }
 
-    /// Relative sigma of the counting term for the ratio I_A / I_B of two
-    /// independent net counts.
-    package static func countingRatio(netA: Double, varianceA: Double, netB: Double, varianceB: Double) -> Double {
-        (varianceA / (netA * netA) + varianceB / (netB * netB)).squareRoot()
-    }
-
     /// Terms of a Cliff-Lorimer ratio C_A/C_B = k_AB * I_A/I_B where the k-factor
     /// is carried as k_A/k_B with independent relative sigmas `kA`, `kB`.
     package static func cliffLorimerRatio(counting: Double, kA: Double, kB: Double,

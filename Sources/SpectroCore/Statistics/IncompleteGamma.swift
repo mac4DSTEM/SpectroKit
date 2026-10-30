@@ -33,15 +33,6 @@ package nonisolated enum IncompleteGamma {
         return 1 - continuedFraction(a: a, x: x)
     }
 
-    /// Regularized upper incomplete gamma Q(a, x) = 1 - P(a, x), computed without
-    /// cancellation in the upper tail.
-    package static func upperRegularized(a: Double, x: Double) -> Double {
-        precondition(a > 0 && x >= 0, "IncompleteGamma needs a > 0, x >= 0")
-        if x == 0 { return 1 }
-        if x < a + 1 { return 1 - series(a: a, x: x) }
-        return continuedFraction(a: a, x: x)
-    }
-
     private static func logPrefactor(a: Double, x: Double) -> Double {
         -x + a * log(x) - lgamma(a)
     }
@@ -122,11 +113,6 @@ package nonisolated enum IncompleteGamma {
             x = next
         }
         return x
-    }
-
-    /// Chi-square quantile with `degreesOfFreedom` d.o.f.: 2 * gammaQuantile(p, d/2).
-    package static func chiSquareQuantile(p: Double, degreesOfFreedom k: Double) -> Double {
-        2 * gammaQuantile(p: p, shape: k / 2)
     }
 }
 
