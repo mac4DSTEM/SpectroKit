@@ -1,5 +1,3 @@
-// SpectroKit S1 test partition (ADR 064 section 3.3): the methods of SpectrumImageOpeningTests that move with the EDX core;
-// the rest stay in SpectrumImageOpeningTests.swift. Helpers are duplicated, not shared, across the split.
 import Foundation
 import Testing
 import SpectroTestSupport

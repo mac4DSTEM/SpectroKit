@@ -6,7 +6,7 @@
 //        protocol that the fit lane conforms to, and the delta-method ratio
 //        variance it feeds.
 //
-//  k enters a Cliff-Lorimer ratio as k_A/k_B (ADR 054 addendum, flag 5), i.e. as
+//  k enters a Cliff-Lorimer ratio as k_A/k_B, i.e. as
 //  sqrt(sigma_kA^2 + sigma_kB^2) for independent k-factors (20 % each gives ~28 %).
 //  In a RATIO OF RATIOS of two regions both ratios use the same k_A/k_B, so the
 //  k term cancels exactly and `ratioOfRatios` carries it as 0.

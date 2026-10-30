@@ -8,3 +8,6 @@
 CLAUDE.md
 .claude/
 __pycache__/
+
+# A library resolves its dependencies fresh, as its consumers do (CI: newest in range, and the floor job)
+Package.resolved

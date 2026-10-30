@@ -1,6 +1,6 @@
 //
 //  AxisGateTests.swift
-//  Role: EDX stage gate G-E (docs/edx-stage-gates-registration.md section 3 and amendment 1): the energy axis.
+//  Role: The energy axis against exSpy, HyperSpy and planted truth.
 //
 //  E1: `VeloxEnergyAxis` / the opener's `EnergyAxis` equal RosettaSciIO's `_get_dispersion_offset` exactly (a reader rule) on every public
 //      Velox file and on planted headers (decoy detector, differing offsets, detector keys out of index order);
@@ -100,9 +100,9 @@ struct AxisGateTests {
 
     /// E1 file order. Registration amendment 1, item 5: keys in file order Detector-0, Detector-10, Detector-2.
     /// RosettaSciIO takes Detector-10 (20 eV, -1900 eV) by FILE order. Until FormatoKit 0.0.3 `VeloxMetadata.parse` sorted the
-    /// detectors by index and took Detector-2 (10 eV, -500 eV): a registered finding, then a strict `withKnownIssue` here;
+    /// detectors by index and took Detector-2 (10 eV, -500 eV): a recorded finding, then a strict `withKnownIssue` here;
     /// FormatoKit 0.0.3 (its registration step 1, A7) takes them in the file's written order, so the rule holds and the
-    /// wrapper is gone (no public file and not the owner's header writes its keys out of index order).
+    /// wrapper is gone (no public file and no measured file's header writes its keys out of index order).
     @Test func testE1DetectorKeysOutOfIndexOrderFollowTheFileOrder() throws {
         let expected = pinned(rule.d("planted")["axis-order"]!)
         #expect(expected[0].cal == Cal(dispersionKeV: 0.02, offsetKeV: -1.9), "rsciio's rule takes Detector-10")
@@ -235,11 +235,11 @@ struct AxisGateTests {
         let badGain = results.indices.filter { abs(results[$0].gainErr) > 1e-4 }
         gateNote("EDX E3 swift outside 1 eV: \(badOff.count) of \(results.count); outside 1e-4 gain: \(badGain.count)")
         // What holds today and is asserted: the lines land within 5 eV on the refined axis (measured max below) and the
-        // refinement improves the fit. Not registered bounds: they guard the measured behaviour against a regression.
+        // refinement improves the fit. Not upstream bounds: they guard the measured behaviour against a regression.
         let worstPos = results.flatMap { $0.posErr.map(abs) }.max()!
         gateNote("EDX E3 swift worst line position error \(worstPos) eV")
         #expect(worstPos < 1.2, "measured worst line position error on the refined axis")
-        withKnownIssue("registered finding (section 7, Predicted for E3): offset and gain are not recovered within 1 eV and 1e-4 on spectra whose lines span 1.25-1.84 keV; they trade off") {
+        withKnownIssue("known finding (predicted for E3): offset and gain are not recovered within 1 eV and 1e-4 on spectra whose lines span 1.25-1.84 keV; they trade off") {
             #expect(badOff.isEmpty, "offset outside 1 eV: \(badOff.count) of 384, e.g. \(badOff.prefix(3).map { "\(rows[$0].id)#\(rows[$0].real) \(String(format: "%.2f", results[$0].offErr)) eV" })")
             #expect(badGain.isEmpty, "gain outside 1e-4: \(badGain.count) of 384, e.g. \(badGain.prefix(3).map { "\(rows[$0].id)#\(rows[$0].real) \(String(format: "%.2e", results[$0].gainErr))" })")
         }
@@ -280,7 +280,7 @@ struct AxisGateTests {
             #expect(v == [0.0198877, 0.0201678], "gain \(g)")
         }
         #expect(resolutionRaised == 2)
-        // the registered prediction "within +-0.2 eV at N_Al >= 1e6" is FALSE for exSpy (amendment 1 item 2):
+        // the prediction "within +-0.2 eV at N_Al >= 1e6" is FALSE for exSpy:
         #expect(e6.map { abs($0) }.max()! > 0.2)
     }
 }

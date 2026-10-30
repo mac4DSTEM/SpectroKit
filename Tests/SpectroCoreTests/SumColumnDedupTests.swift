@@ -4,9 +4,9 @@ import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
-/// Auto ID failed on six of the owner's Velox entries with `ProposerError.rankDeficient`: `ElementProposer.sumColumns` added
+/// Auto ID failed on six measured Velox entries with `ProposerError.rankDeficient`: `ElementProposer.sumColumns` added
 /// one pile-up column per parent pair, and two pairs whose energies coincide in the line table (Dy+Ti and Cs+Ho at 11.0061 keV)
-/// gave two identical design columns. Registered fix: `docs/archive/v5/sum-column-dedup-preregistration-2026-10-08.md`
+/// gave two identical design columns. The fix
 /// (a sum column within `sumPeakToleranceKeV` of one already added in the pass is not added again; the kept column's label names
 /// every pair). The spectra are generated from the fit's own line model with seeded Gaussian-approximated counting noise.
 struct SumColumnDedupTests {

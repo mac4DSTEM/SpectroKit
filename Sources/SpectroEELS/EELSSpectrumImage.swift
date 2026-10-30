@@ -1,6 +1,6 @@
 //
 //  EELSSpectrumImage.swift
-//  Role: What task 16's operations share (docs/design/eels-task-16.md sections 1 and 2): one protocol over the low-loss and the
+//  Role: What the EELS operations share (docs/design/eels-chain.md): one protocol over the low-loss and the
 //        core-loss spectrum image, so alignment, taper and extrapolation return the caller's own type; the per-pixel "no answer"
 //        reasons; the error cases of alignment, deconvolution and the edge model.
 //

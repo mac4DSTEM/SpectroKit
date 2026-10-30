@@ -3,9 +3,9 @@
 //  Role: The pre-edge background A E^-r by HyperSpy 2.4.0's two-area estimate (`_components/power_law.py:100-187`,
 //        `PowerLaw.estimate_parameters`), evaluated as `remove_background(fast=True)` evaluates it on a binned axis
 //        (`_signals/signal1d.py:1102-1152`; `models/model1d.py:375-390`: the component's value times the channel width).
-//        EELS slice 2, registration section 3.1.
+//       
 //
-//  Departure from HyperSpy, registered (section 1): where a window sum is not positive or A, r come out non-finite,
+//  Departure from HyperSpy: where a window sum is not positive or A, r come out non-finite,
 //  HyperSpy's `nan_to_num` (or, on a zero sum, the whole image's estimate failing) is replaced by a nil pixel with its
 //  reason. Everything else is HyperSpy's arithmetic in its order.
 //
@@ -19,7 +19,7 @@ package nonisolated struct PowerLawWindow: Sendable, Equatable {
 
     /// `value_range_to_indices(x1, x2)` and the parity rule (`power_law.py:127-135`).
     package init(axis: EELSAxis, from lo: Double, to hi: Double) throws {
-        // Departure from HyperSpy (registered after review): a window not inside the axis is refused, not clamped.
+        // Departure from HyperSpy: a window not inside the axis is refused, not clamped.
         guard lo >= axis.lowValue, hi <= axis.highValue else {
             throw EELSEdgeError.backgroundWindowOutsideAxis(fromEV: lo, toEV: hi, axisFromEV: axis.lowValue, axisToEV: axis.highValue)
         }

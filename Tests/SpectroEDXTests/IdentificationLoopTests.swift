@@ -1,7 +1,7 @@
 //
 //  IdentificationLoopTests.swift
 //  Role: the identification loop of docs/design/auto-id-tem.md (the residual-peak loop with the 1 % model term) on planted spectra, its
-//        filter and statistic, and its thresholds as named values. The planted pair is the case that hid Mg on the owner's file 1339:
+//        filter and statistic, and its thresholds as named values. The planted pair is the case that hid Mg on a measured Al-alloy map:
 //        Mg Kα at 2 % of Al Kα beside an Al whose lines are 5 % narrower than the model fits them (a core misfit like the real detector's).
 //
 
@@ -12,7 +12,7 @@ import SpectroCore
 
 struct IdentificationLoopTests {
 
-    private static let axis = EnergyAxis(offset: 0, scale: 0.005, size: 4000)   // 0 to 20 keV, like the owner's files
+    private static let axis = EnergyAxis(offset: 0, scale: 0.005, size: 4000)   // 0 to 20 keV, like the measured files
     private static let energies = (0..<axis.size).map { axis.energy(ofChannel: $0) }
 
     /// The planted lines are 5 % narrower than the model fits them at every energy (Al Kα: 66 against 70 eV, as 124 against 130 eV at Mn Kα
@@ -118,7 +118,7 @@ struct IdentificationLoopTests {
                 .groups.first { $0.id == "\(el)_Ka" }?.lines.first { $0.id == "\(el)_Kb" }?.weight
         }
         // eXSpy's table for the quantification fit (parity), NIST EPQ (K-M2 + K-M3 over K-L2 + K-L3) for identification:
-        // Al 0.0474 / 1.505 = 0.0315, measured 0.031 and 0.034 on the owner's 1339 and 1840 sums.
+        // Al 0.0474 / 1.505 = 0.0315, measured 0.031 and 0.034 on two measured Al-alloy map sums.
         #expect(kb("Al", .exspy) == 0.0132)
         #expect(abs((kb("Al", .epqK) ?? 0) - 0.0474 / 1.505) < 1e-4)
         #expect(abs((kb("Cu", .epqK) ?? 0) - 0.2417 / 1.653) < 1e-3)

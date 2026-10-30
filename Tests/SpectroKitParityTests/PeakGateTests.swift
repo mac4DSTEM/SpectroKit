@@ -1,6 +1,6 @@
 //
 //  PeakGateTests.swift
-//  Role: EDX stage gate G-P (docs/edx-stage-gates-registration.md section 3): peak identification.
+//  Role: Peak identification against exSpy pins and planted truth.
 //
 //  exSpy offers no automatic identification (a table lookup and HyperSpy's generic find_peaks1D_ohaver), so the proposer's
 //  reference is planted truth (section 5.2), not exSpy. P1: the lookup against exSpy's `get_xray_lines_near_energy`.
@@ -75,7 +75,7 @@ extension PeakGateTests {
 
     /// P3, the independent eye: HyperSpy's `find_peaks1D_ohaver` on the first five realisations of U130 / family L (N_Al 1e5,
     /// 1e6, 1e7 x rho_Mg 0.002, 0.01, 0.05), two settings (pins.peaks), beside the shipped proposer on the SAME spectra.
-    /// Positions only, reported, no bound (registration). Asserted: the registered readings of the pins (defaults find only Al Ka;
+    /// Positions only, reported, no bound. Asserted: the recorded readings of the pins (defaults find only Al Ka;
     /// amp_thresh 0.2 % of max with medfilt 3 finds Mg within 20 eV in 5 of 5 at rho >= 0.01 and at rho 0.002 for N_Al >= 1e6, and
     /// 2 of 5 at 1e5 / 0.002, with 7 to 25 peaks) and that each pinned Al peak sits where the rebuilt spectrum peaks.
     @Test func testP3PeakFinderIsTheRegisteredIndependentEye() throws {
@@ -124,10 +124,10 @@ extension PeakGateTests {
     /// Per-cell summary lines of the matched set (shared by the three criteria).
     private struct MSummary { let cell: EDXFixtures.Cell; let mean: MgRun; let reals: [MgRun]
         var truthMg: Double { cell.truth["Mg"]! }
-        /// 0.11.0, a stated change of the registered bar: the noise-free net >= 3 L_D(M) (was rho N >= 3 L_D(M)), with L_D(M) from the
+        /// 0.11.0, a stated change of the bar: the noise-free net >= 3 L_D(M) (was rho N >= 3 L_D(M)), with L_D(M) from the
         /// noise-free sandwich of the same design (the run on the mean). The generator integrates each line over its channel and the model
         /// samples at the channel centre (eXSpy's convention, D17), so Mg beside a 1e6 to 1e7 count Al reads 0.3 % of N_Al low on the noise-free
-        /// mean already (Gate D4 measures it against a centre-sampled control); before 0.11.0 the flank-misfit factor widened sigma until that
+        /// mean already (ProposerMgDiagnosis D4 measures it against a centre-sampled control); before 0.11.0 the flank-misfit factor widened sigma until that
         /// offset fitted inside 3 sigma. The criteria now test the statistics against the fit's own deterministic answer; the offset is D4's.
         var detectable: Bool { mean.present && mean.net >= 3 * mean.ld }
     }
@@ -154,7 +154,7 @@ extension PeakGateTests {
 
     /// 0.11.0, stated: the identification loop finds a line only from a residual peak at 5 sigma of the top-hat filter (the published bar),
     /// which on M.s.N4.rho0p05 (461 counts of Mg beside Al at 1e4 counts, about 10 sigma of the fit's own area) is reached in 77 to 80 % of the
-    /// realisations. The detection bar for that cell is registered as a known issue, not lowered in the code.
+    /// realisations. The detection bar for that cell is recorded as a known issue, not lowered in the code.
     private static let peakBarCells: Set<String> = ["M.s.N4.rho0p05"]
     private static let peakBarIssue: Comment = "the published 5 sigma residual-peak bar finds a 461-count Mg in 77 to 80 % (0.11.0)"
 
@@ -211,10 +211,10 @@ extension PeakGateTests {
             gateNote(String(format: "EDX P2 M %@ (full pool, %d reals): truth %.0f noise-free net %.0f L_D %.0f; P %.2f; mean net %.0f",
                             s.cell.id, n, s.truthMg, s.mean.net, s.mean.ld, s.reals.pProposed, s.reals.meanNet))
         }
-        // Not a registered criterion: reported. The proposer's own notes state a look-elsewhere rate of chance proposals
+        // Not a criterion: reported. The proposer's own notes state a look-elsewhere rate of chance proposals
         // per spectrum; elements other than Al, Si and Mg on matched Al-Mg-Si data are such chance proposals.
         let spectra = all.reduce(0) { $0 + $1.reals.count + 1 }
-        gateNote("EDX P2 M full pool: other elements proposed on matched data in \(elsewhere.count) of \(spectra) spectra (not a registered criterion): \(elsewhere.prefix(40))")
+        gateNote("EDX P2 M full pool: other elements proposed on matched data in \(elsewhere.count) of \(spectra) spectra (not a criterion): \(elsewhere.prefix(40))")
     }
 
     /// P2 mismatched sets (U, S, T, C, HALF, B, W, X): no pass or fail, a table (registration P2): net/truth on the noise-free

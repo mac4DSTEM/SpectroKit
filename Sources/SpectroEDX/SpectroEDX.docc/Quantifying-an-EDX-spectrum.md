@@ -34,7 +34,7 @@ func proposeElements(counts: [UInt64], axis: EnergyAxis, beamEnergyKeV: Double) 
 ## Record the method
 
 A ``QuantificationMethod`` holds every choice the number depends on: the estimator, the background, the k-factor source, the
-absorption correction, the elements and their roles. Its defaults are the registered ones.
+absorption correction, the elements and their roles. Its defaults are listed on each property.
 
 ```swift
 func method(for elements: [String], beamEnergyKeV: Double?) -> QuantificationMethod {

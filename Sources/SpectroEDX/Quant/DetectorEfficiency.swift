@@ -2,8 +2,7 @@
 //  DetectorEfficiency.swift
 //  Role: The detector's intrinsic efficiency epsilon(E) as a NAMED input to a
 //        computed k-factor. No curve ships: the Super-X G1 window/contact/dead-
-//        layer thicknesses are not in any file we hold (ADR 054, second opinion
-//        C2), so a computed k carries whatever source the user or the supervisor
+//        layer thicknesses are not in any file we hold, so a computed k carries whatever source the user or the supervisor
 //        names, and the k badge shows `sourceName`.
 //
 

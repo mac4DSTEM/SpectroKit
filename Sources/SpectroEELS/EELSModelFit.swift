@@ -1,7 +1,7 @@
 //
 //  EELSModelFit.swift
 //  Role: exSpy's EELS model (`exspy/models/eelsmodel.py` at 7185a4d1) on the dft GOS tables: a power-law background plus the cross sections of
-//        the requested edges, fitted per pixel (docs/design/eels-task-16.md section 6.2). `two_area_background_estimation`,
+//        the requested edges, fitted per pixel (docs/design/eels-chain.md section 6.2). `two_area_background_estimation`,
 //        `fit_background`, `smart_fit` and the low-loss convolution of the edge components are ported; `quantify` is `EELSModelResult.quantifyText`.
 //
 //  DEVIATION (exSpy): `Model1D.fit` is an unbounded Levenberg-Marquardt that stops short of the minimum (the EDX precedent, `LeastSquaresFit`:
@@ -25,7 +25,7 @@ public struct EELSModelOptions: Sendable, Equatable {
     /// The power-law exponent r is searched in this range. exSpy's is unbounded; a fit that ends on a bound is flagged (`exponentAtBound`).
     public var exponentRange: ClosedRange<Double> = 0 ... 10
     /// Per-edge windows only: each fitted edge (amplitude times its cross section on every channel) is subtracted from the spectrum before the
-    /// next edge's background and amplitude are fitted. Off by default: on the owner's real GMS maps the convolved C K model, fitted on its
+    /// next edge's background and amplitude are fitted. Off by default: on three measured GMS maps of a-C films the convolved C K model, fitted on its
     /// 30 eV signal window, overshoots the data 150 eV further up and leaves O K nothing to fit (2026-10-23); the planted tests hold the on case.
     public var stripPrecedingEdges: Bool = false
     public init(startEnergyEV: Double? = nil, preEdgeSafeWindowEV: Double = 2, exponentRange: ClosedRange<Double> = 0 ... 10, stripPrecedingEdges: Bool = false) {

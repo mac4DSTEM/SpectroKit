@@ -11,7 +11,7 @@ import Foundation
 /// Layout: `counts[(y * nx + x) * channels + c]`, row-major in y, then x, then channel (the order of exSpy's
 /// `(rows, cols, channels)` array). The energy of channel `c` is `energyOffsetEV + energyScaleEV * c`. The counts are the
 /// detector's counts per channel (a BINNED axis in HyperSpy's sense: the sum over channels is the intensity). exSpy
-/// integrates an unbinned axis with Simpson's rule instead; that path is not ported (registration section 3.2), so
+/// integrates an unbinned axis with Simpson's rule instead; that path is not ported, so
 /// counts must be per-channel sums, not densities.
 ///
 /// The zero-loss peak must sit at 0 eV (the registration's assumption, exSpy `_eels.py:647-648`): nothing is aligned or

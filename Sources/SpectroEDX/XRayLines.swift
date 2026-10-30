@@ -5,7 +5,7 @@
 //        line-width law, and eXSpy's default line choice for an element.
 //
 //  Ported from eXSpy at commit 7185a4d13d7d5c550b7bb8d1e9bd62af9cc4203e
-//  (GPL-3.0-or-later, same licence as this app; NOTICE names it):
+//  (GPL-3.0-or-later; NOTICE names it):
 //    - exspy/material/xray_lines.json            -> XRayLineData.swift (verbatim, generated)
 //    - exspy/utils/eds/_xray_lines.py:138-175    -> `fwhm(resolutionMnKaEV:atEnergy:)`
 //    - exspy/utils/eds/_xray_lines.py:75-89      -> `parseOnlyLines`

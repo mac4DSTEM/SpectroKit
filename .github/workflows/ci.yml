@@ -2,8 +2,9 @@
 #
 # Written 2026-10-14; enabling it (Actions on the repository) is the owner's. The package declares macOS 15 / iOS 18 and a
 # Swift 6.2 toolchain (Package.swift: `.macOS(.v15)`, tools 6.2).
-# Two jobs (0.5.1): `test` on the `macos-26` image (Swift 6.3.3, newest Xcode, printed by the job) and `test-macos15` on macos-15
+# Jobs (0.5.1): `test` on the `macos-26` image (Swift 6.3.3, newest Xcode, printed by the job) and `test-macos15` on macos-15
 # with Xcode 26.0, the floor the package now declares (macOS 15, iOS 18; FormatoKit 0.2.1's dylibs are built for 15).
+# No Package.resolved is tracked (0.12.x): `test` gets the newest FormatoKit and ImagoKit in range, `test-floors` the lower bounds.
 # Since 0.4.0 the readers are FormatoKit's, a package dependency fetched from github.com/mac4DSTEM/FormatoKit, which ships
 # libhdf5 inside FormatoHDF5: no libhdf5 step. FormatoKit is public (2026-10-15), so the runner fetches it with no token.
 # Never `swift build --build-tests -c release` (fails on this toolchain's Swift Build backend); tools/test.sh is the gate.
@@ -22,14 +23,21 @@ concurrency:
 
 jobs:
   test:
-    runs-on: macos-26
+    # The org's Mac runner while the org variable MACEM_MAC_RUNNER is set (never for a fork PR); else GitHub's macos-26.
+    runs-on: ${{ vars.MACEM_MAC_RUNNER && !github.event.pull_request.head.repo.fork && fromJSON(vars.MACEM_MAC_RUNNER) || 'macos-26' }}
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Select the newest Xcode
         run: |
-          xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
-          sudo xcode-select -s "$xcode"
+          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then
+            # The Mac runner: the macos-26 image's Xcode 26.6, chosen per job, never by xcode-select on that Mac.
+            export DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer
+            echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          else
+            xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+            sudo xcode-select -s "$xcode"
+          fi
           xcodebuild -version
           swift --version
       - name: Gate (tools/test.sh, release)
@@ -44,12 +52,43 @@ jobs:
           fi
       - name: Consumer check
         run: tools/consumer-check/run.sh
+  # The dependency floors: no Package.resolved is tracked, so `test` resolves the newest FormatoKit and ImagoKit in range, as a
+  # consumer does; this job pins each dependency to the lower bound Package.swift declares (read from the manifest, so it follows
+  # a raised floor) and runs the same gate.
+  test-floors:
+    # The org's Mac runner while the org variable MACEM_MAC_RUNNER is set (never for a fork PR); else GitHub's macos-26.
+    runs-on: ${{ vars.MACEM_MAC_RUNNER && !github.event.pull_request.head.repo.fork && fromJSON(vars.MACEM_MAC_RUNNER) || 'macos-26' }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select the newest Xcode
+        run: |
+          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then
+            # The Mac runner: the macos-26 image's Xcode 26.6, chosen per job, never by xcode-select on that Mac.
+            export DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer
+            echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          else
+            xcode=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+            sudo xcode-select -s "$xcode"
+          fi
+          swift --version
+      - name: Resolve the floor versions
+        run: |
+          swift package resolve
+          swift package dump-package | jq -r '.dependencies[].sourceControl[0] | "\(.identity) \(.requirement.range[0].lowerBound)"' |
+            while read -r name floor; do
+              echo "pinning $name to $floor"
+              swift package resolve "$name" --version "$floor"
+            done
+          grep -E '"(identity|version)"' Package.resolved
+      - name: Gate (tools/test.sh, release)
+        run: tools/test.sh
   version:
     name: CHANGELOG version matches the tag
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Compare
         run: |
           top=$(grep -m1 -E '^## \[?v?[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | sed -E 's/^## \[?v?([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
@@ -61,7 +100,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Select Xcode 26.0 (Swift 6.2)
         run: |
           sudo xcode-select -s /Applications/Xcode_26.0.app
@@ -74,7 +113,7 @@ jobs:
     name: No private references
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Scan tracked files
         run: |
           if git grep -n -I -E '_archive|CLAUDE\.md|memcap|macEM-suite|setup-python-refs' -- ':!.gitignore' ':!.github/workflows/ci.yml'; then

@@ -40,7 +40,7 @@ public nonisolated struct CoreLossEdge: Sendable, Equatable, CustomStringConvert
     /// Silicon K, onset 1839 eV.
     public static let siliconK = CoreLossEdge(element: "Si", subshell: "K1", onsetEV: 1839.0)
 
-    // The L edges (task 16, design section 6.1). L2 and L3 of one element are twins in exSpy's model: one intensity, the L3 name the master
+    // The L edges. L2 and L3 of one element are twins in exSpy's model: one intensity, the L3 name the master
     // (`eelsmodel.py:283-327`); Al has the single combined "L2,3". Onsets from exSpy's eels_binding_energies.json.
     /// Magnesium L1, onset 89 eV.
     public static let magnesiumL1 = CoreLossEdge(element: "Mg", subshell: "L1", onsetEV: 89.0)
