@@ -5,7 +5,7 @@ Runs exSpy's own EDSTEMSpectrum.quantification on a small synthetic 3 x 4 (rows 
 navigation mask (CL only, as exSpy) and one pixel with a single intensity above the floor. Writes
 Tests/SpectroEDXTests/Fixtures/edx-quant-maps-exspy.json.
 
-    ../refs/hyperspy/bin/python -I -B tools/edx-quant-maps/pins.py
+    References/python/bin/python -I -B tools/edx-quant-maps/pins.py
 """
 import json, pathlib, warnings
 import numpy as np

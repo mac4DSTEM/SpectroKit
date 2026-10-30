@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""exSpy pins for SpectroKit's EELS slice 2 (registration sections 4.1-4.4): what exSpy 7185a4d1 / HyperSpy 2.4.0 answer.
+"""exSpy pins for SpectroKit's EELS edge quantification (design note sections 4.1-4.4): what exSpy 7185a4d1 / HyperSpy 2.4.0 answer.
 
 Agreement with exSpy is agreement, not truth: the truth is make_planted.py and edge-planted-truth.json.
 
 Run (HyperSpy 2.4.0 venv; the pinned exSpy checkout is NOT installed, it is put first on sys.path and EELSCLEdge is built
 directly, as tools/eels-thickness/pins.py does; pyEELSMODEL at its pin is put second):
 
-    ../References/python/hyperspy/bin/python -I -B tools/eels-edge/pins.py --sigma-only     # phase A: the planted cross section
+    References/python/bin/python -I -B tools/eels-edge/pins.py --sigma-only     # phase A: the planted cross section
     (python3 tools/eels-edge/make_planted.py)                                       # reads phase A's fixture
-    ../References/python/hyperspy/bin/python -I -B tools/eels-edge/pins.py                  # phase B: everything else
+    References/python/bin/python -I -B tools/eels-edge/pins.py                  # phase B: everything else
 
 Options: --exspy DIR  --pyeels DIR  --gos-dft FILE  --gos-dirac FILE  --gosh-dir DIR  --fixtures DIR  --out DIR
 
 PHASE A (--sigma-only) writes edge-sigma-CK.f64/.json: exSpy's EELSCLEdge("C_K", GOS="dft").function(E) in barn/eV on
 E = 150 + 0.25 k eV, k = 0..2039 (2040 channels; the planted core-loss axis is the first 2000), for THE PLANTED MICROSCOPE
-SETTING E0 = 200 keV, alpha = 10 mrad, beta = 20 mrad, scale 0.25 eV (the same setting as slice 1's planted images).
+SETTING E0 = 200 keV, alpha = 10 mrad, beta = 20 mrad, scale 0.25 eV (the same setting as the thickness fixtures' planted images).
 
 PHASE B writes edge-pins.json (floats are Python reprs; all arrays are lists):
   environment : versions, sha256 of this script, md5 of the GOS files, commits.
@@ -44,7 +44,7 @@ PHASE B writes edge-pins.json (floats are Python reprs; all arrays are lists):
                 I_k = sum(result[window]), I_b = sum(background[window]), sigmaK (C K, 200/10/20, 0.25), I_low(Delta)
                 (low-loss fine channels [0, value-sliced index of Delta), end exclusive), n = I_k * 1e10 / (I_low * sigmaK),
                 and the I_0 route for fixed thresholds 2.5, 4.5, 6.0 eV (I_0 = sum of channels [0, index of theta)).
-                Also per Delta: varIk and sigmaN, the first-order counting-statistics estimate of registration section 6
+                Also per Delta: varIk and sigmaN, the first-order counting-statistics estimate of design note section 6
                 computed from the image's own counts (sigma_n = |n| sqrt(Var(I_k)/I_k^2 + 1/I_low); derivatives of I_b
                 taken analytically through r, k, A).
 """
@@ -342,7 +342,7 @@ def dirac_block():
 
 
 def sigma_n_block(res, bg, I1, I2, x1, x2, x3, i0w, i1w, ik, ib, i_low, sk):
-    """First-order counting-statistics sigma_n (registration section 6), per pixel, from the image's own counts:
+    """First-order counting-statistics sigma_n (design note section 6), per pixel, from the image's own counts:
     Var(I_k) = (I_k + I_b) + (dI_b/dI1)^2 I1 + (dI_b/dI2)^2 I2, sigma_n = |n| sqrt(Var / I_k^2 + 1 / I_low).
     dI_b/dI_j analytic through r = 2 (ln I1 - ln I2) / D, k = 1 - r, A = k I2 / (x2^k - x3^k), I_b = scale A sum_c E_c^-r."""
     D = np.log(x2) - np.log(x1)
@@ -455,7 +455,7 @@ def main():
            "sigmaFixtureSha256": sha_file(os.path.join(ARGS.fixtures, "edge-sigma-CK.f64")),
            "plantedManifestSha256": sha_file(os.path.join(ARGS.fixtures, "edge-planted.json")),
            "plantedRManifestSha256": sha_file(os.path.join(ARGS.fixtures, "edge-planted-R.json"))}
-    obj = {"schema": "spectrokit.eels.edge-pins/1", "registration": "docs/eels-slice-2-registration.md sections 4.1-4.4",
+    obj = {"schema": "spectrokit.eels.edge-pins/1", "registration": "the EELS edge design note section 4.1-4.4",
            "environment": env,
            "units": "function(E) and qint in barn/eV, sigmaK in barn, n in atoms/nm^2 (n = I_k * 1e10 / (I_low * sigmaK))",
            "grid": grid_block(), "splineC": spline_block(), "pyEELSMODEL": pyeels_block(), "dirac": dirac_block(),

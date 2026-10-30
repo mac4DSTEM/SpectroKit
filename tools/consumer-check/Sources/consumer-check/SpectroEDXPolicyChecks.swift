@@ -1,8 +1,8 @@
 //
 //  SpectroEDXPolicyChecks.swift
-//  Role: the policy parameters of SpectroEDX (docs/generality-0.5.0-registration.md) used from outside the package: every
+//  Role: the policy parameters of SpectroEDX (the 0.5.0 policy design) used from outside the package: every
 //        type, initialiser, field and entry point a consumer passes must be `public`. One function per family; each checks that
-//        the default value changes nothing and that one non-default value moves the result the way the registration predicted.
+//        the default value changes nothing and that one non-default value moves the result the way the design note predicted.
 //        Only public API is named.
 //
 

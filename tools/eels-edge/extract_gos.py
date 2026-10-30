@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Extract the dft GOS tables of C, N, O K1 from the GOSH file: SpectroKit EELS slice 2, registration section 3.3.
 
-Run:  ../References/python/hyperspy/bin/python -I -B tools/eels-edge/extract_gos.py [--gosh FILE] [--exspy DIR] [--out DIR]
+Run:  References/python/bin/python -I -B tools/eels-edge/extract_gos.py [--gosh FILE] [--exspy DIR] [--out DIR]
 
 Reads  References/gos-dft-1.5.0.gosh (= exSpy's Segger_Guzzinati_Kohl_1.5.0.gosh, md5 7fee8891c147a4f769668403b54c529b,
        DOI 10.5281/zenodo.7645765, CC-BY-4.0; the md5 is CHECKED) and exSpy's exspy/material/eels_binding_energies.json.
@@ -90,7 +90,7 @@ def dump(v, ind, out):
         out.append(scalar(v))
 
 
-# Task 16 (docs/design/eels-task-16.md section 6.1): one file per element AND TABLE, dft-<El>-<table>.json, listing the edges that read it.
+# Task 16 (docs/design/eels-chain.md section 6.1): one file per element AND TABLE, dft-<El>-<table>.json, listing the edges that read it.
 # L2 and L3 share the L23 table and differ only in their occupancy ratio (exSpy's `subshell_factor`: 0.333 and 0.667); Al has the single "L2,3"
 # (factor 1.0). The onsets are exSpy's eels_binding_energies.json. Same float32-exact number writing and key sorting as the K1 files.
 TASK16 = {

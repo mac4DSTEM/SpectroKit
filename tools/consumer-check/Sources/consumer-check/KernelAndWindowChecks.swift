@@ -1,6 +1,6 @@
 //
 //  KernelAndWindowChecks.swift
-//  Role: family 4 of docs/generality-0.5.0-registration.md used from outside the package: `SmoothingKernel` with
+//  Role: policy family 4 (0.5.0) used from outside the package: `SmoothingKernel` with
 //        `MapSmoothing.apply(_:width:height:kernel:)` (SpectroCore) and the ratio method's default pre-edge window offsets
 //        (SpectroEELS). Only public API is named.
 //

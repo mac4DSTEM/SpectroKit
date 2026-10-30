@@ -1,6 +1,6 @@
 //
 //  ModelPinsTests.swift
-//  Role: The edge model against exSpy 0.3.2 (Fixtures/eels16-model-pins.json, tools/eels-task16/model.py): `two_area_background_estimation`,
+//  Role: The edge model against exSpy 0.3.2 (Fixtures/eels16-model-pins.json, tools/eels-chain/model.py): `two_area_background_estimation`,
 //        `fit_background`, `smart_fit` (intensities, the model curve) and `quantify`, on noise-free and Poisson-noisy planted images, with
 //        and without the low-loss convolution. Tolerances: two-area A and r at the allclose defaults; the fits within the kit's decision
 //        (docs/design/eels-chain.md section 6.2): rtol 1e-3 of exSpy's converged intensities (its LM stops 1e-4 short of the minimum).

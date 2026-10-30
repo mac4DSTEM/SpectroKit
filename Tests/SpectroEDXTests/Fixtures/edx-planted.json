@@ -14535,5 +14535,5 @@
    "width": "fn"
   }
  },
- "what": "planted Al-Mg-Si spectra, registration section 5.2; see tools/edx-stages/make_planted.py for every definition"
+ "what": "planted Al-Mg-Si spectra, design note section 5.2; see tools/edx-planted/make_planted.py for every definition"
 }

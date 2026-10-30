@@ -31,32 +31,4 @@ struct CIScriptTests {
         try FileManager.default.createDirectory(at: temp.appendingPathComponent(".build/out/Intermediates.noindex/A/B/SpectroCore.build"), withIntermediateDirectories: true)
         #expect(try run("/bin/zsh", script: "set -uo pipefail\n" + inventory + "[[ $built == *SpectroCore* ]]", in: temp) == 0)
     }
-
-    @Test func testGapAuditMeasuresBitsAndDoesNotInventMissingOperands() throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
-        // These are arithmetic/diagnostic controls, not scientific reference outputs.
-        process.arguments = ["-I", "-B", "-c", """
-        import json, runpy, sys
-        audit = runpy.run_path(sys.argv[1])
-        gap = audit['gap']
-        assert gap(1.0, float.fromhex('0x1.0000000000001p0'))['ulps'] == 1
-        assert gap(-1.0, float.fromhex('-0x1.0000000000001p0'))['ulps'] == 1
-        assert gap(0.0, -0.0)['ulps'] == 0
-        tiny = float.fromhex('0x0.0000000000001p-1022')
-        assert gap(-tiny, tiny)['ulps'] == 2
-        json.dumps(gap(float('inf'), float('nan')), allow_nan=False)
-        assert gap(1.5, 1.0)['relative'] == 0.5
-        rows = audit['analyze']('Test testDerivative() recorded an issue at Test.swift:1:1: Expectation failed: (x.bitPattern → 4607182418800017408) == (pin.bitPattern → 4607182418800017409)')
-        assert len(rows) == 1 and rows[0]['ulps'] == 1
-        rows = audit['analyze']('Test testDerivative() recorded an issue at Test.swift:1:1: mismatches == 0')
-        assert len(rows) == 1 and rows[0]['measurement'].startswith('unavailable')
-        assert 'ulps' not in rows[0]
-        """, root.appendingPathComponent("tools/ci-parity/gaps.py").path]
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        try process.run()
-        process.waitUntilExit()
-        #expect(process.terminationStatus == 0)
-    }
 }

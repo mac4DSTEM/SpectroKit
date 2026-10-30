@@ -1,6 +1,6 @@
 {
  "environment": {
-  "command": "python -I -B tools/eels-task16/pins.py",
+  "command": "python -I -B tools/eels-chain/pins.py",
   "exspy": "0.3.2",
   "hyperspy": "2.4.0",
   "note": "spectra are synthetic and deterministic; HyperSpy ran without numba (non-accelerated paths, identical results)",

@@ -1,6 +1,6 @@
 //
 //  ProposerPolicyChecks.swift
-//  Role: family 3 of docs/generality-0.5.0-registration.md used from outside the package: `ProposerPolicy` (with `Currie`,
+//  Role: policy family 3 (0.5.0) used from outside the package: `ProposerPolicy` (with `Currie`,
 //        `IdentificationThresholds`, `ElementContext`), `ElementProposer(policy:)`, the now public `ProposalRules` fields and
 //        `UnlistedLineRules` with `UnlistedLineChecker.neighbour`. Only public API is named.
 //

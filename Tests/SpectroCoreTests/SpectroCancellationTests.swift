@@ -277,7 +277,7 @@ struct SpectroCancellationTests {
         let full = FileManager.default.temporaryDirectory.appendingPathComponent("spk-full-\(UUID().uuidString).bundle")
         defer { try? FileManager.default.removeItem(at: full) }
         try FileManager.default.createDirectory(at: full, withIntermediateDirectories: true)
-        try FileManager.default.copyItem(at: SpectroscopyQuantifySpectro.resources, to: full.appendingPathComponent("Spectroscopy"))
+        try FileManager.default.copyItem(at: SpectroscopyQuantifyTests.resources, to: full.appendingPathComponent("Spectroscopy"))
         let fullBundle = Bundle(url: full)
         #expect(QuantificationTables.bundled(in: fullBundle) != nil)
         #expect(QuantificationTables.bundled() != nil, "the default is the library's own copy (Bundle.module), not the host app's")

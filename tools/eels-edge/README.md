@@ -1,21 +1,21 @@
-# tools/eels-edge: truth and pins for EELS slice 2 (power-law background, C K areal density)
+# tools/eels-edge: truth and pins for EELS edge quantification (power-law background, C K areal density)
 
-Written before the Swift code, as the EELS slice 2 design note (archived in the suite's private folder) sections 3.3, 4 and 5 fix them. Four scripts:
+Written before the Swift code, as the EELS edge quantification design note sections 3.3, 4 and 5 fix them. Four scripts:
 
 | script | needs | writes |
 |---|---|---|
 | `extract_gos.py` (h5py) | `References/gos-dft-1.5.0.gosh` (md5 checked), exSpy's `eels_binding_energies.json` | `Sources/SpectroEELS/Resources/GOS/dft-{C,N,O}-K1.json` (~425 KB each, JSON, sorted keys, float32 values widened, gos[iEnergy][iQ] as exSpy's `np.squeeze(gos.T)`) |
 | `pins.py --sigma-only` (phase A) | exSpy venv | `edge-sigma-CK.f64/.json`: exSpy's `function(E)` for C K, 200 keV / 10 / 20 mrad, 0.25 eV, E = 150 + 0.25 k, 2040 channels |
-| `make_planted.py` (NumPy only) | phase A's fixture, slice 1's `planted-noiseless.f64` | `edge-{core,low}-{ss,ps03,ps07,ps13}-{noiseless,noisy}.f64`, `edge-planted.json` (manifest), `edge-planted-truth.json`; and the R set: `edge-{core,low}-R-*.f64`, `edge-planted-R.json`, `edge-planted-truth-R.json` |
+| `make_planted.py` (NumPy only) | phase A's fixture, the thickness fixtures' `planted-noiseless.f64` | `edge-{core,low}-{ss,ps03,ps07,ps13}-{noiseless,noisy}.f64`, `edge-planted.json` (manifest), `edge-planted-truth.json`; and the R set: `edge-{core,low}-R-*.f64`, `edge-planted-R.json`, `edge-planted-truth-R.json` |
 | `pins.py` (phase B) | everything above, pinned exSpy / pyEELSMODEL / HyperSpy | `edge-pins.json` (14.8 MB) |
 
 ## Run (order matters)
 
 ```
-../References/python/hyperspy/bin/python -I -B tools/eels-edge/extract_gos.py
-../References/python/hyperspy/bin/python -I -B tools/eels-edge/pins.py --sigma-only
-../References/python/hyperspy/bin/python -I -B tools/eels-edge/make_planted.py      # any Python with NumPy
-../References/python/hyperspy/bin/python -I -B tools/eels-edge/pins.py
+References/python/bin/python -I -B tools/eels-edge/extract_gos.py
+References/python/bin/python -I -B tools/eels-edge/pins.py --sigma-only
+References/python/bin/python -I -B tools/eels-edge/make_planted.py      # any Python with NumPy
+References/python/bin/python -I -B tools/eels-edge/pins.py
 ```
 All take `--out`/`--fixtures` to write elsewhere. Every output is byte-identical on a second run (checked by sha256, see the
 lead's report). `pins.py` records the script's own sha256, both GOS md5s, commits and versions.
@@ -28,25 +28,25 @@ thing taken from exSpy is the cross-section SHAPE, so this truth tests backgroun
 
 1 barn = 1e-10 nm^2. `function(E)` is barn/eV; per channel sigma_ch = function(E) * scale (barn). Edge counts per channel =
 `I_low * n[atoms/nm^2] * sigma_ch[barn] * 1e-10`. The ratio: `n = I_k * 1e10 / (I_low * sigma_k)`.
-(The registration's text in section 5, "n_true * I_low * sigma(E) * scale", leaves the 1e-10 implicit.)
+(the design note's text in section 5, "n_true * I_low * sigma(E) * scale", leaves the 1e-10 implicit.)
 
 ## Layout of the fixtures
 
 Core-loss images shape (3, 5, 2000), low-loss (3, 5, 3400), float64 little-endian C order; row = background
 [(1e9, 3.0), (5e8, 2.5), (2e10, 3.5)], column = n_true [2, 5, 10, 20, 50]; pixel p = row * 5 + col. Axes: core
-150 + 0.25 k eV; low-loss -10 + 0.05 k eV (slice 1's). Cases: `ss` (low-loss = a delta of 1e7 at 0 eV), `ps03/07/13`
-(slice 1's planted low-loss pixels of tau 0.3 / 0.7 / 1.3, normalised to their own total, scaled to a total of 1e7).
+150 + 0.25 k eV; low-loss -10 + 0.05 k eV (the thickness fixtures'). Cases: `ss` (low-loss = a delta of 1e7 at 0 eV), `ps03/07/13`
+(the thickness fixtures' planted low-loss pixels of tau 0.3 / 0.7 / 1.3, normalised to their own total, scaled to a total of 1e7).
 Noisy copies: `default_rng(20261015)`, per case poisson(core) then poisson(low). One manifest (`edge-planted.json`) instead of a
 `.json` sidecar per `.f64` (32 sidecars would be clutter). `edge-planted-truth.json`: per case, per window, per Delta, per
 pixel: iLow, ikEdge, ibTrue, ibEst, nPredicted, bias (and its background and edge parts), the I_0 route for 2.5/4.5/6.0 eV, plus the
 two-area estimate's I1, I2, r, A computed from the components.
 
-## Readings made (the registration is silent)
+## Readings made (the design note is silent)
 
 1. **Channel bin.** E_k is the LEFT edge of channel k (bin [E_k, E_k + 0.25)); `--bin centre` gives the centred bin. HyperSpy's
    two-area formula treats the sum over [i1, i3) as the integral from x1 to x3, which is the left-edge reading. (Both readings
    give nearly the same bias, see Findings; the fixtures use `left`.)
-2. **Low-loss total.** For the plural-scattering cases the TOTAL low-loss counts are 1e7 (the registration fixes I_0 = 1e7 for
+2. **Low-loss total.** For the plural-scattering cases the TOTAL low-loss counts are 1e7 (the design note fixes I_0 = 1e7 for
    single scattering only). The single-scattering low-loss is a delta of 1e7 at 0 eV, so I_low(Delta) = I_0 = 1e7 for every Delta.
 3. **0.05 -> 0.25 eV mapping.** 0 eV is aligned to the centre of a coarse channel; coarse c = (j - 198) // 5 (exact rebin by 5, mass
    conserved), then a plain convolution on the core-loss grid; the predicted bias uses the same arrays. The sigma fixture
@@ -78,7 +78,7 @@ bias at 0.71 % or less for n >= 5 and 1.8 % at n = 2 (worst row), but that is th
 150: -1.6 %, -3.7 %, -7.1 %. The background part (finding 1, slightly changed by I_low) adds to it: total relative bias at Delta 50
 for the best pixel (n = 50, row 1): -8.5 %, -18.4 %, -31.6 %; at Delta 150: -2.1 %, -4.2 %, -7.6 %; for n = 2 up to about -3 times n_true.
 The I_0 route (theta 4.5 eV) over-estimates instead: n = 50 pixel +23 % (0.3), +63 % (0.7),
-+137 % (1.3) at Delta 50: its bias does grow with tau, as the registration says. Prediction holds: Egerton eq. 4.66 is far better
++137 % (1.3) at Delta 50: its bias does grow with tau, as the design note says. Prediction holds: Egerton eq. 4.66 is far better
 than I_0 at every tau, but it is not unbiased at Delta 50 (the cumulative cross section rising over the window is why).
 Edge intensity inside the pre-edge windows from the zero-loss peak's tails: at most 3e-98 of the background, so the plural
 cases' pre-edge window sums equal the single-scattering ones.
@@ -113,7 +113,7 @@ realistic set below is the one the bias and noise gates can meaningfully use.
 
 ## The second, realistic set (R): n_true 200, 500, 1000, 2000, 5000 atoms/nm^2 (a ~2-50 nm carbon film)
 
-Added by the lead's decision (to be amended into the registration). Same (A, r) rows, axes, I_0 = 1e7, low-loss and cases; seed 20261016.
+Added after the first set. Same (A, r) rows, axes, I_0 = 1e7, low-loss and cases; seed 20261016.
 Files: `edge-{core,low}-R-{ss,ps03,ps07,ps13}-{noiseless,noisy}.f64`, manifest `edge-planted-R.json`, truth in a SEPARATE file
 `edge-planted-truth-R.json` (same structure as the first set's), pins under the new key `plantedR` of `edge-pins.json` (same structure as `planted`,
 plus `varIk` and `sigmaN` per Delta in both sets). The first set's `.f64` files are byte-identical to before; its manifest and truth JSON lost their
@@ -133,7 +133,7 @@ Delta 150: -3.12 .. -1.57 %, -5.23 .. -3.68 %, -8.64 .. -7.09 %. Delta 30: -14.0
 Most of it is the plural-scattering edge-window mismatch (-7.6, -17.6, -30.7 % at Delta 50, identical for every pixel). The I_0 route (theta 4.5 eV)
 over-estimates: +22.1 .. +24.5 % (0.3), +60.8 .. +64.3 % (0.7), +134 .. +141 % (1.3) at Delta 50.
 
-**R3. Noisy copies against sigma_n** (registration section 6 first-order estimate; implemented in `pins.py` from each image's own counts:
+**R3. Noisy copies against sigma_n** (design note section 6 first-order estimate; implemented in `pins.py` from each image's own counts:
 Var(I_k) = (I_k + I_b) + (dI_b/dI1)^2 I1 + (dI_b/dI2)^2 I2, sigma_n = |n| sqrt(Var/I_k^2 + 1/I_low); dI_b/dI_j analytic through r, k, A and the window
 sum of E^-r, checked against a central finite difference: relative difference 9e-11). Default window, Delta 50, z = (n_noisy - n_noiseless) / sigma_n(noisy image):
 - ss: sigma_n/n runs from 1.1 % (n = 5000) to 60 % (n = 200, row 2); sigma_n about 39-55 (row 1, 3) and 117-128 (row 2) atoms/nm^2;

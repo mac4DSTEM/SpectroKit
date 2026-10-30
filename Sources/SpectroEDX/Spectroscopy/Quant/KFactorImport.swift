@@ -19,7 +19,7 @@
 //  Convention (eXSpy's, `quantification_cliff_lorimer`): C_A / C_B = (k_A / k_B) (I_A / I_B), only ratios of k enter. Values are
 //  taken as given; a table that lists the inverse convention is the caller's to invert. No eXSpy table of k-factors exists (exSpy's
 //  documentation gives the list `[1, 1.47, 1.72]` for `['Al_Ka', 'Cr_Ka', 'Ni_Ka']` as the example); the tests pin that the
-//  parsed list drives the same composition as exSpy's own function (`tools/edx-0100/pins.py`).
+//  parsed list drives the same composition as exSpy's own function (`tools/edx-kfactor-import/pins.py`).
 //
 
 import Foundation
