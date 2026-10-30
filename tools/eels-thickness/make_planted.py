@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Planted EELS low-loss spectra with a known t/lambda: SpectroKit EELS slice 1, registration section 5.1.
+"""Planted EELS low-loss spectra with a known t/lambda: SpectroKit EELS thickness, design note section 5.1.
 
 NumPy only (no HyperSpy, no exSpy, no SciPy): this is the truth, independent of the reference the port is pinned to.
 
@@ -10,8 +10,8 @@ Writes, into the fixture directory (default Tests/SpectroEELSTests/Fixtures/, or
   planted-truth.json              tau per pixel and, per fixed threshold, the log-ratio the planted components imply
                                   and its bias against tau (the method's own bias), plus the sum-based value for the record
 
-Run:  python3 tools/eels-thickness/make_planted.py [--out DIR]      (any Python with NumPy; the suite uses
-      ../References/python/hyperspy/bin/python -I)
+Run:  python3 tools/eels-thickness/make_planted.py [--out DIR]      (any Python with NumPy; the reference is
+      References/python/bin/python -I)
 
 THE MODEL
 ---------
@@ -65,7 +65,7 @@ THE BIAS THE GENERATOR PREDICTS (the method's own, not a port's error)
   per pixel, the bias for EVERY channel of the method's default search range (biasByChannel: ind = 220..419, the
   channels [value2index(1.0 eV), value2index(11.0 eV)) of the default window), computed the same way from the
   components. A port that finds channel c for a pixel looks up biasByChannel[c - 220] and the planted-spectrum gate
-  is as tight for the estimated threshold as for the fixed ones. (An addition to the registration's fixed thresholds,
+  is as tight for the estimated threshold as for the fixed ones. (An addition to the design note's fixed thresholds,
   reported as such.)
 
 Every float in the JSON is written with Python's repr (shortest string that round-trips): reading it back gives the
@@ -320,7 +320,7 @@ def main():
     axis = {"offset": OFFSET, "scale": SCALE, "size": SIZE, "units": "eV", "binned": True}
     layout = {"shape": [ROWS, COLS, SIZE], "dtype": "float64", "byteOrder": "little",
               "order": "C: rows, cols, channels (row-major; pixel index = row * 5 + col)"}
-    microscope = {**MICROSCOPE, "note": "assigned for the absolute-thickness pins (registration section 4); "
+    microscope = {**MICROSCOPE, "note": "assigned for the absolute-thickness pins (design note section 4); "
                                        "not a property of the planted physics"}
 
     h_clean, n_clean = write_raw(os.path.join(out, "planted-noiseless.f64"), image)
@@ -328,7 +328,7 @@ def main():
 
     common_prov = {
         "generator": "tools/eels-thickness/make_planted.py",
-        "registration": "docs/eels-slice-1-registration.md section 5.1",
+        "registration": "the EELS thickness design note section 5.1",
         "numpyVersion": np_ver,
         "licence": "SpectroKit's own (GPL-3.0-only); generated, no third-party data",
         "tauRowMajor": TAUS, "countsN": N_COUNTS,

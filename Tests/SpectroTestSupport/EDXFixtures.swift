@@ -2,7 +2,7 @@
 //  EDXFixtures.swift
 //  Role: Loaders for the EDX pins and planted fixtures: pins.json, the planted Velox streams and
 //        their truth, the planted Al-Mg-Si spectra (means plus int16 residuals), the calibration set, and RosettaSciIO's
-//        public Velox files. Formats: tools/edx-stages/README.md. Nothing here is the code under test.
+//        public Velox files. Formats: tools/edx-planted/README.md. Nothing here is the code under test.
 //
 
 import CryptoKit

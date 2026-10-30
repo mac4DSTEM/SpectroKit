@@ -1,6 +1,6 @@
 //
 //  QuantificationPolicyChecks.swift
-//  Role: family 2 of docs/generality-0.5.0-registration.md used from outside the package: `QuantificationPolicy` (`FitPolicy`,
+//  Role: policy family 2 (0.5.0) used from outside the package: `QuantificationPolicy` (`FitPolicy`,
 //        `AbundancePolicy`, `DetectorLayers`, `SingleLineRule`, `IRLSSettings`, `AxisRefinementSettings`) through
 //        `PooledQuantificationInput.policy` and `PooledQuantifier.run`, and `FitRangeSensitivityCheck.run(alternativeToKeV:)`.
 //        Only public API is named.

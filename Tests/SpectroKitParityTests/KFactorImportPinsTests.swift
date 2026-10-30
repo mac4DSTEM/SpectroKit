@@ -1,6 +1,6 @@
 //
 //  KFactorImportPinsTests.swift
-//  Role: the k-factor importer against exSpy's CONVENTION (tools/edx-0100/pins.py): the planted table text in every layout parses to
+//  Role: the k-factor importer against exSpy's CONVENTION (tools/edx-kfactor-import/pins.py): the planted table text in every layout parses to
 //        the k list exSpy's `quantification_cliff_lorimer` documents (`[1, 1.47, 1.72]` for Al_Ka, Cr_Ka, Ni_Ka), and that list
 //        drives the kit's Cliff-Lorimer to exSpy's own weight fractions. exSpy has no table of k-factors: only the convention is pinned.
 //        Tolerance: exSpy's tests compare composition with atol 1e-3 on percent (`test_quant_lorimer*`); the measured difference

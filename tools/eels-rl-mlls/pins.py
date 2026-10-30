@@ -10,9 +10,9 @@ Pins what HyperSpy 2.4.0 / exSpy 0.3.2 answer on deterministic synthetic spectru
     noise-free and Poisson-noisy images, with and without the low-loss convolution, over the whole axis and over an explicit window.
     The exponent comes from (a) the planted per-pixel value ("given") or (b) `two_area_background_estimation()` ("twoArea").
 
-Run (the suite's HyperSpy 2.4.0 / exSpy 0.3.2 venv, NumPy 2.5.4, SciPy 1.18.1):
+Run (the reference venv's HyperSpy 2.4.0 / exSpy 0.3.2 venv, NumPy 2.5.4, SciPy 1.18.1):
 
-    ../References/python/hyperspy/bin/python -I -B tools/eels-rl-mlls/pins.py [--gosh FILE] [--out DIR]
+    References/python/bin/python -I -B tools/eels-rl-mlls/pins.py [--gosh FILE] [--out DIR]
 
 Writes into --out (default Tests/SpectroEELSTests/Fixtures/):
 

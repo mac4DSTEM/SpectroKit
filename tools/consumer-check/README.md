@@ -19,7 +19,7 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
 
 - **SpectroCore through FormatoKit (new section, 41 checks).** Through SpectroCore's public API only, on the committed fixtures
   `Tests/SpectroCoreTests/Fixtures/velox-tiny.emd` and `demo-edx-tiny.dm4`, against what SpectroKit's own tests assert for
-  them (`SpectrumImageOpeningTests+Spectro.swift`; `spectro-golden/velox-tiny.txt`, `demo-edx-tiny-dm4.txt`; the truth file's
+  them (`SpectrumImageOpeningTests.swift`; `spectro-golden/velox-tiny.txt`, `demo-edx-tiny-dm4.txt`; the truth file's
   `totals_written.eds_counts`):
   - `SpectrumImageOpener.kind(ofFileAt:)`: the Velox file is `.veloxSpectrumImage`, the DM4 is `.other` (it has a diffraction
     object), a path that is neither is `.other`.
@@ -63,7 +63,7 @@ FormatoKit type and declares no FormatoKit product; FormatoKit is resolved throu
   `EELSMicroscope` (init, three fields); `LowLossIntensity`; `CoreLossEdge` (`.element .subshell .onsetEV`,
   `.carbonK .nitrogenK .oxygenK`, `.bundled`, `description`, `Equatable`); `ArealDensityMap` (fifteen fields);
   `ArealDensityPixel` (eight fields); `EdgeUnavailable` (four cases); `EELSEdgeError`. Section: `EdgeQuantificationChecks`.
-- **SpectroEDX policies and SpectroCore kernels (0.5.0, 37 checks).** The 0.5.0 policy parameters (design note, archived in the suite's private folder) used
+- **SpectroEDX policies and SpectroCore kernels (0.5.0, 37 checks).** The 0.5.0 policy parameters used
   from outside the package, each with its default (no change against the call that names none) and one non-default value that
   moves the result as predicted: `WindowRules` through `ElementWindows.build(rules:)` and `defaultFamily(of:rules:)` (9, section
   `windowRulesChecks`); `QuantificationPolicy` (`FitPolicy`, `AbundancePolicy`, `DetectorLayers`, `SingleLineRule`, `IRLSSettings`,

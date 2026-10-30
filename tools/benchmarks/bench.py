@@ -1,7 +1,7 @@
 """Python side of the benchmark: the same closed-form inputs as Tests/SpectroKitParityTests/BenchmarkQuantificationTests.swift and
 Tests/SpectroKitParityTests/BenchmarkThicknessTests.swift, timed with one warm-up and five runs.
 
-    ../refs/hyperspy/bin/python -I -B tools/benchmarks/bench.py OUT_DIR [small,typical]
+    References/python/bin/python -I -B tools/benchmarks/bench.py OUT_DIR [small,typical]
 """
 import json, sys, time, warnings, pathlib
 import numpy as np

@@ -1,18 +1,18 @@
-# tools/eels-thickness: truth and pins for EELS slice 1 (the t/λ thickness map)
+# tools/eels-thickness: truth and pins for EELS thickness (the t/λ thickness map)
 
-Written before any Swift code, as the EELS slice 1 design note (archived in the suite's private folder) sections 4 and 5 fix them. Two generators, one
+Written before any Swift code, as the EELS thickness design note sections 4 and 5 fix them. Two generators, one
 fixture directory, `Tests/SpectroEELSTests/Fixtures/` (written before the `SpectroEELS` target existed; `SpectroEELSTests` reads it).
 
 **Agreement with exSpy is not truth.** `pins.json` is what exSpy 7185a4d1 answers; a port that equals it is a port, not a
 measurement. The truth is `planted-truth.json`, made by `make_planted.py` from NumPy alone, with no exSpy, HyperSpy or SciPy
-in it. The two answer different gates (registration section 7: gate 1 against the pins, gates 2 and 3 against the truth).
+in it. The two answer different gates (design note section 7: gate 1 against the pins, gates 2 and 3 against the truth).
 Nothing here makes a thickness validated: `validation: "none"` stays until a sample of known thickness is measured.
 
 ## Run
 
 ```
-python3 tools/eels-thickness/make_planted.py          # NumPy only (the suite uses ../References/python/hyperspy/bin/python -I)
-../References/python/hyperspy/bin/python -I tools/eels-thickness/pins.py
+python3 tools/eels-thickness/make_planted.py          # NumPy only (the reference is References/python/bin/python -I)
+References/python/bin/python -I tools/eels-thickness/pins.py
 ```
 
 Both take `--out`/`--fixtures` to write elsewhere (the reproducibility check does). `pins.py` needs the pinned exSpy checkout
@@ -43,7 +43,7 @@ already names exSpy).
 ## make_planted.py: the planted spectra (section 5.1)
 
 Axis −10 eV + 0.05 eV · k, k = 0 … 3399 (−10 to 159.95 eV), binned counts, the 0 eV channel k = 200. The zero-loss peak is a
-Gaussian at 0 eV, σ = 0.25 eV, **normalised to unit sum** (the registration does not say; it makes I_0 = N e^(−τ) exactly).
+Gaussian at 0 eV, σ = 0.25 eV, **normalised to unit sum** (the design note does not say; it makes I_0 = N e^(−τ) exactly).
 S(E) is the Drude loss function E Γ E_p² / ((E² − E_p²)² + (E Γ)²) for E > 0 (strict), E_p = 15.0 eV, Γ = 0.8 eV, unit sum over
 the axis. Plural scattering by Poisson statistics, I = N Σ_n e^(−τ) τⁿ/n! · (Z ⊛ S^⊛n), N = 10⁶.
 
@@ -55,7 +55,7 @@ energy is E_k + loss_j = (k − 200) · 0.05 + j · 0.05 = (m − 200) · 0.05 =
 its losses. What falls past channel 3399 (≥ 160 eV) is lost; Z and S0 have unit sum, so the loss of term n is `1 − sum(term_n)`.
 The convolutions are explicit loops of NumPy vector adds (no BLAS, no FFT), deterministic. The image is stored as `zl + inel`
 (`zl` = the n = 0 term, `inel` = the sum of the n ≥ 1 terms added in order). The sum over n stops before the first term n > 0
-whose summed in-range intensity is below 1e-14 of the running total (the registration says "the first term below 1e-14 of the
+whose summed in-range intensity is below 1e-14 of the running total (the design note says "the first term below 1e-14 of the
 total": here a term means its summed intensity on the axis, not its Poisson weight; the terms past n = 13 are almost wholly
 scattered beyond 160 eV, so the spectrum is the same to 1e-13 relative). n_max per τ and the Poisson weight left out are in the
 truth file.
@@ -70,7 +70,7 @@ written next to it and the two agree to 5.6e-16 (asserted < 1e-12). The bias is 
 plasmon intensity below θ is counted in I_0, and the Drude tail beyond the axis is missing from I_t; the zero-loss peak above θ
 (positive) is about 1e-23 of the zero-loss intensity at 2.5 eV and about 1e-6 of it at 1.2 eV.
 
-**`biasByChannel` (an addition to the registration).** The estimated threshold is exSpy's rule on the data and the generator does
+**`biasByChannel` (an addition to the design note).** The estimated threshold is exSpy's rule on the data and the generator does
 not know it, so the truth file also holds, per pixel, the bias for every `ind` = 220 … 419, the channels
 [value2index(1 eV), value2index(11 eV)) of the default search window. A port that finds channel c for a pixel looks up
 `biasByChannel.bias[c − 220]`; then gate 2 is as tight for the estimated threshold as for the fixed ones.
@@ -99,7 +99,7 @@ per pixel in row-major order:
   α (1, 10, 30) × β (5, 20, 100): 20 and 180 values, `[…inputs, value]` rows.
 - `rules`: the rules below in words with file:line; `diagnostics`: not pins (below).
 
-Agreement required of the port (registration section 4): the same threshold channel for every pixel; I_0 and I_t relative
+Agreement required of the port (design note section 4): the same threshold channel for every pixel; I_0 and I_t relative
 ≤ 1e-12; t/λ absolute ≤ 1e-12; λ and the correction relative ≤ 1e-13. A difference is a failure of the port, never a tolerance
 to widen.
 
@@ -180,7 +180,7 @@ noiseless image (≤ 5.6e-16: the generator and exSpy agree to rounding); and `g
 per pixel and route, with the pixels above 4. For the estimated threshold it is **7.4 at the worst pixel (pixels 7 and 9 exceed 4)**,
 for every fixed threshold at most 2.01: see the findings below.
 
-## Findings while writing these (the registration is not amended here; these are for its amendment)
+## Findings while writing these (the design note is not amended here; these are for its amendment)
 
 1. **Gate 3 as registered cannot hold for the estimated threshold.** With the estimated threshold the noisy image's thresholds
    differ from the noiseless ones (noiseless 1.2 to 1.35 eV; noisy 1.3 to 8.65 eV, because the global `tol` is set by the noisiest
@@ -193,9 +193,9 @@ for every fixed threshold at most 2.01: see the findings below.
    describes); the estimated route's noise behaviour is a separate, honest finding about the method.
 2. **The noisy image's estimated-threshold pins are decided by rounding** (see `stability`): reproducible only with the bit-exact
    Savitzky–Golay and gradient recipes above, which are for the interior of the cropped range only.
-3. **`biasByChannel`** is an addition so that gate 2 can be exact for the estimated threshold too (the registration wanted "every
+3. **`biasByChannel`** is an addition so that gate 2 can be exact for the estimated threshold too (the design note wanted "every
    pixel and route" but the generator cannot know the estimated channel).
-4. The registration does not say how the zero-loss peak is normalised (here: unit sum) or what "a term below 1e-14 of the total"
+4. the design note does not say how the zero-loss peak is normalised (here: unit sum) or what "a term below 1e-14 of the total"
    measures (here: the term's summed in-range intensity); neither changes any number at the 1e-13 level.
 5. The planted images have no zero-loss twin, so the zero-loss route is pinned on the line scan only ("where a zero-loss spectrum
    exists").

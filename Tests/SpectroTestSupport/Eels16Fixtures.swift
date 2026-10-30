@@ -1,6 +1,6 @@
 //
 //  Eels16Fixtures.swift
-//  Role: Loads the task-16 fixtures `tools/eels-task16/pins.py` wrote (Tests/SpectroEELSTests/Fixtures/eels16-pins.json and the
+//  Role: Loads the task-16 fixtures `tools/eels-chain/pins.py` wrote (Tests/SpectroEELSTests/Fixtures/eels16-pins.json and the
 //        eels16-*.f64 arrays: float64 little-endian, C order, NaN kept). Shared by the fast and the parity targets; no assertions here.
 //        The JSON is read as untyped values: its layout is the script's docstring, and a number that is `null` there is NaN here.
 //

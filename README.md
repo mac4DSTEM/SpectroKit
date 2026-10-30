@@ -224,7 +224,6 @@ of this README and nothing else, and `check-readme.py` fails if the README and `
 
 - [`docs/parity.md`](docs/parity.md): SpectroKit against exSpy's documented API, row by row. Numbers are held to the Python
   reference within its own tolerance; `docs/parity.md` lists each function, its state and its tolerance.
-- [`docs/ci-parity.md`](docs/ci-parity.md): the audit of the cross-CPU differences found on the first CI run.
 - [API reference (DocC)](https://mac4dstem.github.io/SpectroKit/documentation/): one catalogue per module.
 - [`CHANGELOG.md`](CHANGELOG.md): each release, with a Migration paragraph where a consumer must change something.
 - [`NOTICE`](NOTICE): the licences and credits in full.
