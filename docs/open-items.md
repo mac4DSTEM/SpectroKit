@@ -31,3 +31,8 @@ Slowest against Python first. Diagnose before changing a number: state the cause
    (Ge on the FIB lamella is the case) shows it keeps every true element; the uncorroborated tier is `ProposalResult.uncorroborated`; the self-pair half
    bound on sum peaks waits for planted sums that respect it; `AxisGateTests`' known issue (offset and gain trade off
    on lines that span little of the axis) stands.
+12. **Continuum Si dead-layer term** (`FitPolicy.continuumDeadLayer`, opt-in): a typed thickness reduces the shift a dead layer causes on a planted
+   pool (`ContinuumDeadLayerTests`), but a fitted thickness is not identifiable on the default continuum: on the planted pool with no dead layer it reads
+   0.21 µm and moves Si by -2.3 sigma, because the step also takes up the sample's Al-absorption recovery above 1.56 keV, which the order-5 segment
+   cannot follow. Hypothesis: modelling that recovery physically (the sample's own transmission in the continuum) makes the fitted thickness read 0 there;
+   refuted if it still does not. The thickness of a given detector is better measured once on a Si-free standard and typed.
