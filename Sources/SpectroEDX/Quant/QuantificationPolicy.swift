@@ -36,6 +36,28 @@ public nonisolated struct DetectorLayers: Sendable, Equatable, Codable {
     public static let `default` = DetectorLayers()
 }
 
+/// The optional detector Si dead-layer term of the EDX continuum (`FitPolicy.continuumDeadLayer`): the continuum form is multiplied
+/// by the dead layer's transmission exp(-mu_Si(E) rho_Si t) (FFAST mu/rho, rho_Si 2.33 g/cm^3), which steps down at the Si K edge
+/// (1.839 keV). A physical factor with one parameter, not a polynomial split. The thickness is typed (`microns`) or fitted in
+/// `0...maximumMicrons` (`microns` nil). No reference models it (eXSpy has no detector efficiency); planted truth only.
+public nonisolated struct ContinuumDeadLayer: Sendable, Equatable, Codable {
+    /// The typed thickness, micrometres; nil fits it. A typed thickness enters every fit, the energy-axis refinement included; a
+    /// fitted one is fitted after the refinement, which runs without it, so typing a fitted value back on an unlocked axis can
+    /// give a different axis. It adds to `DetectorLayers.deadLayerMicrons` when `continuumEfficiency` is set as well.
+    public var microns: Double?
+    /// Upper end of the fitted thickness, micrometres (unused when `microns` is typed). Default 1.
+    public var maximumMicrons: Double
+
+    public init(microns: Double? = nil, maximumMicrons: Double = 1) {
+        self.microns = microns; self.maximumMicrons = maximumMicrons
+    }
+
+    /// A typed thickness, micrometres.
+    public static func given(microns: Double) -> ContinuumDeadLayer { ContinuumDeadLayer(microns: microns) }
+    /// The thickness fitted in `0...maximumMicrons`.
+    public static func fitted(maximumMicrons: Double = 1) -> ContinuumDeadLayer { ContinuumDeadLayer(maximumMicrons: maximumMicrons) }
+}
+
 /// What the library decided about the spectrum fit.
 public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     /// Lower end of the fitted range, keV. Default 0.2: it keeps the zero-energy noise peak out (a stated choice, not a measurement).
@@ -54,6 +76,11 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     /// A detector efficiency multiplying the whole continuum form (its low-energy roll-off modelled instead of absorbed in the
     /// polynomial). Default nil: the Kramers-only form.
     public var continuumEfficiency: DetectorLayers?
+    /// The detector Si dead-layer term of the continuum, typed or fitted (`ContinuumDeadLayer`); it multiplies
+    /// `continuumEfficiency` when both are set. Default nil: off. It is not neutral: on the planted pool without a dead layer
+    /// (`eds-absorption-truth.json`) a fitted thickness reads 0.21 um and moves Si K-alpha by -2.3 sigma (the step takes up part of
+    /// the sample-side continuum misfit above the Al K edge). A typed 0 is the default fit exactly.
+    public var continuumDeadLayer: ContinuumDeadLayer?
     /// Fit a Si-escape copy of every line group above the Si K edge with an area of its own. Default true; false is the reference's.
     public var escapePeaks: Bool
     /// An opt-in low-energy tail on every line of the fit (`LineTail`). Default nil: Gaussians, every number unchanged.
@@ -73,7 +100,8 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                 continuumEfficiency: DetectorLayers? = nil, escapePeaks: Bool = true, maximumPolynomialOrder: Int = 8,
                 irls: IRLSSettings = IRLSSettings(), escapeRatioWarning: Double = 0.05,
                 axisRefinement: AxisRefinementSettings = AxisRefinementSettings(),
-                lineTail: LineTail? = nil) {
+                lineTail: LineTail? = nil, continuumDeadLayer: ContinuumDeadLayer? = nil) {
+        self.continuumDeadLayer = continuumDeadLayer
         self.fitFromKeV = fitFromKeV; self.defaultUpperLimitKeV = defaultUpperLimitKeV
         self.continuumOrders = continuumOrders; self.continuumEdges = continuumEdges
         self.continuumNonNegative = continuumNonNegative; self.continuumEfficiency = continuumEfficiency
@@ -96,6 +124,12 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         if continuumOrders.count != continuumEdges.count + 1 { return "The continuum needs one polynomial order per segment: \(continuumEdges.count + 1) for \(continuumEdges.count) edge(s), got \(continuumOrders.count)." }
         if continuumOrders.contains(where: { $0 < 0 }) { return "A continuum order must be 0 or more." }
         if !zip(continuumEdges, continuumEdges.dropFirst()).allSatisfy({ $0 < $1 }) { return "The continuum edges must ascend." }
+        if let d = continuumDeadLayer {
+            if let t = d.microns, !(t.isFinite && t >= 0) { return "The typed Si dead layer (\(t) \u{00B5}m) must be 0 or more." }
+            if d.microns == nil, !(d.maximumMicrons.isFinite && d.maximumMicrons > 0) {
+                return "The upper end of the fitted Si dead layer (\(d.maximumMicrons) \u{00B5}m) must be positive."
+            }
+        }
         if maximumPolynomialOrder < 0 { return "The largest polynomial order must be 0 or more." }
         if !(escapeRatioWarning.isFinite && escapeRatioWarning > 0) { return "The escape-ratio warning level must be positive." }
         if irls.maxIterations < 1 || !(irls.tolerance > 0) || !(irls.muFloor > 0) { return "The Poisson iteration needs a cap of 1 or more, a positive tolerance and a positive floor." }
