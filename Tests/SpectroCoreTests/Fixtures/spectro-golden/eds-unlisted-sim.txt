@@ -293,6 +293,7 @@ seed0.four.quantification.fitSettings.escapePeaks = true
 seed0.four.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 seed0.four.quantification.fitSettings.method = .leastSquares
 seed0.four.quantification.fitSettings.lineTail = nil
+seed0.four.quantification.fitSettings.lineWeights = .exspy
 seed0.four.quantification.sumEscapeCounts = nil
 seed0.four.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
 seed0.four.quantification.fitRange.toKeV = 4034000000000000 20
@@ -1529,6 +1530,7 @@ seed0.seven.quantification.fitSettings.escapePeaks = true
 seed0.seven.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 seed0.seven.quantification.fitSettings.method = .leastSquares
 seed0.seven.quantification.fitSettings.lineTail = nil
+seed0.seven.quantification.fitSettings.lineWeights = .exspy
 seed0.seven.quantification.sumEscapeCounts = nil
 seed0.seven.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
 seed0.seven.quantification.fitRange.toKeV = 4034000000000000 20
