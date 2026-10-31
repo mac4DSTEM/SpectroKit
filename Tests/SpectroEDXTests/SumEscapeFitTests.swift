@@ -148,11 +148,14 @@ struct SumEscapeFitTests {
                                          energyOffsetEV: 0, energyDispersionEV: 10)
         let tables = QuantificationTables.bundled()
         var input = PooledQuantificationInput(counts: y, axis: Self.axis, method: m, metadata: meta, regionName: "planted", pixelCount: 1)
+        input.sumEscape = SumEscapeModel()   // both off: the fit without sum peaks, whatever the policy says
         let plain = try PooledQuantifier.run(input, tables: tables)
         #expect(!plain.footerLines.contains { $0.hasPrefix("sum peaks") })
+        #expect(plain.appliedSumEscape == nil)
         input.sumEscape = .both
         let on = try PooledQuantifier.run(input, tables: tables)
         #expect(on.footerLines.contains { $0.hasPrefix("sum peaks") })
+        #expect(on.appliedSumEscape == .both)
         let truth = Self.areas["Ag_La"]!
         let ag = try #require(on.rows.first { $0.element == "Ag" }), agPlain = try #require(plain.rows.first { $0.element == "Ag" })
         #expect(abs(ag.net - truth) < 0.1 * abs(agPlain.net - truth))

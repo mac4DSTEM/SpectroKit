@@ -73,7 +73,9 @@ extension ElementProposer {
             m.elements = (listed + anchors.filter { !listed.contains($0) }).map { QuantificationMethod.ElementState(symbol: $0, role: .quantify, isManual: false) }
             m.beamEnergyKeV = beamEnergy
             let input = PooledQuantificationInput(counts: spectrum, axis: fileAxis, method: m, metadata: metadata, regionName: regionName, pixelCount: 1,
-                                                  resolutionMnKaEV: resolutionMnKaEV)
+                                                  resolutionMnKaEV: resolutionMnKaEV,
+                                                  sumEscape: SumEscapeModel())   // only the refinement is read: no sum-peak fits
+                                                                                 // (the refinement itself runs without them)
             let fit: PooledQuantification
             do { fit = try PooledQuantifier.run(input, tables: tables, cancelled: cancelled) }
             catch let c as SpectroCancelled { throw c }
