@@ -75,11 +75,12 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
-        // The tests that came with the extraction from mac4DSTEM, most of them on SpectroEDX (issue #32 splits them by module).
+        // SpectroCore: opening a spectrum image, smoothing, line profiles, registration, counting statistics, the rank threshold.
+        // It imports no SpectroEDX or SpectroEELS; its Fixtures/ also hold the EDX files the other targets read (FixtureDirs).
         .testTarget(
             name: "SpectroCoreTests",
             dependencies: [
-                "SpectroCore", "SpectroEDX", "SpectroTestSupport",
+                "SpectroCore", "SpectroTestSupport",
                 .product(name: "FormatoDM", package: "FormatoKit"), .product(name: "FormatoEMD", package: "FormatoKit"),
             ],
             exclude: ["Fixtures"],
@@ -89,10 +90,10 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
-        // Small package-wide tests: the CI scripts, the rank threshold, the smoothing kernel.
+        // The package itself, no module: the CI scripts under tools/.
         .testTarget(
             name: "SpectroKitTests",
-            dependencies: ["SpectroCore", "SpectroTestSupport"],
+            dependencies: [],
             swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),
@@ -110,7 +111,8 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
-        // SpectroEDX: counts, energy axis and peak identification on pins (exSpy, HyperSpy, RosettaSciIO) and planted truth (Fixtures/).
+        // SpectroEDX: windows, the fit, the proposer, quantification, absorption, energy axis and peak identification on pins (exSpy,
+        // HyperSpy, RosettaSciIO) and planted truth (Fixtures/).
         .testTarget(
             name: "SpectroEDXTests",
             dependencies: ["SpectroEDX", "SpectroCore", "SpectroTestSupport", .product(name: "FormatoEMD", package: "FormatoKit")],
