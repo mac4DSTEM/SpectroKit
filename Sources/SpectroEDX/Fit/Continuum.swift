@@ -46,7 +46,8 @@
 //  synthetic generators plant an unbroadened step, so making `.broadened` the default re-measures those results first.
 //
 //  The Al K edge energy 1.5596 keV is the standard tabulated value (X-ray Data Booklet, Table 1-1).
-//  The Si K edge (1.839 keV, a detector dead-layer step) is NOT in the default: add it to `edges` to test it.
+//  The Si K edge (1.839 keV, a detector dead-layer step) is NOT in the default: add it to `edges` to test it, or model the step
+//  physically with the opt-in dead-layer term (`FitPolicy.continuumDeadLayer`, `DeadLayerFit.swift`), which multiplies `efficiency`.
 //
 //  Orders (9, 5) are a design choice MEASURED ON A SYNTHETIC SPECTRUM, not a property of the method (threshold
 //  rule): on an Al-matrix spectrum whose detector roll-off is (1 - exp(-(E/0.5 keV)^2.4)) (this lane's own
