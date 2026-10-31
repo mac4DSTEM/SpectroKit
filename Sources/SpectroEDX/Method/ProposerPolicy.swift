@@ -138,16 +138,23 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
     /// peak can never exceed its smaller parent (the chance of a second photon within the shaping time is at most 1); a smaller value would be a measured
     /// dead-time fraction of one detector.
     public var sumPeakFraction: Double
+    /// The downward confirmation rule: an element of at least this atomic number nominated by a K line must show its L alpha line at
+    /// `IdentificationThresholds.confirmationSigma` in the residual where the fitted range holds it, or it is withheld (`familyNote`); acts only with
+    /// `familyConsistency`. Default nil (off): the rule has not been run on measured spectra, so a consumer switches it on (30, from Zn, is the
+    /// intended value: the L lines of lighter elements sit below 1 keV where the continuum model is weakest). Known limit, as for the upward rule:
+    /// the check reads the residual without the element, so an L line that an element found earlier already explains (Zn Lα beside Na Kα, As Lα
+    /// beside Mg Kα, Br Lα under Al Kα) reads as missing and the K pick is withheld.
+    public var downwardFamilyMinimumZ: Int?
 
     public init(currie: Currie = .standard, pool: [String]? = nil, excluded: Set<String> = ElementProposer.defaultExcluded,
                 minimumLineEnergyKeV: Double = 0.45, thresholds: IdentificationThresholds = .default, rangeMarginFWHM: Double = 0.5,
                 sumPeakToleranceKeV: Double = ProposerPolicy.defaultSumPeakToleranceKeV, context: ElementContext = .default,
-                familyConsistency: Bool = true, familyOvervoltage: Double = 2, sumPeakFraction: Double = 1) {
+                familyConsistency: Bool = true, familyOvervoltage: Double = 2, sumPeakFraction: Double = 1, downwardFamilyMinimumZ: Int? = nil) {
         self.currie = currie; self.pool = pool; self.excluded = excluded
         self.minimumLineEnergyKeV = minimumLineEnergyKeV; self.thresholds = thresholds; self.rangeMarginFWHM = rangeMarginFWHM
         self.sumPeakToleranceKeV = sumPeakToleranceKeV; self.context = context
         self.familyConsistency = familyConsistency; self.familyOvervoltage = familyOvervoltage
-        self.sumPeakFraction = sumPeakFraction
+        self.sumPeakFraction = sumPeakFraction; self.downwardFamilyMinimumZ = downwardFamilyMinimumZ
     }
 
     /// 0.06 keV: about half the Mn K alpha width of one detector.
@@ -192,6 +199,7 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
         add("familyConsistency", "\(familyConsistency)", "\(b.familyConsistency)")
         add("familyOvervoltage", "\(familyOvervoltage)", "\(b.familyOvervoltage)")
         add("sumPeakFraction", "\(sumPeakFraction)", "\(b.sumPeakFraction)")
+        add("downwardFamilyMinimumZ", downwardFamilyMinimumZ.map { "\($0)" } ?? "nil", b.downwardFamilyMinimumZ.map { "\($0)" } ?? "nil")
         return d.isEmpty ? nil : "policy (non-default): " + d.joined(separator: ", ")
     }
 }
