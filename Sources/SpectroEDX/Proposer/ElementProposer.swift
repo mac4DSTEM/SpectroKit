@@ -18,7 +18,8 @@
 //      less than 100.
 //   Tiers: an element found from its own peak, unambiguous, needed by the final fit, Si above 0.2 % of the counts and its peak in a band
 //   where the background is healthy (data over model 0.8 to 1.25 off the lines) is proposed; every other found or tested element is a
-//   candidate with `possibleReason` (or `familyNote` for the confirmation rule) and is never proposed.
+//   candidate with `possibleReason` (or `familyNote` for the confirmation rule) and is never proposed. A candidate whose peak went to a
+//   pile-up column that the final fit keeps at or above its L_D is explained (`explainedBySumPeak`), not possible.
 //
 //  What went (0.11.0): the all-candidate joint fit with its L_C pruning and single-candidate forward step, and the flank-misfit factor that
 //  scaled a candidate's sigma_0 by its neighbour's misfit (x33 for Mg beside Al on a measured Al-alloy map, where Mg's own window fitted to
@@ -61,6 +62,12 @@ public nonisolated struct ElementCandidate: Equatable, Sendable {
     /// Found by an L or M line whose confirmation line (K for L, L for M) lies outside the fitted range or too close to the beam energy: the
     /// confirmation rule could not run, so the find is possible only (`possibleReason` says so). A consumer lists these as "uncorroborated".
     public let unconfirmable: Bool
+    /// The label of the modelled sum peak that took the residual peak this element was tested on ("Al+Al sum"), when that sum
+    /// column stays in the final fit at or above its own L_D: the peak is pile-up, explained, and the element is not a "possible"
+    /// find (Ar K-alpha and Ag L-alpha under Al+Al in an Al alloy). nil otherwise. One spectrum cannot separate a real line within the
+    /// detector resolution of the sum from the sum itself (a planted Ar K-alpha of half the sum's counts is still explained); such a
+    /// candidate keeps its sum-peak conflict and its two-beam-current remedy, so the question stays visible.
+    public let explainedBySumPeak: String?
 
     /// net >= L_D: the proposer's bar.
     public var aboveDetectionLimit: Bool { net >= detectionLimit }
@@ -75,11 +82,12 @@ public nonisolated struct ElementCandidate: Equatable, Sendable {
     public init(element: String, group: String, energyKeV: Double, net: Double, sigma: Double, sigmaZero: Double,
                  criticalLevel: Double, detectionLimit: Double, conflicts: [LineConflict],
                  suggestedRole: QuantificationMethod.ElementRole, holeRegionNote: String?, misfit: Double, familyNote: String? = nil,
-                 possibleReason: String? = nil, unconfirmable: Bool = false) {
+                 possibleReason: String? = nil, unconfirmable: Bool = false, explainedBySumPeak: String? = nil) {
         self.element = element; self.group = group; self.energyKeV = energyKeV; self.net = net; self.sigma = sigma
         self.sigmaZero = sigmaZero; self.criticalLevel = criticalLevel; self.detectionLimit = detectionLimit
         self.conflicts = conflicts; self.suggestedRole = suggestedRole; self.holeRegionNote = holeRegionNote; self.misfit = misfit
         self.familyNote = familyNote; self.possibleReason = possibleReason; self.unconfirmable = unconfirmable
+        self.explainedBySumPeak = explainedBySumPeak
     }
 }
 
@@ -111,7 +119,13 @@ public nonisolated struct ProposalResult: Sendable {
     public var proposed: [ElementCandidate] { candidates.filter { $0.isProposed && !$0.hasSumPeakQuestion } }
     /// At or above L_D but sitting on a pile-up energy of the detected parents: "sum peak or this element?", not a finding.
     public var sumPeakQuestions: [ElementCandidate] { candidates.filter { $0.isProposed && $0.hasSumPeakQuestion } }
-    public var possible: [ElementCandidate] { candidates.filter { $0.aboveCriticalLevel && !$0.isProposed && $0.familyNote == nil } }
+    /// Above L_C, not proposed, not withheld and not explained by a modelled sum peak.
+    public var possible: [ElementCandidate] {
+        candidates.filter { $0.aboveCriticalLevel && !$0.isProposed && $0.familyNote == nil && $0.explainedBySumPeak == nil }
+    }
+    /// Tested on a residual peak that a modelled, detected sum peak explains better (`explainedBySumPeak` names it): the answer to
+    /// "sum peak or this element?" is the sum peak. Shown as explained pile-up, never as a possible element.
+    public var explainedBySumPeaks: [ElementCandidate] { candidates.filter { $0.explainedBySumPeak != nil } }
     /// At or above L_D but withheld by the family-consistency rule (`familyNote` says why).
     public var withheld: [ElementCandidate] { candidates.filter { $0.familyNote != nil } }
     /// The uncorroborated tier: found by an L or M line whose confirmation line the fitted range or the beam cannot hold (`unconfirmable`),
@@ -304,6 +318,8 @@ public nonisolated struct ElementProposer: Sendable {
         /// An L or M nomination whose confirmation line lies outside the fitted range or above half the beam: it may join, but stays possible.
         var unconfirmable: String?
         var pass: Pass?
+        /// The sum column (its id, "sum:Al+Al") that took the peak this trial was last tested on; nil when an element took it.
+        var lostToSum: String? = nil
     }
 
     /// An element the loop added to the model.
@@ -556,6 +572,10 @@ public nonisolated struct ElementProposer: Sendable {
             for e in eligible where e.key != best.key && !e.key.hasPrefix("sum:") {
                 trials[e.key]?.reason = String(format: "The peak at %.3f keV went to %@, which explains it better (gain there %.0f against %.0f).",
                                                ep, best.key.hasPrefix("sum:") ? (sumInfo[best.key]?.label ?? best.key) : best.key, best.peakGain, e.peakGain)
+                // Explained only by a clear loss: outside the ambiguity margin at the peak, and no more total gain than the sum
+                // (a real line under the sum, Ar K-alpha 16 eV from Al+Al, gains more through its other lines). A tie stays possible.
+                let clear = best.peakGain - e.peakGain >= t.ambiguityGain && e.gain <= best.gain
+                trials[e.key]?.lostToSum = best.key.hasPrefix("sum:") && clear ? best.key : nil
             }
             model = p.model.groups
             fit = p
@@ -621,9 +641,14 @@ public nonisolated struct ElementProposer: Sendable {
                 c.kind != .sumPeak || (c.requires.compactMap { parentNets[$0] }.min() ?? 0) * sumPeakFraction >= net
             }
         }
+        // The sum columns of the final fit at or above their own L_D: a peak one of them took is explained pile-up.
+        var detectedSums: [String: String] = [:]
+        for (gi, g) in report.model.groups.enumerated() where g.element == "sum" {
+            if let st = stat(report, gi), st.net >= st.ld { detectedSums[g.id] = sumInfo[g.id]?.label ?? g.id }
+        }
         var candidates: [ElementCandidate] = []
         func append(_ el: String, group: String, stat st: Stat, familyNote: String? = nil, possibleReason: String? = nil,
-                    unconfirmable: Bool = false) throws {
+                    unconfirmable: Bool = false, explainedBySumPeak: String? = nil) throws {
             let alpha = XRayLines.line(group)?.energy ?? 0
             var note: String?
             if context.gridElements.contains(el) {
@@ -643,7 +668,7 @@ public nonisolated struct ElementProposer: Sendable {
                 element: el, group: group, energyKeV: alpha, net: st.net, sigma: st.sigma, sigmaZero: st.sigmaZero,
                 criticalLevel: st.lc, detectionLimit: st.ld, conflicts: conflicts(el, group, alpha, st.net),
                 suggestedRole: context.quantifyByDefault.contains(el) ? .quantify : .fitOnly, holeRegionNote: note, misfit: 1,
-                familyNote: familyNote, possibleReason: possibleReason, unconfirmable: unconfirmable))
+                familyNote: familyNote, possibleReason: possibleReason, unconfirmable: unconfirmable, explainedBySumPeak: explainedBySumPeak))
         }
         /// The numbers of a group whose limit cannot be stated: its area, no limit (never proposed).
         func unstated(_ p: Pass, _ gi: Int) -> Stat { Stat(net: p.result.values[gi], sigma: 0, sigmaZero: 0, lc: .infinity, ld: .infinity) }
@@ -677,7 +702,8 @@ public nonisolated struct ElementProposer: Sendable {
             let st = tr.stat ?? tr.pass.flatMap { p in p.model.groups.firstIndex { $0.id == tr.group }.map { unstated(p, $0) } }
                 ?? Stat(net: 0, sigma: 0, sigmaZero: 0, lc: .infinity, ld: .infinity)
             if let c = tr.confirmation { try append(el, group: tr.group, stat: st, familyNote: c) }
-            else { try append(el, group: tr.group, stat: st, possibleReason: tr.reason ?? "Tested but not added.") }
+            else { try append(el, group: tr.group, stat: st, possibleReason: tr.reason ?? "Tested but not added.",
+                              explainedBySumPeak: tr.lostToSum.flatMap { detectedSums[$0] }) }
         }
         candidates.sort { $0.significance > $1.significance }
 
@@ -702,6 +728,10 @@ public nonisolated struct ElementProposer: Sendable {
                 notes.append("Downward confirmation (validation: none): an element of Z \u{2265} \(z) nominated by a K line needs its L\u{03B1} line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it; otherwise it is withheld.")
             }
             notes += candidates.compactMap { c in c.familyNote.map { "Confirmation withheld \(c.element): \($0)" } }
+        }
+        for label in Set(candidates.compactMap(\.explainedBySumPeak)).sorted() {
+            let els = candidates.filter { $0.explainedBySumPeak == label }.map(\.element)
+            notes.append("Explained as pile-up (validation: none): \(els.joined(separator: ", ")) lost the peak they were tested on to the \(label) column, which the final fit keeps at or above its detection limit; they are not possible elements.")
         }
         for b in unhealthy { notes.append(String(format: "Background check: data over model %.2f off the lines in %.1f to %.1f keV (0.80 to 1.25 is healthy); a find there is only possible.", b.ratio, b.lo, b.hi)) }
         let pChance = 0.5 * erfc((currie.zAlpha + currie.zBeta) / 2.0.squareRoot())
