@@ -41,6 +41,8 @@ out = {"generator": "tools/edx-sim/absorption_truth_sim.py over tools/edx-sim/fo
        "medium_atom_fractions_incl_O": x, "medium_weight_fractions_incl_O": wf,
        "areas_with_absorption": {k: amp[k] for k in ("Al_Ka", "Mg_Ka", "Si_Ka")},
        "areas_absorption_free": free, "t_eff": teff, "t_by_segment": tseg,
+       # detector Si internal fluorescence planted at Si Ka (forward.py Si_Ka_internal): a fit of Si Ka sees it too
+       "area_si_ka_internal": amp["Si_Ka_internal"],
        "true_k_counts_per_atom_nm2": kc, "expected": [float(v) for v in r["exp_sum"][0] * NPIX]}
 json.dump(out, open(OUT, "w"), separators=(",", ":"))
 print({k: v for k, v in out.items() if k != "expected"})
