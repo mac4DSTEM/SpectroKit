@@ -1,6 +1,6 @@
 """Truth-geometry absorption pool from the EDX forward model (forward.py beside this script).
 
-Writes Tests/SpectroCoreTests/Fixtures/eds-absorption-truth.json: the EXPECTED pooled spectrum of 1e4 identical recipe-A matrix pixels
+Writes Tests/SpectroEDXTests/Fixtures/eds-absorption-truth.json: the EXPECTED pooled spectrum of 1e4 identical recipe-A matrix pixels
 (Al 98.8 / Mg 0.6 / Si 0.6 at%, 80 nm, 2.70 g/cm3, uniform thickness; the simulator's own four-segment geometry, depth weight beta 0.2,
 oxide O in the medium), the noise-free K-alpha areas the forward model made (after pile-up, tail and escape bookkeeping), the
 absorption-free areas, the per-segment/effective transmissions, and the simulator's true k (Gp * s_family * eps, absorption-free).
@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import xray_model as xm, forward as fw
 MAC = os.path.join(HERE, "..", "..", "Sources", "SpectroEDX", "Resources", "Spectroscopy", "FFastMAC.csv")
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroCoreTests", "Fixtures", "eds-absorption-truth.json")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroEDXTests", "Fixtures", "eds-absorption-truth.json")
 NPIX = 10000
 axis = xm.Axis(4096, 5.0, 95.6)
 f = fw.Forward(axis, MAC)

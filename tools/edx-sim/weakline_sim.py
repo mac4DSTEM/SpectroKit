@@ -1,6 +1,6 @@
 """Weak-line recovery pools from the EDX forward model (forward.py beside this script).
 
-Writes Tests/SpectroCoreTests/Fixtures/eds-weakline-sim.json: for Mg planted at 0, 0.1, 0.3, 1, 10 % of the Al K-alpha counts (Al_Ka + its tail),
+Writes Tests/SpectroEDXTests/Fixtures/eds-weakline-sim.json: for Mg planted at 0, 0.1, 0.3, 1, 10 % of the Al K-alpha counts (Al_Ka + its tail),
 the EXPECTED pooled spectrum of 1e4 identical matrix pixels (80 nm, 2.70 g/cm3, lam 1), and the planted truth. The Swift test adds Poisson noise.
 Usage: References/python/bin/python -I -B tools/edx-sim/weakline_sim.py [out.json]   (numpy only)
 """
@@ -10,7 +10,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import xray_model as xm, forward as fw
 MAC = os.path.join(HERE, "..", "..", "Sources", "SpectroEDX", "Resources", "Spectroscopy", "FFastMAC.csv")
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroCoreTests", "Fixtures", "eds-weakline-sim.json")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroEDXTests", "Fixtures", "eds-weakline-sim.json")
 NPIX = 10000
 axis = xm.Axis(4096, 5.0, 95.6)
 f = fw.Forward(axis, MAC)

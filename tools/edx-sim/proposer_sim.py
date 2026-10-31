@@ -1,6 +1,6 @@
 """Element-proposer pools from the EDX forward model (forward.py beside this script).
 
-Writes Tests/SpectroCoreTests/Fixtures/eds-proposer-sim.json: the EXPECTED pooled spectrum of 256 identical pixels at a counts/pixel dose, for the
+Writes Tests/SpectroEDXTests/Fixtures/eds-proposer-sim.json: the EXPECTED pooled spectrum of 256 identical pixels at a counts/pixel dose, for the
 Al matrix (80 nm) at 10 and 100 counts/px and the beta'' precipitate pixel (104 nm) at 300 counts/px, with every planted component's
 expected counts (lines, escapes, the Al K-alpha tail, the SUM PEAKS, Si internal fluorescence, stray Cu). The sum peaks grow as the square of the rate.
 The Swift test adds Poisson noise. Usage: References/python/bin/python -I -B tools/edx-sim/proposer_sim.py [out.json]   (numpy only)
@@ -11,7 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import xray_model as xm, forward as fw
 MAC = os.path.join(HERE, "..", "..", "Sources", "SpectroEDX", "Resources", "Spectroscopy", "FFastMAC.csv")
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroCoreTests", "Fixtures", "eds-proposer-sim.json")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroEDXTests", "Fixtures", "eds-proposer-sim.json")
 NPIX = 256
 axis = xm.Axis(4096, 5.0, 95.6)
 f = fw.Forward(axis, MAC)

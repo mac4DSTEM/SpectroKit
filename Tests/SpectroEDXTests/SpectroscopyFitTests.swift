@@ -39,8 +39,7 @@ struct SpectroscopyFitTests {
     }
 
     private static let fixture: Fixture = {
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-            .appendingPathComponent("Fixtures/eds-fit-exspy-7185a4d1.json")
+        let url = EDXFixtures.dir.appendingPathComponent("eds-fit-exspy-7185a4d1.json")
         return try! JSONDecoder().decode(Fixture.self, from: Data(contentsOf: url))
     }()
 
@@ -64,7 +63,7 @@ struct SpectroscopyFitTests {
         var axis: EnergyAxis { EnergyAxis(offset: offset, scale: scale, size: size) }
     }
     private static let simPools: SimPools = {
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/eds-weakline-sim.json")
+        let url = EDXFixtures.dir.appendingPathComponent("eds-weakline-sim.json")
         return try! JSONDecoder().decode(SimPools.self, from: Data(contentsOf: url))
     }()
 

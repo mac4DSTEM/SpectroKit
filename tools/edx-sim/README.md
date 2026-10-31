@@ -4,7 +4,7 @@
 `xray_model.py` (lines, continuum, detector efficiency) writes the expected, noise-free pooled spectra the EDX tests draw
 Poisson counts from. NumPy only; the FFAST mass absorption table is SpectroEDX's own resource.
 
-| script | writes `Tests/SpectroCoreTests/Fixtures/` |
+| script | writes `Tests/SpectroEDXTests/Fixtures/` |
 |---|---|
 | `proposer_sim.py` | `eds-proposer-sim.json` |
 | `weakline_sim.py` | `eds-weakline-sim.json` |

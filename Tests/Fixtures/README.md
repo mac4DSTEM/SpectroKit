@@ -14,14 +14,6 @@ A moved fixture is its own commit with the reason and a CHANGELOG line.
 |---|---|---|---|
 | `SpectroCoreTests/Fixtures/demo-edx-tiny.dm4` | 122.8 KB | mac4DSTEM's tools/demo-edx/sim_edx.py --tiny --seed 42 (mac4DSTEM history before 7a0f727f) | frozen input: the generator needs mac4DSTEM's 4D reflection export, so it is not carried here |
 | `SpectroCoreTests/Fixtures/demo-edx-tiny.truth.json` | 371.0 KB | mac4DSTEM's tools/demo-edx/sim_edx.py --tiny --seed 42 (mac4DSTEM history before 7a0f727f) | frozen input: the generator needs mac4DSTEM's 4D reflection export, so it is not carried here |
-| `SpectroCoreTests/Fixtures/eds-absorption-truth.json` | 76.7 KB | `tools/edx-sim/absorption_truth_sim.py` |  |
-| `SpectroCoreTests/Fixtures/eds-fit-exspy-7185a4d1.json` | 155.5 KB | `tools/edx-exspy-pins/fit_pins.py` | rewrites it to the last bit (BLAS order) |
-| `SpectroCoreTests/Fixtures/eds-pins-exspy-7185a4d1.json` | 70.7 KB | `tools/edx-exspy-pins/pins.py` |  |
-| `SpectroCoreTests/Fixtures/eds-proposer-sim.json` | 100.3 KB | `tools/edx-sim/proposer_sim.py` |  |
-| `SpectroCoreTests/Fixtures/eds-quant-pins-exspy-7185a4d1.json` | 30.6 KB | `tools/edx-exspy-pins/quant_pins.py` |  |
-| `SpectroCoreTests/Fixtures/eds-realistic-l-sim.json` | 39.0 KB | `tools/edx-sim/realistic_l_sim.py` |  |
-| `SpectroCoreTests/Fixtures/eds-unlisted-sim.json` | 31.0 KB | `tools/edx-sim/unlisted_sim.py` |  |
-| `SpectroCoreTests/Fixtures/eds-weakline-sim.json` | 378.2 KB | `tools/edx-sim/weakline_sim.py` |  |
 | `SpectroCoreTests/Fixtures/qshape3.mac4dstem.h5` | 10.8 KB | copied from mac4DSTEM's test fixtures at extraction (commit 5ba712a0) | any non-EDS HDF5 file serves: the test only checks the sniff calls it `.other` |
 | `SpectroCoreTests/Fixtures/registration-pins.json` | 39.1 KB | `tools/registration/pins.py` |  |
 | `SpectroCoreTests/Fixtures/spectro-golden/demo-edx-tiny-dm4.arrays.f64` | 42.8 KB | SpectroGoldenTests' recorder (`SPECTRO_GOLDEN_DIR=<dir> swift test --filter testRecordBaseline`; arrays: `SPECTRO_GOLDEN_ARRAYS_DIR=<dir> tools/test.sh --filter SpectroGoldenTests/testRecordPortableArrays`) |  |
@@ -46,6 +38,14 @@ A moved fixture is its own commit with the reason and a CHANGELOG line.
 | `SpectroCoreTests/Fixtures/spectrum-tools-lineprofile-pins.json` | 83.3 KB | `tools/spectrum-tools/pins.py` |  |
 | `SpectroCoreTests/Fixtures/spectrum-tools-smoothing-pins.json` | 379.1 KB | `tools/spectrum-tools/pins.py` |  |
 | `SpectroCoreTests/Fixtures/velox-tiny.emd` | 43.6 KB | `tools/edx-planted/make_velox_tiny.py` |  |
+| `SpectroEDXTests/Fixtures/eds-absorption-truth.json` | 76.7 KB | `tools/edx-sim/absorption_truth_sim.py` |  |
+| `SpectroEDXTests/Fixtures/eds-fit-exspy-7185a4d1.json` | 155.5 KB | `tools/edx-exspy-pins/fit_pins.py` | rewrites it to the last bit (BLAS order) |
+| `SpectroEDXTests/Fixtures/eds-pins-exspy-7185a4d1.json` | 70.7 KB | `tools/edx-exspy-pins/pins.py` |  |
+| `SpectroEDXTests/Fixtures/eds-proposer-sim.json` | 100.3 KB | `tools/edx-sim/proposer_sim.py` |  |
+| `SpectroEDXTests/Fixtures/eds-quant-pins-exspy-7185a4d1.json` | 30.6 KB | `tools/edx-exspy-pins/quant_pins.py` |  |
+| `SpectroEDXTests/Fixtures/eds-realistic-l-sim.json` | 39.0 KB | `tools/edx-sim/realistic_l_sim.py` |  |
+| `SpectroEDXTests/Fixtures/eds-unlisted-sim.json` | 31.0 KB | `tools/edx-sim/unlisted_sim.py` |  |
+| `SpectroEDXTests/Fixtures/eds-weakline-sim.json` | 378.2 KB | `tools/edx-sim/weakline_sim.py` |  |
 | `SpectroEDXTests/Fixtures/edx-0100-exspy.json` | 2.8 KB | `tools/edx-kfactor-import/pins.py` |  |
 | `SpectroEDXTests/Fixtures/edx-axis-e2.f64` | 100.6 KB | `tools/edx-planted/pins.py` |  |
 | `SpectroEDXTests/Fixtures/edx-calibration-counts.u32` | 294.9 KB | `tools/edx-planted/make_planted.py` |  |

@@ -2,7 +2,7 @@
 
 exSpy 7185a4d1 (the checkout `tools/reference/setup.sh` puts in `References/exspy-7185a4d1`, first on `PYTHONPATH`) and HyperSpy 2.4.0:
 
-| script | writes `Tests/SpectroCoreTests/Fixtures/` | reproduces |
+| script | writes `Tests/SpectroEDXTests/Fixtures/` | reproduces |
 |---|---|---|
 | `pins.py` | `eds-pins-exspy-7185a4d1.json`: example spectra, windows, intensities, FWHM, index vectors | byte for byte |
 | `quant_pins.py` | `eds-quant-pins-exspy-7185a4d1.json`: `quantification` (Cliff-Lorimer, zeta, with and without absorption) | byte for byte |

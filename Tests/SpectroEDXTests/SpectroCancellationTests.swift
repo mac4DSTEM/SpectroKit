@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
@@ -100,7 +101,7 @@ struct SpectroCancellationTests {
 
     // MARK: Openers
 
-    private static let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+    private static let dir = FixtureDirs.fixtures(of: "SpectroCoreTests")
 
     /// Mutation: the `check` calls of `openGMSEDS` / `openVelox` / `open` removed - red.
     @Test func testOpenersCancelBeforeAndBetweenSteps() throws {
