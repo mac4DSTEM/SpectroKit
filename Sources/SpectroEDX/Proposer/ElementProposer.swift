@@ -238,12 +238,15 @@ public nonisolated struct ElementProposer: Sendable {
     /// strong line's shape error dragged the continuum beside it (data over model 3.1 in 1 to 2.5 keV beside a planted Al 6 eV narrower than the
     /// model) and the hump it left became an element (Os M). The pass's `result` is returned in counts (its model and residual unscaled).
     private static func fitPass(groups: [FitLineGroup], data: [Double], settings s: FitSettings, axis: EnergyAxis,
-                                channels: Range<Int>, dropped: [String], relative: Double, widths: [Int], weighted: Bool = true) throws -> Pass {
+                                channels: Range<Int>, dropped: [String], relative: Double, widths: [Int], weighted: Bool = true,
+                                explained: [Double]? = nil) throws -> Pass {
         let model = EDSLineModel(groups: groups, resolutionMnKaEV: s.resolutionMnKaEV, beamEnergy: s.beamEnergy,
                                  escapePeaks: s.escapePeaks, droppedLines: dropped, lineTail: s.lineTail)
         try EDSFit.validate(s.referenceShapes, axis: axis, model: model)
         var design = LinearDesign.build(model: model, axis: axis, channels: channels, background: s.background,
                                         shapes: s.referenceShapes, counts: data)
+        // Counts the caller's model already explains (the sum and escape peaks of a sum/escape fit): a fixed part of the model.
+        if let explained { for (k, ch) in channels.enumerated() { design.offset[k] += explained[ch] } }
         let y = channels.map { data[$0] }
         var prefix = [Double](repeating: 0, count: y.count + 1)
         for i in y.indices { prefix[i + 1] = prefix[i] + y[i] }
@@ -275,13 +278,14 @@ public nonisolated struct ElementProposer: Sendable {
 
     /// `fitPass` for every job, concurrently; the results are in job order.
     private static func fitPasses(jobs: [[FitLineGroup]], data: [Double], settings s: FitSettings, axis: EnergyAxis,
-                                  channels: Range<Int>, dropped: [String], relative: Double, widths: [Int]) -> [Result<Pass, Error>] {
+                                  channels: Range<Int>, dropped: [String], relative: Double, widths: [Int],
+                                  explained: [Double]?) -> [Result<Pass, Error>] {
         var out = [Result<Pass, Error>?](repeating: nil, count: jobs.count)
         out.withUnsafeMutableBufferPointer { buf in
             let box = ResultBox(buffer: buf)
             DispatchQueue.concurrentPerform(iterations: jobs.count) { i in
                 box.buffer[i] = Result { try fitPass(groups: jobs[i], data: data, settings: s, axis: axis, channels: channels,
-                                                     dropped: dropped, relative: relative, widths: widths) }
+                                                     dropped: dropped, relative: relative, widths: widths, explained: explained) }
             }
         }
         return out.map { $0! }
@@ -321,11 +325,16 @@ public nonisolated struct ElementProposer: Sendable {
     ///     its own `ProposerError.cancelled`; nothing partial is returned.
     ///   - progress: monotone in 0...1, ends at 1. The number of fits is not known in advance, so it is fits done over fits done plus the
     ///     fits the current step still has planned, clamped never to fall.
+    ///   - explained: counts per channel of `axis` that the caller's model already explains beyond line and continuum columns (the sum
+    ///     and escape peaks of `EDSSumEscapeFit`, `SumEscapeResult.componentCounts`). They are a fixed part of every fit here, so a peak
+    ///     they cover leaves no residual and is never proposed as an element. nil (the default) runs the proposer as before, bit for bit.
     public func propose(counts: [Double], axis: EnergyAxis, settings: FitSettings,
                          holeCounts: [Double]? = nil,
+                         explained: [Double]? = nil,
                          cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                          progress: (@Sendable (Double) -> Void)? = nil) throws -> ProposalResult {
-        guard counts.count == axis.size, holeCounts.map({ $0.count == axis.size }) ?? true else { throw ProposerError.lengthMismatch }
+        guard counts.count == axis.size, holeCounts.map({ $0.count == axis.size }) ?? true,
+              explained.map({ $0.count == axis.size }) ?? true else { throw ProposerError.lengthMismatch }
         var s = settings
         s.method = .leastSquares
         let channels = axis.fitChannels(from: s.fitFrom, to: s.fitTo)
@@ -381,7 +390,8 @@ public nonisolated struct ElementProposer: Sendable {
         func runAll(_ jobs: [[FitLineGroup]], on data: [Double]) throws -> [Result<Pass, Error>] {
             if cancelled() { throw ProposerError.cancelled }
             fitsPlanned = max(fitsPlanned, jobs.count)
-            let out = Self.fitPasses(jobs: jobs, data: data, settings: s, axis: axis, channels: channels, dropped: dropped, relative: t.relativeModelTerm, widths: widths)
+            let out = Self.fitPasses(jobs: jobs, data: data, settings: s, axis: axis, channels: channels, dropped: dropped, relative: t.relativeModelTerm, widths: widths,
+                                     explained: explained)
             fitsDone += jobs.count; tick()
             return out
         }
@@ -651,7 +661,7 @@ public nonisolated struct ElementProposer: Sendable {
         // shape is off, and the statistic's weights spare that misfit). σ₀ and L_D are that fit's own null variance. Pruned, rejected and withheld
         // candidates keep the numbers of the fit that decided them (they are not in the final model).
         let report = try Self.fitPass(groups: model, data: counts, settings: s, axis: axis, channels: channels, dropped: dropped,
-                                      relative: t.relativeModelTerm, widths: widths, weighted: false)
+                                      relative: t.relativeModelTerm, widths: widths, weighted: false, explained: explained)
         fitsDone += 1
         // Candidates: the found elements from the final fit, then the pruned, then the rest that were tested.
         let finalParents = parents(report)

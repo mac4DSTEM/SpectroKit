@@ -160,7 +160,7 @@ final class SpectroscopyAbsorptionTruthTests {
         }
     }
 
-    private static func input(seed: UInt64, absorption: Bool) -> PooledQuantificationInput {
+    private static func input(seed: UInt64, absorption: Bool, policy: QuantificationPolicy = .default) -> PooledQuantificationInput {
         let p = pool
         var rng = SplitMix64(state: seed)
         let counts = p.expected.map { poisson($0, &rng) }
@@ -183,7 +183,7 @@ final class SpectroscopyAbsorptionTruthTests {
             SpectrumDetectorSegment(name: "SuperXG1\(i + 1)", azimuthDegrees: a.0, elevationDegrees: 22, solidAngle: a.1)
         }
         return PooledQuantificationInput(counts: counts, axis: p.axis, method: m, metadata: meta, regionName: "recipe A pool",
-                                         pixelCount: p.npix, resolutionMnKaEV: 130)
+                                         pixelCount: p.npix, resolutionMnKaEV: 130, policy: policy)
     }
 
     private static let seeds: [UInt64] = [11, 12, 13, 14]
@@ -223,7 +223,13 @@ final class SpectroscopyAbsorptionTruthTests {
     /// sqrt(4) (3 x 56 / 2 / 2116 = 0.040, about 85 counts). The seeds are fixed, so this is a regression pin, not a confidence
     /// interval and not validation. A known deviation: pinned so that a change either way fails and is looked at. It is the real
     /// Si gate; the per-seed tolerance above only bounds each draw.
-    private static let siBiasFraction = -0.203, siBiasBand = 0.040
+    /// Those numbers are the fit WITHOUT sum peaks (`SumPeakRule.off`, the default before sum peaks were; the envelope above is
+    /// kept, it bounds both fits). With the default sum peaks (`SumPeakRule.whenSignificant`, the pile-up coefficient kept on every
+    /// seed) the nets are 2061 / 1912 / 1917 / 2006, mean 1974, -6.7 %, sd 72 counts, band 3 x 72 / 2 / 2116 = 0.051 (noise-free the
+    /// same fit reads -4.0 %). The Al+Al sum peak at 2.97 keV had pulled the continuum segment above the Al K edge, and Si K-alpha
+    /// with it (`DemoEDXPoolTests`). `siBiasFractionWithoutSumPeaks` keeps the old pin on the `.off` fit.
+    private static let siBiasFraction = -0.067, siBiasBand = 0.051
+    private static let siBiasFractionWithoutSumPeaks = -0.203, siBiasBandWithoutSumPeaks = 0.040
 
     /// Per-seed numbers go to stderr: `print` stays in the hosted app's stdout and never reaches the xcodebuild log.
     /// Also kept as an attachment (read it from the xcresult: `xcresulttool export attachments`, or the test run's attachments folder).
@@ -285,6 +291,17 @@ final class SpectroscopyAbsorptionTruthTests {
         note(String(format: "L2 Si bias against the planted K-alpha peak %.4f (pinned %.3f +- %.3f); against the sample line alone %.4f",
                     siBias, Self.siBiasFraction, Self.siBiasBand, siNet.reduce(0, +) / Double(siNet.count) / p.areasWithAbsorption["Si_Ka"]! - 1))
         #expect(abs(siBias - Self.siBiasFraction) <= Self.siBiasBand, "Si bias against the planted K-alpha peak: \(siBias), nets \(siNet)")
+        // The fit without sum peaks (the exSpy-equivalent line model) keeps its own pin.
+        var off = QuantificationPolicy.default
+        off.fit.sumPeaks = .off
+        var offNet: [Double] = []
+        for seed in Self.seeds {
+            let r = try PooledQuantifier.run(Self.input(seed: seed, absorption: true, policy: off), tables: Self.tables)
+            offNet.append(try #require(r.rows.first { $0.element == "Si" }).net)
+        }
+        let offBias = offNet.reduce(0, +) / Double(offNet.count) / Self.plantedSiKa - 1
+        note(String(format: "L2 Si bias without sum peaks %.4f (pinned %.3f +- %.3f)", offBias, Self.siBiasFractionWithoutSumPeaks, Self.siBiasBandWithoutSumPeaks))
+        #expect(abs(offBias - Self.siBiasFractionWithoutSumPeaks) <= Self.siBiasBandWithoutSumPeaks, "without sum peaks: \(offBias), nets \(offNet)")
         // The Si correction is a property of the geometry, not of the draw: the same on every seed (predicted +0.078 at%).
         let spread = (siGain.max() ?? 0) - (siGain.min() ?? 0)
         #expect(spread < 0.01, "Si correction by seed: \(siGain)")
