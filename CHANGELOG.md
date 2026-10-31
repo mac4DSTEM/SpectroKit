@@ -8,6 +8,31 @@ each entry from the merged pull requests' titles; a breaking change's Migration 
 Every quantification and thickness result reports `validation: "none"`: agreement with exSpy and HyperSpy is not validation on a
 sample of known composition.
 
+## [0.13.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.12.0...0.13.0) (2026-10-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* SpectrumImageMetadata.sameScanAs4DCube (deprecated since 0.8.0) is removed: use sameScanAsCube. SpectroscopyExport.elementsLine(_:) is removed: use q.rows.map(\.element).joined(separator: ", "). SpectroEELS no longer ships the 16 per-table GOS JSON files (about 6.8 MB): every edge reads the float32 pack, bit-identical tables, no number changes; CoreLossEdge.bundled is empty if the pack cannot be read.
+* pinned images and Xcode, --parallel, Pages permissions per job; drops iOS ([#34](https://github.com/mac4DSTEM/SpectroKit/issues/34))
+* Package.swift no longer declares iOS; it never built there.
+
+### Features
+
+* 0.13.0 removals (duplicate GOS JSON, sameScanAs4DCube, elementsLine, the extra Spectroscopy/ level) ([#30](https://github.com/mac4DSTEM/SpectroKit/issues/30)) ([aaea561](https://github.com/mac4DSTEM/SpectroKit/commit/aaea561ff07e8e067b45ecc9e12936a820b340e9))
+* downward confirmation rule (opt-in) and the uncorroborated tier ([#46](https://github.com/mac4DSTEM/SpectroKit/issues/46)) ([258c881](https://github.com/mac4DSTEM/SpectroKit/commit/258c88185467672a40e525fc416125a394e70fbb))
+* downward confirmation rule (opt-in) and the uncorroborated tier in ProposalResult ([258c881](https://github.com/mac4DSTEM/SpectroKit/commit/258c88185467672a40e525fc416125a394e70fbb))
+* the proposer refines the energy axis on its own K picks ([#47](https://github.com/mac4DSTEM/SpectroKit/issues/47)) ([e650263](https://github.com/mac4DSTEM/SpectroKit/commit/e6502638d3cb06ca2dbcca7eea48afbb92824d04))
+* the proposer refines the energy axis on its own K picks (two-line guard) ([e650263](https://github.com/mac4DSTEM/SpectroKit/commit/e6502638d3cb06ca2dbcca7eea48afbb92824d04))
+* thickness and dose terms in the sigma on wt% and at% ([#53](https://github.com/mac4DSTEM/SpectroKit/issues/53)) ([e0d9fed](https://github.com/mac4DSTEM/SpectroKit/commit/e0d9fedd1c112ae639f3998f65465a8b88af9fea))
+* UnlistedLineCheck's Candidate, Move and initialiser are public ([#42](https://github.com/mac4DSTEM/SpectroKit/issues/42)) ([c3d2d93](https://github.com/mac4DSTEM/SpectroKit/commit/c3d2d9379eeb59faa282037ca8685e5a412ccd54))
+
+
+### Continuous Integration
+
+* pinned images and Xcode, --parallel, Pages permissions on the deploy job, no iOS claim ([#17](https://github.com/mac4DSTEM/SpectroKit/issues/17)) ([ec848d6](https://github.com/mac4DSTEM/SpectroKit/commit/ec848d62f5d201b46773926e095cc487e6c49850))
+* pinned images and Xcode, --parallel, Pages permissions per job; drops iOS ([#34](https://github.com/mac4DSTEM/SpectroKit/issues/34)) ([ec848d6](https://github.com/mac4DSTEM/SpectroKit/commit/ec848d62f5d201b46773926e095cc487e6c49850))
+
 ## [0.12.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.11.0...0.12.0) (2026-10-23)
 
 ### Added
