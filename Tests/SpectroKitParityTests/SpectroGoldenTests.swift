@@ -5,7 +5,7 @@
 //  contract, and compared byte for byte afterwards (a quick check that nothing moved, D12; a mismatch is verified against the Python reference within tolerance). Every Double is its exact bit pattern (hex of `bitPattern`) with a readable
 //  %.17g beside it; large arrays are listed by count, a bit-exact sum and an FNV-1a hash of every element's bits. Original baselines remain unchanged; portable comparisons below bound CPU-dependent Double roundoff.
 //
-//  Inputs are the committed fixtures only (velox-tiny.emd, demo-edx-tiny.dm4, the eds-*.json pools, the demo spectrum image
+//  Inputs are the committed fixtures only (velox-tiny.emd, demo-edx-tiny.dm4, the eds-*.json pools of SpectroEDXTests/Fixtures, the demo spectrum image
 //  of `--demo-spectrum-fixture`), so CI runs it. The dump is a reflection walk (Mirror) of the result values, so a field added to
 //  a result is a new line and fails the comparison until the baseline is re-recorded on purpose.
 //
@@ -28,6 +28,7 @@
 
 import Testing
 import Foundation
+import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 import FormatoEMD
@@ -324,7 +325,7 @@ enum SpectroGolden {
                 let listedFour: [String]; let listedSeven: [String]; let seeds: [UInt64]
                 var axis: EnergyAxis { EnergyAxis(offset: offset, scale: scale, size: size) }
             }
-            let fx = try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: fixtures.appendingPathComponent("eds-realistic-l-sim.json")))
+            let fx = try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: EDXFixtures.dir.appendingPathComponent("eds-realistic-l-sim.json")))
             func counts(seed: UInt64) -> [UInt64] {
                 let axis = fx.axis
                 var mu = fx.continuum
@@ -350,7 +351,7 @@ enum SpectroGolden {
         }
 
         try add("eds-unlisted-sim") { out in
-            let o = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: fixtures.appendingPathComponent("eds-unlisted-sim.json"))) as? [String: Any])
+            let o = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: EDXFixtures.dir.appendingPathComponent("eds-unlisted-sim.json"))) as? [String: Any])
             let e = o["expected"] as! [Double]
             let axis = EnergyAxis(offset: o["offset"] as! Double, scale: o["scale"] as! Double, size: e.count)
             let beam = o["beam"] as! Double
@@ -371,7 +372,7 @@ enum SpectroGolden {
                 let offset: Double, scale: Double, size: Int
                 let regions: [Region]
             }
-            let sim = try JSONDecoder().decode(Sim.self, from: Data(contentsOf: fixtures.appendingPathComponent("eds-proposer-sim.json")))
+            let sim = try JSONDecoder().decode(Sim.self, from: Data(contentsOf: EDXFixtures.dir.appendingPathComponent("eds-proposer-sim.json")))
             let axis = EnergyAxis(offset: sim.offset, scale: sim.scale, size: sim.size)
             let st = FitSettings.standard(elements: ["Al", "Mg", "Si", "O"], axis: axis, resolutionMnKaEV: 130, beamEnergy: 200)
             for (i, r) in sim.regions.enumerated() where i == 2 {   // the densest region (sum peaks); the Debug proposer costs ~9 s a region
@@ -384,7 +385,7 @@ enum SpectroGolden {
         }
 
         try add("eds-weakline-sim") { out in
-            let o = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: fixtures.appendingPathComponent("eds-weakline-sim.json"))) as? [String: Any])
+            let o = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: EDXFixtures.dir.appendingPathComponent("eds-weakline-sim.json"))) as? [String: Any])
             let axis = EnergyAxis(offset: o["offset"] as! Double, scale: o["scale"] as! Double, size: o["size"] as! Int)
             for (i, level) in (o["levels"] as! [[String: Any]]).enumerated() where i == 0 || i == 4 {
                 let c = draw(level["expected"] as! [Double], seed: 2)

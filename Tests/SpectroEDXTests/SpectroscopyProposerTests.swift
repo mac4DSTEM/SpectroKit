@@ -229,7 +229,7 @@ struct SpectroscopyProposerTests {
         var axis: EnergyAxis { EnergyAxis(offset: offset, scale: scale, size: size) }
     }
     private static let sim: SimPools = {
-        let url = FixtureDirs.fixtures(of: "SpectroCoreTests").appendingPathComponent("eds-proposer-sim.json")
+        let url = EDXFixtures.dir.appendingPathComponent("eds-proposer-sim.json")
         return try! JSONDecoder().decode(SimPools.self, from: Data(contentsOf: url))
     }()
 

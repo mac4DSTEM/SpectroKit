@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SpectroTestSupport
 import SpectroCore
 import SpectroEDX
 
@@ -58,7 +59,7 @@ struct SpectroscopyUnlistedLineTests {
     private struct Pool { let expected: [Double]; let axis: EnergyAxis; let beam: Double }
 
     private static let pool: Pool = {
-        let url = Q.fixtures.appendingPathComponent("eds-unlisted-sim.json")
+        let url = EDXFixtures.dir.appendingPathComponent("eds-unlisted-sim.json")
         let o = try! JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
         let e = o["expected"] as! [Double]
         return Pool(expected: e, axis: EnergyAxis(offset: o["offset"] as! Double, scale: o["scale"] as! Double, size: e.count),

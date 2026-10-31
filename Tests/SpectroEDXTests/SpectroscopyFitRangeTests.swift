@@ -61,7 +61,7 @@ struct SpectroscopyFitRangeTests {
     }
 
     private static let fx: Fixture = try! JSONDecoder().decode(
-        Fixture.self, from: Data(contentsOf: Q.fixtures.appendingPathComponent("eds-realistic-l-sim.json")))
+        Fixture.self, from: Data(contentsOf: EDXFixtures.dir.appendingPathComponent("eds-realistic-l-sim.json")))
 
     private static func counts(seed: UInt64, sn: Bool = false) -> [UInt64] {
         let axis = fx.axis
@@ -162,7 +162,7 @@ struct SpectroscopyFitRangeTests {
         #expect(FitRangeSensitivityCheck.alternative(for: typed) == nil)
 
         // The weak-line sim, 19.997 keV, refined as in the room.
-        let url = Q.fixtures.appendingPathComponent("eds-weakline-sim.json")
+        let url = EDXFixtures.dir.appendingPathComponent("eds-weakline-sim.json")
         let o = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         let axis = EnergyAxis(offset: o["offset"] as! Double, scale: o["scale"] as! Double, size: o["size"] as! Int)
         for level in (o["levels"] as! [[String: Any]]) {

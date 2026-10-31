@@ -1,7 +1,7 @@
 # Generates eds-quant-pins-exspy-7185a4d1.json: eXSpy `EDSTEMSpectrum.quantification` (Cliff-Lorimer and zeta-factor,
 # with and without the thin-film absorption correction) on eXSpy's own FePt example and on synthetic intensity sets.
 # Every number in the fixture is eXSpy's output; nothing is computed by the Swift side's formulas.
-# Usage: PYTHONPATH=References/exspy-7185a4d1 References/python/bin/python -B tools/edx-exspy-pins/quant_pins.py Tests/SpectroCoreTests/Fixtures/eds-quant-pins-exspy-7185a4d1.json
+# Usage: PYTHONPATH=References/exspy-7185a4d1 References/python/bin/python -B tools/edx-exspy-pins/quant_pins.py Tests/SpectroEDXTests/Fixtures/eds-quant-pins-exspy-7185a4d1.json
 import warnings; warnings.filterwarnings("ignore")
 import sys, json, logging, numpy as np, exspy, hyperspy.api as hs
 from exspy.signals import EDSTEMSpectrum
