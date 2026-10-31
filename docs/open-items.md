@@ -22,7 +22,7 @@ Slowest against Python first. Diagnose before changing a number: state the cause
    overlap check (an element whose every peak sits under a modelled one leaves no residual peak and is not reported; the method reports
    such finds as possible only), Mn on the Al alloys (proposed at 22 and 70 L_D, a 6xxx minor element by the numbers, the alloy's
    specification not yet known), the line shape beside a dominant K line (the tail, opt-in in `LineTail`, to be measured per detector on the Al matrix and
-   switched on by the consumer); the proposer's own axis refinement with a two-line guard (the app refines on its K picks today); the downward family rule
+   switched on by the consumer); the proposer's own axis refinement with a two-line guard is in (`ElementProposer.proposeOnRefinedAxis`, the apps' flow moved unchanged; the apps switch at their next pin); the downward family rule
    (a K pick of Z ≥ 30 shows its L line) and an "uncorroborated" tier in `ProposalResult` (the app tiers them today); the self-pair half
    bound on sum peaks waits for planted sums that respect it; `AxisGateTests`' known issue (offset and gain trade off
    on lines that span little of the axis) stands.
