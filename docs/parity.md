@@ -274,6 +274,15 @@ the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured
 `IdentificationLoopTests` on planted spectra, `RealFileAutoIDTests` (opt-in) on three measured files. The identification fit's Kβ weights are
 NIST EPQ's (`EDSLineWeights.epqK`), not eXSpy's; the quantification fit keeps eXSpy's, so no parity row moves.
 
+Detector Si internal fluorescence: eXSpy 0.3.2 has no term for it (`EDSModel.add_family_lines` fits one Gaussian per X-ray line; no dead layer
+and no detector efficiency either, the k-factor carries the efficiency), so the Si internal-fluorescence counts at Si Kα land in its `Si_Ka`
+area. SpectroKit's default fit does the same; its `.countsAboveEdge` reference shape, which would remove them, is opt-in. The simulator
+absorption-truth test (`SpectroscopyAbsorptionTruthTests`) therefore holds the fitted Si Kα against the whole planted peak, sample line plus
+internal fluorescence (2116 counts in the recipe-A pool, 236 of them internal fluorescence), and pins the measured bias: the default fit reads
+it 20.3 % low in counts (Si share 0.546 at% against 0.675 at%, 19 % low; the share gap is smaller because the fitted share keeps the
++1.5 % that the simulator's split-off Al Kα tail gives every minor line, which the target cancels), not the 8.7 % the test reported against the sample line alone.
+`validation: "none"`.
+
 ## Where the source claims more than the tests show
 
 - `NumpySum.swift` header: I_0 and I_t "bit for bit" against exSpy, citing `ThicknessPinsTests`. Those tests hold I_0 and I_t to

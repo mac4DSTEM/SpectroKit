@@ -42,9 +42,12 @@ final class SpectroscopyAbsorptionTruthTests {
         let truthAtPct: [String: Double]
         let areasWithAbsorption: [String: Double], areasAbsorptionFree: [String: Double], tEff: [String: Double]
         let trueK: [String: Double]
+        /// The detector Si internal-fluorescence peak the simulator plants at Si K-alpha (forward.py `Si_Ka_internal`), counts.
+        let areaSiKaInternal: Double
         let expected: [Double]
         enum CodingKeys: String, CodingKey {
             case npix, offset, scale, size, expected
+            case areaSiKaInternal = "area_si_ka_internal"
             case thicknessNm = "thickness_nm", truthAtPct = "truth_at_pct", areasWithAbsorption = "areas_with_absorption"
             case areasAbsorptionFree = "areas_absorption_free", tEff = "t_eff", trueK = "true_k_counts_per_atom_nm2"
         }
@@ -184,10 +187,43 @@ final class SpectroscopyAbsorptionTruthTests {
     }
 
     private static let seeds: [UInt64] = [11, 12, 13, 14]
-    /// Fit bias envelope in counts, per element. Mg: the note's -402 +- 33 (402 + 3 x 33). Si: measured on this fixture, 4 seeds
-    /// (the simulator-geometry column of the L2b run is independent of the app's geometry): -164 counts of 1879 (-8.7 %),
-    /// sd 0.018 at % = ~40 counts, so 164 + 3 x 40.
-    private static let biasEnvelopeCounts = ["Mg": 402.0 + 3 * 33.0, "Si": 164.0 + 3 * 40.0]
+
+    /// The planted Si K-alpha a fit sees: the sample line (1879.5 counts) PLUS the detector Si internal-fluorescence peak the
+    /// simulator puts at the same energy (236.3 counts), 2115.8 in all. exSpy, the reference, fits one Gaussian per X-ray line
+    /// (`EDSModel.add_family_lines`) and has no internal-fluorescence term, no dead layer and no detector efficiency (the k-factor
+    /// carries the efficiency), so its `Si_Ka` area takes both (all but a few % of the internal peak, as Si K-beta is tied to
+    /// K-alpha by weight and the internal peak has no K-beta); so does SpectroKit's default fit (the `.countsAboveEdge` reference
+    /// shape is opt-in and off here). Comparing the fit with the sample line alone hid the internal-fluorescence counts and
+    /// understated the Si bias by about half (issue: the truth test leaves the Si internal-fluorescence peak out).
+    private static var plantedSiKa: Double { pool.areasWithAbsorption["Si_Ka"]! + pool.areaSiKaInternal }
+
+    /// Atomic percent from the planted noise-free areas with the simulator's own transmission (1/T_eff), Si K-alpha raised by
+    /// `siExtra` counts. The planted areas are already after pile-up; dividing the detector-made internal-fluorescence counts by
+    /// T_eff is not physics, but it is what the reference and the corrected fit both do to the whole Si K-alpha area.
+    private static func plantedAt(siExtra: Double) throws -> [Double] {
+        let a = pool.areasWithAbsorption
+        let areas = [a["Al_Ka"]!, a["Mg_Ka"]!, a["Si_Ka"]! + siExtra]
+        let factors = elements.map { 1 / pool.tEff[$0 + "_Ka"]! }
+        return try at(try CliffLorimer.weightFractions(intensities: areas, kFactors: typedK.map(\.1), absorption: factors).map { $0 * 100 })
+    }
+
+    /// The Si share a fit that measures the whole planted Si K-alpha peak reads: the sample truth scaled by what the
+    /// internal-fluorescence counts add (0.6 -> about 0.675 at%). This, not 0.6, is what the reference would report.
+    private static func siTargetAtPct() throws -> Double {
+        let truth = pool.truthAtPct["Si"]!
+        return truth * (try plantedAt(siExtra: pool.areaSiKaInternal)[2]) / (try plantedAt(siExtra: 0)[2])
+    }
+
+    /// Fit bias envelope in counts, per element. Mg: the note's -402 +- 33 (402 + 3 x 33), against the planted Mg K-alpha.
+    /// Si: measured on this fixture against the WHOLE planted Si K-alpha peak (`plantedSiKa`), 4 seeds: nets 1750 / 1648 / 1632 /
+    /// 1714, mean 1686, so -430 counts of 2116 (-20.3 %), sd 56 counts; envelope 430 + 3 x 56. (Against the sample line alone the
+    /// same nets read -193 of 1879, -10.3 %: the number the test reported before, as -8.7 %.)
+    private static let biasEnvelopeCounts = ["Mg": 402.0 + 3 * 33.0, "Si": 430.0 + 3 * 56.0]
+    /// The measured Si bias against the whole planted peak, mean of the 4 fixed seeds, with a regression band of 3 seed-sd over
+    /// sqrt(4) (3 x 56 / 2 / 2116 = 0.040, about 85 counts). The seeds are fixed, so this is a regression pin, not a confidence
+    /// interval and not validation. A known deviation: pinned so that a change either way fails and is looked at. It is the real
+    /// Si gate; the per-seed tolerance above only bounds each draw.
+    private static let siBiasFraction = -0.203, siBiasBand = 0.040
 
     /// Per-seed numbers go to stderr: `print` stays in the hosted app's stdout and never reaches the xcodebuild log.
     /// Also kept as an attachment (read it from the xcresult: `xcresulttool export attachments`, or the test run's attachments folder).
@@ -206,9 +242,19 @@ final class SpectroscopyAbsorptionTruthTests {
     /// tail left in the continuum moves Al by 1.5 % x the 1.2 at % non-Al share). Pile-up takes the same ~6 % from all
     /// three lines (kappa x a_Al), so it cancels in a ratio. Refuted if any share leaves its tolerance, or if with-absorption
     /// is not above without for Si and Mg (and below for Al) on every seed.
+    /// Si is held against what the reference measures, the whole planted Si K-alpha peak (`plantedSiKa`, `siTargetAtPct`), not
+    /// the sample truth 0.6: the fit reads it about 20 % low in counts (`siBiasFraction`), the honest size of the Si bias.
     @Test func testPooledFitRecoversTruthAndTheCorrectionMovesTheSharesTheRightWay() throws {
         let p = Self.pool
+        let siTarget = try Self.siTargetAtPct()
+        // The target arithmetic: without the internal-fluorescence counts the planted areas give Si and Mg back in the truth
+        // ratio (both read +1.5 %: the Al K-alpha tail the simulator splits off its Al line, which the ratio in siTargetAtPct cancels).
+        let sampleOnly = try Self.plantedAt(siExtra: 0)
+        #expect(abs((sampleOnly[2] / sampleOnly[1]) / (p.truthAtPct["Si"]! / p.truthAtPct["Mg"]!) - 1) < 1e-3, "planted areas give \(sampleOnly) at%")
+        note(String(format: "L2 Si planted K-alpha %.1f (sample %.1f + internal fluorescence %.1f), Si target %.4f at%% (sample truth %.1f)",
+                    Self.plantedSiKa, p.areasWithAbsorption["Si_Ka"]!, p.areaSiKaInternal, siTarget, p.truthAtPct["Si"]!))
         var siGain: [Double] = []
+        var siNet: [Double] = []
         for seed in Self.seeds {
             let on = try PooledQuantifier.run(Self.input(seed: seed, absorption: true), tables: Self.tables)
             let off = try PooledQuantifier.run(Self.input(seed: seed, absorption: false), tables: Self.tables)
@@ -218,21 +264,27 @@ final class SpectroscopyAbsorptionTruthTests {
             var line = "seed \(seed):"
             for el in Self.elements {
                 let a = try row(on, el), b = try row(off, el)
-                let truth = p.truthAtPct[el]!
+                let truth = el == "Si" ? siTarget : p.truthAtPct[el]!
+                let planted = el == "Si" ? Self.plantedSiKa : p.areasWithAbsorption[el + "_Ka"]!
                 let at = try #require(a.atomicPercent), atOff = try #require(b.atomicPercent)
                 let sigmaCounting = try #require(a.atomicTerms)[.counting] * at
                 let tol = el == "Al" ? 3 * sigmaCounting + 0.05
-                                      : 3 * sigmaCounting + truth * Self.biasEnvelopeCounts[el]! / p.areasWithAbsorption[el + "_Ka"]!
-                line += String(format: " %@ %.4f (off %.4f, truth %.1f, tol %.3f, net %.0f)", el, at, atOff, truth, tol, a.net)
+                                      : 3 * sigmaCounting + truth * Self.biasEnvelopeCounts[el]! / planted
+                line += String(format: " %@ %.4f (off %.4f, target %.4f, tol %.3f, net %.0f of %.0f)", el, at, atOff, truth, tol, a.net, planted)
                 #expect(abs(at - truth) <= tol, "\(el) \(line)")
                 switch el {
                 case "Al": #expect(at < atOff, "\(line)")
                 default: #expect(at > atOff, "\(line)")
                 }
-                if el == "Si" { siGain.append(at - atOff) }
+                if el == "Si" { siGain.append(at - atOff); siNet.append(a.net) }
             }
             note("L2 " + line)
         }
+        // The Si bias against the whole planted Si K-alpha peak, stated and pinned.
+        let siBias = siNet.reduce(0, +) / Double(siNet.count) / Self.plantedSiKa - 1
+        note(String(format: "L2 Si bias against the planted K-alpha peak %.4f (pinned %.3f +- %.3f); against the sample line alone %.4f",
+                    siBias, Self.siBiasFraction, Self.siBiasBand, siNet.reduce(0, +) / Double(siNet.count) / p.areasWithAbsorption["Si_Ka"]! - 1))
+        #expect(abs(siBias - Self.siBiasFraction) <= Self.siBiasBand, "Si bias against the planted K-alpha peak: \(siBias), nets \(siNet)")
         // The Si correction is a property of the geometry, not of the draw: the same on every seed (predicted +0.078 at%).
         let spread = (siGain.max() ?? 0) - (siGain.min() ?? 0)
         #expect(spread < 0.01, "Si correction by seed: \(siGain)")
