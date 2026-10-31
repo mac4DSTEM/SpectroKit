@@ -39,7 +39,17 @@
 //  eXSpy has no uncertainty on any of these (no sigma on a composition at all), so there is no formula to match: the term is the
 //  first-order propagation above, tested by Monte Carlo coverage on planted cases where t or D is drawn with its sigma.
 //
-//  WHAT IS NOT IN IT: the detector (efficiency, take-off angle, window) is taken as exact; the absorption model spread is not an
+//  THE DETECTOR. The quantification's only detector input is the take-off angle alpha of the absorption correction (the detector's
+//  efficiency and window are inside the typed k, zeta or cross-section factors, so their sigma is the factors' term). With absorption on,
+//  the transmission goes as exp(-chi rho t) with chi = mu / sin(alpha) (eXSpy's absorption correction), so an error in alpha (the
+//  holder tilt read off the stage, the detector elevation) moves wt% and at% as a thick or tilted specimen grows:
+//
+//      var(Y) += ( dY / d alpha  sigma_alpha )^2
+//
+//  with dY/d alpha a central difference of the kit's own quantification (step 1e-3 degree), the loop run tight. Without absorption
+//  the angle does not enter and the term is zero.
+//
+//  WHAT IS NOT IN IT: the detector's efficiency and window are inside the factors' term; the absorption model spread is not an
 //  uncertainty; a first-order sigma is a poor guide where the composition is strongly nonlinear in I (a line near the 0.1 floor, a few
 //  counts) or in t: the Monte Carlo tests are at a few hundred to a few tens of thousands of counts per line and a 10 % thickness sigma.
 //
@@ -63,6 +73,9 @@ public nonisolated struct EDXQuantificationSigma: Sendable, Equatable {
     /// The share of the dose sigma alone (zeta and cross section; zeros when no dose sigma is given).
     public var weightDoseSigma: [Double]
     public var atomicDoseSigma: [Double]
+    /// The share of the take-off angle sigma alone (with absorption; zeros when no angle sigma is given or absorption is off).
+    public var weightDetectorSigma: [Double]
+    public var atomicDetectorSigma: [Double]
     /// kg/m^2, where the method gives a mass thickness (every term included).
     public var massThicknessSigma: Double?
     /// The formula in words, for a report.
@@ -70,8 +83,23 @@ public nonisolated struct EDXQuantificationSigma: Sendable, Equatable {
     public var validation: String
 }
 
+/// Per-pixel sigma maps beside the composition maps (`EDXQuantification.quantifyMapsWithSigma`).
+public nonisolated struct EDXQuantificationSigmaMaps: Sendable, Equatable {
+    /// The composition maps, exactly as `quantifyMaps` returns them.
+    public var maps: EDXQuantificationMaps
+    /// One map per element: the one-sigma of wt% and at% at each pixel, every term included (0 on masked pixels, NaN on failed ones).
+    public var weightSigma: [[Double]]
+    public var atomicSigma: [[Double]]
+    /// kg/m^2, where the method gives a mass thickness.
+    public var massThicknessSigma: [Double]?
+    /// Why the sigma could not be propagated at a pixel whose composition was found (its sigma reads NaN); nil elsewhere.
+    public var sigmaFailures: [String?]
+    public var formula: String
+    public var validation: String
+}
+
 extension EDXQuantification {
-    public static let sigmaFormula = "first-order propagation: var(Y) = J C J^T + sum_j (dY/dln f_j s_j)^2 + (dY/dln t sigma_t/t)^2 + (dY/dln D s_D)^2 on the net counts' covariance C, the factors' relative sigma, the typed thickness sigma and the dose relative sigma; detector exact"
+    public static let sigmaFormula = "first-order propagation: var(Y) = J C J^T + sum_j (dY/dln f_j s_j)^2 + (dY/dln t sigma_t/t)^2 + (dY/dln D s_D)^2 + (dY/dalpha sigma_alpha)^2 on the net counts' covariance C, the factors' relative sigma, the typed thickness sigma, the dose relative sigma and the take-off angle sigma; detector efficiency inside the factors"
 
     /// Quantifies one spectrum (or one region's pooled spectrum) and propagates the counting sigma of the net counts, the
     /// factors' relative sigma, the thickness sigma and the dose sigma to wt% and at%.
@@ -81,9 +109,10 @@ extension EDXQuantification {
     /// - thicknessSigmaNm: one-sigma of the typed film thickness in nm (Cliff-Lorimer with a thickness only); nil = exact.
     /// - doseRelativeSigma: relative one-sigma of the dose, live time x beam current (zeta and cross section only; 0.05 = 5 %,
     ///   in practice the beam current's); nil = exact.
+    /// - takeOffSigmaDegrees: one-sigma of the take-off angle in degrees (with an absorption setting only); nil = exact.
     public static func quantifyWithSigma(intensities: [Double], intensityCovariance: [Double]? = nil, intensitySigmas: [Double]? = nil,
                                          factorRelativeSigmas: [Double]? = nil, thicknessSigmaNm: Double? = nil,
-                                         doseRelativeSigma: Double? = nil, setup: EDXQuantificationSetup,
+                                         doseRelativeSigma: Double? = nil, takeOffSigmaDegrees: Double? = nil, setup: EDXQuantificationSetup,
                                          liveTimeSeconds: Double? = nil) throws -> EDXQuantificationSigma {
         let n = intensities.count
         let base = try quantify(intensities: intensities, setup: setup, liveTimeSeconds: liveTimeSeconds)
@@ -97,21 +126,9 @@ extension EDXQuantification {
         } else {
             for i in 0..<n { cov[i * n + i] = max(intensities[i], 0) }
         }
-        if let f = factorRelativeSigmas {
-            guard f.count == n, f.allSatisfy({ $0.isFinite && $0 >= 0 }) else { throw QuantError.countMismatch("One non-negative relative sigma per factor.") }
-        }
-        var typedThickness: Double? = nil
-        if let st = thicknessSigmaNm {
-            guard st.isFinite, st >= 0 else { throw QuantError.invalid("The thickness sigma must be finite and not negative.") }
-            guard case .cliffLorimer(_, let t?) = setup.method else {
-                throw QuantError.invalid("A thickness sigma needs Cliff-Lorimer with a typed thickness (zeta and cross section derive the mass thickness from the dose).")
-            }
-            typedThickness = t
-        }
-        if let sd = doseRelativeSigma {
-            guard sd.isFinite, sd >= 0 else { throw QuantError.invalid("The dose sigma must be finite and not negative.") }
-            if case .cliffLorimer = setup.method { throw QuantError.invalid("A dose sigma needs the zeta or cross-section method (Cliff-Lorimer takes no dose).") }
-        }
+        let typedThickness = try validateSigmaArguments(count: n, setup: setup, factorRelativeSigmas: factorRelativeSigmas,
+                                                        thicknessSigmaNm: thicknessSigmaNm, doseRelativeSigma: doseRelativeSigma,
+                                                        takeOffSigmaDegrees: takeOffSigmaDegrees)
 
         var tight = setup
         if var a = tight.absorption { a.convergencePercent = 1e-10; a.maxIterations = max(a.maxIterations, 500); tight.absorption = a }
@@ -191,17 +208,119 @@ extension EDXQuantification {
             up.beamCurrentNA = current * exp(1e-4); dn.beamCurrentNA = current * exp(-1e-4)
             (wDose, aDose, mDose) = try lnTerm(up, dn, rel: sd)
         }
+        var wDet = zeros, aDet = zeros, mDet = 0.0
+        if let sa = takeOffSigmaDegrees, sa > 0, let a = tight.absorption {
+            // lnTerm divides by 2 x 1e-4; a step of 1e-3 degree with rel = sigma x 1e-4 / 1e-3 gives dY/dalpha x sigma.
+            let h = 1e-3
+            guard a.takeOffDegrees - h > 0, a.takeOffDegrees + h <= 90 else { throw QuantError.invalid("The take-off angle sigma needs the angle at least 0.001 degree inside (0, 90) degrees (the central difference steps that far).") }
+            var up = tight, dn = tight
+            up.absorption?.takeOffDegrees = a.takeOffDegrees + h; dn.absorption?.takeOffDegrees = a.takeOffDegrees - h
+            (wDet, aDet, mDet) = try lnTerm(up, dn, rel: sa * 1e-4 / h)
+        }
 
         func total(_ terms: [Double]...) -> [Double] { (0..<n).map { i in terms.reduce(0) { $0 + $1[i] }.squareRoot() } }
         return EDXQuantificationSigma(
             pixel: base,
-            weightSigma: total(wCount, wFac, wThick, wDose), atomicSigma: total(aCount, aFac, aThick, aDose),
+            weightSigma: total(wCount, wFac, wThick, wDose, wDet), atomicSigma: total(aCount, aFac, aThick, aDose, aDet),
             weightCountingSigma: wCount.map { $0.squareRoot() }, atomicCountingSigma: aCount.map { $0.squareRoot() },
             weightFactorSigma: wFac.map { $0.squareRoot() }, atomicFactorSigma: aFac.map { $0.squareRoot() },
             weightThicknessSigma: wThick.map { $0.squareRoot() }, atomicThicknessSigma: aThick.map { $0.squareRoot() },
             weightDoseSigma: wDose.map { $0.squareRoot() }, atomicDoseSigma: aDose.map { $0.squareRoot() },
-            massThicknessSigma: hasMass ? (mCount + mFac + mThick + mDose).squareRoot() : nil,
+            weightDetectorSigma: wDet.map { $0.squareRoot() }, atomicDetectorSigma: aDet.map { $0.squareRoot() },
+            massThicknessSigma: hasMass ? (mCount + mFac + mThick + mDose + mDet).squareRoot() : nil,
             formula: sigmaFormula, validation: validation)
+    }
+
+    /// Per-pixel sigma maps: `quantifyWithSigma` at every pixel of `quantifyMaps`' input, with the same mask, live times and take-off
+    /// angles per pixel. `intensitySigmaMaps[e][pixel]` is the one-sigma of element e's intensity at a pixel (a fit's per-pixel sigma);
+    /// nil = the counting statistics of raw counts (variance = I). The factor, thickness, dose and take-off sigmas are shared by every
+    /// pixel. A masked pixel reads 0 (as in `quantifyMaps`); a pixel whose composition failed reads NaN (its reason in `maps.failures`),
+    /// and one whose sigma alone could not be propagated reads NaN with its reason in `sigmaFailures`.
+    public static func quantifyMapsWithSigma(intensityMaps: [[Double]], rows: Int, columns: Int, setup: EDXQuantificationSetup,
+                                             intensitySigmaMaps: [[Double]]? = nil, factorRelativeSigmas: [Double]? = nil,
+                                             thicknessSigmaNm: Double? = nil, doseRelativeSigma: Double? = nil,
+                                             takeOffSigmaDegrees: Double? = nil, navigationMask: [Bool]? = nil,
+                                             liveTimesSeconds: [Double]? = nil, takeOffDegreesPerPixel: [Double]? = nil) throws -> EDXQuantificationSigmaMaps {
+        let n = intensityMaps.count
+        let pixels = rows * columns
+        // The composition maps (and every refusal of their inputs) are `quantifyMaps`' own.
+        _ = try validateSigmaArguments(count: n, setup: setup, factorRelativeSigmas: factorRelativeSigmas, thicknessSigmaNm: thicknessSigmaNm,
+                                       doseRelativeSigma: doseRelativeSigma, takeOffSigmaDegrees: takeOffSigmaDegrees)
+        if let sm = intensitySigmaMaps {
+            guard sm.count == n, sm.allSatisfy({ $0.count == pixels }) else { throw QuantError.countMismatch("One sigma map of rows x columns values per intensity map.") }
+        }
+        let maps = try quantifyMaps(intensityMaps: intensityMaps, rows: rows, columns: columns, setup: setup, navigationMask: navigationMask,
+                                    liveTimesSeconds: liveTimesSeconds, takeOffDegreesPerPixel: takeOffDegreesPerPixel)
+        var wS = [[Double]](repeating: [Double](repeating: 0, count: pixels), count: n), aS = wS
+        var mS: [Double]? = maps.massThickness.map { _ in [Double](repeating: 0, count: pixels) }
+        var sigmaFailures = [String?](repeating: nil, count: pixels)
+
+        enum Outcome { case skipped, ok(EDXQuantificationSigma), failed(String) }
+        final class Slots: @unchecked Sendable { var outcomes: [Outcome]; init(_ n: Int) { outcomes = [Outcome](repeating: .skipped, count: n) } }
+        let slots = Slots(pixels)
+        let chunk = 256
+        let chunks = (pixels + chunk - 1) / chunk
+        slots.outcomes.withUnsafeMutableBufferPointer { buffer in
+            nonisolated(unsafe) let out = buffer
+            DispatchQueue.concurrentPerform(iterations: chunks) { ci in
+                for p in (ci * chunk)..<min(pixels, (ci + 1) * chunk) {
+                    if navigationMask?[p] == true || maps.failures[p] != nil { continue }
+                    var s = setup
+                    if let a = takeOffDegreesPerPixel?[p] { s.absorption?.takeOffDegrees = a }
+                    do {
+                        out[p] = .ok(try quantifyWithSigma(
+                            intensities: (0..<n).map { intensityMaps[$0][p] }, intensitySigmas: intensitySigmaMaps.map { m in (0..<n).map { m[$0][p] } },
+                            factorRelativeSigmas: factorRelativeSigmas, thicknessSigmaNm: thicknessSigmaNm, doseRelativeSigma: doseRelativeSigma,
+                            takeOffSigmaDegrees: takeOffSigmaDegrees, setup: s, liveTimeSeconds: liveTimesSeconds?[p] ?? setup.liveTimeSeconds))
+                    } catch {
+                        out[p] = .failed((error as? LocalizedError)?.errorDescription ?? "\(error)")
+                    }
+                }
+            }
+        }
+        for p in 0..<pixels {
+            switch slots.outcomes[p] {
+            case .skipped:
+                if maps.failures[p] != nil {
+                    for e in 0..<n { wS[e][p] = .nan; aS[e][p] = .nan }
+                    mS?[p] = .nan
+                }
+            case .ok(let r):
+                for e in 0..<n { wS[e][p] = r.weightSigma[e]; aS[e][p] = r.atomicSigma[e] }
+                if let m = r.massThicknessSigma { mS?[p] = m }
+            case .failed(let why):
+                for e in 0..<n { wS[e][p] = .nan; aS[e][p] = .nan }
+                mS?[p] = .nan
+                sigmaFailures[p] = why
+            }
+        }
+        return EDXQuantificationSigmaMaps(maps: maps, weightSigma: wS, atomicSigma: aS, massThicknessSigma: mS,
+                                          sigmaFailures: sigmaFailures, formula: sigmaFormula, validation: validation)
+    }
+
+    /// The refusals of the shared sigma arguments; returns the typed thickness when a thickness sigma is given.
+    private static func validateSigmaArguments(count n: Int, setup: EDXQuantificationSetup, factorRelativeSigmas: [Double]?, thicknessSigmaNm: Double?,
+                                               doseRelativeSigma: Double?, takeOffSigmaDegrees: Double?) throws -> Double? {
+        if let f = factorRelativeSigmas {
+            guard f.count == n, f.allSatisfy({ $0.isFinite && $0 >= 0 }) else { throw QuantError.countMismatch("One non-negative relative sigma per factor.") }
+        }
+        var typedThickness: Double? = nil
+        if let st = thicknessSigmaNm {
+            guard st.isFinite, st >= 0 else { throw QuantError.invalid("The thickness sigma must be finite and not negative.") }
+            guard case .cliffLorimer(_, let t?) = setup.method else {
+                throw QuantError.invalid("A thickness sigma needs Cliff-Lorimer with a typed thickness (zeta and cross section derive the mass thickness from the dose).")
+            }
+            typedThickness = t
+        }
+        if let sd = doseRelativeSigma {
+            guard sd.isFinite, sd >= 0 else { throw QuantError.invalid("The dose sigma must be finite and not negative.") }
+            if case .cliffLorimer = setup.method { throw QuantError.invalid("A dose sigma needs the zeta or cross-section method (Cliff-Lorimer takes no dose).") }
+        }
+        if let sa = takeOffSigmaDegrees {
+            guard sa.isFinite, sa >= 0 else { throw QuantError.invalid("The take-off angle sigma must be finite and not negative.") }
+            guard setup.absorption != nil else { throw QuantError.invalid("A take-off angle sigma needs an absorption setting (without it the angle does not enter).") }
+        }
+        return typedThickness
     }
 
     /// `setup` with factor `j` multiplied by `m`.

@@ -306,6 +306,7 @@ seed0.four.quantification.unlistedCheck = nil
 seed0.four.quantification.unlistedCheckPending = false
 seed0.four.quantification.abundanceCaveat = nil
 seed0.four.quantification.appliedSumEscape = nil
+seed0.four.quantification.continuumDeadLayerMicrons = nil
 seed0.four.csv-fnv = 25a1e05b321a14fb
 seed0.four.rangeSensitivity.alternativeToKeV = 4053fdc1c4eb9aaf 79.964951734621295
 seed0.four.rangeSensitivity.moves: array 4
@@ -1541,6 +1542,7 @@ seed0.seven.quantification.unlistedCheck = nil
 seed0.seven.quantification.unlistedCheckPending = false
 seed0.seven.quantification.abundanceCaveat = nil
 seed0.seven.quantification.appliedSumEscape = nil
+seed0.seven.quantification.continuumDeadLayerMicrons = nil
 seed0.seven.csv-fnv = c50c6f94500dc1f3
 seed0.seven.rangeSensitivity.alternativeToKeV = 4053fdffe7111828 79.968744055455886
 seed0.seven.rangeSensitivity.moves: array 4
