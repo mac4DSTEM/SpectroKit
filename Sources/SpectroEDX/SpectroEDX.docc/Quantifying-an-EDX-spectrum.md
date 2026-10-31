@@ -90,6 +90,23 @@ func report(_ result: PooledQuantification) {
 - ``PooledQuantification/Row/net`` is the fitted area of the element's alpha line, in counts; `atBound` marks an upper limit.
 - ``PooledQuantification/Row/atomicPercent`` and ``PooledQuantification/Row/atomicSigma`` are present only when at% was computed.
 - ``PooledQuantification/absorption`` says whether the absorption correction applied or was refused, and why.
+- ``PooledQuantification/appliedSumEscape`` is the sum-peak model the fit kept, or nil for the fit without sum peaks.
+
+## Sum peaks and the line tail
+
+By default (``FitPolicy/sumPeaks`` `.whenSignificant`) the pooled fit tests the sum (pile-up) peak of the strongest line with
+itself, and when it lies 3 sigma or more above 0 it models the sum peaks of the four strongest lines (``EDSSumEscapeFit``). The
+footer says which, with the number. exSpy fits one Gaussian per line and no sum peaks; ``FitPolicy/exspyEquivalent`` (or
+``SumPeakRule/off``) gives that fit: its numbers are bit for bit the old ones, and the footer names the non-default policy. On
+the synthetic AlMgSi demo (planted truth: a simulation recipe, not a measurement) the fit without sum peaks read noise-free
+Si K-alpha 8-57 % low, depending on the pool and its count rate, and held a stray Cu K-alpha at 0; with them Si reads within 4 %
+(8 % at the highest count rate) and the Cu is recovered. A real line under the self pair (Ar K-alpha or Ag L-alpha under
+Al+Al) is read as pile-up: when the sum peaks are kept, the footer and the warnings name the lines within one FWHM of it.
+
+The low-energy tail of a strong line (``LineTail``) is a property of the detector, not of the sample, and is not on by default:
+fitted together with the sum peaks on the demo's Poisson pools (256 to 2 897 pixels) it read 0 to a third of the planted fraction
+and left Mg K-alpha beside Al K-alpha up to 25 % low. Measure it once with ``TailEstimate`` on a high-count spectrum of the same
+detector and set it as ``FitPolicy/lineTail``.
 
 ## What is and is not validated
 
