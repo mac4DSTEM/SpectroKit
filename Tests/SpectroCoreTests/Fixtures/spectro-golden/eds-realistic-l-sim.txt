@@ -329,6 +329,7 @@ seed0.seven.quantification.rangeSensitivity = nil
 seed0.seven.quantification.unlistedCheck = nil
 seed0.seven.quantification.unlistedCheckPending = false
 seed0.seven.quantification.abundanceCaveat = nil
+seed0.seven.quantification.continuumDeadLayerMicrons = nil
 seed0.seven.csv-fnv = 176c2eb938b3c80a
 seed0.seven.rangeSensitivity.alternativeToKeV = 4053fdf036df3a38 79.967786520000004
 seed0.seven.rangeSensitivity.moves: array 7
@@ -697,6 +698,7 @@ seed0.seven-60keV.quantification.rangeSensitivity = nil
 seed0.seven-60keV.quantification.unlistedCheck = nil
 seed0.seven-60keV.quantification.unlistedCheckPending = false
 seed0.seven-60keV.quantification.abundanceCaveat = nil
+seed0.seven-60keV.quantification.continuumDeadLayerMicrons = nil
 seed0.seven-60keV.csv-fnv = b4f647ee0ab928a3
 seed0.seven-60keV.rangeSensitivity = nil
 seed0.four.quantification.method.version = 1
@@ -992,6 +994,7 @@ seed0.four.quantification.rangeSensitivity = nil
 seed0.four.quantification.unlistedCheck = nil
 seed0.four.quantification.unlistedCheckPending = false
 seed0.four.quantification.abundanceCaveat = nil
+seed0.four.quantification.continuumDeadLayerMicrons = nil
 seed0.four.csv-fnv = 527d12db2afd525d
 seed0.four.rangeSensitivity.alternativeToKeV = 4053fdf036df3a38 79.967786520000004
 seed0.four.rangeSensitivity.moves: array 4
