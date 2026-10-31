@@ -208,6 +208,7 @@ level0.quantification.fitSettings.background.continuum.edges[0] = 3ff8f41f212d77
 level0.quantification.fitSettings.background.continuum.orders: n 2 sum-bits e fnv 54226316c5c52fc9
 level0.quantification.fitSettings.background.continuum.nonNegative = true
 level0.quantification.fitSettings.background.continuum.efficiency = nil
+level0.quantification.fitSettings.background.continuum.edgeStep = .sharp
 level0.quantification.fitSettings.escapePeaks = true
 level0.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 level0.quantification.fitSettings.method = .leastSquares
@@ -437,6 +438,7 @@ level4.quantification.fitSettings.background.continuum.edges[0] = 3ff8f41f212d77
 level4.quantification.fitSettings.background.continuum.orders: n 2 sum-bits e fnv 54226316c5c52fc9
 level4.quantification.fitSettings.background.continuum.nonNegative = true
 level4.quantification.fitSettings.background.continuum.efficiency = nil
+level4.quantification.fitSettings.background.continuum.edgeStep = .sharp
 level4.quantification.fitSettings.escapePeaks = true
 level4.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 level4.quantification.fitSettings.method = .leastSquares
