@@ -72,24 +72,39 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     public var escapeRatioWarning: Double
     /// The energy-axis refinement on the pooled spectrum: which of offset, gain and width, the cap, the tolerance and the width bounds.
     public var axisRefinement: AxisRefinementSettings
+    /// Sum (pile-up) peaks of the four strongest alpha lines in the pooled fit (`EDSSumEscapeFit`), when the caller passes no
+    /// `PooledQuantificationInput.sumEscape`. Default `.whenSignificant`: kept when the strongest line's self pair is
+    /// `sumPeakSignificance` sigma above 0. `.off` is the fit before sum peaks were the default (one Gaussian per line, no sum peaks,
+    /// exSpy's model): its numbers are bit for bit the old ones; as a non-default policy it adds the footer line
+    /// `policy (non-default): fit.sumPeaks = off`.
+    public var sumPeaks: SumPeakRule
+    /// The c / sigma_c a pile-up coefficient needs under `.whenSignificant`, sigma_c scaled by the square root of the self-pair fit's
+    /// reduced chi2 (or deviance) when that is above 1. Default 3: a stated choice, not a measured false-keep rate (c is clipped at 0,
+    /// and the rate holds only for a model that fits; a real line under the self pair is read as pile-up whatever the level).
+    public var sumPeakSignificance: Double
 
     public init(fitFromKeV: Double = 0.2, defaultUpperLimitKeV: Double = 20, continuumOrders: [Int] = [9, 5],
                 continuumEdges: [Double] = [FitPolicy.alKEdgeKeV], continuumNonNegative: Bool = true,
                 continuumEfficiency: DetectorLayers? = nil, escapePeaks: Bool = true, maximumPolynomialOrder: Int = 8,
                 irls: IRLSSettings = IRLSSettings(), escapeRatioWarning: Double = 0.05,
                 axisRefinement: AxisRefinementSettings = AxisRefinementSettings(),
-                lineTail: LineTail? = nil, continuumEdgeStep: ContinuumEdgeStep = .sharp) {
+                lineTail: LineTail? = nil, sumPeaks: SumPeakRule = .whenSignificant, sumPeakSignificance: Double = 3,
+                continuumEdgeStep: ContinuumEdgeStep = .sharp) {
         self.fitFromKeV = fitFromKeV; self.defaultUpperLimitKeV = defaultUpperLimitKeV
         self.continuumOrders = continuumOrders; self.continuumEdges = continuumEdges
         self.continuumNonNegative = continuumNonNegative; self.continuumEfficiency = continuumEfficiency
         self.escapePeaks = escapePeaks; self.maximumPolynomialOrder = maximumPolynomialOrder
         self.irls = irls; self.escapeRatioWarning = escapeRatioWarning; self.axisRefinement = axisRefinement
-        self.lineTail = lineTail; self.continuumEdgeStep = continuumEdgeStep
+        self.lineTail = lineTail; self.sumPeaks = sumPeaks; self.sumPeakSignificance = sumPeakSignificance
+        self.continuumEdgeStep = continuumEdgeStep
     }
 
+    /// The fit before sum peaks were the default (one Gaussian per line, no sum peaks): exSpy's line model.
+    public static let exspyEquivalent = FitPolicy(sumPeaks: .off)
+
     private enum CodingKeys: String, CodingKey {
-        case fitFromKeV, defaultUpperLimitKeV, continuumOrders, continuumEdges, continuumNonNegative, continuumEdgeStep
-        case continuumEfficiency, escapePeaks, lineTail, maximumPolynomialOrder, irls, escapeRatioWarning, axisRefinement
+        case fitFromKeV, defaultUpperLimitKeV, continuumOrders, continuumEdges, continuumNonNegative, continuumEfficiency, escapePeaks,
+             lineTail, maximumPolynomialOrder, irls, escapeRatioWarning, axisRefinement, sumPeaks, sumPeakSignificance, continuumEdgeStep
     }
 
     /// The synthesized encoding, except that `continuumEdgeStep` is written only when it is not the default, so the default
@@ -101,7 +116,6 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         try c.encode(continuumOrders, forKey: .continuumOrders)
         try c.encode(continuumEdges, forKey: .continuumEdges)
         try c.encode(continuumNonNegative, forKey: .continuumNonNegative)
-        if continuumEdgeStep != .sharp { try c.encode(continuumEdgeStep, forKey: .continuumEdgeStep) }
         try c.encodeIfPresent(continuumEfficiency, forKey: .continuumEfficiency)
         try c.encode(escapePeaks, forKey: .escapePeaks)
         try c.encodeIfPresent(lineTail, forKey: .lineTail)
@@ -109,9 +123,14 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         try c.encode(irls, forKey: .irls)
         try c.encode(escapeRatioWarning, forKey: .escapeRatioWarning)
         try c.encode(axisRefinement, forKey: .axisRefinement)
+        try c.encode(sumPeaks, forKey: .sumPeaks)
+        try c.encode(sumPeakSignificance, forKey: .sumPeakSignificance)
+        if continuumEdgeStep != .sharp { try c.encode(continuumEdgeStep, forKey: .continuumEdgeStep) }
     }
 
-    /// A stored policy written before `continuumEdgeStep` existed reads the default (`.sharp`, the form it was run with).
+    /// A policy stored before sum peaks were the default has no `sumPeaks`: it reads `.off`, the fit it was stored with (and gets the
+    /// non-default footer line). One stored before `continuumEdgeStep` existed reads `.sharp`, the form it was run with. Every other
+    /// field is required, as before.
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(fitFromKeV: try c.decode(Double.self, forKey: .fitFromKeV),
@@ -126,6 +145,8 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                   escapeRatioWarning: try c.decode(Double.self, forKey: .escapeRatioWarning),
                   axisRefinement: try c.decode(AxisRefinementSettings.self, forKey: .axisRefinement),
                   lineTail: try c.decodeIfPresent(LineTail.self, forKey: .lineTail),
+                  sumPeaks: try c.decodeIfPresent(SumPeakRule.self, forKey: .sumPeaks) ?? .off,
+                  sumPeakSignificance: try c.decodeIfPresent(Double.self, forKey: .sumPeakSignificance) ?? 3,
                   continuumEdgeStep: try c.decodeIfPresent(ContinuumEdgeStep.self, forKey: .continuumEdgeStep) ?? .sharp)
     }
 
@@ -145,6 +166,7 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         if !zip(continuumEdges, continuumEdges.dropFirst()).allSatisfy({ $0 < $1 }) { return "The continuum edges must ascend." }
         if maximumPolynomialOrder < 0 { return "The largest polynomial order must be 0 or more." }
         if !(escapeRatioWarning.isFinite && escapeRatioWarning > 0) { return "The escape-ratio warning level must be positive." }
+        if !(sumPeakSignificance.isFinite && sumPeakSignificance >= 0) { return "The sum-peak significance level must be a number of 0 or more." }
         if irls.maxIterations < 1 || !(irls.tolerance > 0) || !(irls.muFloor > 0) { return "The Poisson iteration needs a cap of 1 or more, a positive tolerance and a positive floor." }
         if axisRefinement.maxIterations < 1 || !(axisRefinement.tolerance > 0)
             || !(axisRefinement.minimumResolutionEV < axisRefinement.maximumResolutionEV) {
@@ -192,6 +214,53 @@ public nonisolated struct AbundancePolicy: Sendable, Equatable, Codable {
             return "The detector layers must be 0 or more, with a positive active silicon thickness."
         }
         return nil
+    }
+}
+
+/// Whether the pooled fit models sum (pile-up) peaks (`FitPolicy.sumPeaks`).
+///
+/// Why it is the default: on the public synthetic AlMgSi demo (planted truth: the simulation recipe of `sim_edx.py` v2.0, not a
+/// measurement) the fit without sum peaks read noise-free Si K-alpha 15-18 % low on the Al-rich map and fixture pools (57 % on
+/// the highest-rate pool, 8 % on the precipitate pool) and held a planted Cu K-alpha at 0 at high rate, because the Al+Al sum peak
+/// (2.97 keV) and its neighbours pull the continuum above the Al K edge. With sum peaks the same pools read Si within 4 % (8 % at the
+/// highest rate) and recover the Cu (`DemoEDXPoolTests`). On the Poisson counts of every demo pool the self pair passes the test
+/// (`DemoEDXPoolTests.reducedChiSquareOnThePoissonCounts` pins it); on the one noise-free spectrum without pile-up tested
+/// (`eds-unlisted-sim.json`) the default keeps the fit without sum peaks bit for bit.
+/// What it cannot tell apart: a real line under the self pair (Ar K-alpha 2.957 or Ag L-alpha 2.984 keV under Al+Al 2.973 keV) is
+/// read as pile-up; the footer and the warnings name the alpha lines within one FWHM of it when the sum peaks are kept.
+/// The Al K-alpha tail is NOT part of this rule: fitted together with the sum peaks on the demo's Poisson pools (256 to 2 897
+/// pixels) it read 0 to a third of the planted fraction and left Mg K-alpha up to 25 % low on the map pools, so it is a detector
+/// calibration (`FitPolicy.lineTail`, measured once with `TailEstimate` on a high-count spectrum).
+public nonisolated enum SumPeakRule: String, Sendable, Codable, CaseIterable {
+    /// No sum peaks: one Gaussian per line, the fit as it ran before (exSpy's line model).
+    case off
+    /// Test the sum peak of the strongest line with itself (Al K-alpha + Al K-alpha in an Al alloy) alone; when its pile-up coefficient
+    /// is `FitPolicy.sumPeakSignificance` sigma above 0 (`significance(_:misfit:)`), fit and keep the sum peaks of the four strongest lines; otherwise the default
+    /// fit, bit for bit. Either way the footer says which, with the number. The self pair is the test because the cross pairs can
+    /// absorb an unlisted line at E_i + E_j: on a synthetic spectrum with no pile-up and Cu, Ga and Ge left out of the list, the
+    /// four-parent model kept c at 48 sigma (Ni K-alpha + O K-alpha on Cu K-alpha) while the Si self pair read 0.
+    case whenSignificant
+    /// Fit and keep the sum peaks whatever the data say.
+    case always
+
+    /// c / (sigma_c sqrt(max(misfit, 1))) of a sum-peak fit: NaN when no pair lies in the fitted range (nothing was tested) or there
+    /// is no sigma, 0 when c is held at 0. sigma_c is counting statistics (Var(data) = model); `misfit` (the fit's reduced chi2 or
+    /// deviance) scales it, so a misfit near E_i + E_j does not pass as pile-up on a fit that is far from chi2_red = 1.
+    package static func significance(_ r: SumEscapeResult, misfit: Double) -> Double {
+        guard let c = r.sumCoefficient, !r.sumPeaks.isEmpty else { return .nan }
+        if r.sumCoefficientAtBound || c == 0 { return 0 }
+        guard let s = r.sumCoefficientSigma, s > 0, s.isFinite else { return .nan }
+        let scale = misfit.isFinite ? max(misfit, 1).squareRoot() : 1
+        return c / (s * scale)
+    }
+
+    /// The alpha lines of elements not in `listed` that lie within one FWHM of `energy`: a real line there is read as the sum peak.
+    package static func coincidentLines(energy: Double, resolutionMnKaEV: Double, listed: [String]) -> [XRayLine] {
+        let w = XRayLines.fwhm(resolutionMnKaEV: resolutionMnKaEV, atEnergy: energy) ?? 0.13
+        return XRayLines.all.filter {
+            ["Ka", "La", "Ma"].contains($0.name) && !XRayLines.notRealLines.contains($0.element) && !listed.contains($0.element)
+                && abs($0.energy - energy) <= w
+        }.sorted { abs($0.energy - energy) < abs($1.energy - energy) }
     }
 }
 
