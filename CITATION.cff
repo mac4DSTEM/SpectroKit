@@ -7,8 +7,8 @@ authors:
     given-names: Paul
     # TODO(Paul): add orcid: "https://orcid.org/…" and affiliation: "…" here
 license: GPL-3.0-only
-version: "0.12.0" # x-release-please-version
-date-released: "2026-10-23" # x-release-please-date
+version: "0.13.0" # x-release-please-version
+date-released: "2026-10-31" # x-release-please-date
 repository-code: "https://github.com/mac4DSTEM/SpectroKit"
 abstract: "A Swift library for EDS and EELS spectroscopy on macOS: X-ray identification and quantification, EELS thickness, deconvolution and core-loss edges, a port of exSpy checked against exSpy and HyperSpy."
 keywords:
