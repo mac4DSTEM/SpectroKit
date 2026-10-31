@@ -25,6 +25,10 @@
 //  this fixture) and nothing removed or changed (`diff` old new: 0 lines `<`). Every other file is still the first host app's
 //  71929a01 baseline, unchanged.
 //
+//  The sum/escape-explained proposer: `demo-edx-tiny-dm4`, `eds-realistic-l-sim`, `eds-unlisted-sim` and `eds-weakline-sim`
+//  re-recorded on purpose for the new `quantification.sumEscapeCounts` field of the pooled result. Each file is the old one
+//  plus one line per quantification (9 lines in all, every one `= nil` on these fixtures) and nothing removed or changed.
+//
 
 import Testing
 import Foundation
