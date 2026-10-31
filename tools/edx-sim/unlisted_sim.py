@@ -1,6 +1,6 @@
 """The unlisted-line check's synthetic pool.
 
-Writes Tests/SpectroCoreTests/Fixtures/eds-unlisted-sim.json: the EXPECTED pooled spectrum (no noise; the Swift test adds seeded
+Writes Tests/SpectroEDXTests/Fixtures/eds-unlisted-sim.json: the EXPECTED pooled spectrum (no noise; the Swift test adds seeded
 Poisson noise) of a hard case: Ti K-alpha 3000 counts among
 strong Ge, Cu and Ga lines, O, Si and Ni, with the unlisted L lines at the intensities seen in the real Velox window (Ge L 5e5,
 Ga L 3e5, Cu L 1e5), on the Velox axis (4096 x 20 eV from -1.932 keV), beam 200 kV.
@@ -13,7 +13,7 @@ Usage: References/python/bin/python -I -B tools/edx-sim/unlisted_sim.py [out.jso
 import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroCoreTests", "Fixtures", "eds-unlisted-sim.json")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroEDXTests", "Fixtures", "eds-unlisted-sim.json")
 OFFSET, SCALE, SIZE, BEAM, FWHM_MNKA, MN_KA = -1.93221348, 0.02, 4096, 200.0, 130.0, 5.8987
 
 # (energy keV, weight relative to the family's area) per family; XRayLineData.swift rows, verbatim.

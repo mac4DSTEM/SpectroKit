@@ -1,6 +1,6 @@
-# Writes Tests/SpectroCoreTests/Fixtures/eds-pins-exspy-7185a4d1.json from exSpy 7185a4d1 / HyperSpy 2.4.0: the example spectra, line
+# Writes Tests/SpectroEDXTests/Fixtures/eds-pins-exspy-7185a4d1.json from exSpy 7185a4d1 / HyperSpy 2.4.0: the example spectra, line
 # windows, intensities, FWHM and index vectors SpectroEDX is compared against.
-# Usage: PYTHONPATH=References/exspy-7185a4d1 References/python/bin/python -B tools/edx-exspy-pins/pins.py Tests/SpectroCoreTests/Fixtures/eds-pins-exspy-7185a4d1.json
+# Usage: PYTHONPATH=References/exspy-7185a4d1 References/python/bin/python -B tools/edx-exspy-pins/pins.py Tests/SpectroEDXTests/Fixtures/eds-pins-exspy-7185a4d1.json
 import warnings; warnings.filterwarnings("ignore")
 import sys, json, math, numpy as np, exspy, hyperspy.api as hs
 from exspy.utils.eds import get_FWHM_at_Energy

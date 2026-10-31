@@ -51,7 +51,7 @@ final class SpectroscopyAbsorptionTruthTests {
         var axis: EnergyAxis { EnergyAxis(offset: offset, scale: scale, size: size) }
     }
     private static let pool: Pool = {
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/eds-absorption-truth.json")
+        let url = EDXFixtures.dir.appendingPathComponent("eds-absorption-truth.json")
         return try! JSONDecoder().decode(Pool.self, from: Data(contentsOf: url))
     }()
 

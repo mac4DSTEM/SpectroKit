@@ -51,13 +51,12 @@ struct EDSQuantPinsTests {
     }
     struct Pins: Decodable { let minIntensity: Double; let cases: [Case] }
 
-    private static let fixturesDir = FixtureDirs.tests.appendingPathComponent("SpectroCoreTests")
     private static let pins: Pins = {
-        let data = try! Data(contentsOf: fixturesDir.appendingPathComponent("Fixtures/eds-quant-pins-exspy-7185a4d1.json"))
+        let data = try! Data(contentsOf: EDXFixtures.dir.appendingPathComponent("eds-quant-pins-exspy-7185a4d1.json"))
         return try! JSONDecoder().decode(Pins.self, from: data)
     }()
     private static let table: MassAbsorptionTable = {
-        let url = fixturesDir.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy/FFastMAC.csv")
+        let url = EDXFixtures.repoRoot.appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy/FFastMAC.csv")
         return try! MassAbsorptionTable(contentsOf: url)
     }()
 

@@ -1,6 +1,6 @@
 """Realistic-L synthetic pool (fit robustness with strong unlisted L lines), a seeded fixture.
 
-Writes Tests/SpectroCoreTests/Fixtures/eds-realistic-l-sim.json: the Velox file's energy axis (offset -1.93221348 keV, 20 eV, 4096 channels),
+Writes Tests/SpectroEDXTests/Fixtures/eds-realistic-l-sim.json: the Velox file's energy axis (offset -1.93221348 keV, 20 eV, 4096 channels),
 a 200 kV beam, 130 eV at Mn Ka, the EXPECTED continuum per channel, the planted line areas (counts per pooled spectrum, by the fit's
 group id), the listed sets and the Poisson seeds. The Swift test adds the lines with SpectroKit's own line shapes (EDSLineModel) and draws Poisson counts with SplitMix64 from each seed, so every number is reproducible.
 
@@ -14,7 +14,7 @@ Usage: References/python/bin/python -I -B tools/edx-sim/realistic_l_sim.py [out.
 """
 import json, math, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroCoreTests", "Fixtures", "eds-realistic-l-sim.json")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroEDXTests", "Fixtures", "eds-realistic-l-sim.json")
 OFFSET, SCALE, SIZE, BEAM = -1.93221348, 0.02, 4096, 200.0
 
 def continuum(e):

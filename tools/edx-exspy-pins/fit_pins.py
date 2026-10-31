@@ -1,4 +1,4 @@
-# tools/edx-exspy-pins/fit_pins.py: writes Tests/SpectroCoreTests/Fixtures/eds-fit-exspy-7185a4d1.json from exSpy 7185a4d1 / HyperSpy 2.4.0
+# tools/edx-exspy-pins/fit_pins.py: writes Tests/SpectroEDXTests/Fixtures/eds-fit-exspy-7185a4d1.json from exSpy 7185a4d1 / HyperSpy 2.4.0
 # by running its EDSModel (closed loop, FePt, SciPy NNLS references).
 # Usage: PYTHONPATH=References/exspy-7185a4d1 References/python/bin/python -B tools/edx-exspy-pins/fit_pins.py [out.json]
 import warnings; warnings.filterwarnings("ignore")
@@ -159,5 +159,5 @@ print("nnls ref Fe/Pt", c["nnlsRef"]["Fe_Ka"], c["nnlsRef"]["Pt_La"], "lstsq", c
 print("negative in lstsq:", c["lsRefNegative"])
 print("closed loop fitted", out["cases"]["closedLoop"]["fitted"], out["cases"]["closedLoop"]["redChisq"])
 import os, sys
-_out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Tests", "SpectroCoreTests", "Fixtures", "eds-fit-exspy-7185a4d1.json")
+_out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Tests", "SpectroEDXTests", "Fixtures", "eds-fit-exspy-7185a4d1.json")
 json.dump(out, open(_out, "w"), separators=(",", ":"))

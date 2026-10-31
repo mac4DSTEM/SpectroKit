@@ -9,7 +9,7 @@ import SpectroEDX
 @MainActor
 struct SpectroscopyQuantifyTests {
 
-    static let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+    static let fixtures = FixtureDirs.fixtures(of: "SpectroCoreTests")
     static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         .appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy")
     static let tables = try! QuantificationTables(directory: resources)

@@ -21,8 +21,7 @@ struct SpectroscopyCoreTests {
     }
 
     nonisolated(unsafe) private static let pins: [String: Any] = {   // written once, read only
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-            .appendingPathComponent("Fixtures/eds-pins-exspy-7185a4d1.json")
+        let url = EDXFixtures.dir.appendingPathComponent("eds-pins-exspy-7185a4d1.json")
         // JSONDecoder, not JSONSerialization: the latter parses 17-digit doubles up to 1 ulp off
         // (found here: -0.042729661231195655 came back as ...565), which breaks exact window edges.
         let data = try! Data(contentsOf: url)
