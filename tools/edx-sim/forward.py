@@ -8,6 +8,8 @@ Per pixel p (thickness t_p nm along the foil normal, density rho_p, live fractio
                    f = NUMERICAL integral over generation depth s in (0,1) of g(s) exp(-x * exit_path(s)), g = 1 + beta (s - 1/2)
                    (a depth-weighted, per-segment path integral; NOT the closed form (1-e^-x)/x)
   continuum:       Kc * sum_el N_el Z_el * (E0-E)/E * eps(E) * T_eff(E, p) * dE * lam
+  detector dead layer (optional, `dead_layer_um`, default 0 = none): eps(E) of lines and continuum times exp(-mu_Si(E) rho_Si t_dead),
+                   mu_Si from the FFAST table, rho_Si 2.33 g/cm^3; a step down at the Si K edge (1.839 keV)
   escape (E_line > Si K edge): fraction f_esc = 0.02 (1.839/E)^1.5 of a moves to E - 1.7397 keV
   Al Ka tail: 1.5 % of the Al Ka counts in an exponential shelf (lambda 0.12 keV) below the peak
   sum peaks (pairs of Al Ka, Mg Ka, Si Ka): s_ab = kappa a_a a_b (a != b), kappa a_a^2 / 2 (a == b); parents lose the photons
@@ -44,6 +46,7 @@ KC_TOTAL_REF = 8.0                                                 # continuum c
 G_AL_KA_REF = 32.4                                                 # Al Ka counts/px of the reference pixel (no absorption)
 SI_K_EDGE = 1.839
 SI_KA = 1.7397
+SI_DENSITY = 2.33                                                  # g/cm^3, the detector dead layer (SpectroEDX QuantElementData)
 ESC0 = 0.02
 PILE_KAPPA = 2.0e-3
 STRAY = 0.05
@@ -134,7 +137,7 @@ def build_components():
 
 
 class Forward:
-    def __init__(self, axis, mac_path, beam_kev=200.0, fwhm_mnka_ev=130.0):
+    def __init__(self, axis, mac_path, beam_kev=200.0, fwhm_mnka_ev=130.0, dead_layer_um=0.0):
         self.axis, self.beam, self.fwhm_ev = axis, beam_kev, fwhm_mnka_ev
         self.mac_path = mac_path
         self.curves = load_mac(mac_path)
@@ -166,6 +169,24 @@ class Forward:
         nz_ref = n_tot_ref * (0.988 * 13 + 0.006 * 12 + 0.006 * 14)
         self.kc = KC_TOTAL_REF / (nz_ref * s_ref)
         self.n_tot_ref = n_tot_ref
+        # Detector Si dead layer (after the normalisation above, so G and Kc keep their meaning: the reference pixel's counts in
+        # front of the dead layer). 0 leaves every array bit-identical to the model without it.
+        self.dead_layer_um = float(dead_layer_um)
+        if self.dead_layer_um > 0:
+            self.eps_ch = self.eps_ch * self.dead_layer_T(e)
+
+    def dead_layer_T(self, energy):
+        """Transmission of the detector Si dead layer, exp(-mu_Si(E) rho_Si t) (Beer-Lambert), mu/rho from the FFAST table above,
+        rho_Si = SI_DENSITY, t = dead_layer_um. The same factor as the dead-layer term of SpectroEDX SDDEfficiency (EPQ SiLiCalibration)."""
+        en = np.maximum(np.asarray(energy, dtype=np.float64), 0.05)
+        return np.exp(-mac(self.curves, "Si", en) * SI_DENSITY * self.dead_layer_um * 1e-4)
+
+    def line_eps(self, energy):
+        """eps(E_line) of a line: the detector efficiency, times the dead-layer transmission when there is a dead layer."""
+        eps = float(xm.detector_efficiency(np.array([energy]))[0])
+        if self.dead_layer_um > 0:
+            eps *= float(self.dead_layer_T(np.array([energy]))[0])
+        return eps
 
     # ---- per-recipe medium ------------------------------------------------------------------------------------
     def medium(self, spec):
@@ -248,7 +269,7 @@ class Forward:
                     n_el = nt * x_el.get(c.element, 0.0)
                     fam = xm.family(c.element, c.line)
                     w = xm.LINES[c.element][c.line][1]
-                    a0 = lam_[pm] * self.gp * n_el * xm.SENSITIVITY[fam] * w * float(xm.detector_efficiency(np.array([c.energy]))[0])
+                    a0 = lam_[pm] * self.gp * n_el * xm.SENSITIVITY[fam] * w * self.line_eps(c.energy)
                     teff, tseg = self.effective_T(line_kappa[r, i] * rr, tt)
                     A[np.where(pm)[0], i] = a0 * teff
                     if a_free is not None:
@@ -263,7 +284,7 @@ class Forward:
                         continue
                     w = xm.LINES["Ga"][c.line][1]
                     n_ga = ga_[pm]
-                    a0 = lam_[pm] * self.gp * n_ga * (xm.SENSITIVITY["Ga_L"]) * w * float(xm.detector_efficiency(np.array([c.energy]))[0])
+                    a0 = lam_[pm] * self.gp * n_ga * (xm.SENSITIVITY["Ga_L"]) * w * self.line_eps(c.energy)
                     kap = self.mu_rho(med[r][2], c.energy) * 1e-7
                     teff, tseg = self.effective_T(kap * rr, tt)
                     A[np.where(pm)[0], i] = a0 * teff
