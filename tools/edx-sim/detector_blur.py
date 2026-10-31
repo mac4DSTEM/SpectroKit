@@ -9,7 +9,8 @@ spectrum by its blurred copy:
 
 C the forward model's own continuum for the same pixels (`continuum`), blur the detector Gaussian applied photon by photon: the counts
 of channel j spread over the axis with sigma from the line-width law at E_j (`xray_model.fwhm_kev`), the kernel normalised over the
-channels it reaches (counts conserved). The Si internal-fluorescence peak forward.py derives from the counts above 1.839 keV is kept
+channels it reaches (counts conserved), except within one kernel reach of an axis end, where the input is kept (the counts that
+would come from beyond the axis are not in it, so a blurred end would roll off by up to ln 2). The Si internal-fluorescence peak forward.py derives from the counts above 1.839 keV is kept
 as forward.py made it: blurring moves about 1e-4 of the continuum across that energy (5e-6 for the Al matrix, 1.1e-4 for the
 beta'' precipitate pixel).
 """
@@ -36,6 +37,13 @@ def blur(values, centre_kev, fwhm_mnka_ev=130.0, reach_sigma=6.0):
         lo, hi = max(0, j - reach), min(len(e), j + reach + 1)
         w = np.exp(-0.5 * ((e[lo:hi] - e[j]) / s) ** 2)
         out[lo:hi] += v[j] * w / w.sum()
+    # Within one kernel reach of an axis end the detector also receives counts from beyond the axis, which `values` does not hold:
+    # there the input is kept as it is (a smooth continuum is its own blur to first order), so the ends do not roll off.
+    def reach_at(j):
+        return int(math.ceil(reach_sigma * xm.fwhm_kev(max(float(e[j]), 0.0), fwhm_mnka_ev) * SIGMA_PER_FWHM / de))
+    r0, r1 = reach_at(0), reach_at(len(e) - 1)
+    out[:r0] = v[:r0]
+    out[len(e) - r1:] = v[len(e) - r1:]
     return out
 
 

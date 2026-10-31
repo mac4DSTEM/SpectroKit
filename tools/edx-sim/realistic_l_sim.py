@@ -8,6 +8,7 @@ Continuum (a DIFFERENT functional form from the fit's Kramers x Bernstein; unlis
     B(E) = 1500 (3/E) ((E0 - E)/(E0 - 3)) (1 - exp(-(E/0.5)^2.4)) exp(-(E - 3)/12) x (1 - 0.03 Phi((E - 1.839)/sigma)),  0 at E <= 0.1 keV
 the 3 % downward step at the Si K edge standing for the detector's Si dead layer and the Si-rich specimen, seen through the detector:
 Phi the normal CDF, sigma the line-width law's at 1.839 keV for 130 eV at Mn Ka (a measured edge is never a jump between two channels).
+Only the step is blurred (standard library only); the smooth rest of B is its own blur to first order (detector_blur.py blurs all).
 Lines: the unlisted L lines at intensities seen in a measured region's windows (Ge La 5e5, Ga La 3e5, Cu La 1e5); Ti Ka planted at 3000.
 `plantSn` is an optional extra plant, Sn L-alpha 3.44 keV and Sn K-alpha 25.27 keV (the K line outside the
 default 20 keV fit range, the L line inside it); the tests add it only where they name it, so the other keys are unchanged.

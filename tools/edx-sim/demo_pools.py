@@ -11,8 +11,8 @@ same pixels (`expected`, counts, 4 decimals), and the generator's planted compon
 `expected` is seen through the detector: sim_edx.py v2.0 draws its lines as Gaussians but its continuum, and the absorption edges in
 it, unblurred. Its continuum is forward.py's (beside this script, the same model), so each pool's continuum C is rebuilt from the
 truth arrays (recipe, thickness, density and live fraction per map pixel; recipe, thickness, density and rate scale per ladder
-region), checked against the generator's expected spectrum in 9.5-19 keV (no line there; the script stops if they differ by more
-than 1e-9), and replaced by its detector-blurred copy (`detector_blur.py`): expected - C + blur(C). `counts` stay the demo file's
+region), checked channel by channel against the generator's expected spectrum in 9.5-19 keV (no line there; the script stops if
+one differs by more than 1e-9), and replaced by its detector-blurred copy (`detector_blur.py`): expected - C + blur(C). `counts` stay the demo file's
 own Poisson draws of the unblurred spectrum: the blur moves at most 1.2 counts in a channel of a pool, 0.1 sigma or less.
 """
 import json
@@ -67,9 +67,9 @@ def recipe_spec(recipe):
 def through_detector(expected, cont, name):
     """The expected spectrum with its continuum `cont` replaced by the detector-blurred copy, after checking `cont` is its continuum."""
     e = np.asarray(expected, dtype=np.float64)
-    ratio = e[LINE_FREE].sum() / cont[LINE_FREE].sum()
-    if abs(ratio - 1) > 1e-9:
-        raise SystemExit('%s: the rebuilt continuum is not the generator\'s (9.5-19 keV ratio %r)' % (name, ratio))
+    worst = float(np.max(np.abs(e[LINE_FREE] / cont[LINE_FREE] - 1)))
+    if worst > 1e-9:
+        raise SystemExit('%s: the rebuilt continuum is not the generator\'s (9.5-19 keV, worst channel %r)' % (name, worst))
     return e - cont + db.blur(cont, FWD.axis.centre, T['edx']['FWHM_MnKa_eV'])
 
 
