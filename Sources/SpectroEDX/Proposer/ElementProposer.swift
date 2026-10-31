@@ -114,6 +114,9 @@ public nonisolated struct ProposalResult: Sendable {
     public var possible: [ElementCandidate] { candidates.filter { $0.aboveCriticalLevel && !$0.isProposed && $0.familyNote == nil } }
     /// At or above L_D but withheld by the family-consistency rule (`familyNote` says why).
     public var withheld: [ElementCandidate] { candidates.filter { $0.familyNote != nil } }
+    /// The uncorroborated tier: found by an L or M line whose confirmation line the fitted range or the beam cannot hold (`unconfirmable`),
+    /// strongest first. Possible only (`possibleReason` says why), never proposed; a consumer shows them and does not add them.
+    public var uncorroborated: [ElementCandidate] { candidates.filter(\.unconfirmable) }
 
     /// Explicit so the room's tests can state a result (the memberwise one is internal).
     public init(candidates: [ElementCandidate], sumPeaks: [SumPeakFinding], refused: [(element: String, reason: String)],
@@ -156,6 +159,8 @@ public nonisolated struct ElementProposer: Sendable {
     /// The confirmation-line rule and its overvoltage, see `ProposerPolicy`.
     package var familyConsistency = true
     package var familyOvervoltage = 2.0
+    /// The downward confirmation rule, see `ProposerPolicy.downwardFamilyMinimumZ`. nil: off.
+    package var downwardFamilyMinimumZ: Int?
     package var sumPeakFraction = 1.0
 
     /// Elements the line table lists that no spectrum of a material shows or that the app has no use for:
@@ -180,7 +185,8 @@ public nonisolated struct ElementProposer: Sendable {
     package var policy: ProposerPolicy {
         ProposerPolicy(currie: currie, pool: pool, excluded: excluded, minimumLineEnergyKeV: minimumLineEnergyKeV, thresholds: thresholds,
                        rangeMarginFWHM: rangeMarginFWHM, sumPeakToleranceKeV: sumPeakToleranceKeV, context: context,
-                       familyConsistency: familyConsistency, familyOvervoltage: familyOvervoltage, sumPeakFraction: sumPeakFraction)
+                       familyConsistency: familyConsistency, familyOvervoltage: familyOvervoltage, sumPeakFraction: sumPeakFraction,
+                       downwardFamilyMinimumZ: downwardFamilyMinimumZ)
     }
 
     /// The proposer with every choice named (`ProposerPolicy.default` is what the other initialiser builds).
@@ -188,7 +194,7 @@ public nonisolated struct ElementProposer: Sendable {
         self.init(currie: policy.currie, pool: policy.pool, minimumLineEnergyKeV: policy.minimumLineEnergyKeV)
         thresholds = policy.thresholds; excluded = policy.excluded
         rangeMarginFWHM = policy.rangeMarginFWHM; sumPeakToleranceKeV = policy.sumPeakToleranceKeV; context = policy.context
-        familyConsistency = policy.familyConsistency; familyOvervoltage = policy.familyOvervoltage
+        familyConsistency = policy.familyConsistency; familyOvervoltage = policy.familyOvervoltage; downwardFamilyMinimumZ = policy.downwardFamilyMinimumZ
         sumPeakFraction = policy.sumPeakFraction
     }
 
@@ -421,7 +427,16 @@ public nonisolated struct ElementProposer: Sendable {
         /// The confirmation rule for an element nominated by `line`: `withhold` says why it cannot be it; `unconfirmable` says why the rule
         /// could not run (its confirmation line is outside the fitted range or too close to the beam energy), which keeps a find possible.
         func confirmation(_ el: String, _ line: XRayLine, _ z: [Double]) -> (withhold: String?, unconfirmable: String?) {
-            guard familyConsistency, line.family != .K else { return (nil, nil) }
+            guard familyConsistency else { return (nil, nil) }
+            // The downward rule (opt-in): a K nomination of an element at or above `downwardFamilyMinimumZ` needs its L alpha line. A K line
+            // is the strong evidence, so an L line the range cannot hold (or below the tested energies) leaves the find as it is.
+            if line.family == .K {
+                let companionID = el + "_La"
+                guard let minimumZ = downwardFamilyMinimumZ, line.atomicNumber >= minimumZ, let c = XRayLines.line(companionID),
+                      c.energy >= max(lo, minimumLineEnergyKeV) + rangeMarginFWHM * fwhm(c.energy),
+                      c.energy <= hi - rangeMarginFWHM * fwhm(c.energy) else { return (nil, nil) }
+                return (companionPeak(el, line, companionID, c, z), nil)
+            }
             let companionID = el + (line.family == .L ? "_Ka" : "_La")
             guard let c = XRayLines.line(companionID) else { return (nil, nil) }
             guard c.energy >= lo + rangeMarginFWHM * fwhm(c.energy), c.energy <= hi - rangeMarginFWHM * fwhm(c.energy),
@@ -429,6 +444,11 @@ public nonisolated struct ElementProposer: Sendable {
                 return (nil, String(format: "Found by its %@ alone: its %@ (%.2f keV) lies outside the fitted range (%.2f to %.2f keV) or too close to the beam energy, so the confirmation line cannot be checked.",
                                     Self.lineLabel(line.id), Self.lineLabel(companionID), c.energy, lo, hi))
             }
+            return (companionPeak(el, line, companionID, c, z), nil)
+        }
+
+        /// nil when the companion line `c` has a residual peak of `confirmationSigma`; otherwise why the element cannot be it.
+        func companionPeak(_ el: String, _ line: XRayLine, _ companionID: String, _ c: XRayLine, _ z: [Double]) -> String? {
             // A peak of its own: a local maximum of the filtered residual within one Gaussian sigma of the line (the flank of a neighbour's
             // unmodelled peak 1.6 sigma away, Cu Kα beside Ta Lα, is not a confirmation).
             let sigma = fwhm(c.energy) / EDSLineModel.sigma2fwhm
@@ -436,9 +456,9 @@ public nonisolated struct ElementProposer: Sendable {
                 let h = widths[i] / 2
                 return !(max(0, i - h)...min(z.count - 1, i + h)).contains { $0 != i && z[$0] > z[i] }
             }.map { z[$0] }.max() ?? 0
-            guard zc < t.confirmationSigma else { return (nil, nil) }
-            return (String(format: "%@ %@ (%.2f keV) has a residual peak of %.1f \u{03C3}, below the %.0f \u{03C3} its %@ (%.2f keV) needs: not %@.",
-                          el, Self.lineLabel(companionID), c.energy, zc, t.confirmationSigma, Self.lineLabel(line.id), line.energy, el), nil)
+            guard zc < t.confirmationSigma else { return nil }
+            return String(format: "%@ %@ (%.2f keV) has a residual peak of %.1f \u{03C3}, below the %.0f \u{03C3} its %@ (%.2f keV) needs: not %@.",
+                          el, Self.lineLabel(companionID), c.energy, zc, t.confirmationSigma, Self.lineLabel(line.id), line.energy, el)
         }
 
         // The loop: the strongest residual peak, its candidates, the best of them joins.
@@ -668,6 +688,9 @@ public nonisolated struct ElementProposer: Sendable {
         if EPQLineWeights.bundled == nil { notes.append("The NIST EPQ line weights are missing from this build: the identification fit used eXSpy's Kβ weights.") }
         if familyConsistency {
             notes.append("Confirmation lines (validation: none): an element nominated by an L or M line needs its K or L alpha line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise it is withheld.")
+            if let z = downwardFamilyMinimumZ {
+                notes.append("Downward confirmation (validation: none): an element of Z \u{2265} \(z) nominated by a K line needs its L\u{03B1} line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it; otherwise it is withheld.")
+            }
             notes += candidates.compactMap { c in c.familyNote.map { "Confirmation withheld \(c.element): \($0)" } }
         }
         for b in unhealthy { notes.append(String(format: "Background check: data over model %.2f off the lines in %.1f to %.1f keV (0.80 to 1.25 is healthy); a find there is only possible.", b.ratio, b.lo, b.hi)) }

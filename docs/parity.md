@@ -268,9 +268,9 @@ continuum with an Al K-edge step, Poisson maximum-likelihood and reference shape
 fit-range sensitivity check, and, in EELS, the ratio-method areal density (`EELSEdgeQuantification.ratioMethod`, Egerton's
 ratio method on exSpy's GOS), which exSpy does not have as a function.
 
-The proposer's confirmation-line rule (R4, `ProposerPolicy.familyConsistency`) and its sum-peak plausibility bound
+The proposer's confirmation-line rule (R4, `ProposerPolicy.familyConsistency`; its downward form `downwardFamilyMinimumZ`, opt-in) and its sum-peak plausibility bound
 (`sumPeakFraction`): no Python counterpart;
-the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured cuts), `validation: "none"`; tests `FamilyConsistencyTests` and
+the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured cuts), `validation: "none"`; tests `FamilyConsistencyTests`, `DownwardFamilyTests` and
 `IdentificationLoopTests` on planted spectra, `RealFileAutoIDTests` (opt-in) on three measured files. The identification fit's Kβ weights are
 NIST EPQ's (`EDSLineWeights.epqK`), not eXSpy's; the quantification fit keeps eXSpy's, so no parity row moves.
 
