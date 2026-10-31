@@ -72,9 +72,15 @@ struct SumEscapeExplainedTests {
     @Test(arguments: [1, 2])
     func simSumPeaksTheModelCoversAreNotNamed(region: Int) throws {
         let counts = Self.simCounts(region)
-        let (off, qOff) = try Self.check(Self.input(counts: counts, axis: Self.sim.axis, elements: Self.listed, sumEscape: nil))
+        // Off: an explicit model with both terms off (the default runs sum peaks when the data support them, below).
+        let (off, qOff) = try Self.check(Self.input(counts: counts, axis: Self.sim.axis, elements: Self.listed, sumEscape: SumEscapeModel()))
         #expect(qOff.sumEscapeCounts == nil)
         #expect(off.names.contains("Ar"), "premise: without the model the Al+Al sum is named as Ar: \(off.summary)")
+        // The default (`SumPeakRule.whenSignificant`): the Al+Al self pair is significant, the sum peaks are kept and explained.
+        let (byDefault, qDefault) = try Self.check(Self.input(counts: counts, axis: Self.sim.axis, elements: Self.listed, sumEscape: nil))
+        #expect(qDefault.appliedSumEscape == SumEscapeModel(sumPeaks: true))
+        #expect(qDefault.sumEscapeCounts != nil)
+        #expect(!byDefault.names.contains("Ar") && !byDefault.names.contains("Ag"), "the default explains the Al+Al sum: \(byDefault.summary)")
         let (on, q) = try Self.check(Self.input(counts: counts, axis: Self.sim.axis, elements: Self.listed, sumEscape: .both))
         let sumCounts = try #require(q.sumEscapeCounts)
         #expect(sumCounts.reduce(0, +) > 0.5 * Self.sim.regions[region].components.filter { $0.key.hasPrefix("sum_") }.values.reduce(0, +))

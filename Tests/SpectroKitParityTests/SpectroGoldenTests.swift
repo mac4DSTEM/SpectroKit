@@ -164,8 +164,9 @@ enum GoldenQ {
     }
 
     static func input(_ method: QuantificationMethod, image: LoadedSpectrumImage) -> PooledQuantificationInput {
+        // The fit without sum peaks (an explicit off model): the baseline records the exSpy-equivalent line model.
         PooledQuantificationInput(counts: image.sum(mask: nil), axis: image.energyAxis, method: method, metadata: image.metadata,
-                                  regionName: "Whole map", pixelCount: image.metadata.pixelCount)
+                                  regionName: "Whole map", pixelCount: image.metadata.pixelCount, sumEscape: SumEscapeModel())
     }
 }
 
@@ -224,7 +225,9 @@ enum SpectroGolden {
     static func pooledInput(counts: [UInt64], axis: EnergyAxis, method: QuantificationMethod, name: String) -> PooledQuantificationInput {
         let meta = SpectrumImageMetadata(fileName: name, filePath: "", scanWidth: 1, scanHeight: 1, channelCount: axis.size,
                                          energyOffsetEV: axis.offset * 1000, energyDispersionEV: axis.scale * 1000)
-        return PooledQuantificationInput(counts: counts, axis: axis, method: method, metadata: meta, regionName: "synthetic", pixelCount: 1)
+        // The fit without sum peaks (an explicit off model): the baseline records the exSpy-equivalent line model.
+        return PooledQuantificationInput(counts: counts, axis: axis, method: method, metadata: meta, regionName: "synthetic", pixelCount: 1,
+                                         sumEscape: SumEscapeModel())
     }
 
     /// The fit, its CSV, the range-sensitivity statement, the proposer on the fit's own settings and the unlisted-line check.

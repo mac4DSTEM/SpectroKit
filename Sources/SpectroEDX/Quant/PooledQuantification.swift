@@ -14,6 +14,10 @@
 //      is then computed WITHOUT the correction and the result says so; it never pretends.
 //
 //  DEVIATIONS (named):
+//    * Sum peaks (`FitPolicy.sumPeaks`, default `.whenSignificant`): exSpy fits one Gaussian per line and no sum peaks. The fit
+//      tests the strongest line's self pair and, when its pile-up coefficient is 3 sigma above 0, keeps the sum peaks of the four
+//      strongest lines (`EDSSumEscapeFit`, unvalidated); otherwise it is the exSpy-equivalent fit bit for bit. `.off` always is.
+//      The axis refinement runs without them. The footer names the decision with its number.
 //    * Absorption is iterated to 1e-7 % (eXSpy stops at 0.5 %): the sigma terms are finite differences of
 //      the composition, and a loop that stops at 0.5 % would put steps into them.
 //    * The absorption "model spread" is |at%(geometric-mean transmission) - at%(weighted-mean transmission)|. The
@@ -86,8 +90,9 @@ public nonisolated struct PooledQuantificationInput: Sendable {
     /// The choices the library made about the fit and the step to composition (`QuantificationPolicy.default` is what it has always
     /// done). A non-default policy is named in the result's footer. It is not part of `method`, whose hash it leaves alone.
     public var policy: QuantificationPolicy
-    /// The optional sum-peak and common-escape-fraction components of the fit (0.10.0; nil, the default, runs the fit as it always ran).
-    /// Unvalidated (no Python reference); named in the footer when on.
+    /// The sum-peak and common-escape-fraction components of the fit, chosen by the caller (0.10.0). nil, the default, leaves the
+    /// choice to `policy.fit.sumPeaks` (sum peaks kept when the data support them); a model runs as given, and `SumEscapeModel()`
+    /// (both off) is the default fit as it ran before sum peaks were the default. Unvalidated (no Python reference); named in the footer.
     public var sumEscape: SumEscapeModel? = nil
 
     public init(counts: [UInt64], axis: EnergyAxis, method: QuantificationMethod, metadata: SpectrumImageMetadata,
@@ -177,6 +182,9 @@ public nonisolated struct PooledQuantification: Sendable {
     /// A2: a caveat on the at% rows ("assumes the listed elements only; unlisted: Cu (net 139 411) ..."), set by the unlisted-line
     /// check; "unlisted-line check running" while it runs; nil when the check found nothing. Never blanks a number.
     public var abundanceCaveat: String? = nil
+    /// The sum-peak (and escape) model the reported fit ran with; nil for the fit without sum peaks (one Gaussian per line).
+    /// Set by the caller's `PooledQuantificationInput.sumEscape`, or by `FitPolicy.sumPeaks` when the caller passes none.
+    public var appliedSumEscape: SumEscapeModel? = nil
 
     public var hasAbundance: Bool { abundanceRefusal == nil }
     /// "\u{03C7}\u{00B2}\u{1D63} 54.8 (Pearson)" or "reduced deviance 1.02": shown beside the at% always (R7).
@@ -271,22 +279,84 @@ public nonisolated enum PooledQuantifier {
         try SpectroCancellation.check(cancelled)
         progress?(0.85)
         var sumEscapeLines: [String] = []
-        var sumEscapeCounts: [Double]?
+        var applied: SumEscapeModel?
+        var keptSumEscape: SumEscapeResult?
         do {
-            if let model = input.sumEscape, !model.isOff {
-                let r = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings, model: model,
+            if let model = input.sumEscape {
+                // The caller chose the model: it runs as asked (an `isOff` model is the default fit).
+                if !model.isOff {
+                    let r = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings, model: model,
                                                     escapeRatioWarning: policy.fit.escapeRatioWarning)
-                fit = r.fit; sumEscapeLines = r.parameters
-                var full = [Double](repeating: 0, count: axis.size)
-                for (k, ch) in r.fit.channels.enumerated() where k < r.componentCounts.count { full[ch] = r.componentCounts[k] }
-                sumEscapeCounts = full
+                    fit = r.fit; sumEscapeLines = r.parameters; applied = model; keptSumEscape = r
+                } else {
+                    fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings, escapeRatioWarning: policy.fit.escapeRatioWarning)
+                }
             } else {
-                fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings, escapeRatioWarning: policy.fit.escapeRatioWarning)
+                switch policy.fit.sumPeaks {
+                case .off:
+                    fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings, escapeRatioWarning: policy.fit.escapeRatioWarning)
+                case .always:
+                    let model = SumEscapeModel(sumPeaks: true)
+                    let r = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings, model: model,
+                                                    escapeRatioWarning: policy.fit.escapeRatioWarning)
+                    fit = r.fit; applied = model; sumEscapeLines = r.parameters; keptSumEscape = r
+                case .whenSignificant:
+                    // The test: the self pair of the strongest line alone (Al K-alpha + Al K-alpha in an Al alloy), the largest sum
+                    // peak and the one least likely to sit on an unlisted line. The full model's cross pairs can absorb the misfit of an
+                    // unlisted line at E_i + E_j (Ni K-alpha + O K-alpha on Cu K-alpha, measured on a synthetic spectrum with no pile-up),
+                    // so they are not the test.
+                    let probe = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings,
+                                                        model: SumEscapeModel(sumPeaks: true, parentCount: 1),
+                                                        escapeRatioWarning: policy.fit.escapeRatioWarning)
+                    let misfit = method.estimator == .poissonMaximumLikelihood ? probe.fit.reducedDeviance : probe.fit.pearsonReducedChiSquared
+                    let z = SumPeakRule.significance(probe, misfit: misfit)
+                    let pair = probe.sumPeaks.first?.label ?? "no self pair in the fitted range"
+                    var kept = false
+                    if probe.converged && z >= policy.fit.sumPeakSignificance {
+                        let model = SumEscapeModel(sumPeaks: true)
+                        let r = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings, model: model,
+                                                        escapeRatioWarning: policy.fit.escapeRatioWarning)
+                        if r.converged {
+                            fit = r.fit; applied = model; kept = true; keptSumEscape = r
+                            sumEscapeLines = [String(format: "sum peaks kept: %@ alone is c / \u{03C3}_c = %.1f \u{2265} %g above 0 (\u{03C3}_c scaled by \u{221A}max(misfit, 1))",
+                                                     pair, z, policy.fit.sumPeakSignificance)] + r.parameters
+                            // A real line under the self pair is read as pile-up and never named by the unlisted-line check: say which.
+                            if let e = probe.sumPeaks.first?.energyKeV {
+                                let near = SumPeakRule.coincidentLines(energy: e, resolutionMnKaEV: fitSettings.resolutionMnKaEV, listed: active)
+                                if !near.isEmpty {
+                                    let names = near.prefix(4).map { String(format: "%@ %.3f keV", $0.id, $0.energy) }.joined(separator: ", ")
+                                    let caveat = String(format: "the %@ sum peak (%.3f keV) lies within one FWHM of %@: a real line there is read as pile-up; list the element to test it",
+                                                        pair, e, names)
+                                    sumEscapeLines.insert(caveat, at: 1)
+                                    warnings.append(caveat)
+                                }
+                            }
+                        } else {
+                            fit = probe.baseline
+                            sumEscapeLines = ["sum peaks tested, not kept: the full sum-peak model did not converge; the default fit (one Gaussian per line, no sum peaks)"]
+                        }
+                    } else {
+                        fit = probe.baseline
+                    }
+                    if !kept && sumEscapeLines.isEmpty {
+                        // Not supported by the data: the default fit (the baseline of the same settings, bit for bit).
+                        sumEscapeLines = [String(format: "sum peaks tested, not kept: %@ alone is c / \u{03C3}_c = %@ (needs %g)%@; the default fit (one Gaussian per line, no sum peaks)",
+                                                 pair, z.isFinite ? String(format: "%.1f", z) : "n/a", policy.fit.sumPeakSignificance,
+                                                 probe.converged ? "" : ", the alternation did not converge")]
+                    }
+                }
             }
         }
         catch {
             let why = (error as? LocalizedError)?.errorDescription ?? "\(error)"
             throw QuantificationRefusal("The fit could not run: \(why).")
+        }
+        // The sum and escape peaks the kept model explains, on the full axis (0 outside the fitted channels).
+        var sumEscapeCounts: [Double]?
+        if let r = keptSumEscape {
+            var full = [Double](repeating: 0, count: axis.size)
+            for (k, ch) in r.fit.channels.enumerated() where k < r.componentCounts.count { full[ch] = r.componentCounts[k] }
+            sumEscapeCounts = full
         }
         // The fit appends the weak-line bias note to every continuum fit; it is a statement about a weak line beside Al K-alpha
         // (measured at Mg K-alpha on synthetic data), so it is kept only when that situation is in this result.
@@ -419,7 +489,14 @@ public nonisolated enum PooledQuantifier {
             absorption: absorption, warnings: warnings, qualityLabel: qualityLabel, quality: quality, footerLines: footer,
             fitSettings: fitSettings, fitRange: fitRange)
         result.sumEscapeCounts = sumEscapeCounts
+        result.appliedSumEscape = applied
         return result
+    }
+
+    /// The model a refit of the same quantification must run with so that it repeats this result's sum-peak decision instead of
+    /// taking it again on other data (the unlisted-line and fit-range checks): the applied model, or an off model (the default fit).
+    package static func sameSumEscape(as q: PooledQuantification) -> SumEscapeModel {
+        q.appliedSumEscape ?? SumEscapeModel()
     }
 
     /// What every shown sigma covers (WP3b F3 wording): the fit's counting statistics, not the choice of model.
