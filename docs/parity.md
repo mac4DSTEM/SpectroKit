@@ -274,6 +274,11 @@ the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured
 `IdentificationLoopTests` on planted spectra, `RealFileAutoIDTests` (opt-in) on three measured files. The identification fit's Kβ weights are
 NIST EPQ's (`EDSLineWeights.epqK`), not eXSpy's; the quantification fit keeps eXSpy's, so no parity row moves.
 
+The continuum's step at an edge (`FitPolicy.continuumEdgeStep`): `.sharp` (default) cuts the segments at the edge channel;
+`.broadened` (opt-in) weights each segment by the detector's Gaussian step at its edges, sigma from the line-width law at the edge.
+No Python counterpart: exSpy's background is a polynomial with no edge. `validation: "none"`; tests `ContinuumEdgeBroadeningTests`
+on a generated Al film whose edge is convolved with the detector (no measured spectrum committed).
+
 Detector Si internal fluorescence: eXSpy 0.3.2 has no term for it (`EDSModel.add_family_lines` fits one Gaussian per X-ray line; no dead layer
 and no detector efficiency either, the k-factor carries the efficiency), so the Si internal-fluorescence counts at Si Kα land in its `Si_Ka`
 area. SpectroKit's default fit does the same; its `.countsAboveEdge` reference shape, which would remove them, is opt-in. The simulator

@@ -51,6 +51,11 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     public var continuumEdges: [Double]
     /// Bernstein basis with non-negative coefficients (the continuum cannot go negative). False: free-sign monomials.
     public var continuumNonNegative: Bool
+    /// How the continuum steps at each edge. Default `.sharp`, the form the registered synthetic results were measured with.
+    /// `.broadened` blurs the step by the detector resolution, as a measured edge is: on a pure Al spectrum (Titan, Super-X) the
+    /// sharp step left the model 39 % above the data in 1.65-2.2 keV, the broadened one 19 %; on a synthetic Al film with a
+    /// broadened edge a weak Si K-alpha read -38.7 % sharp and -25.4 % broadened.
+    public var continuumEdgeStep: ContinuumEdgeStep
     /// A detector efficiency multiplying the whole continuum form (its low-energy roll-off modelled instead of absorbed in the
     /// polynomial). Default nil: the Kramers-only form.
     public var continuumEfficiency: DetectorLayers?
@@ -73,13 +78,55 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                 continuumEfficiency: DetectorLayers? = nil, escapePeaks: Bool = true, maximumPolynomialOrder: Int = 8,
                 irls: IRLSSettings = IRLSSettings(), escapeRatioWarning: Double = 0.05,
                 axisRefinement: AxisRefinementSettings = AxisRefinementSettings(),
-                lineTail: LineTail? = nil) {
+                lineTail: LineTail? = nil, continuumEdgeStep: ContinuumEdgeStep = .sharp) {
         self.fitFromKeV = fitFromKeV; self.defaultUpperLimitKeV = defaultUpperLimitKeV
         self.continuumOrders = continuumOrders; self.continuumEdges = continuumEdges
         self.continuumNonNegative = continuumNonNegative; self.continuumEfficiency = continuumEfficiency
         self.escapePeaks = escapePeaks; self.maximumPolynomialOrder = maximumPolynomialOrder
         self.irls = irls; self.escapeRatioWarning = escapeRatioWarning; self.axisRefinement = axisRefinement
-        self.lineTail = lineTail
+        self.lineTail = lineTail; self.continuumEdgeStep = continuumEdgeStep
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case fitFromKeV, defaultUpperLimitKeV, continuumOrders, continuumEdges, continuumNonNegative, continuumEdgeStep
+        case continuumEfficiency, escapePeaks, lineTail, maximumPolynomialOrder, irls, escapeRatioWarning, axisRefinement
+    }
+
+    /// The synthesized encoding, except that `continuumEdgeStep` is written only when it is not the default, so the default
+    /// policy's canonical JSON stays byte for byte what it was before the field existed.
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(fitFromKeV, forKey: .fitFromKeV)
+        try c.encode(defaultUpperLimitKeV, forKey: .defaultUpperLimitKeV)
+        try c.encode(continuumOrders, forKey: .continuumOrders)
+        try c.encode(continuumEdges, forKey: .continuumEdges)
+        try c.encode(continuumNonNegative, forKey: .continuumNonNegative)
+        if continuumEdgeStep != .sharp { try c.encode(continuumEdgeStep, forKey: .continuumEdgeStep) }
+        try c.encodeIfPresent(continuumEfficiency, forKey: .continuumEfficiency)
+        try c.encode(escapePeaks, forKey: .escapePeaks)
+        try c.encodeIfPresent(lineTail, forKey: .lineTail)
+        try c.encode(maximumPolynomialOrder, forKey: .maximumPolynomialOrder)
+        try c.encode(irls, forKey: .irls)
+        try c.encode(escapeRatioWarning, forKey: .escapeRatioWarning)
+        try c.encode(axisRefinement, forKey: .axisRefinement)
+    }
+
+    /// A stored policy written before `continuumEdgeStep` existed reads the default (`.sharp`, the form it was run with).
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(fitFromKeV: try c.decode(Double.self, forKey: .fitFromKeV),
+                  defaultUpperLimitKeV: try c.decode(Double.self, forKey: .defaultUpperLimitKeV),
+                  continuumOrders: try c.decode([Int].self, forKey: .continuumOrders),
+                  continuumEdges: try c.decode([Double].self, forKey: .continuumEdges),
+                  continuumNonNegative: try c.decode(Bool.self, forKey: .continuumNonNegative),
+                  continuumEfficiency: try c.decodeIfPresent(DetectorLayers.self, forKey: .continuumEfficiency),
+                  escapePeaks: try c.decode(Bool.self, forKey: .escapePeaks),
+                  maximumPolynomialOrder: try c.decode(Int.self, forKey: .maximumPolynomialOrder),
+                  irls: try c.decode(IRLSSettings.self, forKey: .irls),
+                  escapeRatioWarning: try c.decode(Double.self, forKey: .escapeRatioWarning),
+                  axisRefinement: try c.decode(AxisRefinementSettings.self, forKey: .axisRefinement),
+                  lineTail: try c.decodeIfPresent(LineTail.self, forKey: .lineTail),
+                  continuumEdgeStep: try c.decodeIfPresent(ContinuumEdgeStep.self, forKey: .continuumEdgeStep) ?? .sharp)
     }
 
     /// The Al K absorption edge, keV (X-ray Data Booklet, Table 1-1): the default continuum split.

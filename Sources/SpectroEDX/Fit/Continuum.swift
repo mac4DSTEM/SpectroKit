@@ -29,6 +29,22 @@
 //  the model has no nonlinear parameter: n_0 + 1 and n_1 + 1 coefficients, 10 + 6 = 16 by default, all
 //  linear and non-negative.
 //
+//  THE STEP SEEN THROUGH THE DETECTOR (opt-in `ContinuumEdgeStep.broadened`): a detector records the incoming spectrum
+//  convolved with its resolution, so a measured edge is a Gaussian-blurred step (about 75 eV FWHM at 1.56 keV for 128 eV at
+//  Mn K-alpha), never a jump between two channels. The broadened form weights segment s by
+//      w_s(E) = Phi((E - a_s) / sigma(a_s)) - Phi((E - b_s) / sigma(b_s)),
+//  Phi the standard normal CDF, sigma the line-width law's Gaussian sigma at the edge (`XRayLines.fwhm`, the line model's own
+//  resolution), no factor at the fitted range's ends; each segment's polynomial continues past its edge at its end value
+//  (t clamped to [0, 1]). The weights sum to 1 whenever every segment holds channels (a segment with none, two edges in one
+//  channel gap, is skipped and its weight is lost) and are non-negative, so the continuum stays non-negative. This is the step
+//  convolved with the detector Gaussian when the polynomials are flat across the edge's width. An edge outside the fitted range
+//  is not modelled, including the blurred tail of a step just outside it.
+//  Measured: on a pure Al wedge (Titan 200 kV, Super-X; Snelson, Collins, MacArthur, University of Leeds, doi 10.5518/1826,
+//  CC BY 4.0) the sharp step made the model fall 351 counts more than the data between the channels at 1.559 and 1.564 keV,
+//  left the data 1677 counts above the model in 1.53-1.65 keV and the model 39 % above the data in 1.65-2.2 keV; broadened:
+//  42 counts, 907 counts and 19 %. `.sharp` (the default) is the earlier form, value for value: the kit's registered
+//  synthetic generators plant an unbroadened step, so making `.broadened` the default re-measures those results first.
+//
 //  The Al K edge energy 1.5596 keV is the standard tabulated value (X-ray Data Booklet, Table 1-1).
 //  The Si K edge (1.839 keV, a detector dead-layer step) is NOT in the default: add it to `edges` to test it.
 //
@@ -59,7 +75,7 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
 
     public static func == (a: ContinuumForm, b: ContinuumForm) -> Bool {
         a.beamEnergy == b.beamEnergy && a.edges == b.edges && a.orders == b.orders && a.nonNegative == b.nonNegative
-            && sameEfficiency(a.efficiency, b.efficiency)
+            && sameEfficiency(a.efficiency, b.efficiency) && a.edgeStep == b.edgeStep
     }
 
     /// Beam energy E0 in keV (the continuum ends there).
@@ -74,22 +90,27 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
     /// roll-off is modelled and P_s only carries what epsilon does not. nil: the round-1 form. The model is generic
     /// (`DetectorEfficiency`), not a measured Super-X calibration.
     package var efficiency: (any DetectorEfficiency)?
+    /// How the step at each edge is drawn: sharp at the edge channel (default) or broadened by the detector resolution.
+    package var edgeStep: ContinuumEdgeStep
 
     package static let alKEdge = FitPolicy.alKEdgeKeV
 
     package init(beamEnergy: Double, edges: [Double] = [ContinuumForm.alKEdge], orders: [Int] = [9, 5],
-                 nonNegative: Bool = true, efficiency: (any DetectorEfficiency)? = nil) {
+                 nonNegative: Bool = true, efficiency: (any DetectorEfficiency)? = nil,
+                 edgeStep: ContinuumEdgeStep = .sharp) {
         precondition(orders.count == edges.count + 1, "ContinuumForm needs one order per segment")
         precondition(zip(edges, edges.dropFirst()).allSatisfy { $0 < $1 }, "edges ascend")
         self.beamEnergy = beamEnergy; self.edges = edges; self.orders = orders; self.nonNegative = nonNegative
-        self.efficiency = efficiency
+        self.efficiency = efficiency; self.edgeStep = edgeStep
     }
 
     package var coefficientCount: Int { orders.reduce(0) { $0 + $1 + 1 } }
 
     /// The basis columns over `energies` (ascending, the fitted channels). A coefficient with no
     /// support (an empty segment) is not produced. `names` label them for the result.
-    package func columns(energies: [Double]) -> (values: [[Double]], names: [String]) {
+    /// `resolutionMnKaEV`: the detector resolution that broadens each edge step (the line model's). nil, or `edgeStep == .sharp`,
+    /// or no edge inside the range: the sharp form, value for value the form before broadening existed.
+    package func columns(energies: [Double], resolutionMnKaEV: Double? = nil) -> (values: [[Double]], names: [String]) {
         guard let lo = energies.first, let hi = energies.last, hi > lo else { return ([], []) }
         // Segment boundaries inside the fitted range.
         var bounds = [lo]
@@ -99,6 +120,9 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
         let eRef = 2.0
         let epsRef = efficiency?.efficiency(energyKeV: eRef) ?? 1
         let kRef = (beamEnergy - eRef) / eRef * (epsRef > 0 ? epsRef : 1)
+        if edgeStep == .broadened, let r = resolutionMnKaEV, bounds.count > 2 {
+            return broadenedColumns(energies: energies, bounds: bounds, segmentIndex: segmentIndex, resolutionMnKaEV: r, kRef: kRef)
+        }
         var values: [[Double]] = [], names: [String] = []
         for s in 0..<(bounds.count - 1) {
             let a = bounds[s], b = bounds[s + 1]
@@ -126,6 +150,47 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
         return (values, names)
     }
 
+    /// The broadened form (header): B(E) = K(E) eps(E) sum_s w_s(E) P_s(clamp(t_s, 0, 1)) / kRef, w_s = Phi_a - Phi_b.
+    private func broadenedColumns(energies: [Double], bounds: [Double], segmentIndex: [Int], resolutionMnKaEV r: Double,
+                                  kRef: Double) -> (values: [[Double]], names: [String]) {
+        let last = bounds.count - 2
+        func sigma(_ e: Double) -> Double {
+            // A width law with no real width at the edge (a resolution far below the line-width law's floor) falls back to the
+            // Mn K-alpha width, as the proposer does.
+            let fwhm = XRayLines.fwhm(resolutionMnKaEV: r, atEnergy: e) ?? r / 1000
+            return max(fwhm, 1e-9) / (8 * log(2.0)).squareRoot()
+        }
+        func phi(_ z: Double) -> Double { 0.5 * erfc(-z / 2.0.squareRoot()) }
+        var values: [[Double]] = [], names: [String] = []
+        for s in 0...last {
+            let a = bounds[s], b = bounds[s + 1]
+            // The order follows the segment's own channels, as in the sharp form.
+            let own = energies.filter { $0 >= a && (s == last ? $0 <= b : $0 < b) }.count
+            guard own > 0 else { continue }
+            let order = min(orders[segmentIndex[s]], own - 1)
+            let sa = s > 0 ? sigma(a) : 0, sb = s < last ? sigma(b) : 0
+            // Phi(lower edge) - Phi(upper edge): the weights telescope to 1 for any number of edges (a product would over-count
+            // between two close edges); max(0, ...) guards the far tails where the lower edge's sigma is the smaller.
+            let weight = energies.map { e -> Double in
+                max(0, (s > 0 ? phi((e - a) / sa) : 1) - (s < last ? phi((e - b) / sb) : 0))
+            }
+            for k in 0...order {
+                var col = [Double](repeating: 0, count: energies.count)
+                for (i, e) in energies.enumerated() where weight[i] > 0 {
+                    let t = min(max((e - a) / (b - a), 0), 1)
+                    let basis = nonNegative
+                        ? binomial(order, k) * pow(t, Double(k)) * pow(1 - t, Double(order - k))
+                        : pow(t, Double(k))
+                    let eps = efficiency?.efficiency(energyKeV: e) ?? 1
+                    col[i] = ((beamEnergy - e) / e) * eps / kRef * basis * weight[i]
+                }
+                values.append(col)
+                names.append("continuum s\(segmentIndex[s]) t^\(k)")
+            }
+        }
+        return (values, names)
+    }
+
     private func binomial(_ n: Int, _ k: Int) -> Double {
         var r = 1.0
         for i in 0..<k { r = r * Double(n - i) / Double(i + 1) }
@@ -136,7 +201,8 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
     package var label: String {
         let eps = efficiency.map { "\u{00D7}\u{03B5}(\($0.sourceName))" } ?? ""
         let ord = orders.map(String.init).joined(separator: ",")
-        let split = edges.isEmpty ? "no edge split" : "split at " + edges.map { "\($0) keV" }.joined(separator: ", ")
+        let step = edgeStep == .broadened ? " (step broadened by the detector resolution)" : ""
+        let split = edges.isEmpty ? "no edge split" : "split at " + edges.map { "\($0) keV" }.joined(separator: ", ") + step
         return "continuum: Kramers\(eps)\u{00D7}\(nonNegative ? "Bernstein" : "poly")(\(ord)), \(split); orders chosen on synthetic data"
     }
 
@@ -152,4 +218,12 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
         + "unmeasured on real data. Weak-line bias measured on synthetic data: \u{0394} = \u{2212}295 \u{00B1} 31 counts at 900 planted Mg K\u{03B1} "
         + "(generator A, no tail: continuum\u{2013}line projection) and \u{2212}310 \u{00B1} 23 at 882 (generator S); "
         + "\u{2212}402 \u{00B1} 33 at 3000 (A) and \u{2212}310 \u{00B1} 23 at 2899 (S)"
+}
+
+/// How the continuum's step at an absorption edge is drawn (`FitPolicy.continuumEdgeStep`).
+public nonisolated enum ContinuumEdgeStep: String, Sendable, Codable, Equatable {
+    /// Seen through the detector: each segment weighted by the detector's Gaussian step at its edges.
+    case broadened
+    /// A jump between the two channels either side of the edge (the default).
+    case sharp
 }
