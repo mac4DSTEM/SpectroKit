@@ -84,7 +84,8 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     /// The detector Si dead-layer term of the continuum, typed or fitted (`ContinuumDeadLayer`); it multiplies
     /// `continuumEfficiency` when both are set. Default nil: off. It is not neutral: on the planted pool without a dead layer
     /// (`eds-absorption-truth.json`) a fitted thickness reads 0.21 um and moves Si K-alpha by -2.3 sigma (the step takes up part of
-    /// the sample-side continuum misfit above the Al K edge). A typed 0 is the default fit exactly.
+    /// the sample-side continuum misfit above the Al K edge); measured with sum peaks off, on the fit without the sum/escape model.
+    /// A typed 0 is the default fit exactly.
     public var continuumDeadLayer: ContinuumDeadLayer?
     /// Fit a Si-escape copy of every line group above the Si K edge with an area of its own. Default true; false is the reference's.
     public var escapePeaks: Bool
@@ -142,8 +143,9 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
              continuumDeadLayer, lineWeights
     }
 
-    /// The synthesized encoding in a fixed key order. Every field with a value is written, `continuumEdgeStep` and `sumPeaks`
-    /// included; a stored policy without them reads the form it was run with (see `init(from:)`).
+    /// Every non-optional field is written, `sumPeaks`, `sumPeakSignificance`, `continuumEdgeStep` and `lineWeights` included,
+    /// default or not. An optional that is nil (`continuumEfficiency`, `lineTail`, `continuumDeadLayer`) is left out, so the
+    /// default policy has no `continuumDeadLayer` key. Key order is not fixed here; `QuantificationPolicy.canonicalJSON` sorts it.
     public func encode(to encoder: any Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(fitFromKeV, forKey: .fitFromKeV)
@@ -165,9 +167,10 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         try c.encode(lineWeights, forKey: .lineWeights)
     }
 
-    /// A policy stored before sum peaks were the default has no `sumPeaks`: it reads `.off`, the fit it was stored with (and gets the
-    /// non-default footer line). One stored before `continuumEdgeStep` existed reads `.sharp`, the form it was run with; one without `lineWeights` reads `.exspy`. Every other
-    /// field is required, as before.
+    /// A field added after policies were first stored reads, when its key is missing, the value that policy was run with: `sumPeaks`
+    /// `.off` (the fit before sum peaks were the default; it gets the non-default footer line), `sumPeakSignificance` 3,
+    /// `continuumEdgeStep` `.sharp`, `lineWeights` `.exspy`. A missing optional (`continuumEfficiency`, `lineTail`,
+    /// `continuumDeadLayer`) reads nil. Every other field is required.
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(fitFromKeV: try c.decode(Double.self, forKey: .fitFromKeV),

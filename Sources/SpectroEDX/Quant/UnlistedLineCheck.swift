@@ -280,7 +280,7 @@ public nonisolated enum UnlistedLineChecker {
         refit.method.elements.removeAll { e in elements.contains { $0.element == e.symbol } }
         refit.method.elements += elements.map { .init(symbol: $0.element, role: .fitOnly, isManual: false) }
         refit.refinement = q.refinement
-        refit.sumEscape = PooledQuantifier.sameSumEscape(as: q)   // the reported fit's sum-peak decision, not a new one
+        refit = PooledQuantifier.pinningReportedChoices(refit, as: q)   // the reported fit's sum-peak decision and dead layer, not new ones
         let after: PooledQuantification
         do { after = try PooledQuantifier.run(refit, tables: nil, cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(f * 0.95) } }) }
         catch let c as SpectroCancelled { throw c }

@@ -114,6 +114,55 @@ struct QuantificationPolicyTests {
         #expect(throws: QuantificationRefusal.self) { try Self.run(c, policy: Self.fit(FitPolicy(continuumOrders: [9]))) }
     }
 
+    /// Every FitPolicy field at a non-default value survives `canonicalJSON`: it decodes to an equal policy and re-encodes to the
+    /// same string. The default writes no `continuumDeadLayer` key; a stored policy without it reads nil, one without `sumPeaks`
+    /// reads `.off`.
+    @Test func testEveryNonDefaultFitPolicyFieldRoundTripsThroughCanonicalJSON() throws {
+        var irls = IRLSSettings(); irls.maxIterations = 50
+        var refinement = AxisRefinementSettings(); refinement.refineGain = false
+        let f = FitPolicy(fitFromKeV: 0.3, defaultUpperLimitKeV: 15, continuumOrders: [7, 4], continuumEdges: [1.5],
+                          continuumNonNegative: false, continuumEfficiency: DetectorLayers(aluminiumNm: 20), escapePeaks: false,
+                          maximumPolynomialOrder: 6, irls: irls, escapeRatioWarning: 0.1, axisRefinement: refinement,
+                          lineTail: LineTail(fraction: 0.02, slopeKeV: 0.1, source: "typed"), sumPeaks: .always,
+                          sumPeakSignificance: 5, continuumEdgeStep: .sharp, continuumDeadLayer: .given(microns: 0.3),
+                          lineWeights: .epq)
+        let d = FitPolicy.default
+        #expect(f.fitFromKeV != d.fitFromKeV && f.defaultUpperLimitKeV != d.defaultUpperLimitKeV && f.continuumOrders != d.continuumOrders
+                && f.continuumEdges != d.continuumEdges && f.continuumNonNegative != d.continuumNonNegative
+                && f.continuumEfficiency != d.continuumEfficiency && f.escapePeaks != d.escapePeaks
+                && f.maximumPolynomialOrder != d.maximumPolynomialOrder && f.irls != d.irls && f.escapeRatioWarning != d.escapeRatioWarning
+                && f.axisRefinement != d.axisRefinement && f.lineTail != d.lineTail && f.sumPeaks != d.sumPeaks
+                && f.sumPeakSignificance != d.sumPeakSignificance && f.continuumEdgeStep != d.continuumEdgeStep
+                && f.continuumDeadLayer != d.continuumDeadLayer && f.lineWeights != d.lineWeights)
+        let p = QuantificationPolicy(fit: f)
+        let json = p.canonicalJSON
+        let back = try JSONDecoder().decode(QuantificationPolicy.self, from: Data(json.utf8))
+        #expect(back == p)
+        #expect(back.canonicalJSON == json)
+
+        // The default has no dead-layer key; a stored policy without it, or without `sumPeaks`, reads nil and `.off`.
+        func fitObject(_ s: String) throws -> [String: Any] {
+            let o = try #require(try JSONSerialization.jsonObject(with: Data(s.utf8)) as? [String: Any])
+            return try #require(o["fit"] as? [String: Any])
+        }
+        func decode(fit: [String: Any], like s: String) throws -> QuantificationPolicy {
+            var o = try #require(try JSONSerialization.jsonObject(with: Data(s.utf8)) as? [String: Any])
+            o["fit"] = fit
+            return try JSONDecoder().decode(QuantificationPolicy.self, from: JSONSerialization.data(withJSONObject: o))
+        }
+        let defaultJSON = QuantificationPolicy.default.canonicalJSON
+        #expect(try fitObject(defaultJSON)["continuumDeadLayer"] == nil)
+        #expect(!defaultJSON.contains("continuumDeadLayer"))
+        var withoutDeadLayer = try fitObject(json)
+        #expect(withoutDeadLayer.removeValue(forKey: "continuumDeadLayer") != nil)
+        let noDeadLayer = try decode(fit: withoutDeadLayer, like: json)
+        #expect(noDeadLayer.fit.continuumDeadLayer == nil)
+        #expect(noDeadLayer.fit.lineWeights == .epq && noDeadLayer.fit.sumPeaks == .always)   // the rest as stored
+        var withoutSumPeaks = try fitObject(defaultJSON)
+        #expect(withoutSumPeaks.removeValue(forKey: "sumPeaks") != nil)
+        #expect(try decode(fit: withoutSumPeaks, like: defaultJSON).fit.sumPeaks == .off)
+    }
+
     // MARK: F1 the fit start
 
     @Test func testFitStartMovesTheFittedChannelsAndTheRefusalBound() throws {

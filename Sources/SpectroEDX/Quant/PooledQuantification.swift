@@ -291,6 +291,9 @@ public nonisolated enum PooledQuantifier {
         fitSettings.resolutionMnKaEV = resolution
         let fitRange = range(axis)
         var deadLayerMicrons: Double?
+        // The fitted dead layer's warning, finished after the sum-peak decision (whether the final fit includes the sum/escape
+        // model is known only then), and its place in `warnings`.
+        var deadLayerNote: (text: String, at: Int)?
         if policy.fit.continuumDeadLayer != nil, deadLayerTable == nil {
             warnings.append("the Si dead-layer term applies to the continuum background only; not used with the polynomial background")
         }
@@ -309,9 +312,8 @@ public nonisolated enum PooledQuantifier {
                 }
                 deadLayerMicrons = r.microns
                 fitSettings = DeadLayerFit.settings(fitSettings, base: baseEfficiency, microns: r.microns, table: table)
-                warnings.append(String(format: "Si dead layer fitted: %.4f \u{00B5}m; the area sigmas are conditional on it", r.microns)
-                                + (input.sumEscape.map { !$0.isOff } == true ? "; fitted without the sum/escape model, which the final fit includes" : "")
-                                + (locked ? "" : "; the axis refinement ran without it"))
+                deadLayerNote = (String(format: "Si dead layer fitted: %.4f \u{00B5}m; the area sigmas are conditional on it", r.microns),
+                                 warnings.count)
                 if r.atUpperBound {
                     warnings.append(String(format: "the fitted Si dead layer sits at its upper bound (%.3g \u{00B5}m): the bound, not the data, set it", d.maximumMicrons))
                 }
@@ -392,6 +394,11 @@ public nonisolated enum PooledQuantifier {
         catch {
             let why = (error as? LocalizedError)?.errorDescription ?? "\(error)"
             throw QuantificationRefusal("The fit could not run: \(why).")
+        }
+        if let note = deadLayerNote {
+            // `applied` is the sum/escape model the final fit ran with, from the caller or from `policy.fit.sumPeaks`.
+            warnings.insert(note.text + (applied != nil ? "; fitted without the sum/escape model, which the final fit includes" : "")
+                            + (locked ? "" : "; the axis refinement ran without it"), at: note.at)
         }
         // The sum and escape peaks the kept model explains, on the full axis (0 outside the fitted channels).
         var sumEscapeCounts: [Double]?
@@ -541,6 +548,20 @@ public nonisolated enum PooledQuantifier {
     /// taking it again on other data (the unlisted-line and fit-range checks): the applied model, or an off model (the default fit).
     package static func sameSumEscape(as q: PooledQuantification) -> SumEscapeModel {
         q.appliedSumEscape ?? SumEscapeModel()
+    }
+
+    /// `refit` (the reported fit's input with one thing changed) set to repeat `q`'s data-driven fit choices instead of taking them
+    /// again on its own data: the sum-peak decision (`sameSumEscape(as:)`) and, when `q` fitted the Si dead layer, its thickness,
+    /// typed. A typed thickness is left as it is. When `q` ran on an unlocked axis without a refinement result (the refinement
+    /// failed and the file's axis was used), the refit is locked to the file's axis too, so it does not refine one of its own.
+    package static func pinningReportedChoices(_ refit: PooledQuantificationInput, as q: PooledQuantification) -> PooledQuantificationInput {
+        var out = refit
+        out.sumEscape = sameSumEscape(as: q)
+        if !q.axisLocked, q.refinement == nil { out.method.lockEnergyAxis = true }
+        if let d = out.policy.fit.continuumDeadLayer, d.microns == nil, let t = q.continuumDeadLayerMicrons {
+            out.policy.fit.continuumDeadLayer = .given(microns: t)
+        }
+        return out
     }
 
     /// What every shown sigma covers (WP3b F3 wording): the fit's counting statistics, not the choice of model.
