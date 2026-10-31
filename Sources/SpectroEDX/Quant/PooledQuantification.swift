@@ -174,6 +174,9 @@ public nonisolated struct PooledQuantification: Sendable {
     /// A2: a caveat on the at% rows ("assumes the listed elements only; unlisted: Cu (net 139 411) ..."), set by the unlisted-line
     /// check; "unlisted-line check running" while it runs; nil when the check found nothing. Never blanks a number.
     public var abundanceCaveat: String? = nil
+    /// The detector Si dead layer of the continuum as run (typed or fitted), micrometres; nil when the term is off
+    /// (`FitPolicy.continuumDeadLayer`). validation: "none".
+    public var continuumDeadLayerMicrons: Double? = nil
 
     public var hasAbundance: Bool { abundanceRefusal == nil }
     /// "\u{03C7}\u{00B2}\u{1D63} 54.8 (Pearson)" or "reduced deviance 1.02": shown beside the at% always (R7).
@@ -221,6 +224,17 @@ public nonisolated enum PooledQuantifier {
             }
             continuumEfficiency = SDDEfficiency(table: table, layers: layers)
         }
+        // The detector Si dead-layer term: a typed thickness enters every fit (refinement included); a fitted one is fitted on
+        // the axis the final fit uses, below, and the refinement runs without it.
+        let baseEfficiency = continuumEfficiency
+        var deadLayerTable: MassAbsorptionTable?
+        if let d = policy.fit.continuumDeadLayer, method.background == .empiricalWithAlEdge {
+            guard let table = tables?.mac ?? MassAbsorptionTable.bundled else {
+                throw QuantificationRefusal("The continuum's Si dead layer needs the mass-absorption table, which is not available in this build.")
+            }
+            deadLayerTable = table
+            if let t = d.microns { continuumEfficiency = DeadLayerFit.efficiency(base: baseEfficiency, microns: t, table: table) }
+        }
 
         func settings(axis: EnergyAxis) -> FitSettings {
             var s: FitSettings
@@ -264,6 +278,33 @@ public nonisolated enum PooledQuantifier {
         var fitSettings = settings(axis: axis)
         fitSettings.resolutionMnKaEV = resolution
         let fitRange = range(axis)
+        var deadLayerMicrons: Double?
+        if policy.fit.continuumDeadLayer != nil, deadLayerTable == nil {
+            warnings.append("the Si dead-layer term applies to the continuum background only; not used with the polynomial background")
+        }
+        if let d = policy.fit.continuumDeadLayer, let table = deadLayerTable {
+            if let t = d.microns { deadLayerMicrons = t }
+            else {
+                let r: DeadLayerFit.Result
+                do {
+                    r = try DeadLayerFit.fit(counts: counts, axis: axis, settings: fitSettings, base: baseEfficiency, table: table,
+                                             maximumMicrons: d.maximumMicrons, cancelled: cancelled)
+                }
+                catch let c as SpectroCancelled { throw c }
+                catch {
+                    let why = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+                    throw QuantificationRefusal("The fit could not run: \(why).")
+                }
+                deadLayerMicrons = r.microns
+                fitSettings = DeadLayerFit.settings(fitSettings, base: baseEfficiency, microns: r.microns, table: table)
+                warnings.append(String(format: "Si dead layer fitted: %.4f \u{00B5}m; the area sigmas are conditional on it", r.microns)
+                                + (input.sumEscape.map { !$0.isOff } == true ? "; fitted without the sum/escape model, which the final fit includes" : "")
+                                + (locked ? "" : "; the axis refinement ran without it"))
+                if r.atUpperBound {
+                    warnings.append(String(format: "the fitted Si dead layer sits at its upper bound (%.3g \u{00B5}m): the bound, not the data, set it", d.maximumMicrons))
+                }
+            }
+        }
         let fit: EDSFitResult
         try SpectroCancellation.check(cancelled)
         progress?(0.85)
@@ -405,12 +446,14 @@ public nonisolated enum PooledQuantifier {
 
         try SpectroCancellation.check(cancelled)
         progress?(1)
-        return PooledQuantification(
+        var result = PooledQuantification(
             method: method, rows: rows, referenceElement: referenceIndex.map { rows[$0].element }, fit: fit,
             fileAxis: input.axis, usedAxis: axis, axisLocked: locked, refinement: refinement,
             plotModel: plotModel, plotBackground: plotBackground, kSet: kSet, abundanceRefusal: abundanceRefusal,
             absorption: absorption, warnings: warnings, qualityLabel: qualityLabel, quality: quality, footerLines: footer,
             fitSettings: fitSettings, fitRange: fitRange)
+        result.continuumDeadLayerMicrons = deadLayerMicrons
+        return result
     }
 
     /// What every shown sigma covers (WP3b F3 wording): the fit's counting statistics, not the choice of model.
