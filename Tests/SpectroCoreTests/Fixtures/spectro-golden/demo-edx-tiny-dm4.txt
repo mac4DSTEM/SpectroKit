@@ -676,6 +676,7 @@ whole.quantification.unlistedCheck = nil
 whole.quantification.unlistedCheckPending = false
 whole.quantification.abundanceCaveat = nil
 whole.quantification.appliedSumEscape = nil
+whole.quantification.continuumDeadLayerMicrons = nil
 whole.csv-fnv = 37c2c8963acfc357
 whole.rangeSensitivity = nil
 whole.unlistedProposal.candidates: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
@@ -916,5 +917,6 @@ region-locked-axis.quantification.unlistedCheck = nil
 region-locked-axis.quantification.unlistedCheckPending = false
 region-locked-axis.quantification.abundanceCaveat = nil
 region-locked-axis.quantification.appliedSumEscape = nil
+region-locked-axis.quantification.continuumDeadLayerMicrons = nil
 region-locked-axis.csv-fnv = 90f4608d5329d926
 region-locked-axis.rangeSensitivity = nil
