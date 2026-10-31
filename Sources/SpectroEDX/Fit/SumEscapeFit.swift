@@ -111,6 +111,12 @@ public nonisolated struct SumEscapeResult: Sendable {
     public var escapeFraction: Double?
     public var escapeFractionSigma: Double?
     public var escapePeaks: [EscapeComponent]
+    /// The fitted sum and escape peaks together, counts per channel of `fit.channels` (c S(A) + f E(A) at the reported areas): what
+    /// the model explains beyond the line and continuum columns. The element proposer takes it as a fixed part of its model, so a
+    /// peak this model covers is not proposed as an element. All zeros when the model is off. It is the exact sum term at the
+    /// reported areas; `fit.model` holds its linearisation at the previous iterate, which differs by c times the squared area step
+    /// (nothing at convergence; the warnings say when the alternation did not converge).
+    public var componentCounts: [Double]
     public var iterations: Int
     public var converged: Bool
     /// The parameters of the model as run, one sentence each.
@@ -136,7 +142,8 @@ public nonisolated enum EDSSumEscapeFit {
         if model.isOff {
             return SumEscapeResult(fit: baseline, baseline: baseline, sumCoefficient: nil, sumCoefficientSigma: nil,
                                    sumCoefficientAtBound: false, sumPeaks: [], escapeFraction: nil, escapeFractionSigma: nil,
-                                   escapePeaks: [], iterations: 0, converged: true,
+                                   escapePeaks: [], componentCounts: [Double](repeating: 0, count: baseline.channels.count),
+                                   iterations: 0, converged: true,
                                    parameters: ["sum and escape model: off (the default fit)"], validation: validation)
         }
 
@@ -285,6 +292,9 @@ public nonisolated enum EDSSumEscapeFit {
         }
         var escComponents: [EscapeComponent] = []
         for gi in 0..<g where escColumns[gi] != nil { escComponents.append(EscapeComponent(group: groups[gi].id, area: f * area[gi])) }
+        var componentCounts = [Double](repeating: 0, count: n)
+        if c != 0 { let q = sumShape(area); for k in 0..<n { componentCounts[k] += c * q[k] } }
+        if f != 0 { let q = escShape(area); for k in 0..<n { componentCounts[k] += f * q[k] } }
 
         // Sigma of c and f: the term's shape with the fit's other columns projected out.
         func sigmaOf(_ q: [Double]) -> Double? {
@@ -331,7 +341,7 @@ public nonisolated enum EDSSumEscapeFit {
         return SumEscapeResult(fit: fit, baseline: baseline, sumCoefficient: model.sumPeaks ? c : nil, sumCoefficientSigma: cSigma,
                                sumCoefficientAtBound: cAtBound, sumPeaks: sumComponents,
                                escapeFraction: model.commonEscapeFraction ? f : nil, escapeFractionSigma: fSigma,
-                               escapePeaks: escComponents, iterations: iterations, converged: converged,
+                               escapePeaks: escComponents, componentCounts: componentCounts, iterations: iterations, converged: converged,
                                parameters: params, validation: validation)
     }
 }

@@ -162,6 +162,9 @@ public nonisolated struct PooledQuantification: Sendable {
     public var footerLines: [String]
     /// The settings the reported fit ran with (axis, width, range, continuum, estimator): the unlisted-line check proposes on them.
     package var fitSettings: FitSettings
+    /// The sum and escape peaks the reported fit modelled (`SumEscapeResult.componentCounts` on the full axis, 0 outside the fitted
+    /// channels); nil when the sum/escape model is off. The unlisted-line check hands it to the proposer as explained counts.
+    package var sumEscapeCounts: [Double]? = nil
     /// The fitted range as run and where its upper end came from (WP3c; the footer's "fit range" line).
     package var fitRange: FitRangeChoice
     /// WP3c: what one extra fit to the axis end does to each quantified net, when the axis runs past the default range;
@@ -268,11 +271,15 @@ public nonisolated enum PooledQuantifier {
         try SpectroCancellation.check(cancelled)
         progress?(0.85)
         var sumEscapeLines: [String] = []
+        var sumEscapeCounts: [Double]?
         do {
             if let model = input.sumEscape, !model.isOff {
                 let r = try EDSSumEscapeFit.run(counts: counts, axis: axis, settings: fitSettings, model: model,
                                                     escapeRatioWarning: policy.fit.escapeRatioWarning)
                 fit = r.fit; sumEscapeLines = r.parameters
+                var full = [Double](repeating: 0, count: axis.size)
+                for (k, ch) in r.fit.channels.enumerated() where k < r.componentCounts.count { full[ch] = r.componentCounts[k] }
+                sumEscapeCounts = full
             } else {
                 fit = try EDSFit.run(counts: counts, axis: axis, settings: fitSettings, escapeRatioWarning: policy.fit.escapeRatioWarning)
             }
@@ -405,12 +412,14 @@ public nonisolated enum PooledQuantifier {
 
         try SpectroCancellation.check(cancelled)
         progress?(1)
-        return PooledQuantification(
+        var result = PooledQuantification(
             method: method, rows: rows, referenceElement: referenceIndex.map { rows[$0].element }, fit: fit,
             fileAxis: input.axis, usedAxis: axis, axisLocked: locked, refinement: refinement,
             plotModel: plotModel, plotBackground: plotBackground, kSet: kSet, abundanceRefusal: abundanceRefusal,
             absorption: absorption, warnings: warnings, qualityLabel: qualityLabel, quality: quality, footerLines: footer,
             fitSettings: fitSettings, fitRange: fitRange)
+        result.sumEscapeCounts = sumEscapeCounts
+        return result
     }
 
     /// What every shown sigma covers (WP3b F3 wording): the fit's counting statistics, not the choice of model.

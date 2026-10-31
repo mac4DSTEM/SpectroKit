@@ -171,7 +171,10 @@ public nonisolated enum UnlistedLineChecker {
                                 proposer: ElementProposer = ElementProposer(),
                                 cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                                 progress: (@Sendable (Double) -> Void)? = nil) throws -> ProposalResult {
-        try proposer.propose(counts: counts, axis: q.usedAxis, settings: proposerSettings(q), cancelled: cancelled, progress: progress)
+        // The sum and escape peaks the reported fit modelled are explained counts for the proposer: a peak they cover is not an
+        // unlisted element (nil when the sum/escape model is off: the proposer runs as it always ran).
+        try proposer.propose(counts: counts, axis: q.usedAxis, settings: proposerSettings(q), explained: q.sumEscapeCounts,
+                             cancelled: cancelled, progress: progress)
     }
 
     /// "Al_Ka" -> "Al K\u{03B1}", "Lu_Ma" -> "Lu M\u{03B1}", "Cu_Lb1" -> "Cu L\u{03B2}1".
