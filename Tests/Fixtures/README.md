@@ -38,7 +38,7 @@ A moved fixture is its own commit with the reason and a CHANGELOG line.
 | `SpectroCoreTests/Fixtures/spectrum-tools-lineprofile-pins.json` | 83.3 KB | `tools/spectrum-tools/pins.py` |  |
 | `SpectroCoreTests/Fixtures/spectrum-tools-smoothing-pins.json` | 379.1 KB | `tools/spectrum-tools/pins.py` |  |
 | `SpectroCoreTests/Fixtures/velox-tiny.emd` | 43.6 KB | `tools/edx-planted/make_velox_tiny.py` |  |
-| `SpectroEDXTests/Fixtures/eds-absorption-truth.json` | 76.7 KB | `tools/edx-sim/absorption_truth_sim.py` |  |
+| `SpectroEDXTests/Fixtures/eds-absorption-truth.json` | 76.8 KB | `tools/edx-sim/absorption_truth_sim.py` |  |
 | `SpectroEDXTests/Fixtures/eds-fit-exspy-7185a4d1.json` | 155.5 KB | `tools/edx-exspy-pins/fit_pins.py` | rewrites it to the last bit (BLAS order) |
 | `SpectroEDXTests/Fixtures/eds-pins-exspy-7185a4d1.json` | 70.7 KB | `tools/edx-exspy-pins/pins.py` |  |
 | `SpectroEDXTests/Fixtures/eds-proposer-sim.json` | 100.3 KB | `tools/edx-sim/proposer_sim.py` |  |
