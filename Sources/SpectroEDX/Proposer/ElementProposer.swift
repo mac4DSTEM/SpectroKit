@@ -5,7 +5,7 @@
 //        method (Newbury and Ritchie's automatic qualitative analysis, as AutoEMX documents its defaults; no code copied):
 //
 //   1. fit the listed elements (the landed `EDSFit`: Kramers x Bernstein continuum with the Al K step, Si-escape columns, unweighted
-//      non-negative least squares) with the NIST EPQ Kβ weights (`EDSLineWeights.epqK`; the quantification fit keeps eXSpy's);
+//      non-negative least squares) with the NIST EPQ Kβ weights (`EDSLineWeights.epqK`; the quantification fit keeps eXSpy's by default, `FitPolicy.lineWeights`);
 //   2. top-hat filter the residual and take its strongest peak at or above 5 σ (1.5 times that below 1 keV), the variance of a channel
 //      being y + (0.01 mu)^2, so a strong line's small shape error is not a peak;
 //   3. every pool element with a line of weight >= 0.1 within 2.5 σ + 25 eV of the peak is a candidate, and so is a pile-up pair of the

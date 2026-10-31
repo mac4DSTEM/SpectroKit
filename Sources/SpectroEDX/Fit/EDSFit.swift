@@ -27,15 +27,18 @@ public nonisolated struct FitSettings: Sendable, Equatable {
     package var method: FitMethod = .leastSquares
     /// Opt-in low-energy tail on every line, escape and sum peak; nil (default) = Gaussians, every number unchanged.
     public var lineTail: LineTail? = nil
+    /// The table tying each family's sub-lines to its alpha line. Default `.exspy` (the parity path); `.epq` ties the K families at NIST
+    /// EPQ's Kβ weights.
+    public var lineWeights: EDSLineWeights = .exspy
 
     package init(elements: [String], resolutionMnKaEV: Double, beamEnergy: Double,
                  fitFrom: Double? = nil, fitTo: Double? = nil, background: FitBackground,
                  escapePeaks: Bool = true, referenceShapes: ReferenceShapes = .none,
-                 method: FitMethod = .leastSquares, lineTail: LineTail? = nil) {
+                 method: FitMethod = .leastSquares, lineTail: LineTail? = nil, lineWeights: EDSLineWeights = .exspy) {
         self.elements = elements; self.resolutionMnKaEV = resolutionMnKaEV; self.beamEnergy = beamEnergy
         self.fitFrom = fitFrom; self.fitTo = fitTo; self.background = background
         self.escapePeaks = escapePeaks; self.referenceShapes = referenceShapes; self.method = method
-        self.lineTail = lineTail
+        self.lineTail = lineTail; self.lineWeights = lineWeights
     }
 
     /// The upper end of the default fitted range, keV.
@@ -70,7 +73,7 @@ public nonisolated struct FitSettings: Sendable, Equatable {
                     background: .continuum(ContinuumForm(beamEnergy: beamEnergy, edges: policy.continuumEdges,
                                                          orders: policy.continuumOrders, nonNegative: policy.continuumNonNegative,
                                                          efficiency: efficiency, edgeStep: policy.continuumEdgeStep)),
-                    escapePeaks: policy.escapePeaks, lineTail: policy.lineTail)
+                    escapePeaks: policy.escapePeaks, lineTail: policy.lineTail, lineWeights: policy.lineWeights)
     }
 }
 
@@ -155,7 +158,7 @@ package nonisolated enum EDSFit {
         guard !channels.isEmpty else { throw EDSFitError.noChannels }
         let model = EDSLineModel.build(elements: settings.elements, axis: axis, beamEnergy: settings.beamEnergy,
                                        resolutionMnKaEV: settings.resolutionMnKaEV, escapePeaks: settings.escapePeaks,
-                                       lineTail: settings.lineTail)
+                                       lineTail: settings.lineTail, lineWeights: settings.lineWeights)
         try validate(settings.referenceShapes, axis: axis, model: model)
         let design = LinearDesign.build(model: model, axis: axis, channels: channels, background: settings.background,
                                         shapes: settings.referenceShapes, counts: counts)

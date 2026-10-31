@@ -273,7 +273,15 @@ The proposer's confirmation-line rule (R4, `ProposerPolicy.familyConsistency`; i
 (`sumPeakFraction`): no Python counterpart;
 the bounds are physics (`familyOvervoltage` 2, `sumPeakFraction` 1, not measured cuts), `validation: "none"`; tests `FamilyConsistencyTests`, `DownwardFamilyTests` and
 `IdentificationLoopTests` on planted spectra, `RealFileAutoIDTests` (opt-in) on three measured files. The identification fit's Kβ weights are
-NIST EPQ's (`EDSLineWeights.epqK`), not eXSpy's; the quantification fit keeps eXSpy's, so no parity row moves.
+NIST EPQ's (`EDSLineWeights.epqK`), not eXSpy's; the quantification fit keeps eXSpy's by default (`FitPolicy.lineWeights`), so no parity row moves.
+
+The quantification fit's line-weight table (`FitPolicy.lineWeights`, `FitSettings.lineWeights`): `.exspy` (default, the parity
+path: every exSpy parity row is unchanged) or `.epq` (opt-in, NIST EPQ's Kβ/Kα for the K families: Al 0.0315, Mg 0.0174, Si 0.0571
+against exSpy's 0.0132, 0.01, 0.0278). No Python counterpart for `.epq`; `validation: "none"`. Measured on the public Leeds
+standards (DOI 10.5518/1826): the EPQ tie fits the pure-Al wedge better (chi2/n over 0.8-2.6 keV 3.15 to 2.51) and Mg Kβ on MgO
+better (chi2/n 1.2-1.4 keV 8.01 to 6.55), but EPQ's Si Kβ worsens MgO at 1.78-1.95 keV (chi2/n 6.79 to 12.87), so the default
+stays `.exspy`. The synthetic generators plant either table (`EDX_SIM_KBETA`, default `epq`; the committed fixtures use `exspy`);
+tests `LineWeightTableTests` on planted spectra.
 
 The continuum's step at an edge (`FitPolicy.continuumEdgeStep`): `.broadened` (default) weights each segment by the detector's
 Gaussian step at its edges, sigma from the line-width law at the edge; `.sharp` (opt-in, the earlier default) cuts the segments at
