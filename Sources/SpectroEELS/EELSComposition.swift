@@ -12,6 +12,13 @@ public struct EELSCompositionPixel: Sendable, Equatable {
     public let atomicPercent: [Double]
     public let weightPercent: [Double]
     public let unavailable: EELSUnavailable?
+    /// Per symbol: true where the element's amount is at or below zero, so it is not detected and counts as 0 at% and 0 wt% (the others are
+    /// normalised among themselves). Empty where the pixel has no answer.
+    public let notDetected: [Bool]
+
+    init(atomicPercent: [Double], weightPercent: [Double], unavailable: EELSUnavailable?, notDetected: [Bool] = []) {
+        self.atomicPercent = atomicPercent; self.weightPercent = weightPercent; self.unavailable = unavailable; self.notDetected = notDetected
+    }
 }
 
 public enum EELSQuantification {
@@ -46,7 +53,8 @@ public enum EELSQuantification {
                 return EELSCompositionPixel(atomicPercent: [], weightPercent: [], unavailable: .noComposition)
             }
             return EELSCompositionPixel(atomicPercent: amounts.map { 100 * $0 / atoms },
-                                        weightPercent: zip(amounts, masses).map { 100 * $0 * $1 / weights }, unavailable: nil)
+                                        weightPercent: zip(amounts, masses).map { 100 * $0 * $1 / weights }, unavailable: nil,
+                                        notDetected: amounts.map { $0 <= 0 })
         }
     }
 }

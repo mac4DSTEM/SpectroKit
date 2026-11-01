@@ -130,7 +130,7 @@ struct EELSModelFitTests {
         let cu = ModelFixtures.nums((c.record["truth"] as! [String: Any])["intensity"].flatMap { ($0 as! [String: Any])["Cu_L3"] })
         for p in 0 ..< 6 {
             let px = comp[p]
-            #expect(px.unavailable == nil && px.atomicPercent.count == 2)
+            #expect(px.unavailable == nil && px.atomicPercent.count == 2 && px.notDetected == [false, false])
             let atFe = 100 * intensity[p] / (intensity[p] + cu[p])
             #expect(abs(px.atomicPercent[0] - atFe) < 0.05, Comment(rawValue: "pixel \(p): \(px.atomicPercent) vs \(atFe)"))
             #expect(abs(px.atomicPercent.reduce(0, +) - 100) < 1e-9 && abs(px.weightPercent.reduce(0, +) - 100) < 1e-9)
@@ -142,7 +142,7 @@ struct EELSModelFitTests {
         var mask = [Bool](repeating: true, count: 6); mask[1] = false
         let masked = try EELSModelFit.fit(coreLoss: c.core, edges: c.edges, microscope: c.microscope, mask: mask)
         let m = try EELSQuantification.composition(masked, symbols: ["Fe"])
-        #expect(m[1].unavailable == .masked && m[1].atomicPercent.isEmpty)
+        #expect(m[1].unavailable == .masked && m[1].atomicPercent.isEmpty && m[1].notDetected.isEmpty)
         #expect(abs(m[0].atomicPercent[0] - 100) < 1e-12 && abs(m[0].weightPercent[0] - 100) < 1e-12)
     }
 
