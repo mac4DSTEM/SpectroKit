@@ -189,4 +189,3 @@ struct ContinuumEdgeBroadeningTests {
         #expect(sharpForm.edgeStep == .sharp)
     }
 }
-
