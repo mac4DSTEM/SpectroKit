@@ -250,7 +250,7 @@ seed0.four.quantification.kSet.values[0] = 3fe83b222d39aaa6 0.75721844513949033
 seed0.four.quantification.kSet.values[1] = 3ff0000000000000 1
 seed0.four.quantification.kSet.values[2] = 3ff7700548d3005b 1.4648487896629578
 seed0.four.quantification.kSet.values[3] = 3ffdcea7bd3d5a09 1.862952937333491
-seed0.four.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV; UNVALIDATED"
+seed0.four.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV"
 seed0.four.quantification.kSet.date = "EPQ 249dd3f8 + Krause 1979 + FFAST"
 seed0.four.quantification.kSet.relativeSigma: n 4 sum 3fe3333333333334 0.60000000000000009 fnv a7277b4a2d72b5b0
 seed0.four.quantification.kSet.relativeSigma[0] = 3fc999999999999a 0.20000000000000001
@@ -270,7 +270,7 @@ seed0.four.quantification.footerLines[2] = "beam 200 kV · typed"
 seed0.four.quantification.footerLines[3] = "fit range 0.2–20 keV (default; axis to 79.97 keV) · 1 px pooled (synthetic)"
 seed0.four.quantification.footerLines[4] = "σ: counting only; model choice can move a weak line by more"
 seed0.four.quantification.footerLines[5] = "σ is counting statistics at χ²ᵣ = 1; this fit is at 5279 (Pearson)"
-seed0.four.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV; UNVALIDATED (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Si)"
+seed0.four.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Si)"
 seed0.four.quantification.footerLines[7] = "k-free ratio: net / net(Si)"
 seed0.four.quantification.footerLines[8] = "absorption correction: off"
 seed0.four.quantification.fitSettings.elements: array 4
@@ -306,7 +306,7 @@ seed0.four.quantification.unlistedCheckPending = false
 seed0.four.quantification.abundanceCaveat = nil
 seed0.four.quantification.appliedSumEscape = nil
 seed0.four.quantification.continuumDeadLayerMicrons = nil
-seed0.four.csv-fnv = 39e1a8432149c423
+seed0.four.csv-fnv = 4a9d0d044d7ee96a
 seed0.four.rangeSensitivity.alternativeToKeV = 4053fdc30de1dcc8 79.965030165261055
 seed0.four.rangeSensitivity.moves: array 4
 seed0.four.rangeSensitivity.moves[0].element = "O"
@@ -1037,7 +1037,7 @@ seed0.four.unlistedProposal.currie.alpha = 3fa999999999999a 0.050000000000000003
 seed0.four.unlistedProposal.currie.beta = 3fa999999999999a 0.050000000000000003
 seed0.four.unlistedProposal.notes: array 20
 seed0.four.unlistedProposal.notes[0] = "Lines below 0.45 keV are not tested (a measured limit of the continuum model, not a property of the method)."
-seed0.four.unlistedProposal.notes[1] = "Identification (validation: none): the residual's peaks at or above 5 σ of its top-hat filter (1.5 × below 1 keV); a candidate joins when Σ(y − μ)²/(μ + (0.01 μ)²) falls by at least 100, 20 % of that at its own lines, with its area at or above Currie L_D (α = β = 0.05, σ₀ from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (100). Kβ weights from NIST EPQ in this fit."
+seed0.four.unlistedProposal.notes[1] = "Identification: the residual's peaks at or above 5 σ of its top-hat filter (1.5 × below 1 keV); a candidate joins when Σ(y − μ)²/(μ + (0.01 μ)²) falls by at least 100, 20 % of that at its own lines, with its area at or above Currie L_D (α = β = 0.05, σ₀ from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (100). Kβ weights from NIST EPQ in this fit."
 seed0.four.unlistedProposal.notes[2] = "Fit: least squares, weighted by 1/(y + (0.01 y)²) to decide, least squares, unweighted for the numbers shown; continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data; escape peaks: fitted for 5 line groups above the Si K edge (1.839 keV); reference shapes: none; 10 residual peaks examined, 66 candidate fits, 71 fits in all."
 seed0.four.unlistedProposal.notes[3] = "Confirmation lines (validation: none): an element nominated by an L or M line needs its K or L alpha line at 3 σ in the residual where the fitted range holds it and the beam is at least 2.0 times its energy; otherwise it is withheld."
 seed0.four.unlistedProposal.notes[4] = "Confirmation withheld Eu: Eu Lα (5.85 keV) has a residual peak of 0.0 σ, below the 3 σ its Mα (1.10 keV) needs: not Eu."
@@ -1188,7 +1188,7 @@ seed0.four.withholding[1][1] = 412d61f78baff631 962811.77282685612
 seed0.four.withholding[1][2] = 0000000000000000 0
 seed0.four.withholding[1][3] = 4117673a001fc5cb 383438.50012120296
 seed0.four.withholding.caveat = "assumes the listed elements only; unlisted: Ge (net 265 729), Ga (net 300 419), Cu (net 60 178), Eu (net 96 201), Sm (net 89 057), excess beside Ni Lα (net 49 559), Na (net 26 176), excess beside Ni Lα (net 10 094), excess beside Si Kα (net 16 655), excess beside Si Kα (net 22 026), Zr (net 782), Gd (net 7 119), P (net 754), Hg (net 355); largest move 33.5 σ (O)"
-seed0.four.csv-withholding-fnv = fd85f3651ba26e8c
+seed0.four.csv-withholding-fnv = 495e898b581cddc5
 seed0.seven.quantification.method.version = 1
 seed0.seven.quantification.method.estimator = .leastSquares
 seed0.seven.quantification.method.background = .empiricalWithAlEdge
@@ -1460,7 +1460,7 @@ seed0.seven.quantification.kSet.values[0] = 3fe83b222d39aaa6 0.75721844513949033
 seed0.seven.quantification.kSet.values[1] = 3ff0000000000000 1
 seed0.seven.quantification.kSet.values[2] = 3ff7700548d3005b 1.4648487896629578
 seed0.seven.quantification.kSet.values[3] = 3ffdcea7bd3d5a09 1.862952937333491
-seed0.seven.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV; UNVALIDATED"
+seed0.seven.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV"
 seed0.seven.quantification.kSet.date = "EPQ 249dd3f8 + Krause 1979 + FFAST"
 seed0.seven.quantification.kSet.relativeSigma: n 4 sum 3fe3333333333334 0.60000000000000009 fnv a7277b4a2d72b5b0
 seed0.seven.quantification.kSet.relativeSigma[0] = 3fc999999999999a 0.20000000000000001
@@ -1480,7 +1480,7 @@ seed0.seven.quantification.footerLines[2] = "beam 200 kV · typed"
 seed0.seven.quantification.footerLines[3] = "fit range 0.2–20 keV (default; axis to 79.97 keV) · 1 px pooled (synthetic)"
 seed0.seven.quantification.footerLines[4] = "σ: counting only; model choice can move a weak line by more"
 seed0.seven.quantification.footerLines[5] = "σ is counting statistics at χ²ᵣ = 1; this fit is at 0.98 (Pearson)"
-seed0.seven.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV; UNVALIDATED (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Si)"
+seed0.seven.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Si; beam 200.0 keV (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Si)"
 seed0.seven.quantification.footerLines[7] = "k-free ratio: net / net(Si)"
 seed0.seven.quantification.footerLines[8] = "absorption correction: off"
 seed0.seven.quantification.fitSettings.elements: array 7
@@ -1519,7 +1519,7 @@ seed0.seven.quantification.unlistedCheckPending = false
 seed0.seven.quantification.abundanceCaveat = nil
 seed0.seven.quantification.appliedSumEscape = nil
 seed0.seven.quantification.continuumDeadLayerMicrons = nil
-seed0.seven.csv-fnv = 5312e03b97452089
+seed0.seven.csv-fnv = f98ff464b67a600
 seed0.seven.rangeSensitivity.alternativeToKeV = 4053fdffd20951d7 79.968739041424996
 seed0.seven.rangeSensitivity.moves: array 4
 seed0.seven.rangeSensitivity.moves[0].element = "O"
@@ -2128,7 +2128,7 @@ seed0.seven.unlistedProposal.currie.alpha = 3fa999999999999a 0.05000000000000000
 seed0.seven.unlistedProposal.currie.beta = 3fa999999999999a 0.050000000000000003
 seed0.seven.unlistedProposal.notes: array 17
 seed0.seven.unlistedProposal.notes[0] = "Lines below 0.45 keV are not tested (a measured limit of the continuum model, not a property of the method)."
-seed0.seven.unlistedProposal.notes[1] = "Identification (validation: none): the residual's peaks at or above 5 σ of its top-hat filter (1.5 × below 1 keV); a candidate joins when Σ(y − μ)²/(μ + (0.01 μ)²) falls by at least 100, 20 % of that at its own lines, with its area at or above Currie L_D (α = β = 0.05, σ₀ from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (100). Kβ weights from NIST EPQ in this fit."
+seed0.seven.unlistedProposal.notes[1] = "Identification: the residual's peaks at or above 5 σ of its top-hat filter (1.5 × below 1 keV); a candidate joins when Σ(y − μ)²/(μ + (0.01 μ)²) falls by at least 100, 20 % of that at its own lines, with its area at or above Currie L_D (α = β = 0.05, σ₀ from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (100). Kβ weights from NIST EPQ in this fit."
 seed0.seven.unlistedProposal.notes[2] = "Fit: least squares, weighted by 1/(y + (0.01 y)²) to decide, least squares, unweighted for the numbers shown; continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data; escape peaks: fitted for 7 line groups above the Si K edge (1.839 keV); reference shapes: none; 10 residual peaks examined, 59 candidate fits, 62 fits in all."
 seed0.seven.unlistedProposal.notes[3] = "Confirmation lines (validation: none): an element nominated by an L or M line needs its K or L alpha line at 3 σ in the residual where the fitted range holds it and the beam is at least 2.0 times its energy; otherwise it is withheld."
 seed0.seven.unlistedProposal.notes[4] = "Confirmation withheld Rb: Rb Kα (13.40 keV) has a residual peak of 0.0 σ, below the 3 σ its Lβ1 (1.75 keV) needs: not Rb."
@@ -2208,4 +2208,4 @@ seed0.seven.withholding[1][1] = 412d4866703dcc66 959539.21922148461
 seed0.seven.withholding[1][2] = 40a741bb2cb26e36 2976.865575386003
 seed0.seven.withholding[1][3] = 41181d1688ed1266 395077.63371685741
 seed0.seven.withholding.caveat = "assumes the listed elements only; unlisted: excess beside Si Kα (net 21 344), Pt (net 823), Au (net 786), Zr (net 662), Nb (net 622), excess beside Si Kα (net 9 624); largest move 0.1 σ (Si)"
-seed0.seven.csv-withholding-fnv = 3c09e7f1ae9edf96
+seed0.seven.csv-withholding-fnv = 6be059b55bbf59bf
