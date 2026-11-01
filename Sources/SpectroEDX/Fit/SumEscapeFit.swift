@@ -336,7 +336,7 @@ public nonisolated enum EDSSumEscapeFit {
         fit.escapeLabel = params.filter { $0.hasPrefix("sum peaks") || $0.hasPrefix("escape peaks") }.joined(separator: "; ")
         if fit.escapeLabel.isEmpty { fit.escapeLabel = baseline.escapeLabel }
         if !converged { fit.warnings.append("sum/escape model: the alternation did not converge in \(maxIt) iterations") }
-        fit.warnings.append("sum/escape model is unvalidated (validation: none); the line areas are conditional on its coefficients")
+        fit.warnings.append("sum/escape model (sum peaks c m A_i A_j, one common escape fraction; no reference implementation, planted-truth tests only): the line areas are conditional on its coefficients")
 
         return SumEscapeResult(fit: fit, baseline: baseline, sumCoefficient: model.sumPeaks ? c : nil, sumCoefficientSigma: cSigma,
                                sumCoefficientAtBound: cAtBound, sumPeaks: sumComponents,
