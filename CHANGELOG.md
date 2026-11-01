@@ -8,6 +8,51 @@ each entry from the merged pull requests' titles; a breaking change's Migration 
 Every quantification and thickness result reports `validation: "none"`: agreement with exSpy and HyperSpy is not validation on a
 sample of known composition.
 
+## [0.13.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.12.0...0.13.0) (2026-11-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* PooledQuantifier.run fits sum peaks by default when the data support them, so nets, at% and wt% change on spectra with pile-up. Migration: pass a policy with fit.sumPeaks = .off (or FitPolicy.exspyEquivalent), or sumEscape: SumEscapeModel(), to keep the old numbers. A stored QuantificationPolicy without the new field decodes as .off and its footer names the non-default policy.
+* PooledQuantifier.run fits sum peaks by default when the data support them, so nets, at% and wt% change on spectra with pile-up. Migration: pass a policy with fit.sumPeaks = .off (or FitPolicy.exspyEquivalent), or sumEscape: SumEscapeModel(), to keep the old numbers. A stored QuantificationPolicy without the new field decodes as .off and its footer names the non-default policy.
+* PooledQuantifier.run fits sum peaks by default when the data support them, so nets, at% and wt% change on spectra with pile-up. Migration: pass a policy with fit.sumPeaks = .off (or FitPolicy.exspyEquivalent), or sumEscape: SumEscapeModel(), to keep the old numbers. A stored QuantificationPolicy without the new field decodes as .off and its footer names the non-default policy.
+* PooledQuantifier.run fits sum peaks by default when the data support them, so nets, at% and wt% change on spectra with pile-up. Migration: pass a policy with fit.sumPeaks = .off (or FitPolicy.exspyEquivalent), or sumEscape: SumEscapeModel(), to keep the old numbers. A stored QuantificationPolicy without the new field decodes as .off and its footer names the non-default policy.
+* PooledQuantifier.run fits sum peaks by default when the data support them, so nets, at% and wt% change on spectra with pile-up. Migration: pass a policy with fit.sumPeaks = .off (or FitPolicy.exspyEquivalent), or sumEscape: SumEscapeModel(), to keep the old numbers. A stored QuantificationPolicy without the new field decodes as .off and its footer names the non-default policy.
+* SpectrumImageMetadata.sameScanAs4DCube (deprecated since 0.8.0) is removed: use sameScanAsCube. SpectroscopyExport.elementsLine(_:) is removed: use q.rows.map(\.element).joined(separator: ", "). SpectroEELS no longer ships the 16 per-table GOS JSON files (about 6.8 MB): every edge reads the float32 pack, bit-identical tables, no number changes; CoreLossEdge.bundled is empty if the pack cannot be read.
+* pinned images and Xcode, --parallel, Pages permissions per job; drops iOS ([#34](https://github.com/mac4DSTEM/SpectroKit/issues/34))
+* Package.swift no longer declares iOS; it never built there.
+
+### Features
+
+* 0.13.0 removals (duplicate GOS JSON, sameScanAs4DCube, elementsLine, the extra Spectroscopy/ level) ([#30](https://github.com/mac4DSTEM/SpectroKit/issues/30)) ([aaea561](https://github.com/mac4DSTEM/SpectroKit/commit/aaea561ff07e8e067b45ecc9e12936a820b340e9))
+* broaden the continuum step at absorption edges by the detector by default ([#65](https://github.com/mac4DSTEM/SpectroKit/issues/65)) ([1a72013](https://github.com/mac4DSTEM/SpectroKit/commit/1a72013732ba0f51fa96bf67a1a1dd7d52d43269))
+* detector Si dead-layer step in the EDX simulator and a planted pool ([#49](https://github.com/mac4DSTEM/SpectroKit/issues/49)) ([df9082d](https://github.com/mac4DSTEM/SpectroKit/commit/df9082d5e23344b0747c75d34bf23cca662f62a1))
+* downward confirmation rule (opt-in) and the uncorroborated tier ([#46](https://github.com/mac4DSTEM/SpectroKit/issues/46)) ([258c881](https://github.com/mac4DSTEM/SpectroKit/commit/258c88185467672a40e525fc416125a394e70fbb))
+* downward confirmation rule (opt-in) and the uncorroborated tier in ProposalResult ([258c881](https://github.com/mac4DSTEM/SpectroKit/commit/258c88185467672a40e525fc416125a394e70fbb))
+* opt-in detector-broadened continuum step at absorption edges ([#64](https://github.com/mac4DSTEM/SpectroKit/issues/64)) ([93931fc](https://github.com/mac4DSTEM/SpectroKit/commit/93931fc834c3ee93bcff7fb48ad71bbeacd232e9))
+* opt-in NIST EPQ line-weight table for the quantification fit ([#67](https://github.com/mac4DSTEM/SpectroKit/issues/67)) ([4e9189b](https://github.com/mac4DSTEM/SpectroKit/commit/4e9189b69f5429d23ec75d04df32cacdd1232220))
+* optional detector Si dead-layer term in the EDX continuum ([#50](https://github.com/mac4DSTEM/SpectroKit/issues/50)) ([6f9d132](https://github.com/mac4DSTEM/SpectroKit/commit/6f9d13226d8e7415ed3bea11cc94368e91df6906))
+* self-pair half bound on sum-peak questions and the opt-in overlap check ([#54](https://github.com/mac4DSTEM/SpectroKit/issues/54)) ([6a1b0c8](https://github.com/mac4DSTEM/SpectroKit/commit/6a1b0c8cc8b03272876494fdfe19b1c0a65e9cd2))
+* take-off angle term in the sigma on wt% and at%, and per-pixel sigma maps ([#55](https://github.com/mac4DSTEM/SpectroKit/issues/55)) ([ff67d39](https://github.com/mac4DSTEM/SpectroKit/commit/ff67d3967547e8815967191b42bb117b8343243a))
+* the pooled fit models sum peaks when the strongest line's self pair is significant ([#59](https://github.com/mac4DSTEM/SpectroKit/issues/59)) ([e91a75a](https://github.com/mac4DSTEM/SpectroKit/commit/e91a75a505e10654501b2519cd5a2abbeabcb99a))
+* the proposer refines the energy axis on its own K picks ([#47](https://github.com/mac4DSTEM/SpectroKit/issues/47)) ([e650263](https://github.com/mac4DSTEM/SpectroKit/commit/e6502638d3cb06ca2dbcca7eea48afbb92824d04))
+* the proposer refines the energy axis on its own K picks (two-line guard) ([e650263](https://github.com/mac4DSTEM/SpectroKit/commit/e6502638d3cb06ca2dbcca7eea48afbb92824d04))
+* thickness and dose terms in the sigma on wt% and at% ([#53](https://github.com/mac4DSTEM/SpectroKit/issues/53)) ([e0d9fed](https://github.com/mac4DSTEM/SpectroKit/commit/e0d9fedd1c112ae639f3998f65465a8b88af9fea))
+* UnlistedLineCheck's Candidate, Move and initialiser are public ([#42](https://github.com/mac4DSTEM/SpectroKit/issues/42)) ([c3d2d93](https://github.com/mac4DSTEM/SpectroKit/commit/c3d2d9379eeb59faa282037ca8685e5a412ccd54))
+
+
+### Bug Fixes
+
+* fitted dead-layer note follows the applied sum-peak model; refits repeat the reported dead layer ([#68](https://github.com/mac4DSTEM/SpectroKit/issues/68)) ([6ea2fb4](https://github.com/mac4DSTEM/SpectroKit/commit/6ea2fb47cf5bab5e99b6e201375ebb026adf34ed))
+* kit texts name the method without a validation tag ([#77](https://github.com/mac4DSTEM/SpectroKit/issues/77)) ([ff6da75](https://github.com/mac4DSTEM/SpectroKit/commit/ff6da75e02334c1061f9df5703f5b8b1074494e6))
+* velox-tiny golden carries FormatoKit 0.12.0 acquisition fields ([#71](https://github.com/mac4DSTEM/SpectroKit/issues/71)) ([383d590](https://github.com/mac4DSTEM/SpectroKit/commit/383d5906bf6cfd2a14ba491d3093797a2c6cf069))
+
+
+### Continuous Integration
+
+* pinned images and Xcode, --parallel, Pages permissions on the deploy job, no iOS claim ([#17](https://github.com/mac4DSTEM/SpectroKit/issues/17)) ([ec848d6](https://github.com/mac4DSTEM/SpectroKit/commit/ec848d62f5d201b46773926e095cc487e6c49850))
+* pinned images and Xcode, --parallel, Pages permissions per job; drops iOS ([#34](https://github.com/mac4DSTEM/SpectroKit/issues/34)) ([ec848d6](https://github.com/mac4DSTEM/SpectroKit/commit/ec848d62f5d201b46773926e095cc487e6c49850))
+
 ## [0.12.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.11.0...0.12.0) (2026-10-23)
 
 ### Added
