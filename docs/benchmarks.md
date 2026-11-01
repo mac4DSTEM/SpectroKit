@@ -45,6 +45,6 @@ Sizes: quantification small 8 x 8, typical 256 x 256 (3 elements), large 1024 x 
 | function | decision | why |
 |---|---|---|
 | quantification maps, all methods (the Python column converts to weight percent only; Swift returns both) | CPU only (parallel over pixels since 0.8.0) | 9 to 40 ms for 65 536 pixels; per pixel the work is 10 to 500 ns of arithmetic, so a Metal dispatch pays only above about 1e6 pixels; the break-even is **not measured** (the large size is not measured yet). Not a work item until a large-size run shows a slow large image |
-| t/lambda log ratio, fixed threshold | CPU only; **slower than Python on the typical size** (0.49x), first in `docs/open-items.md` | single-threaded scalar passes against NumPy's vectorised axis sums |
+| t/lambda log ratio, fixed threshold | CPU only; **slower than Python on the typical size** (0.49x), first in `docs/parity.md` (known limits) | single-threaded scalar passes against NumPy's vectorised axis sums |
 | t/lambda log ratio, estimated threshold | CPU only | 5x faster than Python at the typical size (Python's per-pixel Savitzky-Golay search dominates) |
-| EDX line fit, auto ID, EELS background fit, edge quantification | not benchmarked in 0.8.0 | need a Velox spectrum image or a planted EELS image on both sides; listed in `docs/open-items.md` |
+| EDX line fit, auto ID, EELS background fit, edge quantification | not benchmarked in 0.8.0 | need a Velox spectrum image or a planted EELS image on both sides; listed in `docs/parity.md` (known limits) |
