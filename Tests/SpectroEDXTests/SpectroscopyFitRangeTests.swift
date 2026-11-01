@@ -100,10 +100,11 @@ struct SpectroscopyFitRangeTests {
     // MARK: P1
 
     /// P1: 7 elements, default settings: the fit stops at 20 keV (the channel holding it) and Ti is unbiased - E1's 20 keV row,
-    /// Ti 2972/3147/2984/3080/3060, mean 3049 +- 108 (z +0.45); Expert 60 keV moves no other planted K-alpha's mean z by > 0.5.
+    /// Ti 2972/3147/2984/3080/3060, mean 3049 +- 108 (z +0.45); re-measured with the broadened continuum step and the blurred Si K
+    /// step of the generator: 2979/3134/2982/3074/3057, mean 3045; Expert 60 keV moves no other planted K-alpha's mean z by > 0.5.
     /// Mutation M1: `FitSettings.defaultFitTo` returning min(axis end, beam) (the fit forced to the axis end) - red (Ti z -2.28).
     @Test func testP1TheDefaultStopsAt20keVAndTiIsUnbiased() throws {
-        let measured: [Double] = [2972, 3147, 2984, 3080, 3060]
+        let measured: [Double] = [2979, 3134, 2982, 3074, 3057]
         let ka = ["O", "Si", "Ti", "Ni", "Ge", "Cu", "Ga"]
         var tis: [Double] = [], sigmas: [Double] = []
         var z20 = [String: Double](), z60 = [String: Double]()
@@ -131,7 +132,8 @@ struct SpectroscopyFitRangeTests {
 
     // MARK: P3
 
-    /// P3: past the default, one fit to the axis end, stated per element (E3: Ti -7.5 ... -12.0 %, -2.2 ... -3.3 sigma; every other
+    /// P3: past the default, one fit to the axis end, stated per element (E3: Ti -7.5 ... -12.0 %, -2.2 ... -3.3 sigma; re-measured with
+    /// the broadened continuum step and the blurred Si K step of the generator: -6.4 ... -11.7 %, -1.8 ... -3.2 sigma; every other
     /// element within 2 sigma), in the footer and the export, never in a sigma. On a 19.997 keV file (the weak-line sim, axis
     /// refined as the room runs, refined end up to 20.019 keV) no statement and no second fit; nor for a typed range.
     /// Mutation M1 (above) - red (the default reaches the axis end, no statement). Mutation M4: `FitRangeChoice` deciding the
@@ -146,8 +148,8 @@ struct SpectroscopyFitRangeTests {
             for m in s.moves {
                 let sd = try #require(m.inSigma)
                 if m.element == "Ti" {
-                    #expect((-0.125 ... -0.070).contains(try #require(m.relative)), "seed \(seed) Ti \(String(describing: m.relative))")
-                    #expect((-3.4 ... -2.1).contains(sd), "seed \(seed) Ti \(sd) sigma")
+                    #expect((-0.125 ... -0.055).contains(try #require(m.relative)), "seed \(seed) Ti \(String(describing: m.relative))")
+                    #expect((-3.4 ... -1.7).contains(sd), "seed \(seed) Ti \(sd) sigma")
                 } else {
                     #expect(abs(sd) <= 2, "seed \(seed) \(m.element) \(sd) sigma")
                 }

@@ -3,13 +3,14 @@
 Writes Tests/SpectroEDXTests/Fixtures/eds-proposer-sim.json: the EXPECTED pooled spectrum of 256 identical pixels at a counts/pixel dose, for the
 Al matrix (80 nm) at 10 and 100 counts/px and the beta'' precipitate pixel (104 nm) at 300 counts/px, with every planted component's
 expected counts (lines, escapes, the Al K-alpha tail, the SUM PEAKS, Si internal fluorescence, stray Cu). The sum peaks grow as the square of the rate.
+The continuum is seen through the detector (blurred by its resolution, detector_blur.py); the dose is set on the unblurred total (the same).
 The Swift test adds Poisson noise. Usage: References/python/bin/python -I -B tools/edx-sim/proposer_sim.py [out.json]   (numpy only)
 """
 import json, math, os, sys
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import xray_model as xm, forward as fw
+import xray_model as xm, forward as fw, detector_blur as db
 MAC = os.path.join(HERE, "..", "..", "Sources", "SpectroEDX", "Resources", "Spectroscopy", "FFastMAC.csv")
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroEDXTests", "Fixtures", "eds-proposer-sim.json")
 NPIX = 256
@@ -39,7 +40,8 @@ for label, recipe, (t, rho), dose in [
         ("beta'' 300 counts/px", "precip_endon_0", (fw.THICKNESS_BASE_NM * fw.PRECIP_T, 0.5 * fw.PHASE_DENSITY["Al"] + 0.5 * fw.PHASE_DENSITY["beta"]), 300.0)]:
     s = at_dose(recipe, t, rho, dose)
     e, a = region(recipe, t, rho, s)
+    blurred = db.blurred(f, xm.edx_spec(recipe), t, rho, s, e)      # the continuum seen through the detector (detector_blur.py)
     print(label, "rate scale", s, "counts/px", e.sum(), {k: round(v * NPIX, 1) for k, v in a.items() if k.startswith("sum_") or k in ("Al_Ka", "Mg_Ka", "Si_Ka", "O_Ka", "Cu_Ka")})
-    out["regions"].append({"label": label, "countsPerPixel": float(e.sum()), "expected": [round(float(v) * NPIX, 5) for v in e],
+    out["regions"].append({"label": label, "countsPerPixel": float(e.sum()), "expected": [round(float(v) * NPIX, 5) for v in blurred],
                            "components": {k: v * NPIX for k, v in a.items()}, "sumPeakEnergies": {c.name: c.energy for c in f.comps if c.kind == "sum"}})
 json.dump(out, open(OUT, "w"), separators=(",", ":"))

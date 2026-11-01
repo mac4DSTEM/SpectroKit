@@ -69,7 +69,7 @@ public nonisolated struct FitSettings: Sendable, Equatable {
                     fitTo: defaultFitTo(axis: axis, beamEnergy: beamEnergy, upperLimitKeV: policy.defaultUpperLimitKeV),
                     background: .continuum(ContinuumForm(beamEnergy: beamEnergy, edges: policy.continuumEdges,
                                                          orders: policy.continuumOrders, nonNegative: policy.continuumNonNegative,
-                                                         efficiency: efficiency)),
+                                                         efficiency: efficiency, edgeStep: policy.continuumEdgeStep)),
                     escapePeaks: policy.escapePeaks, lineTail: policy.lineTail)
     }
 }

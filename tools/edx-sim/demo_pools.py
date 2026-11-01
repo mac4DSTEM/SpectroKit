@@ -7,12 +7,26 @@ simulation recipe, not a measurement. Read-only on the demo folder.
 
 Needs numpy and h5py. Each pool: the Poisson counts summed over its pixels, the generator's noise-free expected spectrum of the
 same pixels (`expected`, counts, 4 decimals), and the generator's planted component areas (`planted`, counts).
+
+`expected` is seen through the detector: sim_edx.py v2.0 draws its lines as Gaussians but its continuum, and the absorption edges in
+it, unblurred. Its continuum is forward.py's (beside this script, the same model), so each pool's continuum C is rebuilt from the
+truth arrays (recipe, thickness, density and live fraction per map pixel; recipe, thickness, density and rate scale per ladder
+region), checked channel by channel against the generator's expected spectrum in 9.5-19 keV (no line there; the script stops if
+one differs by more than 1e-9), and replaced by its detector-blurred copy (`detector_blur.py`): expected - C + blur(C). `counts` stay the demo file's
+own Poisson draws of the unblurred spectrum: the blur moves at most 1.2 counts in a channel of a pool, 0.1 sigma or less.
 """
 import json
+import os
 import sys
 
 import h5py
 import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import detector_blur as db  # noqa: E402
+import forward as fw  # noqa: E402
+import xray_model as xm  # noqa: E402
 
 D = sys.argv[1].rstrip('/') + '/'
 OUT = sys.argv[2]
@@ -36,6 +50,29 @@ def spectrum(x):
     return [round(float(v), 4) for v in x]
 
 
+FWD = fw.Forward(xm.Axis(4096, 5.0, 95.6), os.path.join(HERE, '..', '..', 'Sources', 'SpectroEDX', 'Resources', 'Spectroscopy', 'FFastMAC.csv'))
+assert abs(FWD.kc - T['forward_model']['continuum']['Kc']) <= 1e-12 * FWD.kc, 'forward.py Kc differs from the generator'
+LINE_FREE = (FWD.axis.centre >= 9.5) & (FWD.axis.centre < 19.0)
+
+
+def recipe_spec(recipe):
+    """The demo recipe as forward.py's RecipeSpec (metal fractions and oxide O from the truth; beta_pure is forward.py's own)."""
+    r = T['recipes'].get(recipe)
+    if r is None or recipe == 'vacuum':
+        return xm.edx_spec(recipe)
+    return xm.RecipeSpec(recipe, {k: v / 100 for k, v in r['composition_at_pct_metals'].items()}, 1.0,
+                         oxide_o_per_metal=r['oxide_O_per_metal_atom'])
+
+
+def through_detector(expected, cont, name):
+    """The expected spectrum with its continuum `cont` replaced by the detector-blurred copy, after checking `cont` is its continuum."""
+    e = np.asarray(expected, dtype=np.float64)
+    worst = float(np.max(np.abs(e[LINE_FREE] / cont[LINE_FREE] - 1)))
+    if worst > 1e-9:
+        raise SystemExit('%s: the rebuilt continuum is not the generator\'s (9.5-19 keV, worst channel %r)' % (name, worst))
+    return e - cont + db.blur(cont, FWD.axis.centre, T['edx']['FWHM_MnKa_eV'])
+
+
 pools = []
 recipes_af = {k: v['atom_fraction_incl_oxide'] for k, v in T['recipes'].items()}
 recipes_af['beta_pure'] = {'Mg': 5 / 11, 'Si': 6 / 11}
@@ -47,9 +84,13 @@ for ri in (5, 6, 7):
     c0, c1 = r['columns']
     block = lad[:, c0:c1 + 1, :].astype(np.int64)
     c = r['components_expected_total_counts']
-    pools.append(dict(name='L%d_%s' % (ri, r['recipe']), source='ladder', npix=int(block.shape[0] * block.shape[1]),
+    npix = int(block.shape[0] * block.shape[1])
+    cont = npix * r['rate_scale'] * db.continuum(FWD, recipe_spec(r['recipe']), r['thickness_nm'], r['density_g_cm3'], 1.0)
+    name = 'L%d_%s' % (ri, r['recipe'])
+    pools.append(dict(name=name, source='ladder', npix=npix,
                       thickness_nm=r['thickness_nm'], truth_at=metals(recipes_af[r['recipe']]), axis_true=true_axis,
-                      counts=block.sum(axis=(0, 1)).tolist(), expected=spectrum(LA['expected_spectrum_sum_by_region'][ri]),
+                      counts=block.sum(axis=(0, 1)).tolist(),
+                      expected=spectrum(through_detector(LA['expected_spectrum_sum_by_region'][ri], cont, name)),
                       planted={k: round(float(c.get(k, 0.0)), 4) for k in keys}))
 
 with h5py.File(D + 'AlMgSi_4D_EDX_EDS.hspy', 'r') as f:
@@ -61,13 +102,17 @@ cexp = TA['component_expected_counts']
 for name, idx in (('M_A', [0]), ('M_matrix', [0, 1, 2, 3, 4, 5, 6])):
     mask = np.isin(rm, idx)
     w = TA['expected_total_counts_per_pixel'][mask]
+    cont = np.zeros(FWD.axis.n)
+    for t_, rho_, lam_, ri_ in zip(thick[mask], TA['density_g_cm3'][mask], TA['live_fraction'][mask], rm[mask]):
+        cont += db.continuum(FWD, recipe_spec(order[ri_]), float(t_), float(rho_), float(lam_))
     pools.append(dict(name=name, source='map', npix=int(mask.sum()),
                       thickness_nm=round(float((thick[mask] * w).sum() / w.sum()), 6), truth_at=metals(recipes_af[order[idx[0]]]),
                       axis_true=true_axis, counts=m[mask].sum(axis=0).tolist(),
-                      expected=spectrum(sum(TA['expected_spectrum_sum_by_recipe'][i] for i in idx)),
+                      expected=spectrum(through_detector(sum(TA['expected_spectrum_sum_by_recipe'][i] for i in idx), cont, name)),
                       planted={k: round(float(cexp[comps.index(k)][mask].sum()), 4) for k in keys}))
 
-out = dict(generator='mac4DSTEM demo-edx, tools/demo-edx/sim_edx.py v2.0 (seed 42, ladder seed 52); truth is the simulation recipe',
+out = dict(generator='mac4DSTEM demo-edx, tools/demo-edx/sim_edx.py v2.0 (seed 42, ladder seed 52); truth is the simulation recipe; '
+                     'expected: continuum blurred by the detector (tools/edx-sim/detector_blur.py), counts: the demo files',
            true_k_counts_per_atom_nm2={k: kc[k + '_K'] for k in ('Al', 'Mg', 'Si')},
            atomic_mass={'Al': 26.9815, 'Mg': 24.305, 'Si': 28.0855}, pools=pools)
 with open(OUT, 'w') as fh:

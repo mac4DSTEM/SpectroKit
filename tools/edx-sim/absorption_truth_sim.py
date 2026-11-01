@@ -2,7 +2,7 @@
 
 Writes Tests/SpectroEDXTests/Fixtures/eds-absorption-truth.json: the EXPECTED pooled spectrum of 1e4 identical recipe-A matrix pixels
 (Al 98.8 / Mg 0.6 / Si 0.6 at%, 80 nm, 2.70 g/cm3, uniform thickness; the simulator's own four-segment geometry, depth weight beta 0.2,
-oxide O in the medium), the noise-free K-alpha areas the forward model made (after pile-up, tail and escape bookkeeping), the
+oxide O in the medium; the continuum seen through the detector, blurred by its resolution, detector_blur.py), the noise-free K-alpha areas the forward model made (after pile-up, tail and escape bookkeeping), the
 absorption-free areas, the per-segment/effective transmissions, and the simulator's true k (Gp * s_family * eps, absorption-free).
 The Swift test (SpectroscopyAbsorptionTruthTests) adds Poisson noise and types the SIMULATOR's k, because the simulator's
 sensitivities (Al 1.0, Mg 0.55, Si 1.2) are not SpectroKit's Bote-Salvat model.
@@ -12,7 +12,7 @@ import json, os, sys
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import xray_model as xm, forward as fw
+import xray_model as xm, forward as fw, detector_blur as db
 MAC = os.path.join(HERE, "..", "..", "Sources", "SpectroEDX", "Resources", "Spectroscopy", "FFastMAC.csv")
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "Tests", "SpectroEDXTests", "Fixtures", "eds-absorption-truth.json")
 NPIX = 10000
@@ -43,6 +43,6 @@ out = {"generator": "tools/edx-sim/absorption_truth_sim.py over tools/edx-sim/fo
        "areas_absorption_free": free, "t_eff": teff, "t_by_segment": tseg,
        # detector Si internal fluorescence planted at Si Ka (forward.py Si_Ka_internal): a fit of Si Ka sees it too
        "area_si_ka_internal": amp["Si_Ka_internal"],
-       "true_k_counts_per_atom_nm2": kc, "expected": [float(v) for v in r["exp_sum"][0] * NPIX]}
+       "true_k_counts_per_atom_nm2": kc, "expected": [float(v) for v in db.blurred(f, spec, fw.THICKNESS_BASE_NM, fw.PHASE_DENSITY["Al"], 1.0, r["exp_sum"][0]) * NPIX]}
 json.dump(out, open(OUT, "w"), separators=(",", ":"))
 print({k: v for k, v in out.items() if k != "expected"})

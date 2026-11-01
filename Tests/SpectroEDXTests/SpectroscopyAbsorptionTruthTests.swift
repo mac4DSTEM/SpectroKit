@@ -28,8 +28,9 @@ import SpectroEDX
 ///  So the error of an element's share is at most at%_X x (beta/6 + 0.04) x (c_X + c_Al), c = 1/T - 1 the app's own factor
 ///  (the reference's error enters the ratio too).
 /// Level 2 adds counting statistics (the result's own counting term, 3 sigma) and the documented weak-line bias next to Al
-/// K-alpha (`ContinuumForm.weakLineBiasNote`: -295 +- 31 at 900, -310 +- 23 at 882, -402 +- 33 at 3000 Mg counts, so
-/// 402 + 3 x 33 = 501 counts as an envelope; it is MEASURED for Mg only and ASSUMED to bound Si here).
+/// K-alpha (`ContinuumForm.weakLineBiasNote` with the sharp continuum step: -295 +- 31 at 900, -310 +- 23 at 882, -402 +- 33 at
+/// 3000 Mg counts, so 402 + 3 x 33 = 501 counts as an envelope; it is MEASURED for Mg only and ASSUMED to bound Si here). Kept with
+/// the broadened step, whose largest cell (-325 +- 38 at 3000) lies inside it.
 final class SpectroscopyAbsorptionTruthTests {
 
     static let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
@@ -214,7 +215,8 @@ final class SpectroscopyAbsorptionTruthTests {
         return truth * (try plantedAt(siExtra: pool.areaSiKaInternal)[2]) / (try plantedAt(siExtra: 0)[2])
     }
 
-    /// Fit bias envelope in counts, per element. Mg: the note's -402 +- 33 (402 + 3 x 33), against the planted Mg K-alpha.
+    /// Fit bias envelope in counts, per element. Mg: the sharp-step note's -402 +- 33 (402 + 3 x 33), against the planted Mg K-alpha
+    /// (kept: the broadened-step note's largest cell is -325 +- 38).
     /// Si: measured on this fixture against the WHOLE planted Si K-alpha peak (`plantedSiKa`), 4 seeds: nets 1750 / 1648 / 1632 /
     /// 1714, mean 1686, so -430 counts of 2116 (-20.3 %), sd 56 counts; envelope 430 + 3 x 56. (Against the sample line alone the
     /// same nets read -193 of 1879, -10.3 %: the number the test reported before, as -8.7 %.)
@@ -228,8 +230,11 @@ final class SpectroscopyAbsorptionTruthTests {
     /// seed) the nets are 2061 / 1912 / 1917 / 2006, mean 1974, -6.7 %, sd 72 counts, band 3 x 72 / 2 / 2116 = 0.051 (noise-free the
     /// same fit reads -4.0 %). The Al+Al sum peak at 2.97 keV had pulled the continuum segment above the Al K edge, and Si K-alpha
     /// with it (`DemoEDXPoolTests`). `siBiasFractionWithoutSumPeaks` keeps the old pin on the `.off` fit.
-    private static let siBiasFraction = -0.067, siBiasBand = 0.051
-    private static let siBiasFractionWithoutSumPeaks = -0.203, siBiasBandWithoutSumPeaks = 0.040
+    /// RE-PINNED with the continuum seen through the detector (the fixture's continuum blurred) and the broadened continuum step
+    /// (the default since then): with sum peaks the nets are 2058 / 2074 / 2153 / 2037, mean 2081, -1.67 %, sd 51 counts, band
+    /// 3 x 51 / 2 / 2116 = 0.036 (noise-free about -1.5 %); without sum peaks -17.2 % (band kept at 0.040).
+    private static let siBiasFraction = -0.0167, siBiasBand = 0.036
+    private static let siBiasFractionWithoutSumPeaks = -0.172, siBiasBandWithoutSumPeaks = 0.040
 
     /// Per-seed numbers go to stderr: `print` stays in the hosted app's stdout and never reaches the xcodebuild log.
     /// Also kept as an attachment (read it from the xcresult: `xcresulttool export attachments`, or the test run's attachments folder).

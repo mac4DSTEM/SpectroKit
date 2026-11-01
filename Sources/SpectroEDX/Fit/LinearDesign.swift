@@ -106,7 +106,7 @@ package nonisolated struct LinearDesign: Sendable {
                 bg.append(Column(kind: .background, name: "polynomial \(k)", values: v, signed: true, supported: true))
             }
         case .continuum(let form):
-            let (cols, names) = form.columns(energies: energies)
+            let (cols, names) = form.columns(energies: energies, resolutionMnKaEV: model.resolutionMnKaEV)
             for (v, nm) in zip(cols, names) {
                 bg.append(Column(kind: .background, name: nm, values: v.map { $0 * axis.scale },
                                  signed: !form.nonNegative, supported: true))
