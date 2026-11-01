@@ -73,6 +73,11 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     public var continuumEdges: [Double]
     /// Bernstein basis with non-negative coefficients (the continuum cannot go negative). False: free-sign monomials.
     public var continuumNonNegative: Bool
+    /// How the continuum steps at each edge. Default `.sharp`, the form the registered synthetic results were measured with.
+    /// `.broadened` blurs the step by the detector resolution, as a measured edge is: on a pure Al spectrum (Titan, Super-X) the
+    /// sharp step left the model 39 % above the data in 1.65-2.2 keV, the broadened one 19 %; on a synthetic Al film with a
+    /// broadened edge a weak Si K-alpha read -38.7 % sharp and -25.4 % broadened.
+    public var continuumEdgeStep: ContinuumEdgeStep
     /// A detector efficiency multiplying the whole continuum form (its low-energy roll-off modelled instead of absorbed in the
     /// polynomial). Default nil: the Kramers-only form.
     public var continuumEfficiency: DetectorLayers?
@@ -111,7 +116,7 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                 irls: IRLSSettings = IRLSSettings(), escapeRatioWarning: Double = 0.05,
                 axisRefinement: AxisRefinementSettings = AxisRefinementSettings(),
                 lineTail: LineTail? = nil, sumPeaks: SumPeakRule = .whenSignificant, sumPeakSignificance: Double = 3,
-                continuumDeadLayer: ContinuumDeadLayer? = nil) {
+                continuumEdgeStep: ContinuumEdgeStep = .sharp, continuumDeadLayer: ContinuumDeadLayer? = nil) {
         self.continuumDeadLayer = continuumDeadLayer
         self.fitFromKeV = fitFromKeV; self.defaultUpperLimitKeV = defaultUpperLimitKeV
         self.continuumOrders = continuumOrders; self.continuumEdges = continuumEdges
@@ -119,6 +124,7 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         self.escapePeaks = escapePeaks; self.maximumPolynomialOrder = maximumPolynomialOrder
         self.irls = irls; self.escapeRatioWarning = escapeRatioWarning; self.axisRefinement = axisRefinement
         self.lineTail = lineTail; self.sumPeaks = sumPeaks; self.sumPeakSignificance = sumPeakSignificance
+        self.continuumEdgeStep = continuumEdgeStep
     }
 
     /// The fit before sum peaks were the default (one Gaussian per line, no sum peaks): exSpy's line model.
@@ -126,11 +132,35 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
 
     private enum CodingKeys: String, CodingKey {
         case fitFromKeV, defaultUpperLimitKeV, continuumOrders, continuumEdges, continuumNonNegative, continuumEfficiency, escapePeaks,
-             lineTail, maximumPolynomialOrder, irls, escapeRatioWarning, axisRefinement, sumPeaks, sumPeakSignificance, continuumDeadLayer
+             lineTail, maximumPolynomialOrder, irls, escapeRatioWarning, axisRefinement, sumPeaks, sumPeakSignificance, continuumEdgeStep,
+             continuumDeadLayer
+    }
+
+    /// The synthesized encoding, except that `continuumEdgeStep` is written only when it is not the default, so the default
+    /// policy's canonical JSON stays byte for byte what it was before the field existed.
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(fitFromKeV, forKey: .fitFromKeV)
+        try c.encode(defaultUpperLimitKeV, forKey: .defaultUpperLimitKeV)
+        try c.encode(continuumOrders, forKey: .continuumOrders)
+        try c.encode(continuumEdges, forKey: .continuumEdges)
+        try c.encode(continuumNonNegative, forKey: .continuumNonNegative)
+        try c.encodeIfPresent(continuumEfficiency, forKey: .continuumEfficiency)
+        try c.encode(escapePeaks, forKey: .escapePeaks)
+        try c.encodeIfPresent(lineTail, forKey: .lineTail)
+        try c.encode(maximumPolynomialOrder, forKey: .maximumPolynomialOrder)
+        try c.encode(irls, forKey: .irls)
+        try c.encode(escapeRatioWarning, forKey: .escapeRatioWarning)
+        try c.encode(axisRefinement, forKey: .axisRefinement)
+        try c.encode(sumPeaks, forKey: .sumPeaks)
+        try c.encode(sumPeakSignificance, forKey: .sumPeakSignificance)
+        if continuumEdgeStep != .sharp { try c.encode(continuumEdgeStep, forKey: .continuumEdgeStep) }
+        try c.encodeIfPresent(continuumDeadLayer, forKey: .continuumDeadLayer)
     }
 
     /// A policy stored before sum peaks were the default has no `sumPeaks`: it reads `.off`, the fit it was stored with (and gets the
-    /// non-default footer line). Every other field is required, as before.
+    /// non-default footer line). One stored before `continuumEdgeStep` existed reads `.sharp`, the form it was run with. Every other
+    /// field is required, as before.
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(fitFromKeV: try c.decode(Double.self, forKey: .fitFromKeV),
@@ -147,6 +177,7 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                   lineTail: try c.decodeIfPresent(LineTail.self, forKey: .lineTail),
                   sumPeaks: try c.decodeIfPresent(SumPeakRule.self, forKey: .sumPeaks) ?? .off,
                   sumPeakSignificance: try c.decodeIfPresent(Double.self, forKey: .sumPeakSignificance) ?? 3,
+                  continuumEdgeStep: try c.decodeIfPresent(ContinuumEdgeStep.self, forKey: .continuumEdgeStep) ?? .sharp,
                   continuumDeadLayer: try c.decodeIfPresent(ContinuumDeadLayer.self, forKey: .continuumDeadLayer))
     }
 
