@@ -161,13 +161,22 @@ public enum EELSDeconvolution {
         let stops = try zeroLossStops(options.threshold, lowLoss: lowLoss, axis: originalAxis, cancelled: cancelled,
                                       progress: progress.map { p in { @Sendable f in p(0.2 * f) } })
 
+        // A pixel whose continuation is not finite (A x^-r overflows) is NaN in exSpy, which deconvolves the others; here it is flagged,
+        // its continuation zeroed so the image can be formed, and it is left unanswered below.
+        var overflowed = [Bool](repeating: false, count: pixels)
         let cl: CoreLossSpectrumImage
         if options.extrapolateCoreLoss {
-            cl = try EELSSpectrumOps.powerLawExtrapolation(coreLoss, windowChannels: 20, extrapolationChannels: 100, cancelled: cancelled).image
+            let e = try EELSSpectrumOps.powerLawExtrapolationFlaggingNonFinite(coreLoss, windowChannels: 20, extrapolationChannels: 100, cancelled: cancelled)
+            cl = e.image
+            for p in 0 ..< pixels where e.nonFinite[p] { overflowed[p] = true }
         } else { cl = coreLoss }
         let ll: LowLossSpectrumImage
+        var firstLowLossOverflowed = false
         if options.extrapolateLowLoss {
-            ll = try EELSSpectrumOps.powerLawExtrapolation(lowLoss, windowChannels: 100, extrapolationChannels: 100, cancelled: cancelled).image
+            let e = try EELSSpectrumOps.powerLawExtrapolationFlaggingNonFinite(lowLoss, windowChannels: 100, extrapolationChannels: 100, cancelled: cancelled)
+            ll = e.image
+            for p in 0 ..< pixels where e.nonFinite[p] { overflowed[p] = true }
+            firstLowLossOverflowed = e.nonFinite[0]
         } else { ll = lowLoss }
         let (llT, llTaper) = try EELSSpectrumOps.hanningTaper(ll)
         let (clT, _) = try EELSSpectrumOps.hanningTaper(cl)
@@ -179,6 +188,8 @@ public enum EELSDeconvolution {
 
         let fwhm: Double
         if let f = options.fwhmEV { fwhm = f } else {
+            // exSpy measures the first pixel; with its continuation non-finite the width is NaN and so is every pixel's result.
+            if firstLowLossOverflowed { throw EELSDeconvolutionError.noPeakWidth }
             let first = Array(llT.counts[0 ..< llChannels])
             guard let w = try peakWidth(first, offsetEV: llT.energyOffsetEV, scaleEV: llT.energyScaleEV) else {
                 throw EELSDeconvolutionError.noPeakWidth
@@ -202,7 +213,7 @@ public enum EELSDeconvolution {
 
         var out = [Double](repeating: 0, count: pixels * origin)
         let why = EELSSlots<EELSUnavailable?>(count: pixels, initial: nil)
-        let clSource = clT.counts, llSource = llT.counts
+        let clSource = clT.counts, llSource = llT.counts, unanswered = overflowed
         try out.withUnsafeMutableBufferPointer { dst in
             nonisolated(unsafe) let target = dst
             try clSource.withUnsafeBufferPointer { csrc in
@@ -211,6 +222,7 @@ public enum EELSDeconvolution {
                     try EELSParallel.forEachPixel(count: pixels, cancelled: cancelled,
                                                   progress: progress.map { p in { @Sendable f in p(0.2 + 0.8 * f) } }) { p in
                         guard let stopChannel = stops[p], stopChannel <= llChannels else { why.set(p, .noThreshold); return }
+                        if unanswered[p] { why.set(p, .nonFiniteResult); return }
                         let i0 = NumpySum.pairwise(linput.baseAddress! + p * llChannels, count: stopChannel)
                         let jk = realFFT(cinput.baseAddress! + p * clChannels, count: clChannels, size: size, plan: forward)
                         let jl = realFFT(linput.baseAddress! + p * llChannels, count: llChannels, size: size, plan: forward)

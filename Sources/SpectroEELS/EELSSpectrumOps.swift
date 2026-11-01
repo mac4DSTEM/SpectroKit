@@ -34,6 +34,27 @@ public nonisolated enum EELSSpectrumOps {
         _ image: I, windowChannels: Int = 20, extrapolationChannels: Int = 1024, fixNegativeR: Bool = false,
         cancelled: @Sendable () -> Bool = SpectroCancellation.task, progress: (@Sendable (Double) -> Void)? = nil
     ) throws -> (image: I, fits: [PowerLawParameters?]) {
+        let r = try extrapolate(image, windowChannels: windowChannels, extrapolationChannels: extrapolationChannels, fixNegativeR: fixNegativeR,
+                                zeroNonFinite: false, cancelled: cancelled, progress: progress)
+        return (r.image, r.fits)
+    }
+
+    /// The same, for the Fourier-ratio deconvolution: where a pixel's continuation is not finite (`A x^-r` overflows although A and r are
+    /// finite), its new channels are zeros and `nonFinite[p]` is true, so the caller can leave that pixel unanswered, as exSpy's NaN does,
+    /// instead of the whole image failing. The other pixels are exactly those of `powerLawExtrapolation`.
+    package static func powerLawExtrapolationFlaggingNonFinite<I: EELSSpectrumImage>(
+        _ image: I, windowChannels: Int, extrapolationChannels: Int,
+        cancelled: @Sendable () -> Bool = SpectroCancellation.task
+    ) throws -> (image: I, nonFinite: [Bool]) {
+        let r = try extrapolate(image, windowChannels: windowChannels, extrapolationChannels: extrapolationChannels, fixNegativeR: false,
+                                zeroNonFinite: true, cancelled: cancelled, progress: nil)
+        return (r.image, r.nonFinite)
+    }
+
+    private static func extrapolate<I: EELSSpectrumImage>(
+        _ image: I, windowChannels: Int, extrapolationChannels: Int, fixNegativeR: Bool, zeroNonFinite: Bool,
+        cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?
+    ) throws -> (image: I, fits: [PowerLawParameters?], nonFinite: [Bool]) {
         let n = image.channels
         guard extrapolationChannels >= 1 else { throw EELSDeconvolutionError.extrapolationWindowTooWide(window: windowChannels, channels: n) }
         guard windowChannels >= 3, windowChannels <= n else { throw EELSDeconvolutionError.extrapolationWindowTooWide(window: windowChannels, channels: n) }
@@ -45,6 +66,7 @@ public nonisolated enum EELSSpectrumOps {
         let pixels = image.nx * image.ny
         var counts = [Double](repeating: 0, count: pixels * extended)
         let fits = EELSSlots<PowerLawParameters?>(count: pixels, initial: nil)
+        let nonFinite = EELSSlots<Bool>(count: pixels, initial: false)
         let scale = image.energyScaleEV
         let source = image.counts
         try counts.withUnsafeMutableBufferPointer { dst in
@@ -58,16 +80,22 @@ public nonisolated enum EELSSpectrumOps {
                     guard case .success(let fit) = PowerLawFit.estimate(UnsafeBufferPointer(start: row, count: n), window: window) else { return }
                     fits.set(p, PowerLawParameters(a: fit.a, r: fit.r))
                     let a = fixNegativeR && fit.r <= 0 ? 0.0 : fit.a
+                    var finite = true
                     for c in n..<extended {
                         let x = axis.energy(ofChannel: c)
                         // factor * A * x ** (-r), NumPy's order of operations
                         out[c] = (scale * a) * Libm.pow(x, -fit.r)
+                        if !out[c].isFinite { finite = false }
+                    }
+                    if zeroNonFinite && !finite {
+                        for c in n..<extended { out[c] = 0 }
+                        nonFinite.set(p, true)
                     }
                 }
             }
         }
         let result = try I(nx: image.nx, ny: image.ny, channels: extended, counts: counts, energyOffsetEV: image.energyOffsetEV, energyScaleEV: scale)
-        return (result, fits.values)
+        return (result, fits.values, nonFinite.values)
     }
 
     // MARK: Hanning taper

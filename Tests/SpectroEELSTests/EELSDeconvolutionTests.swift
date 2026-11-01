@@ -93,6 +93,101 @@ struct EELSDeconvolutionTests {
         }
     }
 
+    /// A 4 x 3 low loss (256 channels from -5 eV at 0.5 eV) and core loss (256 channels from 250 eV) built in closed form. `bad` gets the
+    /// window that makes the two-area power law overflow on the continuation (A 8e-296, r -143.09 in HyperSpy): its last 100 low-loss channels
+    /// are 5.4e-15 then 50.
+    private func overflowPair(bad: Int?) throws -> (ll: LowLossSpectrumImage, core: CoreLossSpectrumImage) {
+        let n = 256, pixels = 12
+        var ll = [Double](repeating: 0, count: pixels * n), cl = ll
+        for p in 0 ..< pixels {
+            for c in 0 ..< n {
+                let e = -5 + 0.5 * Double(c)
+                var s = 1000 * exp(-0.5 * (e / 0.6) * (e / 0.6))
+                s += (80 + 5 * Double(p)) * exp(-0.5 * ((e - 20) / 4) * ((e - 20) / 4))
+                if e > 1 { s += 300 * pow(max(abs(e), 1), -1.5) }
+                ll[p * n + c] = s
+                let ec = 250 + 0.5 * Double(c)
+                cl[p * n + c] = (2 + 0.1 * Double(p)) * (ec > 284 ? pow(ec / 284, -3) : 0) + 1e-3 * pow(ec / 250, -2)
+            }
+        }
+        if let bad {
+            for c in (n - 100) ..< (n - 50) { ll[bad * n + c] = 5.4e-15 }
+            for c in (n - 50) ..< n { ll[bad * n + c] = 50 }
+        }
+        return (try LowLossSpectrumImage(nx: 4, ny: 3, channels: n, counts: ll, energyOffsetEV: -5, energyScaleEV: 0.5),
+                try CoreLossSpectrumImage(nx: 4, ny: 3, channels: n, counts: cl, energyOffsetEV: 250, energyScaleEV: 0.5))
+    }
+
+    /// exSpy 0.3.2 gives NaN at a pixel whose low-loss continuation overflows (with a RuntimeWarning) and deconvolves the rest; the kit leaves
+    /// that pixel unanswered (zeros, `nonFiniteResult`) and answers the other eleven, which do not change by one bit against the same image
+    /// without the bad pixel.
+    @Test func testFourierRatioPixelWithNonFiniteContinuationIsUnavailable() throws {
+        let clean = try overflowPair(bad: nil), broken = try overflowPair(bad: 5)
+        // the bad window really overflows: the public extrapolation of that image cannot be formed
+        #expect(throws: (any Error).self) { try EELSSpectrumOps.powerLawExtrapolation(broken.ll, windowChannels: 100, extrapolationChannels: 100) }
+        let options = FourierRatioOptions(threshold: .fixed(2.5))
+        let before = try EELSDeconvolution.fourierRatio(coreLoss: clean.core, lowLoss: clean.ll, options: options)
+        let after = try EELSDeconvolution.fourierRatio(coreLoss: broken.core, lowLoss: broken.ll, options: options)
+        let n = clean.core.channels
+        #expect(after.fwhmEV == before.fwhmEV && after.fftSize == before.fftSize)
+        for px in 0 ..< 12 {
+            let row = after.image.counts[px * n ..< (px + 1) * n]
+            if px == 5 {
+                #expect(after.unavailable[px] == .nonFiniteResult && row.allSatisfy { $0 == 0 })
+            } else {
+                #expect(after.unavailable[px] == nil, Comment(rawValue: "pixel \(px)"))
+                #expect(Array(row) == Array(before.image.counts[px * n ..< (px + 1) * n]), Comment(rawValue: "pixel \(px) moved"))
+            }
+        }
+        // exSpy 0.3.2 on the same inputs (estimated FWHM, threshold 2.5 eV): pixel 1, channels 60...63, within the kit's Fourier-ratio tolerance
+        let exspy = [-0.017163108412498216, -0.00234262241292717, -0.03682816896247529, 0.038049721723035654]
+        for (k, want) in exspy.enumerated() {
+            let got = after.image.counts[1 * n + 60 + k]
+            #expect(abs(got - want) <= 1e-7 * abs(want) + 1e-7 * 5.330745866192701, Comment(rawValue: "channel \(60 + k): \(got)"))
+        }
+    }
+
+    /// The FWHM is estimated from the first pixel (exSpy's current spectrum). When that pixel's continuation overflows, exSpy's width is NaN
+    /// and so is every pixel; the kit refuses with `noPeakWidth` (pass `fwhmEV`). With a FWHM given, only that pixel is unanswered.
+    @Test func testFourierRatioFirstPixelNonFiniteContinuation() throws {
+        let broken = try overflowPair(bad: 0)
+        #expect(throws: EELSDeconvolutionError.noPeakWidth) {
+            try EELSDeconvolution.fourierRatio(coreLoss: broken.core, lowLoss: broken.ll, options: FourierRatioOptions(threshold: .fixed(2.5)))
+        }
+        let given = FourierRatioOptions(fwhmEV: 1.2, threshold: .fixed(2.5))
+        let out = try EELSDeconvolution.fourierRatio(coreLoss: broken.core, lowLoss: broken.ll, options: given)
+        let ref = try EELSDeconvolution.fourierRatio(coreLoss: broken.core, lowLoss: try overflowPair(bad: nil).ll, options: given)
+        let n = broken.core.channels
+        #expect(out.unavailable[0] == .nonFiniteResult && out.image.counts[0 ..< n].allSatisfy { $0 == 0 })
+        #expect(out.unavailable[1 ..< 12].allSatisfy { $0 == nil })
+        #expect(Array(out.image.counts[n...]) == Array(ref.image.counts[n...]))
+    }
+
+    /// The core loss's own continuation (window 20) overflowing at pixel 0: that pixel is unanswered, the FWHM (from the low loss) is still
+    /// estimated, and the other pixels are bit-identical. The window (ten channels at 0.31, ten at 50 on 5 + 0.5 c eV) gives A 2.4e-296,
+    /// r -140.65 in HyperSpy, whose continuation overflows.
+    @Test func testFourierRatioCoreLossNonFiniteContinuation() throws {
+        let n = 256
+        func core(bad: Bool) throws -> CoreLossSpectrumImage {
+            var cl = [Double](repeating: 0, count: 12 * n)
+            for p in 0 ..< 12 { for c in 0 ..< n { cl[p * n + c] = (100 + Double(p)) * pow((5 + 0.5 * Double(c)) / 5, -1) } }
+            if bad {
+                for c in (n - 20) ..< (n - 10) { cl[c] = 0.31 }
+                for c in (n - 10) ..< n { cl[c] = 50 }
+            }
+            return try CoreLossSpectrumImage(nx: 4, ny: 3, channels: n, counts: cl, energyOffsetEV: 5, energyScaleEV: 0.5)
+        }
+        let low = try overflowPair(bad: nil).ll, broken = try core(bad: true)
+        #expect(throws: (any Error).self) { try EELSSpectrumOps.powerLawExtrapolation(broken, windowChannels: 20, extrapolationChannels: 100) }
+        let options = FourierRatioOptions(threshold: .fixed(2.5))
+        let out = try EELSDeconvolution.fourierRatio(coreLoss: broken, lowLoss: low, options: options)
+        let ref = try EELSDeconvolution.fourierRatio(coreLoss: try core(bad: false), lowLoss: low, options: options)
+        #expect(out.fwhmEV == ref.fwhmEV)
+        #expect(out.unavailable[0] == .nonFiniteResult && out.image.counts[0 ..< n].allSatisfy { $0 == 0 })
+        #expect(out.unavailable[1 ..< 12].allSatisfy { $0 == nil })
+        #expect(Array(out.image.counts[n...]) == Array(ref.image.counts[n...]))
+    }
+
     /// A zero in the zero-loss spectrum's transform: the logarithm leaves the real line, the pixel says so.
     @Test func testFourierLogOfZeroSpectrumIsUnavailable() throws {
         let t = try plural()
