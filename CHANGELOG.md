@@ -8,6 +8,13 @@ each entry from the merged pull requests' titles; a breaking change's Migration 
 Every quantification and thickness result reports `validation: "none"`: agreement with exSpy and HyperSpy is not validation on a
 sample of known composition.
 
+## [0.13.2](https://github.com/mac4DSTEM/SpectroKit/compare/0.13.1...0.13.2) (2026-11-01)
+
+
+### Bug Fixes
+
+* the energy axis refinement stops at an offset and gain bound and never reports converged there ([#84](https://github.com/mac4DSTEM/SpectroKit/issues/84)) ([95bc318](https://github.com/mac4DSTEM/SpectroKit/commit/95bc31861129f4ba45b4cc7e1b2df0475c2a24b7))
+
 ## [0.13.1](https://github.com/mac4DSTEM/SpectroKit/compare/0.13.0...0.13.1) (2026-11-01)
 
 
