@@ -1,7 +1,7 @@
 #!/bin/zsh
 # SpectroKit consumer check: build tools/consumer-check (a separate package that depends on SpectroKit by path) in DEBUG and
 # run it against the committed fixtures. Debug is what a consumer's Debug build does with a dependency that may carry no
-# unsafe flags (SpectroKit's manifest has none). Nothing is set up first: the file readers are FormatoKit's (0.4.0) and
+# unsafe flags (SpectroKit's manifest has none). Nothing is set up first: the file readers are FormatoKit's (since SpectroKit 0.4.0) and
 # FormatoKit ships libhdf5 as three binary xcframeworks (FormatoLibHDF5, FormatoLibSZ, FormatoLibAEC), so MAC4DSTEM_HDF5_PATH is
 # unset before the run. Exit 0 only if the build has no warning but FormatoKit's prints for those signed xcframeworks
 # ("not stripping binary because it is signed"), SpectroKit_SpectroEELS.bundle (the GOS tables) and the three frameworks
