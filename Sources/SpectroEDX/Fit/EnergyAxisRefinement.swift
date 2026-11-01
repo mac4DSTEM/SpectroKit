@@ -22,7 +22,17 @@ import Foundation
 import SpectroCore
 
 /// Which of the energy axis's offset, gain and the detector width the refinement adjusts, and how long it searches. Defaults are the
-/// library's choice (all three, 600 simplex iterations, tolerance 1e-12, widths between 20 and 500 eV).
+/// library's choice (all three, 600 simplex iterations, tolerance 1e-12, widths between 20 and 500 eV, offset within +-200 eV and
+/// gain within +-5 % of the file's).
+///
+/// THE OFFSET AND GAIN BOUNDS (0.13.2). A spectrum with one strong line fixes two numbers (its channel and its width in channels)
+/// against three parameters, so the residual has a flat valley along which offset, gain and width trade; the simplex then walks
+/// until a bound stops it (a synthetic one-line spectrum went to gain +444 %, offset -6.6 keV). +-200 eV and +-5 % are a stated
+/// choice, far outside a working detector calibration (the tests plant up to +-12 eV and 0.2 %), and they keep the fitted
+/// energies near or above zero from the 0.2 keV start. A refinement that ends against any bound is not a minimum: it is reported not
+/// converged, with the parameter named, and the pooled fit uses the file's axis.
+/// A policy stored before 0.13.2 has no offset or gain key and reads these defaults, not "no bound": unlike the rule for other new
+/// `FitPolicy` keys, a re-run can differ from its stored run, and only where that run walked against the new bounds.
 public nonisolated struct AxisRefinementSettings: Sendable, Equatable, Codable {
     /// Adjust the offset. Default true; false keeps the file's.
     public var refineOffset = true
@@ -38,12 +48,36 @@ public nonisolated struct AxisRefinementSettings: Sendable, Equatable, Codable {
     public var minimumResolutionEV = 20.0
     /// A trial width at or above this, eV, is rejected. Default 500.
     public var maximumResolutionEV = 500.0
+    /// A trial offset shift whose size is at or above this, eV, is rejected. Default 200.
+    public var maximumOffsetShiftEV = 200.0
+    /// A trial relative gain shift whose size is at or above this is rejected. Default 0.05 (5 %).
+    public var maximumGainShift = 0.05
 
     public init(refineOffset: Bool = true, refineGain: Bool = true, refineResolution: Bool = true, maxIterations: Int = 600,
-                tolerance: Double = 1e-12, minimumResolutionEV: Double = 20, maximumResolutionEV: Double = 500) {
+                tolerance: Double = 1e-12, minimumResolutionEV: Double = 20, maximumResolutionEV: Double = 500,
+                maximumOffsetShiftEV: Double = 200, maximumGainShift: Double = 0.05) {
         self.refineOffset = refineOffset; self.refineGain = refineGain; self.refineResolution = refineResolution
         self.maxIterations = maxIterations; self.tolerance = tolerance
         self.minimumResolutionEV = minimumResolutionEV; self.maximumResolutionEV = maximumResolutionEV
+        self.maximumOffsetShiftEV = maximumOffsetShiftEV; self.maximumGainShift = maximumGainShift
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case refineOffset, refineGain, refineResolution, maxIterations, tolerance, minimumResolutionEV, maximumResolutionEV,
+             maximumOffsetShiftEV, maximumGainShift
+    }
+
+    /// A policy stored before 0.13.2 has no offset or gain bound: it reads the defaults (see the type's note).
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = AxisRefinementSettings()
+        self.init(refineOffset: try c.decode(Bool.self, forKey: .refineOffset), refineGain: try c.decode(Bool.self, forKey: .refineGain),
+                  refineResolution: try c.decode(Bool.self, forKey: .refineResolution),
+                  maxIterations: try c.decode(Int.self, forKey: .maxIterations), tolerance: try c.decode(Double.self, forKey: .tolerance),
+                  minimumResolutionEV: try c.decode(Double.self, forKey: .minimumResolutionEV),
+                  maximumResolutionEV: try c.decode(Double.self, forKey: .maximumResolutionEV),
+                  maximumOffsetShiftEV: try c.decodeIfPresent(Double.self, forKey: .maximumOffsetShiftEV) ?? defaults.maximumOffsetShiftEV,
+                  maximumGainShift: try c.decodeIfPresent(Double.self, forKey: .maximumGainShift) ?? defaults.maximumGainShift)
     }
 }
 
@@ -58,7 +92,13 @@ public nonisolated struct AxisRefinementResult: Sendable, Equatable {
     package let rssFile: Double
     package let rssRefined: Double
     package let iterations: Int
+    /// The simplex met its tolerance AND no refined parameter ended against its bound.
     package let converged: Bool
+    /// The refined parameters that ended against their bound ("offset", "gain", "FWHM"), in that order; empty when none did.
+    /// Not empty: the result is not a minimum of the residual and the pooled fit does not use it.
+    public let parametersAtBound: [String]
+    /// "gain +5.000 % (bound +-5 %)", one clause per parameter at its bound; empty when none is.
+    package let boundText: String
 
     public var refinedAxis: EnergyAxis { EnergyAxis(offset: offset, scale: scale, size: size) }
     package let size: Int
@@ -90,7 +130,8 @@ package nonisolated enum EnergyAxisRefinement {
             let d = (options.refineOffset ? u[0] : 0) * 1e-3
             let g = (options.refineGain ? u[1] : 0) * 1e-4
             let r = fileResolutionMnKaEV + (options.refineResolution ? u[2] : 0)
-            guard r > options.minimumResolutionEV, r < options.maximumResolutionEV else { return .infinity }
+            guard r > options.minimumResolutionEV, r < options.maximumResolutionEV,
+                  abs(d * 1000) < options.maximumOffsetShiftEV, abs(g) < options.maximumGainShift else { return .infinity }
             let axis = EnergyAxis(offset: fileAxis.offset + d, scale: fileAxis.scale * (1 + g), size: fileAxis.size)
             let model = EDSLineModel.build(elements: settings.elements, axis: axis, beamEnergy: settings.beamEnergy,
                                            resolutionMnKaEV: r, escapePeaks: settings.escapePeaks, lineTail: settings.lineTail,
@@ -117,12 +158,28 @@ package nonisolated enum EnergyAxisRefinement {
         let d = (options.refineOffset ? best[0] : 0) * 1e-3
         let g = (options.refineGain ? best[1] : 0) * 1e-4
         let r = fileResolutionMnKaEV + (options.refineResolution ? best[2] : 0)
+        // A parameter within 1e-4 of its bound span of a bound ended against it (the simplex presses on a rejected region).
+        var atBound: [String] = [], clauses: [String] = []
+        func near(_ v: Double, _ lo: Double, _ hi: Double) -> Bool { min(v - lo, hi - v) <= 1e-4 * (hi - lo) }
+        if options.refineOffset, near(d * 1000, -options.maximumOffsetShiftEV, options.maximumOffsetShiftEV) {
+            atBound.append("offset")
+            clauses.append(String(format: "offset %+.1f eV (bound \u{00B1}%g eV)", d * 1000, options.maximumOffsetShiftEV))
+        }
+        if options.refineGain, near(g, -options.maximumGainShift, options.maximumGainShift) {
+            atBound.append("gain")
+            clauses.append(String(format: "gain %+.3f %% (bound \u{00B1}%g %%)", g * 100, options.maximumGainShift * 100))
+        }
+        if options.refineResolution, near(r, options.minimumResolutionEV, options.maximumResolutionEV) {
+            atBound.append("FWHM")
+            clauses.append(String(format: "FWHM %.0f eV (bounds %g-%g eV)", r, options.minimumResolutionEV, options.maximumResolutionEV))
+        }
         try SpectroCancellation.check(cancelled)
         progress?(1)
         return AxisRefinementResult(
             fileOffset: fileAxis.offset, fileScale: fileAxis.scale, fileResolutionMnKaEV: fileResolutionMnKaEV,
             offset: fileAxis.offset + d, scale: fileAxis.scale * (1 + g), resolutionMnKaEV: r,
-            rssFile: rss([0, 0, 0]), rssRefined: rss(best), iterations: iterations, converged: converged,
+            rssFile: rss([0, 0, 0]), rssRefined: rss(best), iterations: iterations, converged: converged && atBound.isEmpty,
+            parametersAtBound: atBound, boundText: clauses.joined(separator: ", "),
             size: fileAxis.size)
     }
 

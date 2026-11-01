@@ -80,7 +80,7 @@ extension ElementProposer {
             do { fit = try PooledQuantifier.run(input, tables: tables, cancelled: cancelled) }
             catch let c as SpectroCancelled { throw c }
             catch { break }
-            guard let r = fit.refinement, fit.usedAxis == r.refinedAxis else { break }
+            guard let r = fit.refinement, r.parametersAtBound.isEmpty, fit.usedAxis == r.refinedAxis else { break }
             anchorsUsed = anchors
             refinement = r
             axis = r.refinedAxis

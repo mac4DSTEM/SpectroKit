@@ -220,6 +220,10 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
             || !(axisRefinement.minimumResolutionEV < axisRefinement.maximumResolutionEV) {
             return "The axis refinement needs a cap of 1 or more, a positive tolerance and a width range with its lower bound below its upper."
         }
+        if !(axisRefinement.maximumOffsetShiftEV.isFinite && axisRefinement.maximumOffsetShiftEV > 0)
+            || !(axisRefinement.maximumGainShift.isFinite && axisRefinement.maximumGainShift > 0) {
+            return "The axis refinement needs a finite, positive bound on the offset shift and on the gain shift."
+        }
         return nil
     }
 }
