@@ -24,8 +24,8 @@
 //  What went (0.11.0): the all-candidate joint fit with its L_C pruning and single-candidate forward step, and the flank-misfit factor that
 //  scaled a candidate's sigma_0 by its neighbour's misfit (x33 for Mg beside Al on a measured Al-alloy map, where Mg's own window fitted to
 //  ±3 σ). The 1 % model term does that job in the published way.
-//  Not yet: the method's overlap check (elements whose every peak sits under a modelled one); such an element leaves no residual peak and
-//  is not reported. An open item, not a proposal changer: the method reports its finds as possible only.
+//  The method's overlap check (elements whose every peak sits under a modelled one leave no residual peak) is opt-in
+//  (`ProposerPolicy.overlapCheck`): each such element is fitted once with the settled model and, when the fit needs it, reported as possible only.
 //
 
 import Foundation
@@ -176,6 +176,8 @@ public nonisolated struct ElementProposer: Sendable {
     /// The downward confirmation rule, see `ProposerPolicy.downwardFamilyMinimumZ`. nil: off.
     package var downwardFamilyMinimumZ: Int?
     package var sumPeakFraction = 1.0
+    /// The overlap check, see `ProposerPolicy.overlapCheck`.
+    package var overlapCheck = false
 
     /// Elements the line table lists that no spectrum of a material shows or that the app has no use for:
     /// radioactive or absent from the table (Tc, Pm and everything from Po up, as the field's auto IDs stop at Bi), noble gases other than Ar
@@ -200,7 +202,7 @@ public nonisolated struct ElementProposer: Sendable {
         ProposerPolicy(currie: currie, pool: pool, excluded: excluded, minimumLineEnergyKeV: minimumLineEnergyKeV, thresholds: thresholds,
                        rangeMarginFWHM: rangeMarginFWHM, sumPeakToleranceKeV: sumPeakToleranceKeV, context: context,
                        familyConsistency: familyConsistency, familyOvervoltage: familyOvervoltage, sumPeakFraction: sumPeakFraction,
-                       downwardFamilyMinimumZ: downwardFamilyMinimumZ)
+                       downwardFamilyMinimumZ: downwardFamilyMinimumZ, overlapCheck: overlapCheck)
     }
 
     /// The proposer with every choice named (`ProposerPolicy.default` is what the other initialiser builds).
@@ -209,7 +211,7 @@ public nonisolated struct ElementProposer: Sendable {
         thresholds = policy.thresholds; excluded = policy.excluded
         rangeMarginFWHM = policy.rangeMarginFWHM; sumPeakToleranceKeV = policy.sumPeakToleranceKeV; context = policy.context
         familyConsistency = policy.familyConsistency; familyOvervoltage = policy.familyOvervoltage; downwardFamilyMinimumZ = policy.downwardFamilyMinimumZ
-        sumPeakFraction = policy.sumPeakFraction
+        sumPeakFraction = policy.sumPeakFraction; overlapCheck = policy.overlapCheck
     }
 
     /// - Parameters:
@@ -616,6 +618,55 @@ public nonisolated struct ElementProposer: Sendable {
             fit = try run(model, on: counts)
         }
 
+        // The overlap check (opt-in): an element whose every line hides under a modelled one leaves no residual peak, so the loop never
+        // nominated it. Each such element is fitted once with the settled model; it is reported possible when the fit needs it.
+        var overlapFinds: [(element: String, trial: Trial)] = []
+        if overlapCheck {
+            let inModel = Set(model.map(\.element))
+            // Every modelled line can host (a weak Kβ still carries model counts there); the fit then decides.
+            let modelled = model.flatMap { g in g.lines.map { (g.element == "sum" ? (sumInfo[g.id]?.label ?? g.id) : g.element, $0.energy) } }
+            var jobs: [[FitLineGroup]] = [], keys: [(element: String, hosts: [String])] = []
+            for el in poolElements where testable.contains(el) && !inModel.contains(el) && trials[el] == nil && pruned[el] == nil && found[el] == nil {
+                let lines = XRayLines.lines(of: el).filter { $0.weight >= t.minimumLineWeight && $0.energy >= max(lo, minimumLineEnergyKeV) && $0.energy <= hi }
+                guard !lines.isEmpty else { continue }
+                var hosts: [String] = []
+                let hidden = lines.allSatisfy { l in
+                    let reach = t.candidateWindowSigma * fwhm(l.energy) / EDSLineModel.sigma2fwhm + t.candidateWindowKeV
+                    guard let h = modelled.filter({ abs($0.1 - l.energy) <= reach }).min(by: { abs($0.1 - l.energy) < abs($1.1 - l.energy) }) else { return false }
+                    if !hosts.contains(h.0) { hosts.append(h.0) }
+                    return true
+                }
+                guard hidden else { continue }
+                jobs.append(model + poolGroups.filter { $0.element == el })
+                keys.append((el, hosts))
+            }
+            if !jobs.isEmpty {
+                let results = try runAll(jobs, on: counts)
+                tested += jobs.count
+                for (k, r) in zip(keys, results) {
+                    guard let p = try? r.get() else { continue }
+                    let gain = fit.statistic - p.statistic
+                    let gs = p.model.groups.enumerated().filter { $0.element.element == k.element }.compactMap { gi, g in stat(p, gi).map { (g.id, $0) } }
+                    guard gain >= t.minimumGain, let (gid, st) = gs.max(by: { $0.1.significance < $1.1.significance }), st.net >= st.ld else { continue }
+                    // The loop's other bars: the gain must be at its own lines (not a reshaped host), and no line of it may worsen its window.
+                    let new = p.model.groups.filter { $0.element == k.element }
+                    let mask = near(new)
+                    let local = zip(mask.indices, mask).filter(\.1).reduce(0.0) { $0 + fit.terms[$1.0] - p.terms[$1.0] }
+                    guard local / gain >= t.minimumLocalShare else { continue }
+                    let contradicted = new.contains { g in g.lines.contains { l in
+                        guard l.weight >= t.minimumLineWeight else { return false }
+                        let d = window(l.energy, l.fwhm).reduce(0.0) { $0 + fit.terms[$1] - p.terms[$1] }
+                        return d <= -t.contradictionGain && -d > t.contradictionShare * gain
+                    } }
+                    guard !contradicted else { continue }
+                    let reason = String(format: "Every line of it sits under a modelled line (%@), so it left no residual peak of its own and its confirmation lines cannot be read apart; the overlap check fitted it with the settled model: gain %.0f, area %.0f at or above its detection limit %.0f. Possible only.",
+                                        k.hosts.joined(separator: ", "), gain, st.net, st.ld)
+                    overlapFinds.append((k.element, Trial(key: k.element, group: gid, stat: st, gain: gain, peakGain: 0, localShare: 0, reason: reason,
+                                                         confirmation: nil, unconfirmable: nil, pass: p)))
+                }
+            }
+        }
+
         // Background health in bands, off the modelled lines: data over model within 0.8 to 1.25.
         let onLines = near(model)
         var unhealthy: [(lo: Double, hi: Double, ratio: Double)] = []
@@ -638,7 +689,9 @@ public nonisolated struct ElementProposer: Sendable {
         func conflicts(_ el: String, _ group: String, _ alpha: Double, _ net: Double) -> [LineConflict] {
             LineConflicts.conflicts(element: el, line: group, lineEnergyKeV: alpha, parents: finalParents.map(\.parent).filter { $0.element != el },
                                     toleranceKeV: sumPeakToleranceKeV, context: context).filter { c in
-                c.kind != .sumPeak || (c.requires.compactMap { parentNets[$0] }.min() ?? 0) * sumPeakFraction >= net
+                // A self pair (one parent) spends two photons of its line per event: at most half that parent.
+                let pairShare = c.requires.count == 1 ? 0.5 : 1.0
+                return c.kind != .sumPeak || (c.requires.compactMap { parentNets[$0] }.min() ?? 0) * pairShare * sumPeakFraction >= net
             }
         }
         // The sum columns of the final fit at or above their own L_D: a peak one of them took is explained pile-up.
@@ -705,6 +758,9 @@ public nonisolated struct ElementProposer: Sendable {
             else { try append(el, group: tr.group, stat: st, possibleReason: tr.reason ?? "Tested but not added.",
                               explainedBySumPeak: tr.lostToSum.flatMap { detectedSums[$0] }) }
         }
+        for f in overlapFinds where !candidates.contains(where: { $0.element == f.element }) {
+            if let st = f.trial.stat { try append(f.element, group: f.trial.group, stat: st, possibleReason: f.trial.reason) }
+        }
         candidates.sort { $0.significance > $1.significance }
 
         var sumPeaks: [SumPeakFinding] = []
@@ -732,6 +788,9 @@ public nonisolated struct ElementProposer: Sendable {
         for label in Set(candidates.compactMap(\.explainedBySumPeak)).sorted() {
             let els = candidates.filter { $0.explainedBySumPeak == label }.map(\.element)
             notes.append("Explained as pile-up (validation: none): \(els.joined(separator: ", ")) lost the peak they were tested on to the \(label) column, which the final fit keeps at or above its detection limit; they are not possible elements.")
+        }
+        if overlapCheck {
+            notes.append(String(format: "Overlap check (validation: none): every element whose lines all sit under modelled lines was fitted once with the settled model; %d reached L_D with a gain of at least %.0f and are possible only.", overlapFinds.count, t.minimumGain))
         }
         for b in unhealthy { notes.append(String(format: "Background check: data over model %.2f off the lines in %.1f to %.1f keV (0.80 to 1.25 is healthy); a find there is only possible.", b.ratio, b.lo, b.hi)) }
         let pChance = 0.5 * erfc((currie.zAlpha + currie.zBeta) / 2.0.squareRoot())
