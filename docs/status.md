@@ -13,7 +13,7 @@ Live:
 - **SpectroCore**: line-profile pooling, display smoothing, sparse regions.
 
 Every quantification says `validation: "none"` until a standard of known composition is measured. Parity row by row: `docs/parity.md`;
-timings against Python: `docs/benchmarks.md`; what is open: `docs/open-items.md`; fixtures and their generators: `Tests/Fixtures/README.md`.
+timings against Python: `docs/benchmarks.md`; what is open: the GitHub issues; known limits: `docs/parity.md`; fixtures and their generators: `Tests/Fixtures/README.md`.
 
 Tests: the fast targets run per change (`swift test -c release --parallel --skip SpectroKitParityTests`); the pinned Python comparisons
 (golden baseline, exSpy/HyperSpy/pyEELSMODEL pins, the planted EDX runs) are `SpectroKitParityTests`, run in CI on every push and before a tag.
