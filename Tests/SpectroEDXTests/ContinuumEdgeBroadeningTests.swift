@@ -181,4 +181,3 @@ struct ContinuumEdgeBroadeningTests {
         #expect(form.edgeStep == .broadened)
     }
 }
-
