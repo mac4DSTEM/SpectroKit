@@ -1,6 +1,6 @@
 # Status
 
-SpectroKit 0.12.0 (tagged 2026-10-23), on FormatoKit `"0.4.0"..<"1.0.0"` and ImagoKit `"0.6.1"..<"1.0.0"`, against HyperSpy 2.4.0 and
+SpectroKit 0.12.0 (tagged 2026-10-23), on FormatoKit `"0.12.0"..<"1.0.0"` (main; the 0.12.0 tag allowed `"0.4.0"`) and ImagoKit `"0.6.1"..<"1.0.0"`, against HyperSpy 2.4.0 and
 exSpy 0.3.2 / 7185a4d1. macOS 15 and later.
 
 Live:
