@@ -207,7 +207,7 @@ struct EELSMLLSTests {
         #expect(bad.pixels[1].unavailable == nil)
     }
 
-    /// at% and wt% from the MLLS intensities equal the ratios of the intensities, and a negative intensity makes the pixel unavailable.
+    /// at% and wt% from the MLLS intensities equal the ratios of the intensities, with nothing flagged as not detected.
     @Test func testCompositionFromMLLS() throws {
         let t = try planted("fecu.full.given")
         let result = try EELSMLLS.fit(coreLoss: t.core, edges: t.edges, microscope: t.microscope, options: EELSMLLSOptions(exponent: .perPixel(t.truthR)))
@@ -221,5 +221,58 @@ struct EELSMLLSTests {
         }
         #expect(throws: EELSModelError.symbolNotFitted("Si")) { try EELSQuantification.composition(result, symbols: ["Si"]) }
         #expect(throws: EELSModelError.self) { try EELSQuantification.composition(result, symbols: ["Fe", "Fe"]) }
+        #expect(comp.allSatisfy { $0.notDetected == [false, false] })
+    }
+
+    /// An element whose unconstrained MLLS amount is at or below zero is not detected: 0 at% and 0 wt%, flagged in `notDetected`, and the
+    /// others are normalised among themselves (as the non-negative model fit gives such an element 0). The pixel keeps its composition.
+    /// Pixels with every amount positive are unchanged to the bit.
+    ///
+    /// The image: the planted C, N and O image with its N amplitude moved to +-1.5 % of C's by linearity. With H_CO the hat matrix of the
+    /// fit without N (power law, C, O), the CNO fit of Y - k (H_CNO Y - H_CO Y) has N amplitude (1 - k) N(Y), because H_CO Y lies in the
+    /// CNO design's span with no N part (C and O move towards the fit without N; only the sign of N matters here).
+    @Test func testCompositionWithNegativeAbsentElementKeepsTheOthers() throws {
+        let t = try planted("cno.full.given")
+        let options = EELSMLLSOptions(exponent: .perPixel(t.truthR))
+        let all = try EELSMLLS.fit(coreLoss: t.core, edges: t.edges, microscope: t.microscope, options: options)
+        let co = try EELSMLLS.fit(coreLoss: t.core, edges: [t.edges[0], t.edges[2]], microscope: t.microscope, options: options)
+        #expect(all.edges.map(\.element) == ["C", "N", "O"])
+        let n = t.core.channels
+        var counts = t.core.counts
+        for p in 0 ..< t.core.pixelCount {
+            let c = all.pixels[p].intensities[0].value, nk = all.pixels[p].intensities[1].value
+            let target = (p % 2 == 0 ? 0.015 : -0.015) * c
+            let k = 1 - target / nk
+            let full = try #require(all.modelCurve(pixel: p)), without = try #require(co.modelCurve(pixel: p))
+            for ch in 0 ..< n { counts[p * n + ch] -= k * (full[ch] - without[ch]) }
+        }
+        let image = try CoreLossSpectrumImage(nx: t.core.nx, ny: t.core.ny, channels: n, counts: counts,
+                                              energyOffsetEV: t.core.energyOffsetEV, energyScaleEV: t.core.energyScaleEV)
+        let result = try EELSMLLS.fit(coreLoss: image, edges: t.edges, microscope: t.microscope, options: options)
+        let comp = try EELSQuantification.composition(result, symbols: ["C", "N", "O"])
+        let masses = ["C", "N", "O"].map { EELSQuantification.atomicMasses[$0]! }
+        for p in 0 ..< t.core.pixelCount {
+            let a = result.pixels[p].intensities.map(\.value), c = comp[p]
+            #expect(c.unavailable == nil, Comment(rawValue: "pixel \(p)"))
+            if p % 2 == 0 {
+                #expect(a[1] > 0, Comment(rawValue: "pixel \(p): N \(a[1])"))
+                // the old rule, exactly
+                let atoms = a.reduce(0, +), weights = zip(a, masses).map { $0 * $1 }.reduce(0, +)
+                #expect(c.atomicPercent == a.map { 100 * $0 / atoms })
+                #expect(c.weightPercent == zip(a, masses).map { 100 * $0 * $1 / weights })
+                #expect(c.notDetected == [false, false, false])
+            } else {
+                #expect(a[1] < 0, Comment(rawValue: "pixel \(p): N \(a[1])"))
+                #expect(c.notDetected == [false, true, false])
+                #expect(c.atomicPercent[1] == 0 && c.weightPercent[1] == 0)
+                #expect(abs(c.atomicPercent[0] - 100 * a[0] / (a[0] + a[2])) < 1e-9)
+                #expect(abs(c.weightPercent[2] - 100 * a[2] * masses[2] / (a[0] * masses[0] + a[2] * masses[2])) < 1e-9)
+                #expect(abs(c.atomicPercent.reduce(0, +) - 100) < 1e-9 && abs(c.weightPercent.reduce(0, +) - 100) < 1e-9)
+            }
+        }
+        // every element at or below zero: no composition
+        let none = try EELSQuantification.composition(result, symbols: ["N"])
+        #expect(none[1].unavailable == .noComposition && none[1].atomicPercent.isEmpty)
+        #expect(none[0].unavailable == nil && none[0].atomicPercent == [100])
     }
 }

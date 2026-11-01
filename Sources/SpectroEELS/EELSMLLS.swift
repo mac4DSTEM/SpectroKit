@@ -247,8 +247,13 @@ public enum EELSMLLS {
 
 extension EELSQuantification {
     /// at% and wt% of `symbols` at every pixel of an MLLS `result`, as `composition(_: EELSModelResult, symbols:)` does for the model fit: an
-    /// element's amount is its master edge's intensity (the first independent edge in fit order when an element has K and L). Negative
-    /// intensities (the fit is unconstrained) make the pixel unavailable (`noComposition`). No uncertainty on the percentages (open item).
+    /// element's amount is its master edge's intensity (the first independent edge in fit order when an element has K and L). The fit is
+    /// unconstrained, so an absent element's amount scatters around zero: an amount at or below zero is not detected (`notDetected`), counts
+    /// as 0 at% and 0 wt%, and the others are normalised among themselves (kit decision, consistent with the non-negative model fit, which
+    /// gives an absent element 0; exSpy has no EELS composition, and its EDS Cliff-Lorimer passes a negative line through as a negative
+    /// fraction). `notDetected == false` only means the amount is above zero, not above a detection limit. Clamping per pixel biases an
+    /// average of pixel compositions upward for an absent element: quantify a summed region instead. The pixel is unavailable
+    /// (`noComposition`) only when no amount is above zero. No uncertainty on the percentages (open item).
     public static func composition(_ result: EELSMLLSResult, symbols: [String]) throws -> [EELSCompositionPixel] {
         var columns: [Int] = []
         if let dup = symbols.enumerated().first(where: { i, s in symbols[..<i].contains(s) })?.element { throw EELSModelError.symbolNotFitted(dup + " (listed twice)") }
@@ -261,14 +266,18 @@ extension EELSQuantification {
             guard pixel.unavailable == nil else {
                 return EELSCompositionPixel(atomicPercent: [], weightPercent: [], unavailable: pixel.unavailable)
             }
-            let amounts = columns.map { pixel.intensities[$0].value }
+            let fitted = columns.map { pixel.intensities[$0].value }
+            // An amount at or below zero is not detected and counts as 0, as the non-negative model fit gives an absent element.
+            let notDetected = fitted.map { !($0 > 0) }
+            let amounts = fitted.map { $0 > 0 ? $0 : 0 }
             let atoms = amounts.reduce(0, +)
             let weights = zip(amounts, masses).map { $0 * $1 }.reduce(0, +)
-            guard atoms > 0, weights > 0, amounts.allSatisfy({ $0 >= 0 }) else {
+            guard atoms > 0, weights > 0 else {
                 return EELSCompositionPixel(atomicPercent: [], weightPercent: [], unavailable: .noComposition)
             }
             return EELSCompositionPixel(atomicPercent: amounts.map { 100 * $0 / atoms },
-                                        weightPercent: zip(amounts, masses).map { 100 * $0 * $1 / weights }, unavailable: nil)
+                                        weightPercent: zip(amounts, masses).map { 100 * $0 * $1 / weights }, unavailable: nil,
+                                        notDetected: notDetected)
         }
     }
 }
