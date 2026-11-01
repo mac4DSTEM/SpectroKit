@@ -29,8 +29,9 @@ package enum PlantedRuns {
     /// The design of the single-candidate test (registration P2): `pool: ["Mg"]`, `settings.elements = [Al, Si]`.
     /// Sets the Mn Ka resolution of the model (130 eV unless a diagnosis experiment scans it) and the fit range.
     package static func run(_ counts: [Double], pool: [String]? = ["Mg"], current: [String] = ["Al", "Si"], resolution: Double = 130,
-                    axis: EnergyAxis = PlantedRuns.axis, reference: ReferenceShapes = .none) -> MgRun {
-        var settings = FitSettings.standard(elements: current, axis: axis, resolutionMnKaEV: resolution, beamEnergy: 200)
+                    axis: EnergyAxis = PlantedRuns.axis, reference: ReferenceShapes = .none,
+                    policy: FitPolicy = .default) -> MgRun {
+        var settings = FitSettings.standard(elements: current, axis: axis, resolutionMnKaEV: resolution, beamEnergy: 200, policy: policy)
         settings.referenceShapes = reference
         guard let r = try? ElementProposer(pool: pool).propose(counts: counts, axis: axis, settings: settings),
               let c = r.candidates.first(where: { $0.element == "Mg" }) else {

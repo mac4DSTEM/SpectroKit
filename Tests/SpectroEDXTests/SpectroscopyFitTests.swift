@@ -136,7 +136,10 @@ struct SpectroscopyFitTests {
                 for i in out.indices { out[i] += a * escapeFraction * ec[i] }
             }
         }
-        var bg = energies.map { $0 >= 0.2 ? truthContinuum($0, beam: beam) : 0 }
+        // The continuum (and its Al K and Si K steps) seen through the detector, as the lines are.
+        var bg = DetectorBlur.blur(energies.map { $0 > 0 ? truthContinuum($0, beam: beam) : 0 }, energies: energies,
+                                   resolutionMnKaEV: resolution)
+        for i in bg.indices where energies[i] < 0.2 { bg[i] = 0 }
         let sum = bg.reduce(0, +)
         bg = bg.map { $0 / sum * continuumTotal }
         for i in out.indices { out[i] += bg[i] }

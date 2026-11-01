@@ -1,6 +1,6 @@
 //
 //  ContinuumEdgeBroadeningTests.swift
-//  Role: The continuum's step at the Al K edge (sharp default, opt-in broadened) on a spectrum whose edge is seen through the detector, as a real one is: a
+//  Role: The continuum's step at the Al K edge (broadened default, opt-in sharp) on a spectrum whose edge is seen through the detector, as a real one is: a
 //        Kramers continuum absorbed by an Al film (FFAST mu/rho), then convolved with the detector's Gaussian, plus Al K (and a weak
 //        Si K) line. Noise-free and generated here; no measured spectrum is committed.
 //
@@ -116,11 +116,12 @@ struct ContinuumEdgeBroadeningTests {
         #expect(abs(s - -0.387) < 0.02, "sharp Si bias \(s)")
     }
 
-    /// `.sharp` is the default and the form without the broadening: the same columns as a call with no resolution.
-    @Test func testTheSharpStepIsTheDefaultAndTheUnbroadenedForm() {
+    /// `.broadened` is the default; `.sharp` is the form without the broadening: the same columns as a call with no resolution.
+    @Test func testTheBroadenedStepIsTheDefaultAndSharpTheUnbroadenedForm() {
         let e = Array(Self.energies[40..<4000])
-        let sharp = ContinuumForm(beamEnergy: Self.beam)
-        let broad = ContinuumForm(beamEnergy: Self.beam, edgeStep: .broadened)
+        let sharp = ContinuumForm(beamEnergy: Self.beam, edgeStep: .sharp)
+        let broad = ContinuumForm(beamEnergy: Self.beam)
+        #expect(broad.edgeStep == .broadened)
         #expect(sharp.edgeStep == .sharp)
         #expect(sharp.columns(energies: e, resolutionMnKaEV: Self.resolution).values == sharp.columns(energies: e).values)
         #expect(broad.columns(energies: e).values == sharp.columns(energies: e).values, "no resolution: the sharp form")
@@ -136,8 +137,8 @@ struct ContinuumEdgeBroadeningTests {
     /// (Kramers / kRef): the weights sum to 1. Every column is non-negative and finite.
     @Test func testTheBroadenedWeightsSumToOne() {
         let e = Array(Self.energies[40..<4000])
-        let broad = ContinuumForm(beamEnergy: Self.beam, edgeStep: .broadened).columns(energies: e, resolutionMnKaEV: Self.resolution).values
-        let sharp = ContinuumForm(beamEnergy: Self.beam).columns(energies: e).values
+        let broad = ContinuumForm(beamEnergy: Self.beam).columns(energies: e, resolutionMnKaEV: Self.resolution).values
+        let sharp = ContinuumForm(beamEnergy: Self.beam, edgeStep: .sharp).columns(energies: e).values
         for i in e.indices {
             let b = broad.reduce(0) { $0 + $1[i] }, s = sharp.reduce(0) { $0 + $1[i] }
             #expect(abs(b - s) <= 1e-12 * max(abs(s), 1), "channel \(i): \(b) vs \(s)")
@@ -149,9 +150,9 @@ struct ContinuumEdgeBroadeningTests {
     @Test func testTheBroadenedWeightsSumToOneWithTwoCloseEdges() {
         let e = Array(Self.energies[40..<4000])
         let edges = [1.5596, 1.65]
-        let broad = ContinuumForm(beamEnergy: Self.beam, edges: edges, orders: [9, 3, 5], edgeStep: .broadened)
+        let broad = ContinuumForm(beamEnergy: Self.beam, edges: edges, orders: [9, 3, 5])
             .columns(energies: e, resolutionMnKaEV: Self.resolution).values
-        let sharp = ContinuumForm(beamEnergy: Self.beam, edges: edges, orders: [9, 3, 5]).columns(energies: e).values
+        let sharp = ContinuumForm(beamEnergy: Self.beam, edges: edges, orders: [9, 3, 5], edgeStep: .sharp).columns(energies: e).values
         for i in e.indices {
             let b = broad.reduce(0) { $0 + $1[i] }, s = sharp.reduce(0) { $0 + $1[i] }
             #expect(abs(b - s) <= 1e-12 * max(abs(s), 1), "channel \(i): \(b) vs \(s)")
@@ -159,25 +160,32 @@ struct ContinuumEdgeBroadeningTests {
         #expect(broad.allSatisfy { $0.allSatisfy { $0 >= 0 && $0.isFinite } })
     }
 
-    /// The policy: default `.sharp`, named in the footer when `.broadened`, and a stored policy without the field reads `.sharp`.
-    @Test func testThePolicyDefaultsToSharpAndOldStoredPoliciesReadIt() throws {
-        #expect(FitPolicy.default.continuumEdgeStep == .sharp)
-        // The default policy's canonical JSON is what it was before the field existed: the key is written only when not the default.
-        #expect(!QuantificationPolicy.default.canonicalJSON.contains("continuumEdgeStep"))
-        var broad = QuantificationPolicy()
-        broad.fit.continuumEdgeStep = .broadened
-        #expect(broad.footerLine?.contains("continuumEdgeStep = broadened") == true, "\(broad.footerLine ?? "nil")")
-        let round = try JSONDecoder().decode(QuantificationPolicy.self, from: Data(broad.canonicalJSON.utf8))
-        #expect(round == broad)
+    /// The policy: default `.broadened` (the key written), `.sharp` named in the footer as non-default, and a stored policy without
+    /// the field reads `.sharp`, the form it was run with (and so gets that footer line).
+    @Test func testThePolicyDefaultsToBroadenedAndOldStoredPoliciesReadSharp() throws {
+        #expect(FitPolicy.default.continuumEdgeStep == .broadened)
+        #expect(FitPolicy.exspyEquivalent.continuumEdgeStep == .broadened)
+        #expect(QuantificationPolicy.default.canonicalJSON.contains("\"continuumEdgeStep\":\"broadened\""))
+        #expect(QuantificationPolicy.default.footerLine == nil)
+        var sharp = QuantificationPolicy()
+        sharp.fit.continuumEdgeStep = .sharp
+        #expect(sharp.footerLine?.contains("continuumEdgeStep = sharp") == true, "\(sharp.footerLine ?? "nil")")
+        #expect(sharp.canonicalJSON.contains("\"continuumEdgeStep\":\"sharp\""))
+        for p in [sharp, QuantificationPolicy.default] {
+            #expect(try JSONDecoder().decode(QuantificationPolicy.self, from: Data(p.canonicalJSON.utf8)) == p)
+        }
         var json = try #require(try JSONSerialization.jsonObject(with: Data(QuantificationPolicy.default.canonicalJSON.utf8)) as? [String: Any])
         var fit = try #require(json["fit"] as? [String: Any])
         fit.removeValue(forKey: "continuumEdgeStep")
         json["fit"] = fit
         let old = try JSONDecoder().decode(QuantificationPolicy.self, from: try JSONSerialization.data(withJSONObject: json))
-        #expect(old == .default)
-        let settings = FitSettings.standard(elements: ["Al"], axis: Self.axis, resolutionMnKaEV: Self.resolution, beamEnergy: Self.beam,
-                                            policy: broad.fit)
+        #expect(old == sharp)
+        let settings = FitSettings.standard(elements: ["Al"], axis: Self.axis, resolutionMnKaEV: Self.resolution, beamEnergy: Self.beam)
         guard case .continuum(let form) = settings.background else { Issue.record("no continuum"); return }
         #expect(form.edgeStep == .broadened)
+        let sharpSettings = FitSettings.standard(elements: ["Al"], axis: Self.axis, resolutionMnKaEV: Self.resolution, beamEnergy: Self.beam,
+                                                 policy: sharp.fit)
+        guard case .continuum(let sharpForm) = sharpSettings.background else { Issue.record("no continuum"); return }
+        #expect(sharpForm.edgeStep == .sharp)
     }
 }

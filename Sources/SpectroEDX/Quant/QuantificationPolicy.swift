@@ -73,10 +73,10 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     public var continuumEdges: [Double]
     /// Bernstein basis with non-negative coefficients (the continuum cannot go negative). False: free-sign monomials.
     public var continuumNonNegative: Bool
-    /// How the continuum steps at each edge. Default `.sharp`, the form the registered synthetic results were measured with.
-    /// `.broadened` blurs the step by the detector resolution, as a measured edge is: on a pure Al spectrum (Titan, Super-X) the
-    /// sharp step left the model 39 % above the data in 1.65-2.2 keV, the broadened one 19 %; on a synthetic Al film with a
-    /// broadened edge a weak Si K-alpha read -38.7 % sharp and -25.4 % broadened.
+    /// How the continuum steps at each edge. Default `.broadened`: the step blurred by the detector resolution, as a measured edge
+    /// is. On a pure Al spectrum (Titan, Super-X) the sharp step left the model 39 % above the data in 1.65-2.2 keV, the broadened
+    /// one 19 %; on a synthetic Al film with a broadened edge a weak Si K-alpha read -38.7 % sharp and -25.4 % broadened.
+    /// `.sharp` is the form before `.broadened` became the default, value for value; a stored policy without the field reads it.
     public var continuumEdgeStep: ContinuumEdgeStep
     /// A detector efficiency multiplying the whole continuum form (its low-energy roll-off modelled instead of absorbed in the
     /// polynomial). Default nil: the Kramers-only form.
@@ -116,7 +116,7 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                 irls: IRLSSettings = IRLSSettings(), escapeRatioWarning: Double = 0.05,
                 axisRefinement: AxisRefinementSettings = AxisRefinementSettings(),
                 lineTail: LineTail? = nil, sumPeaks: SumPeakRule = .whenSignificant, sumPeakSignificance: Double = 3,
-                continuumEdgeStep: ContinuumEdgeStep = .sharp, continuumDeadLayer: ContinuumDeadLayer? = nil) {
+                continuumEdgeStep: ContinuumEdgeStep = .broadened, continuumDeadLayer: ContinuumDeadLayer? = nil) {
         self.continuumDeadLayer = continuumDeadLayer
         self.fitFromKeV = fitFromKeV; self.defaultUpperLimitKeV = defaultUpperLimitKeV
         self.continuumOrders = continuumOrders; self.continuumEdges = continuumEdges
@@ -127,7 +127,8 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         self.continuumEdgeStep = continuumEdgeStep
     }
 
-    /// The fit before sum peaks were the default (one Gaussian per line, no sum peaks): exSpy's line model.
+    /// The fit before sum peaks were the default (one Gaussian per line, no sum peaks): exSpy's line model. Its continuum is the
+    /// default one (exSpy's polynomial has no edge at all), broadened step included.
     public static let exspyEquivalent = FitPolicy(sumPeaks: .off)
 
     private enum CodingKeys: String, CodingKey {
@@ -136,8 +137,8 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
              continuumDeadLayer
     }
 
-    /// The synthesized encoding, except that `continuumEdgeStep` is written only when it is not the default, so the default
-    /// policy's canonical JSON stays byte for byte what it was before the field existed.
+    /// The synthesized encoding in a fixed key order. Every field with a value is written, `continuumEdgeStep` and `sumPeaks`
+    /// included; a stored policy without them reads the form it was run with (see `init(from:)`).
     public func encode(to encoder: any Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(fitFromKeV, forKey: .fitFromKeV)
@@ -154,7 +155,7 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         try c.encode(axisRefinement, forKey: .axisRefinement)
         try c.encode(sumPeaks, forKey: .sumPeaks)
         try c.encode(sumPeakSignificance, forKey: .sumPeakSignificance)
-        if continuumEdgeStep != .sharp { try c.encode(continuumEdgeStep, forKey: .continuumEdgeStep) }
+        try c.encode(continuumEdgeStep, forKey: .continuumEdgeStep)
         try c.encodeIfPresent(continuumDeadLayer, forKey: .continuumDeadLayer)
     }
 

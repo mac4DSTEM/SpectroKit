@@ -29,7 +29,7 @@
 //  the model has no nonlinear parameter: n_0 + 1 and n_1 + 1 coefficients, 10 + 6 = 16 by default, all
 //  linear and non-negative.
 //
-//  THE STEP SEEN THROUGH THE DETECTOR (opt-in `ContinuumEdgeStep.broadened`): a detector records the incoming spectrum
+//  THE STEP SEEN THROUGH THE DETECTOR (`ContinuumEdgeStep.broadened`, the default since the generators were blurred): a detector records the incoming spectrum
 //  convolved with its resolution, so a measured edge is a Gaussian-blurred step (about 75 eV FWHM at 1.56 keV for 128 eV at
 //  Mn K-alpha), never a jump between two channels. The broadened form weights segment s by
 //      w_s(E) = Phi((E - a_s) / sigma(a_s)) - Phi((E - b_s) / sigma(b_s)),
@@ -42,8 +42,11 @@
 //  Measured: on a pure Al wedge (Titan 200 kV, Super-X; Snelson, Collins, MacArthur, University of Leeds, doi 10.5518/1826,
 //  CC BY 4.0) the sharp step made the model fall 351 counts more than the data between the channels at 1.559 and 1.564 keV,
 //  left the data 1677 counts above the model in 1.53-1.65 keV and the model 39 % above the data in 1.65-2.2 keV; broadened:
-//  42 counts, 907 counts and 19 %. `.sharp` (the default) is the earlier form, value for value: the kit's registered
-//  synthetic generators plant an unbroadened step, so making `.broadened` the default re-measures those results first.
+//  42 counts, 907 counts and 19 %. `.sharp` (opt-in) is the earlier form, value for value: the cut at the edge channel. The kit's
+//  synthetic generators blur their continuum with the detector resolution (tools/edx-sim/detector_blur.py), as a detector does, and
+//  the registered synthetic results were re-measured under `.broadened` when it became the default.
+//  The remaining data excess on that wedge at 1.56-1.65 keV is the Al K-beta line, not the continuum: eXSpy's table ties it at
+//  0.0132 of K-alpha; fitted free it reads 0.028 there (NIST EPQ 0.0315). The quantification fit keeps eXSpy's weight (parity).
 //
 //  The Al K edge energy 1.5596 keV is the standard tabulated value (X-ray Data Booklet, Table 1-1).
 //  The Si K edge (1.839 keV, a detector dead-layer step) is NOT in the default: add it to `edges` to test it, or model the step
@@ -91,14 +94,14 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
     /// roll-off is modelled and P_s only carries what epsilon does not. nil: the round-1 form. The model is generic
     /// (`DetectorEfficiency`), not a measured Super-X calibration.
     package var efficiency: (any DetectorEfficiency)?
-    /// How the step at each edge is drawn: sharp at the edge channel (default) or broadened by the detector resolution.
+    /// How the step at each edge is drawn: broadened by the detector resolution (default) or sharp at the edge channel.
     package var edgeStep: ContinuumEdgeStep
 
     package static let alKEdge = FitPolicy.alKEdgeKeV
 
     package init(beamEnergy: Double, edges: [Double] = [ContinuumForm.alKEdge], orders: [Int] = [9, 5],
                  nonNegative: Bool = true, efficiency: (any DetectorEfficiency)? = nil,
-                 edgeStep: ContinuumEdgeStep = .sharp) {
+                 edgeStep: ContinuumEdgeStep = .broadened) {
         precondition(orders.count == edges.count + 1, "ContinuumForm needs one order per segment")
         precondition(zip(edges, edges.dropFirst()).allSatisfy { $0 < $1 }, "edges ascend")
         self.beamEnergy = beamEnergy; self.edges = edges; self.orders = orders; self.nonNegative = nonNegative
@@ -216,15 +219,15 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
     public static let weakLineBiasNote =
         "a weak line next to Al K\u{03B1} reads low by \u{2248} 300 counts per pooled spectrum on synthetic data "
         + "(cause: the Al K\u{03B1} incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); "
-        + "unmeasured on real data. Weak-line bias measured on synthetic data: \u{0394} = \u{2212}295 \u{00B1} 31 counts at 900 planted Mg K\u{03B1} "
-        + "(generator A, no tail: continuum\u{2013}line projection) and \u{2212}310 \u{00B1} 23 at 882 (generator S); "
-        + "\u{2212}402 \u{00B1} 33 at 3000 (A) and \u{2212}310 \u{00B1} 23 at 2899 (S)"
+        + "unmeasured on real data. Weak-line bias measured on synthetic data: \u{0394} = \u{2212}270 \u{00B1} 31 counts at 900 planted Mg K\u{03B1} "
+        + "(generator A, no tail: continuum\u{2013}line projection) and \u{2212}272 \u{00B1} 23 at 882 (generator S); "
+        + "\u{2212}325 \u{00B1} 38 at 3000 (A) and \u{2212}226 \u{00B1} 22 at 2899 (S)"
 }
 
 /// How the continuum's step at an absorption edge is drawn (`FitPolicy.continuumEdgeStep`).
 public nonisolated enum ContinuumEdgeStep: String, Sendable, Codable, Equatable {
-    /// Seen through the detector: each segment weighted by the detector's Gaussian step at its edges.
+    /// Seen through the detector: each segment weighted by the detector's Gaussian step at its edges (the default).
     case broadened
-    /// A jump between the two channels either side of the edge (the default).
+    /// A jump between the two channels either side of the edge: the form before `.broadened` was the default, value for value.
     case sharp
 }
