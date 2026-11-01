@@ -89,6 +89,8 @@ struct SumEscapeFitTests {
         // The note names the method, not a validation tag (the badge is the `validation` field).
         let note = try #require(r.fit.warnings.first { $0.hasPrefix("sum/escape model") && $0.contains("conditional on its coefficients") })
         #expect(note.contains("planted-truth tests only") && !note.contains("validation"), "\(note)")
+        #expect(r.parameters.contains("no reference implementation; planted-truth tests only"), "\(r.parameters)")
+        #expect(!r.parameters.contains { $0.contains("validation") }, "\(r.parameters)")
     }
 
     @Test func noisyPlantedCoefficientsAndNetCountsImprove() throws {

@@ -753,14 +753,14 @@ public nonisolated struct ElementProposer: Sendable {
         if let p = policy.noteLine { notes.insert(p, at: 3) }
         if EPQLineWeights.bundled == nil { notes.append("The NIST EPQ line weights are missing from this build: the identification fit used eXSpy's Kβ weights.") }
         if familyConsistency {
-            notes.append("Confirmation lines (validation: none): an element nominated by an L or M line needs its K or L alpha line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise it is withheld.")
+            notes.append("Confirmation lines: an element nominated by an L or M line needs its K or L alpha line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise it is withheld.")
             if let z = downwardFamilyMinimumZ {
-                notes.append("Downward confirmation (validation: none): an element of Z \u{2265} \(z) nominated by a K line needs its L\u{03B1} line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it; otherwise it is withheld.")
+                notes.append("Downward confirmation: an element of Z \u{2265} \(z) nominated by a K line needs its L\u{03B1} line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it; otherwise it is withheld.")
             }
             notes += candidates.compactMap { c in c.familyNote.map { "Confirmation withheld \(c.element): \($0)" } }
         }
         if overlapCheck {
-            notes.append(String(format: "Overlap check (validation: none): every element whose lines all sit under modelled lines was fitted once with the settled model; %d reached L_D with a gain of at least %.0f and are possible only.", overlapFinds.count, t.minimumGain))
+            notes.append(String(format: "Overlap check: every element whose lines all sit under modelled lines was fitted once with the settled model; %d reached L_D with a gain of at least %.0f and are possible only.", overlapFinds.count, t.minimumGain))
         }
         for b in unhealthy { notes.append(String(format: "Background check: data over model %.2f off the lines in %.1f to %.1f keV (0.80 to 1.25 is healthy); a find there is only possible.", b.ratio, b.lo, b.hi)) }
         let pChance = 0.5 * erfc((currie.zAlpha + currie.zBeta) / 2.0.squareRoot())

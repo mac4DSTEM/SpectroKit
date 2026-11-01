@@ -332,7 +332,7 @@ public nonisolated enum EDSSumEscapeFit {
                                  f, how, XRayLines.line("Si_Ka")!.energy, escComponents.count, escComponents.count == 1 ? "" : "s"))
         }
         params.append("solver: alternating Gauss-Newton on the line areas and least squares on the coefficients, \(iterations) iteration\(iterations == 1 ? "" : "s"), " + (converged ? "converged" : "NOT converged"))
-        params.append("validation: none (no reference implementation; planted-truth tests only)")
+        params.append("no reference implementation; planted-truth tests only")
         fit.escapeLabel = params.filter { $0.hasPrefix("sum peaks") || $0.hasPrefix("escape peaks") }.joined(separator: "; ")
         if fit.escapeLabel.isEmpty { fit.escapeLabel = baseline.escapeLabel }
         if !converged { fit.warnings.append("sum/escape model: the alternation did not converge in \(maxIt) iterations") }
