@@ -105,6 +105,18 @@ struct FamilyConsistencyTests {
         #expect(Self.candidate(loose, "Si")?.hasSumPeakQuestion == true, "with no bound the Mg+O sum claims Si")
     }
 
+    /// A self pair spends two photons of one line on each pile-up event, so its sum peak is at most half its parent (a pair of two lines at most
+    /// the smaller parent). Ar Kα (2.957 keV) sits 17 eV from the Al+Al sum (2.974 keV): planted at two thirds of Al it is too large for that sum
+    /// and carries no question; at a third it keeps it. Red before the half bound: the 6000-count Ar carried the question.
+    @Test func testASelfPairSumPeakIsAtMostHalfItsParent() throws {
+        let big = try Self.propose(Self.expected([("Al_Ka", 9000, Self.whole), ("Ar_Ka", 6000, Self.whole)]))
+        let ar = try #require(Self.candidate(big, "Ar"))
+        #expect(!ar.hasSumPeakQuestion, "\(ar.conflicts.map(\.question))")
+        let small = try Self.propose(Self.expected([("Al_Ka", 9000, Self.whole), ("Ar_Ka", 3000, Self.whole)]))
+        let arSmall = try #require(Self.candidate(small, "Ar"))
+        #expect(arSmall.hasSumPeakQuestion, "a third of Al can be the Al+Al sum")
+    }
+
     /// The rule off is the old run (no note, no withheld). The rule on: the withheld keep the numbers of their own test fit, and every other
     /// candidate has the numbers of the old run made without the withheld elements in the pool (the model is settled again without them, so their
     /// counts return to the lines they belong to).

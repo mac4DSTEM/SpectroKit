@@ -136,7 +136,7 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
     public var familyOvervoltage: Double
     /// A candidate on a pile-up energy is a sum-peak question only when its net is at most this fraction of the smaller parent's net. Default 1: a pile-up
     /// peak can never exceed its smaller parent (the chance of a second photon within the shaping time is at most 1); a smaller value would be a measured
-    /// dead-time fraction of one detector.
+    /// dead-time fraction of one detector. A self pair (Al+Al) spends two photons of its line per event, so its bound is half the parent's net.
     public var sumPeakFraction: Double
     /// The downward confirmation rule: an element of at least this atomic number nominated by a K line must show its L alpha line at
     /// `IdentificationThresholds.confirmationSigma` in the residual where the fitted range holds it, or it is withheld (`familyNote`); acts only with
@@ -145,16 +145,24 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
     /// the check reads the residual without the element, so an L line that an element found earlier already explains (Zn Lα beside Na Kα, As Lα
     /// beside Mg Kα, Br Lα under Al Kα) reads as missing and the K pick is withheld.
     public var downwardFamilyMinimumZ: Int?
+    /// The overlap check of the published method: after the loop, every pool element whose lines (weight at least
+    /// `IdentificationThresholds.minimumLineWeight`, inside the fitted range) all sit within the candidate window of a modelled line leaves no
+    /// residual peak of its own, so it is fitted with the settled model once; when it gains at least `minimumGain` and its area reaches L_D it is
+    /// reported as possible (`possibleReason` names the lines it hides under), never proposed. Default false (off): the check has not been run on
+    /// measured spectra, so a consumer switches it on.
+    public var overlapCheck: Bool
 
     public init(currie: Currie = .standard, pool: [String]? = nil, excluded: Set<String> = ElementProposer.defaultExcluded,
                 minimumLineEnergyKeV: Double = 0.45, thresholds: IdentificationThresholds = .default, rangeMarginFWHM: Double = 0.5,
                 sumPeakToleranceKeV: Double = ProposerPolicy.defaultSumPeakToleranceKeV, context: ElementContext = .default,
-                familyConsistency: Bool = true, familyOvervoltage: Double = 2, sumPeakFraction: Double = 1, downwardFamilyMinimumZ: Int? = nil) {
+                familyConsistency: Bool = true, familyOvervoltage: Double = 2, sumPeakFraction: Double = 1, downwardFamilyMinimumZ: Int? = nil,
+                overlapCheck: Bool = false) {
         self.currie = currie; self.pool = pool; self.excluded = excluded
         self.minimumLineEnergyKeV = minimumLineEnergyKeV; self.thresholds = thresholds; self.rangeMarginFWHM = rangeMarginFWHM
         self.sumPeakToleranceKeV = sumPeakToleranceKeV; self.context = context
         self.familyConsistency = familyConsistency; self.familyOvervoltage = familyOvervoltage
         self.sumPeakFraction = sumPeakFraction; self.downwardFamilyMinimumZ = downwardFamilyMinimumZ
+        self.overlapCheck = overlapCheck
     }
 
     /// 0.06 keV: about half the Mn K alpha width of one detector.
@@ -200,6 +208,7 @@ public nonisolated struct ProposerPolicy: Sendable, Equatable {
         add("familyOvervoltage", "\(familyOvervoltage)", "\(b.familyOvervoltage)")
         add("sumPeakFraction", "\(sumPeakFraction)", "\(b.sumPeakFraction)")
         add("downwardFamilyMinimumZ", downwardFamilyMinimumZ.map { "\($0)" } ?? "nil", b.downwardFamilyMinimumZ.map { "\($0)" } ?? "nil")
+        add("overlapCheck", "\(overlapCheck)", "\(b.overlapCheck)")
         return d.isEmpty ? nil : "policy (non-default): " + d.joined(separator: ", ")
     }
 }

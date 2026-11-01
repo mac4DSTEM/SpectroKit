@@ -1131,18 +1131,7 @@ seed0.four.unlistedProposal.candidates[4].sigma = 4086be0cfb6af5f9 727.756338916
 seed0.four.unlistedProposal.candidates[4].sigmaZero = 408209678d2648b6 577.17556219014546
 seed0.four.unlistedProposal.candidates[4].criticalLevel = 408daaf45c655a79 949.36931685621596
 seed0.four.unlistedProposal.candidates[4].detectionLimit = 409db5c6d6610f76 1901.4441771665274
-seed0.four.unlistedProposal.candidates[4].conflicts: array 1
-seed0.four.unlistedProposal.candidates[4].conflicts[0].id = "sum-O+O sum-Eu"
-seed0.four.unlistedProposal.candidates[4].conflicts[0].kind = .sumPeak
-seed0.four.unlistedProposal.candidates[4].conflicts[0].element = "Eu"
-seed0.four.unlistedProposal.candidates[4].conflicts[0].line = "Eu_Ma"
-seed0.four.unlistedProposal.candidates[4].conflicts[0].energiesKeV: n 2 sum 400130f27bb2fec6 2.1489000000000003 fnv 341e8c8abd330310
-seed0.four.unlistedProposal.candidates[4].conflicts[0].energiesKeV[0] = 3ff0cbfb15b573eb 1.0498000000000001
-seed0.four.unlistedProposal.candidates[4].conflicts[0].energiesKeV[1] = 3ff195e9e1b089a0 1.0991
-seed0.four.unlistedProposal.candidates[4].conflicts[0].requires: array 1
-seed0.four.unlistedProposal.candidates[4].conflicts[0].requires[0] = "O"
-seed0.four.unlistedProposal.candidates[4].conflicts[0].question = "O+O sum peak (1.050 keV) or Eu Mα (1.099 keV)?"
-seed0.four.unlistedProposal.candidates[4].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+seed0.four.unlistedProposal.candidates[4].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 seed0.four.unlistedProposal.candidates[4].suggestedRole = .fitOnly
 seed0.four.unlistedProposal.candidates[4].holeRegionNote = nil
 seed0.four.unlistedProposal.candidates[4].misfit = 3ff0000000000000 1
@@ -1850,7 +1839,7 @@ seed0.four.unlistedCheck.candidates[4].element = "Eu"
 seed0.four.unlistedCheck.candidates[4].group = "Eu_Ma"
 seed0.four.unlistedCheck.candidates[4].net = 40f2507137ad8a20 75015.076093234587
 seed0.four.unlistedCheck.candidates[4].detectionLimit = 409db5c6d6610f76 1901.4441771665274
-seed0.four.unlistedCheck.candidates[4].sumPeakQuestion = true
+seed0.four.unlistedCheck.candidates[4].sumPeakQuestion = false
 seed0.four.unlistedCheck.candidates[4].besideLine = nil
 seed0.four.unlistedCheck.candidates[4].fractionOfNeighbour = nil
 seed0.four.unlistedCheck.candidates[5].element = "Sm"
@@ -1953,4 +1942,4 @@ seed0.four.withholding[1][1] = 412d54c187238ef3 961120.76394316403
 seed0.four.withholding[1][2] = 0000000000000000 0
 seed0.four.withholding[1][3] = 4117716d1fe5a512 384091.28114946291
 seed0.four.withholding.caveat = "assumes the listed elements only; unlisted: Ge (net 266 867), Ga (net 299 903), Cu (net 59 388), excess beside Ni Lα (net 59 562), Eu (net 75 015), Sm (net 23 332), excess beside Si Kα (net 23 653), excess beside Ni Lα (net 13 244), excess beside Ni Lα (net 5 231), excess beside Si Kα (net 1 948), Zr (net 943), excess beside Si Kα (net 15 126), P (net 1 025), Hg (net 456), Gd (net 6 109); largest move 34.3 σ (O)"
-seed0.four.csv-withholding-fnv = 1717cef67e58bbcc
+seed0.four.csv-withholding-fnv = 5d17985677fac897
