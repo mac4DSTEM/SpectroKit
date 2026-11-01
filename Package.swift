@@ -21,7 +21,8 @@ let package = Package(
         .library(name: "SpectroEDX", targets: ["SpectroEDX"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/mac4DSTEM/FormatoKit", "0.4.0"..<"1.0.0"),
+        // 0.12.0 is the first tag with the Velox acquisition fields the velox-tiny golden records.
+        .package(url: "https://github.com/mac4DSTEM/FormatoKit", "0.12.0"..<"1.0.0"),
         // SpectroEELS runs its Fourier deconvolutions on ImagoCore's exact-length FFT; 0.6.1 is the first tag with it.
         .package(url: "https://github.com/mac4DSTEM/ImagoKit", "0.6.1"..<"1.0.0"),
     ],
