@@ -83,12 +83,12 @@ differ from raw SciPy where the CPU-dependent tie rule says so.
 ### The largest gaps, in the order the study needs them
 
 1. **What remains of the EELS chain** (0.9.0 landed alignment, power-law extrapolation, Fourier-log and Fourier-ratio, and the multi-edge model fit on 20 K and L edges):
-   fine structure and a free onset energy in the model, `kramers_kronig_analysis`, hydrogenic and Dirac GOS. See `docs/open-items.md`.
+   fine structure and a free onset energy in the model, `kramers_kronig_analysis`, hydrogenic and Dirac GOS. Open work is in the issues.
 2. **The dielectric function** (`kramers_kronig_analysis`) and the EELS model on real data (no validation yet).
 3. **EDS calibration and model operations**: `rebin`, `get_calibration_from`, `calibrate_xray_lines`, free/fix of line parameters, the public
    background-window parameters (`line_width`, `windows_width`, `integration_window_factor`), `vacuum_mask` (the mask is an input now).
 4. **EDX fit accuracy on real Al alloys** (Mg K alpha about 300 counts low, Si K alpha 20 % low against the whole planted peak on the simulated recipe-A pool (Si internal fluorescence below), sigma 5 to 12 % small; auto ID misses Mg in 37 of 38
-   Al-Mg-Si files): the diagnosis needs the pure-Al standard; `docs/open-items.md` carries the cause as far as it is known.
+   Al-Mg-Si files): the diagnosis needs the pure-Al standard; SpectroKit#8 carries the cause as far as it is known.
 5. **The app-side `@testable` reach**: 0.9.0 opened `PooledQuantificationInput`'s fields and the window, segment and proposal initialisers; the next release opens `UnlistedLineCheck.Candidate` and `.Move` (fields and initialisers) and `UnlistedLineCheck.init` with its stored fields (SpectroKit#13). Nothing the apps reach stays `package`.
 
 ## EDS
@@ -316,3 +316,31 @@ it 20.3 % low in counts (Si share 0.546 at% against 0.675 at%, 19 % low; the sha
   closed loop (model to 1e-7 counts) and FePt (2e-4 of the pin, since HyperSpy's `lm` stops short), not on a general case.
 - The cross-section route of `ZetaFactor` has hand-recorded exSpy values (`testZetaAndCrossSectionPins`) but no fixture-driven
   iteration-for-iteration set like Cliff-Lorimer and zeta.
+
+## Known limits and decisions
+
+Open work is in the [issues](https://github.com/mac4DSTEM/SpectroKit/issues), including the ones closed as *not planned* and
+parked for later (t/λ speed #7, EELS fine structure #10, Richardson-Lucy and weighted MLLS #11, EDS calibration operations
+#12, standards #14). Speed against HyperSpy and exSpy is in `docs/benchmarks.md`; benchmark rows for the EDX fit and auto ID
+on a Velox spectrum image, the EELS power-law fit, edge quantification and the large sizes are not written yet.
+
+- **t/λ with a fixed threshold** is 2x slower than HyperSpy at 64 x 64 x 2048 (9.1 ms against 4.5 ms). Untested hypothesis:
+  the per-pixel pairwise sums (bit-faithful to NumPy) and the zero-loss argmax run single-threaded; parallelising the pixel
+  loop is the cheap experiment. The estimated-threshold route is already 5x faster.
+- **EDX Si K alpha** is counted against the whole planted Si K alpha peak (the sample line plus the detector's Si
+  internal-fluorescence peak at the same energy), because that is what exSpy measures; against the sample line alone the bias
+  is 10 %. The opt-in `.countsAboveEdge` reference shape takes the internal fluorescence out; it is not measured per detector.
+- **EELS:** `power_law_extrapolation` on an unbinned axis is not offered (exSpy's Simpson branch is a factor two off the exact
+  power law). Richardson-Lucy runs direct convolutions (1.1 s for 32 x 32 x 2048 at 15 iterations). Line profiles use hard
+  cell membership, not partial pixel coverage; a corner's inner side has a gap of at most a pixel.
+- **Sum and escape model:** one pile-up coefficient for the whole spectrum, the parents are the alpha lines of the strongest
+  groups (family lines such as K beta are not parents), one common escape fraction. `PooledQuantification.plotModel`
+  includes the peaks; the proposer and the unlisted-line check keep their own pile-up columns.
+- **k-factor import:** the table is taken in exSpy's convention (C_A/C_B = k_A/k_B I_A/I_B); a vendor table in the inverse
+  convention is the caller's to invert. A real Velox export has not been read.
+- **Continuum Si dead-layer term** (`FitPolicy.continuumDeadLayer`, opt-in): a typed thickness reduces the shift a dead layer
+  causes on a planted pool (`ContinuumDeadLayerTests`), but a fitted thickness is not identifiable on the default continuum
+  (0.21 µm on a pool with none, Si moved by -2.3 sigma), because the step also takes up the sample's Al-absorption recovery
+  above 1.56 keV. Type the thickness measured once on a Si-free standard.
+- **Axis refinement:** offset and gain trade off on lines that span little of the axis
+  (`AxisGateTests.testE3RefinementRecoversPlantedOffsetAndGain`).
