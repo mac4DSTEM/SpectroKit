@@ -604,6 +604,8 @@ whole.quantification.refinement.rssFile = 40954ed514f96f63 1363.708087823318
 whole.quantification.refinement.rssRefined = 40707f466a600e82 263.95469129106652
 whole.quantification.refinement.iterations = 104
 whole.quantification.refinement.converged = true
+whole.quantification.refinement.parametersAtBound: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+whole.quantification.refinement.boundText = ""
 whole.quantification.refinement.size = 512
 whole.quantification.plotModel: n 512 sum 408642460c1ad601 712.28420277562702 fnv 724e54731dbd18d7
 whole.quantification.plotBackground: n 512 sum 406198f0ded13ffe 140.77940312260756 fnv dfb53193382aa4b

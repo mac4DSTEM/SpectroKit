@@ -174,6 +174,8 @@ level0.quantification.refinement.rssFile = 414be7422632f3e3 3657348.2984299525
 level0.quantification.refinement.rssRefined = 414b8fa4aa1546b0 3612489.3287742957
 level0.quantification.refinement.iterations = 98
 level0.quantification.refinement.converged = true
+level0.quantification.refinement.parametersAtBound: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+level0.quantification.refinement.boundText = ""
 level0.quantification.refinement.size = 4096
 level0.quantification.plotModel: n 4096 sum 4117b46554736a93 388377.33247152827 fnv 9185698d1dd3d97b
 level0.quantification.plotBackground: n 4096 sum 40f606b5aa5f6d78 90219.354094913113 fnv 6d86cfd7139ceb36
@@ -405,6 +407,8 @@ level4.quantification.refinement.rssFile = 413eb2e2eef45d2f 2011874.9334161987
 level4.quantification.refinement.rssRefined = 413e42935bd6e312 1983123.3587476653
 level4.quantification.refinement.iterations = 84
 level4.quantification.refinement.converged = true
+level4.quantification.refinement.parametersAtBound: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+level4.quantification.refinement.boundText = ""
 level4.quantification.refinement.size = 4096
 level4.quantification.plotModel: n 4096 sum 4116312abc4c0005 363594.68388366728 fnv a01fd9b34b164cb9
 level4.quantification.plotBackground: n 4096 sum 40f56682454b6097 87656.141917588524 fnv 5fd90c12681b255f
