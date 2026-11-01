@@ -8,6 +8,15 @@ each entry from the merged pull requests' titles; a breaking change's Migration 
 Every quantification and thickness result reports `validation: "none"`: agreement with exSpy and HyperSpy is not validation on a
 sample of known composition.
 
+## [0.13.1](https://github.com/mac4DSTEM/SpectroKit/compare/0.13.0...0.13.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* Fourier-ratio leaves a pixel with a non-finite power-law continuation unanswered ([#80](https://github.com/mac4DSTEM/SpectroKit/issues/80)) ([19ff45a](https://github.com/mac4DSTEM/SpectroKit/commit/19ff45a775e771ee89186620d6b6ae3d60a4c81f))
+* Fourier-ratio leaves a pixel with a non-finite power-law continuation unanswered instead of failing the whole image ([19ff45a](https://github.com/mac4DSTEM/SpectroKit/commit/19ff45a775e771ee89186620d6b6ae3d60a4c81f))
+* MLLS composition counts a negative amount as not detected and keeps the other elements ([#81](https://github.com/mac4DSTEM/SpectroKit/issues/81)) ([b20397d](https://github.com/mac4DSTEM/SpectroKit/commit/b20397d1f2407e46b32077e841159d90b7dc48a7))
+
 ## [0.13.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.12.0...0.13.0) (2026-11-01)
 
 
