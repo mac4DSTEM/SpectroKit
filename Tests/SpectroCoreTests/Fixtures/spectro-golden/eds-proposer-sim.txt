@@ -1,189 +1,201 @@
 # SpectroGolden eds-proposer-sim
-region2(beta'' 300 counts/px).proposal.candidates: array 15
-region2(beta'' 300 counts/px).proposal.candidates[0].element = "Ag"
-region2(beta'' 300 counts/px).proposal.candidates[0].group = "Ag_La"
-region2(beta'' 300 counts/px).proposal.candidates[0].energyKeV = 4007e00d1b71758e 2.9843999999999999
-region2(beta'' 300 counts/px).proposal.candidates[0].net = 40b95d0594b641c7 6493.0218004141416
-region2(beta'' 300 counts/px).proposal.candidates[0].sigma = 405fb788b806f28c 126.86771965673887
-region2(beta'' 300 counts/px).proposal.candidates[0].sigmaZero = 404bf361c553cb67 55.90142122832804
-region2(beta'' 300 counts/px).proposal.candidates[0].criticalLevel = 4056fcc727b0e323 91.949655459157427
-region2(beta'' 300 counts/px).proposal.candidates[0].detectionLimit = 4067535af78e8b08 186.60485437241027
+region2(beta'' 300 counts/px).proposal.candidates: array 21
+region2(beta'' 300 counts/px).proposal.candidates[0].element = "Rh"
+region2(beta'' 300 counts/px).proposal.candidates[0].group = "Rh_La"
+region2(beta'' 300 counts/px).proposal.candidates[0].energyKeV = 4005930be0ded289 2.6968000000000001
+region2(beta'' 300 counts/px).proposal.candidates[0].net = 409ab8f450e08b1e 1710.238589771739
+region2(beta'' 300 counts/px).proposal.candidates[0].sigma = 404678920d880bda 44.941957179478507
+region2(beta'' 300 counts/px).proposal.candidates[0].sigmaZero = 4036614112b28342 22.379899185735901
+region2(beta'' 300 counts/px).proposal.candidates[0].criticalLevel = 404267e46bb2cc68 36.811658346466004
+region2(beta'' 300 counts/px).proposal.candidates[0].detectionLimit = 4053150c0b6e1c32 76.328860147027427
 region2(beta'' 300 counts/px).proposal.candidates[0].conflicts: array 1
-region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].id = "sum-Al+Al sum-Ag"
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].id = "sum-Al+Mg sum-Rh"
 region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].kind = .sumPeak
-region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].element = "Ag"
-region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].line = "Ag_La"
-region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].energiesKeV: n 2 sum 4017d460aa64c2f8 5.9573999999999998 fnv 3854f55e8c8b86cc
-region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].energiesKeV[0] = 4007c8b439581062 2.9729999999999999
-region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].energiesKeV[1] = 4007e00d1b71758e 2.9843999999999999
-region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].requires: array 1
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].element = "Rh"
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].line = "Rh_La"
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].energiesKeV: n 2 sum 4015bf62b6ae7d56 5.4368999999999996 fnv e9a9ba2b1991a100
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].energiesKeV[0] = 4005ebb98c7e2824 2.7401
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].energiesKeV[1] = 4005930be0ded289 2.6968000000000001
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].requires: array 2
 region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].requires[0] = "Al"
-region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].question = "Al+Al sum peak (2.973 keV) or Ag Lα (2.984 keV)? They are 11 eV apart, far inside the detector resolution."
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].requires[1] = "Mg"
+region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].question = "Al+Mg sum peak (2.740 keV) or Rh Lα (2.697 keV)?"
 region2(beta'' 300 counts/px).proposal.candidates[0].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
 region2(beta'' 300 counts/px).proposal.candidates[0].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[0].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[0].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[0].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[0].possibleReason = "The peak at 3.227 keV went to Al+Si sum, which explains it better (gain there 203739 against 177970)."
+region2(beta'' 300 counts/px).proposal.candidates[0].possibleReason = "The peak at 2.737 keV went to Al+Mg sum, which explains it better (gain there 33387 against 29635)."
 region2(beta'' 300 counts/px).proposal.candidates[0].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[1].element = "Rh"
-region2(beta'' 300 counts/px).proposal.candidates[1].group = "Rh_La"
-region2(beta'' 300 counts/px).proposal.candidates[1].energyKeV = 4005930be0ded289 2.6968000000000001
-region2(beta'' 300 counts/px).proposal.candidates[1].net = 409a826592fa75e6 1696.5991934904537
-region2(beta'' 300 counts/px).proposal.candidates[1].sigma = 40465ae6e577a91a 44.710171397617344
-region2(beta'' 300 counts/px).proposal.candidates[1].sigmaZero = 403642a83a87d660 22.260379465259007
-region2(beta'' 300 counts/px).proposal.candidates[1].criticalLevel = 40424eba7abc4c1f 36.615065900747361
-region2(beta'' 300 counts/px).proposal.candidates[1].detectionLimit = 4052fbe21a779be9 75.935675255590141
+region2(beta'' 300 counts/px).proposal.candidates[1].element = "Ar"
+region2(beta'' 300 counts/px).proposal.candidates[1].group = "Ar_Ka"
+region2(beta'' 300 counts/px).proposal.candidates[1].energyKeV = 4007a95e9e1b089a 2.9577
+region2(beta'' 300 counts/px).proposal.candidates[1].net = 40b6f2e3bd26736b 5874.8896049529822
+region2(beta'' 300 counts/px).proposal.candidates[1].sigma = 407005c75d6985a8 256.36117306918686
+region2(beta'' 300 counts/px).proposal.candidates[1].sigmaZero = 406305b0456ceb27 152.17776747964055
+region2(beta'' 300 counts/px).proposal.candidates[1].criticalLevel = 406f49ecc5860000 250.31015278026462
+region2(beta'' 300 counts/px).proposal.candidates[1].detectionLimit = 407f7536ad74d3f2 503.32584901462462
 region2(beta'' 300 counts/px).proposal.candidates[1].conflicts: array 1
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].id = "sum-Al+Mg sum-Rh"
+region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].id = "sum-Al+Al sum-Ar"
 region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].kind = .sumPeak
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].element = "Rh"
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].line = "Rh_La"
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].energiesKeV: n 2 sum 4015bf62b6ae7d56 5.4368999999999996 fnv e9a9ba2b1991a100
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].energiesKeV[0] = 4005ebb98c7e2824 2.7401
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].energiesKeV[1] = 4005930be0ded289 2.6968000000000001
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].requires: array 2
+region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].element = "Ar"
+region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].line = "Ar_Ka"
+region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].energiesKeV: n 2 sum 4017b9096bb98c7e 5.9306999999999999 fnv ccfdcc7427df7932
+region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].energiesKeV[0] = 4007c8b439581062 2.9729999999999999
+region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].energiesKeV[1] = 4007a95e9e1b089a 2.9577
+region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].requires: array 1
 region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].requires[0] = "Al"
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].requires[1] = "Mg"
-region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].question = "Al+Mg sum peak (2.740 keV) or Rh Lα (2.697 keV)?"
+region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].question = "Al+Al sum peak (2.973 keV) or Ar Kα (2.958 keV)? They are 15 eV apart, far inside the detector resolution."
 region2(beta'' 300 counts/px).proposal.candidates[1].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
 region2(beta'' 300 counts/px).proposal.candidates[1].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[1].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[1].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[1].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[1].possibleReason = "The peak at 2.742 keV went to Al+Mg sum, which explains it better (gain there 31777 against 28049)."
+region2(beta'' 300 counts/px).proposal.candidates[1].possibleReason = "The peak at 3.227 keV went to Al+Si sum, which explains it better (gain there 212982 against 140417)."
 region2(beta'' 300 counts/px).proposal.candidates[1].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[2].element = "Ar"
-region2(beta'' 300 counts/px).proposal.candidates[2].group = "Ar_Ka"
-region2(beta'' 300 counts/px).proposal.candidates[2].energyKeV = 4007a95e9e1b089a 2.9577
-region2(beta'' 300 counts/px).proposal.candidates[2].net = 40b828f9a79b3446 6184.9752137186642
-region2(beta'' 300 counts/px).proposal.candidates[2].sigma = 406ffaa4205c8ce7 255.83253496242762
-region2(beta'' 300 counts/px).proposal.candidates[2].sigmaZero = 40621745937b9e11 144.72724317688019
-region2(beta'' 300 counts/px).proposal.candidates[2].criticalLevel = 406dc1c3a1ca1c28 238.05513085817915
-region2(beta'' 300 counts/px).proposal.candidates[2].detectionLimit = 407ded0d89b8f01a 478.8158051704537
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts: array 1
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].id = "sum-Al+Al sum-Ar"
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].kind = .sumPeak
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].element = "Ar"
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].line = "Ar_Ka"
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].energiesKeV: n 2 sum 4017b9096bb98c7e 5.9306999999999999 fnv ccfdcc7427df7932
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].energiesKeV[0] = 4007c8b439581062 2.9729999999999999
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].energiesKeV[1] = 4007a95e9e1b089a 2.9577
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].requires: array 1
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].requires[0] = "Al"
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].question = "Al+Al sum peak (2.973 keV) or Ar Kα (2.958 keV)? They are 15 eV apart, far inside the detector resolution."
-region2(beta'' 300 counts/px).proposal.candidates[2].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+region2(beta'' 300 counts/px).proposal.candidates[2].element = "In"
+region2(beta'' 300 counts/px).proposal.candidates[2].group = "In_La"
+region2(beta'' 300 counts/px).proposal.candidates[2].energyKeV = 400a4bc6a7ef9db2 3.2869999999999999
+region2(beta'' 300 counts/px).proposal.candidates[2].net = 4092e7384f3f6edc 1209.80498980631
+region2(beta'' 300 counts/px).proposal.candidates[2].sigma = 404b2287cf3b84dd 54.269769577085505
+region2(beta'' 300 counts/px).proposal.candidates[2].sigmaZero = 404502f2af005080 42.02303111567835
+region2(beta'' 300 counts/px).proposal.candidates[2].criticalLevel = 405147ca8235d679 69.121735146118127
+region2(beta'' 300 counts/px).proposal.candidates[2].detectionLimit = 40619e5e52137e5e 140.94901374633167
+region2(beta'' 300 counts/px).proposal.candidates[2].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[2].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[2].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[2].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[2].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[2].possibleReason = "The peak at 3.227 keV went to Al+Si sum, which explains it better (gain there 203739 against 136297)."
+region2(beta'' 300 counts/px).proposal.candidates[2].possibleReason = "The peak at 3.477 keV went to Si+Si sum, which explains it better (gain there 24509 against 18445)."
 region2(beta'' 300 counts/px).proposal.candidates[2].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[3].element = "In"
-region2(beta'' 300 counts/px).proposal.candidates[3].group = "In_La"
-region2(beta'' 300 counts/px).proposal.candidates[3].energyKeV = 400a4bc6a7ef9db2 3.2869999999999999
-region2(beta'' 300 counts/px).proposal.candidates[3].net = 40921868f64f413a 1158.1025020965158
-region2(beta'' 300 counts/px).proposal.candidates[3].sigma = 404adbb6121e69e8 53.716493859148443
-region2(beta'' 300 counts/px).proposal.candidates[3].sigmaZero = 4044ed97e8936500 41.856198379487978
-region2(beta'' 300 counts/px).proposal.candidates[3].criticalLevel = 4051363a7c78306a 68.847319714901147
-region2(beta'' 300 counts/px).proposal.candidates[3].detectionLimit = 40618cce4c55d84f 140.40018288389771
-region2(beta'' 300 counts/px).proposal.candidates[3].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+region2(beta'' 300 counts/px).proposal.candidates[3].element = "Sn"
+region2(beta'' 300 counts/px).proposal.candidates[3].group = "Sn_La"
+region2(beta'' 300 counts/px).proposal.candidates[3].energyKeV = 400b8d4fdf3b645a 3.444
+region2(beta'' 300 counts/px).proposal.candidates[3].net = 407ee631323cc042 494.38701080065596
+region2(beta'' 300 counts/px).proposal.candidates[3].sigma = 403fa466ad749cca 31.642191735238875
+region2(beta'' 300 counts/px).proposal.candidates[3].sigmaZero = 4035fd3a84b71a46 21.989174170210639
+region2(beta'' 300 counts/px).proposal.candidates[3].criticalLevel = 404215a0e750f1cb 36.168972887538608
+region2(beta'' 300 counts/px).proposal.candidates[3].detectionLimit = 4052c2c8870c4195 75.043489229172636
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts: array 1
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].id = "sum-Si+Si sum-Sn"
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].kind = .sumPeak
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].element = "Sn"
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].line = "Sn_La"
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].energiesKeV: n 2 sum 401bb18fc504816f 6.9234 fnv 6b6c3c40b17fbb08
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].energiesKeV[0] = 400bd5cfaacd9e84 3.4794
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].energiesKeV[1] = 400b8d4fdf3b645a 3.444
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].requires: array 1
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].requires[0] = "Si"
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].question = "Si+Si sum peak (3.479 keV) or Sn Lα (3.444 keV)?"
+region2(beta'' 300 counts/px).proposal.candidates[3].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
 region2(beta'' 300 counts/px).proposal.candidates[3].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[3].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[3].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[3].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[3].possibleReason = "The peak at 3.487 keV went to Si+Si sum, which explains it better (gain there 23464 against 17540)."
+region2(beta'' 300 counts/px).proposal.candidates[3].possibleReason = "The peak at 3.477 keV went to Si+Si sum, which explains it better (gain there 24509 against 16177)."
 region2(beta'' 300 counts/px).proposal.candidates[3].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[4].element = "Sn"
-region2(beta'' 300 counts/px).proposal.candidates[4].group = "Sn_La"
-region2(beta'' 300 counts/px).proposal.candidates[4].energyKeV = 400b8d4fdf3b645a 3.444
-region2(beta'' 300 counts/px).proposal.candidates[4].net = 407e9d2fa853f0d0 489.82413513936353
-region2(beta'' 300 counts/px).proposal.candidates[4].sigma = 403f2391bd6f8c4d 31.138942565663729
-region2(beta'' 300 counts/px).proposal.candidates[4].sigmaZero = 4035c095be1c105a 21.75228489098695
-region2(beta'' 300 counts/px).proposal.candidates[4].criticalLevel = 4041e3c0e9643208 35.7793246974216
-region2(beta'' 300 counts/px).proposal.candidates[4].detectionLimit = 405290e8891f81d2 74.26419284893862
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts: array 1
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].id = "sum-Si+Si sum-Sn"
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].kind = .sumPeak
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].element = "Sn"
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].line = "Sn_La"
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].energiesKeV: n 2 sum 401bb18fc504816f 6.9234 fnv 6b6c3c40b17fbb08
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].energiesKeV[0] = 400bd5cfaacd9e84 3.4794
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].energiesKeV[1] = 400b8d4fdf3b645a 3.444
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].requires: array 1
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].requires[0] = "Si"
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].question = "Si+Si sum peak (3.479 keV) or Sn Lα (3.444 keV)?"
-region2(beta'' 300 counts/px).proposal.candidates[4].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+region2(beta'' 300 counts/px).proposal.candidates[4].element = "Pd"
+region2(beta'' 300 counts/px).proposal.candidates[4].group = "Pd_La"
+region2(beta'' 300 counts/px).proposal.candidates[4].energyKeV = 4006b573eab367a1 2.8386
+region2(beta'' 300 counts/px).proposal.candidates[4].net = 407c8954736f225d 456.58311789905366
+region2(beta'' 300 counts/px).proposal.candidates[4].sigma = 4041aa9c00dfe57b 35.33288584644739
+region2(beta'' 300 counts/px).proposal.candidates[4].sigmaZero = 403892524dd282f6 24.571568359274316
+region2(beta'' 300 counts/px).proposal.candidates[4].criticalLevel = 404435543dbb7ec3 40.416633335638402
+region2(beta'' 300 counts/px).proposal.candidates[4].detectionLimit = 4054e27bdd76ce8d 83.538810125372223
+region2(beta'' 300 counts/px).proposal.candidates[4].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[4].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[4].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[4].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[4].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[4].possibleReason = "The peak at 3.487 keV went to Si+Si sum, which explains it better (gain there 23464 against 14997)."
+region2(beta'' 300 counts/px).proposal.candidates[4].possibleReason = "The peak at 2.737 keV went to Al+Mg sum, which explains it better (gain there 33387 against 5175)."
 region2(beta'' 300 counts/px).proposal.candidates[4].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[5].element = "Pd"
-region2(beta'' 300 counts/px).proposal.candidates[5].group = "Pd_La"
-region2(beta'' 300 counts/px).proposal.candidates[5].energyKeV = 4006b573eab367a1 2.8386
-region2(beta'' 300 counts/px).proposal.candidates[5].net = 407a4b33a583cf6f 420.70010901916879
-region2(beta'' 300 counts/px).proposal.candidates[5].sigma = 404150ab2315a23d 34.630222688258506
-region2(beta'' 300 counts/px).proposal.candidates[5].sigmaZero = 4038877d2766f815 24.529253447188314
-region2(beta'' 300 counts/px).proposal.candidates[5].criticalLevel = 40442c6b87357c4c 40.347031499019607
-region2(beta'' 300 counts/px).proposal.candidates[5].detectionLimit = 4054d99326f0cc16 83.399606452134634
-region2(beta'' 300 counts/px).proposal.candidates[5].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+region2(beta'' 300 counts/px).proposal.candidates[5].element = "Ag"
+region2(beta'' 300 counts/px).proposal.candidates[5].group = "Ag_La"
+region2(beta'' 300 counts/px).proposal.candidates[5].energyKeV = 4007e00d1b71758e 2.9843999999999999
+region2(beta'' 300 counts/px).proposal.candidates[5].net = 40956f10285751cd 1371.7657788890531
+region2(beta'' 300 counts/px).proposal.candidates[5].sigma = 405eb647f08ce4b5 122.84814084776993
+region2(beta'' 300 counts/px).proposal.candidates[5].sigmaZero = 405a9c1f7599c77f 106.43942012803562
+region2(beta'' 300 counts/px).proposal.candidates[5].criticalLevel = 4065e278f71124d3 175.07726624821098
+region2(beta'' 300 counts/px).proposal.candidates[5].detectionLimit = 40760dc2defff8c5 352.86007595051734
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts: array 2
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].id = "sum-Al+Al sum-Ag"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].kind = .sumPeak
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].element = "Ag"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].line = "Ag_La"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].energiesKeV: n 2 sum 4017d460aa64c2f8 5.9573999999999998 fnv 3854f55e8c8b86cc
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].energiesKeV[0] = 4007c8b439581062 2.9729999999999999
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].energiesKeV[1] = 4007e00d1b71758e 2.9843999999999999
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].requires: array 1
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].requires[0] = "Al"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].question = "Al+Al sum peak (2.973 keV) or Ag Lα (2.984 keV)? They are 11 eV apart, far inside the detector resolution."
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].id = "sum-Mg+Si sum-Ag"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].kind = .sumPeak
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].element = "Ag"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].line = "Ag_La"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].energiesKeV: n 2 sum 4017e92a30553262 5.9777000000000005 fnv 9a1a81efa69d3d7b
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].energiesKeV[0] = 4007f2474538ef35 2.9933000000000001
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].energiesKeV[1] = 4007e00d1b71758e 2.9843999999999999
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].requires: array 2
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].requires[0] = "Mg"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].requires[1] = "Si"
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].question = "Mg+Si sum peak (2.993 keV) or Ag Lα (2.984 keV)? They are 9 eV apart, far inside the detector resolution."
+region2(beta'' 300 counts/px).proposal.candidates[5].conflicts[1].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
 region2(beta'' 300 counts/px).proposal.candidates[5].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[5].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[5].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[5].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[5].possibleReason = "The peak at 2.742 keV went to Al+Mg sum, which explains it better (gain there 31777 against 4730)."
+region2(beta'' 300 counts/px).proposal.candidates[5].possibleReason = "The peak at 3.477 keV went to Si+Si sum, which explains it better (gain there 24509 against 4106)."
 region2(beta'' 300 counts/px).proposal.candidates[5].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[6].element = "Ru"
-region2(beta'' 300 counts/px).proposal.candidates[6].group = "Ru_La"
-region2(beta'' 300 counts/px).proposal.candidates[6].energyKeV = 400477ced916872b 2.5585
-region2(beta'' 300 counts/px).proposal.candidates[6].net = 406d27dce1c85d1e 233.24571313031714
-region2(beta'' 300 counts/px).proposal.candidates[6].sigma = 40388cb7fb052127 24.549682320358581
-region2(beta'' 300 counts/px).proposal.candidates[6].sigmaZero = 40327c16515f4258 18.484715543514852
-region2(beta'' 300 counts/px).proposal.candidates[6].criticalLevel = 403e67973c0665c5 30.404651404916667
-region2(beta'' 300 counts/px).proposal.candidates[6].detectionLimit = 404fc1e67b7d0558 63.514846263928746
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts: array 1
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].id = "sum-Mg+Mg sum-Ru"
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].kind = .sumPeak
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].element = "Ru"
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].line = "Ru_La"
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].energiesKeV: n 2 sum 40144346dc5d6388 5.0656999999999996 fnv 303007786e8a1d73
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].energiesKeV[0] = 40040ebedfa43fe6 2.5072000000000001
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].energiesKeV[1] = 400477ced916872b 2.5585
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].requires: array 1
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].requires[0] = "Mg"
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].question = "Mg+Mg sum peak (2.507 keV) or Ru Lα (2.558 keV)?"
-region2(beta'' 300 counts/px).proposal.candidates[6].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+region2(beta'' 300 counts/px).proposal.candidates[6].element = "Cd"
+region2(beta'' 300 counts/px).proposal.candidates[6].group = "Cd_La"
+region2(beta'' 300 counts/px).proposal.candidates[6].energyKeV = 40091205bc01a36e 3.1337999999999999
+region2(beta'' 300 counts/px).proposal.candidates[6].net = 4079683bfed244c6 406.51464731346312
+region2(beta'' 300 counts/px).proposal.candidates[6].sigma = 4044421765a13745 40.516339019507122
+region2(beta'' 300 counts/px).proposal.candidates[6].sigmaZero = 404130be7d516873 34.3808132789135
+region2(beta'' 300 counts/px).proposal.candidates[6].criticalLevel = 404c469473e97fbc 56.551405419362226
+region2(beta'' 300 counts/px).proposal.candidates[6].detectionLimit = 405cf3bc13a4cf86 115.80835429281987
+region2(beta'' 300 counts/px).proposal.candidates[6].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[6].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[6].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[6].misfit = 3ff0000000000000 1
-region2(beta'' 300 counts/px).proposal.candidates[6].familyNote = "Ru Kα (19.28 keV) has a residual peak of 0.0 σ, below the 3 σ its Lα (2.56 keV) needs: not Ru."
-region2(beta'' 300 counts/px).proposal.candidates[6].possibleReason = nil
+region2(beta'' 300 counts/px).proposal.candidates[6].familyNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[6].possibleReason = "The peak at 3.477 keV went to Si+Si sum, which explains it better (gain there 24509 against 4481)."
 region2(beta'' 300 counts/px).proposal.candidates[6].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[7].element = "Cd"
-region2(beta'' 300 counts/px).proposal.candidates[7].group = "Cd_La"
-region2(beta'' 300 counts/px).proposal.candidates[7].energyKeV = 40091205bc01a36e 3.1337999999999999
-region2(beta'' 300 counts/px).proposal.candidates[7].net = 407973766c20b3b2 407.21641171240037
-region2(beta'' 300 counts/px).proposal.candidates[7].sigma = 40442786372b1d10 40.308783432055975
-region2(beta'' 300 counts/px).proposal.candidates[7].sigmaZero = 40411836750caecc 34.189161902611517
-region2(beta'' 300 counts/px).proposal.candidates[7].criticalLevel = 404c1e3ab80860ac 56.236166957941663
-region2(beta'' 300 counts/px).proposal.candidates[7].detectionLimit = 405ccb6257c3b076 115.17787736997875
-region2(beta'' 300 counts/px).proposal.candidates[7].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+region2(beta'' 300 counts/px).proposal.candidates[7].element = "Ru"
+region2(beta'' 300 counts/px).proposal.candidates[7].group = "Ru_La"
+region2(beta'' 300 counts/px).proposal.candidates[7].energyKeV = 400477ced916872b 2.5585
+region2(beta'' 300 counts/px).proposal.candidates[7].net = 406a844eaac760c8 212.13460291806246
+region2(beta'' 300 counts/px).proposal.candidates[7].sigma = 4038153b3338011e 24.082934571431103
+region2(beta'' 300 counts/px).proposal.candidates[7].sigmaZero = 40327479abb5e378 18.454981548220047
+region2(beta'' 300 counts/px).proposal.candidates[7].criticalLevel = 403e5b11fec537d4 30.355743334912248
+region2(beta'' 300 counts/px).proposal.candidates[7].detectionLimit = 404fb5613e3bd767 63.417030123919908
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts: array 1
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].id = "sum-Mg+Mg sum-Ru"
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].kind = .sumPeak
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].element = "Ru"
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].line = "Ru_La"
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].energiesKeV: n 2 sum 40144346dc5d6388 5.0656999999999996 fnv 303007786e8a1d73
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].energiesKeV[0] = 40040ebedfa43fe6 2.5072000000000001
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].energiesKeV[1] = 400477ced916872b 2.5585
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].requires: array 1
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].requires[0] = "Mg"
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].question = "Mg+Mg sum peak (2.507 keV) or Ru Lα (2.558 keV)?"
+region2(beta'' 300 counts/px).proposal.candidates[7].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
 region2(beta'' 300 counts/px).proposal.candidates[7].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[7].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[7].misfit = 3ff0000000000000 1
-region2(beta'' 300 counts/px).proposal.candidates[7].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[7].possibleReason = "The peak at 3.487 keV went to Si+Si sum, which explains it better (gain there 23464 against 4284)."
+region2(beta'' 300 counts/px).proposal.candidates[7].familyNote = "Ru Kα (19.28 keV) has a residual peak of 1.7 σ, below the 3 σ its Lα (2.56 keV) needs: not Ru."
+region2(beta'' 300 counts/px).proposal.candidates[7].possibleReason = nil
 region2(beta'' 300 counts/px).proposal.candidates[7].unconfirmable = false
 region2(beta'' 300 counts/px).proposal.candidates[8].element = "Bi"
 region2(beta'' 300 counts/px).proposal.candidates[8].group = "Bi_Ma"
 region2(beta'' 300 counts/px).proposal.candidates[8].energyKeV = 400360aa64c2f838 2.4222000000000001
-region2(beta'' 300 counts/px).proposal.candidates[8].net = 4065a1b91bf032fa 173.05384632982151
-region2(beta'' 300 counts/px).proposal.candidates[8].sigma = 40339d9442b0f871 19.615543525891955
-region2(beta'' 300 counts/px).proposal.candidates[8].sigmaZero = 402f6fd9252c3d21 15.718453561449282
-region2(beta'' 300 counts/px).proposal.candidates[8].criticalLevel = 4039dac423b386d8 25.854555350618142
-region2(beta'' 300 counts/px).proposal.candidates[8].detectionLimit = 404b3513632a266b 54.414654155331696
+region2(beta'' 300 counts/px).proposal.candidates[8].net = 40652186ddcddc05 169.04771318633007
+region2(beta'' 300 counts/px).proposal.candidates[8].sigma = 403396f7ddf27cb3 19.589719649983362
+region2(beta'' 300 counts/px).proposal.candidates[8].sigmaZero = 402f895e42f6411d 15.768297283706994
+region2(beta'' 300 counts/px).proposal.candidates[8].criticalLevel = 4039efc12647adaf 25.936540977954504
+region2(beta'' 300 counts/px).proposal.candidates[8].detectionLimit = 404b4a1065be4d42 54.57862541000442
 region2(beta'' 300 counts/px).proposal.candidates[8].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[8].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[8].holeRegionNote = nil
@@ -191,161 +203,260 @@ region2(beta'' 300 counts/px).proposal.candidates[8].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[8].familyNote = "Bi Lα (10.84 keV) has a residual peak of 2.4 σ, below the 3 σ its Mβ (2.53 keV) needs: not Bi."
 region2(beta'' 300 counts/px).proposal.candidates[8].possibleReason = nil
 region2(beta'' 300 counts/px).proposal.candidates[8].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[9].element = "Cl"
-region2(beta'' 300 counts/px).proposal.candidates[9].group = "Cl_Ka"
-region2(beta'' 300 counts/px).proposal.candidates[9].energyKeV = 4004faacd9e83e42 2.6223999999999998
-region2(beta'' 300 counts/px).proposal.candidates[9].net = 4066e40692f32621 183.12580249300029
-region2(beta'' 300 counts/px).proposal.candidates[9].sigma = 403a3148327781b8 26.192507890869564
-region2(beta'' 300 counts/px).proposal.candidates[9].sigmaZero = 4034ee10bbc55ba1 20.929942832644546
-region2(beta'' 300 counts/px).proposal.candidates[9].criticalLevel = 4041369ddb1d1ff7 34.426692380162358
-region2(beta'' 300 counts/px).proposal.candidates[9].detectionLimit = 4051e3c57ad86fc1 71.558928214420135
-region2(beta'' 300 counts/px).proposal.candidates[9].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
-region2(beta'' 300 counts/px).proposal.candidates[9].suggestedRole = .fitOnly
-region2(beta'' 300 counts/px).proposal.candidates[9].holeRegionNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[9].element = "Cu"
+region2(beta'' 300 counts/px).proposal.candidates[9].group = "Cu_Ka"
+region2(beta'' 300 counts/px).proposal.candidates[9].energyKeV = 402018793dd97f63 8.0478000000000005
+region2(beta'' 300 counts/px).proposal.candidates[9].net = 405e9083f03b98c1 122.25805288143148
+region2(beta'' 300 counts/px).proposal.candidates[9].sigma = 4031ebe12d0a6699 17.921404662169696
+region2(beta'' 300 counts/px).proposal.candidates[9].sigmaZero = 402aee7166df2481 13.465708937396132
+region2(beta'' 300 counts/px).proposal.candidates[9].criticalLevel = 4036262cbd8e6350 22.149120185148888
+region2(beta'' 300 counts/px).proposal.candidates[9].detectionLimit = 4047807bfd0502e3 47.003783824393189
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts: array 1
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].id = "cu-grid"
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].kind = .gridOrSample
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].element = "Cu"
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].line = "Cu_Ka"
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].energiesKeV: n 1 sum 402018793dd97f63 8.0478000000000005 fnv 531237518ebd7b74
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].energiesKeV[0] = 402018793dd97f63 8.0478000000000005
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].requires: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].question = "Cu from the grid or from the Q phase?"
+region2(beta'' 300 counts/px).proposal.candidates[9].conflicts[0].remedy = "Measure Cu on a hole region (no sample): net Cu there is grid and holder signal."
+region2(beta'' 300 counts/px).proposal.candidates[9].suggestedRole = .quantify
+region2(beta'' 300 counts/px).proposal.candidates[9].holeRegionNote = "No hole region available: Cu grid and Q phase cannot be separated."
 region2(beta'' 300 counts/px).proposal.candidates[9].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[9].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[9].possibleReason = "The peak at 2.742 keV went to Al+Mg sum, which explains it better (gain there 31777 against 1174)."
+region2(beta'' 300 counts/px).proposal.candidates[9].possibleReason = nil
 region2(beta'' 300 counts/px).proposal.candidates[9].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[10].element = "K"
-region2(beta'' 300 counts/px).proposal.candidates[10].group = "K_Ka"
-region2(beta'' 300 counts/px).proposal.candidates[10].energyKeV = 400a82a9930be0df 3.3138000000000001
-region2(beta'' 300 counts/px).proposal.candidates[10].net = 40608ef18885ea66 132.46698404460329
-region2(beta'' 300 counts/px).proposal.candidates[10].sigma = 40432917e45a4db7 38.321041626065771
-region2(beta'' 300 counts/px).proposal.candidates[10].sigmaZero = 4041d231163d8b38 35.642123012591071
-region2(beta'' 300 counts/px).proposal.candidates[10].criticalLevel = 404d50233c599763 58.626075309510973
-region2(beta'' 300 counts/px).proposal.candidates[10].detectionLimit = 405dfd4adc14e72d 119.95769407311737
+region2(beta'' 300 counts/px).proposal.candidates[10].element = "Cl"
+region2(beta'' 300 counts/px).proposal.candidates[10].group = "Cl_Ka"
+region2(beta'' 300 counts/px).proposal.candidates[10].energyKeV = 4004faacd9e83e42 2.6223999999999998
+region2(beta'' 300 counts/px).proposal.candidates[10].net = 4062738fe2333381 147.6113139152549
+region2(beta'' 300 counts/px).proposal.candidates[10].sigma = 403948a6d33df144 25.283795549986522
+region2(beta'' 300 counts/px).proposal.candidates[10].sigmaZero = 4034e8fecc602e52 20.910137914163279
+region2(beta'' 300 counts/px).proposal.candidates[10].criticalLevel = 404132726635802b 34.394116188166969
+region2(beta'' 300 counts/px).proposal.candidates[10].detectionLimit = 4051df9a05f0cff5 71.493775830429357
 region2(beta'' 300 counts/px).proposal.candidates[10].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[10].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[10].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[10].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[10].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[10].possibleReason = "The peak at 3.487 keV went to Si+Si sum, which explains it better (gain there 23464 against 208)."
+region2(beta'' 300 counts/px).proposal.candidates[10].possibleReason = "The peak at 2.737 keV went to Al+Mg sum, which explains it better (gain there 33387 against 1009)."
 region2(beta'' 300 counts/px).proposal.candidates[10].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[11].element = "Pb"
-region2(beta'' 300 counts/px).proposal.candidates[11].group = "Pb_Ma"
-region2(beta'' 300 counts/px).proposal.candidates[11].energyKeV = 4002c467381d7dbf 2.3458999999999999
-region2(beta'' 300 counts/px).proposal.candidates[11].net = 4046d78f6eb0cfb2 45.684064709027908
-region2(beta'' 300 counts/px).proposal.candidates[11].sigma = 4030c9e82714a25a 16.788698618447917
-region2(beta'' 300 counts/px).proposal.candidates[11].sigmaZero = 402f71468a1f761b 15.72124129900026
-region2(beta'' 300 counts/px).proposal.candidates[11].criticalLevel = 4039dbf0a6496adc 25.859140770839858
-region2(beta'' 300 counts/px).proposal.candidates[11].detectionLimit = 404b363fe5c00a6f 54.423824995775128
+region2(beta'' 300 counts/px).proposal.candidates[11].element = "K"
+region2(beta'' 300 counts/px).proposal.candidates[11].group = "K_Ka"
+region2(beta'' 300 counts/px).proposal.candidates[11].energyKeV = 400a82a9930be0df 3.3138000000000001
+region2(beta'' 300 counts/px).proposal.candidates[11].net = 4068a4cc51cd436e 197.14994134989269
+region2(beta'' 300 counts/px).proposal.candidates[11].sigma = 4043d6e73eac1c49 39.678932031668019
+region2(beta'' 300 counts/px).proposal.candidates[11].sigmaZero = 4041ec46a3cab8d6 35.845905755982741
+region2(beta'' 300 counts/px).proposal.candidates[11].criticalLevel = 404d7b0ad5396666 58.961268094088879
+region2(beta'' 300 counts/px).proposal.candidates[11].detectionLimit = 405e283274f4b630 120.62807964227318
 region2(beta'' 300 counts/px).proposal.candidates[11].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[11].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[11].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[11].misfit = 3ff0000000000000 1
-region2(beta'' 300 counts/px).proposal.candidates[11].familyNote = "Pb Lα (10.55 keV) has a residual peak of 2.4 σ, below the 3 σ its Mβ (2.44 keV) needs: not Pb."
-region2(beta'' 300 counts/px).proposal.candidates[11].possibleReason = nil
+region2(beta'' 300 counts/px).proposal.candidates[11].familyNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[11].possibleReason = "The peak at 3.477 keV went to Si+Si sum, which explains it better (gain there 24509 against 337)."
 region2(beta'' 300 counts/px).proposal.candidates[11].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[12].element = "Sb"
-region2(beta'' 300 counts/px).proposal.candidates[12].group = "Sb_La"
-region2(beta'' 300 counts/px).proposal.candidates[12].energyKeV = 400cd66cf41f212d 3.6046999999999998
-region2(beta'' 300 counts/px).proposal.candidates[12].net = 4011a4de7b62d4ed 4.4110049513885601
-region2(beta'' 300 counts/px).proposal.candidates[12].sigma = 40318bde17c15daf 17.546357617100224
-region2(beta'' 300 counts/px).proposal.candidates[12].sigmaZero = 403170c12433e364 17.440447104137448
-region2(beta'' 300 counts/px).proposal.candidates[12].criticalLevel = 403cafde18b99894 28.686982674895788
-region2(beta'' 300 counts/px).proposal.candidates[12].detectionLimit = 404e0a2d58303827 60.079508803886988
+region2(beta'' 300 counts/px).proposal.candidates[12].element = "Ta"
+region2(beta'' 300 counts/px).proposal.candidates[12].group = "Ta_La"
+region2(beta'' 300 counts/px).proposal.candidates[12].energyKeV = 40204ac083126e98 8.1460000000000008
+region2(beta'' 300 counts/px).proposal.candidates[12].net = 4037314023edcb1e 23.192384954028164
+region2(beta'' 300 counts/px).proposal.candidates[12].sigma = 4028ff5630f777a9 12.498704462250162
+region2(beta'' 300 counts/px).proposal.candidates[12].sigmaZero = 4027a0568a192f52 11.813160243582079
+region2(beta'' 300 counts/px).proposal.candidates[12].criticalLevel = 40336e50bd113b4f 19.430919472414924
+region2(beta'' 300 counts/px).proposal.candidates[12].detectionLimit = 4044c89ffc87dae2 41.567382398925261
 region2(beta'' 300 counts/px).proposal.candidates[12].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[12].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[12].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[12].misfit = 3ff0000000000000 1
 region2(beta'' 300 counts/px).proposal.candidates[12].familyNote = nil
-region2(beta'' 300 counts/px).proposal.candidates[12].possibleReason = "Adding it improves the fit by 6, below the 100 a new line needs."
+region2(beta'' 300 counts/px).proposal.candidates[12].possibleReason = "Adding it improves the fit by 13, below the 100 a new line needs."
 region2(beta'' 300 counts/px).proposal.candidates[12].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[13].element = "Mo"
-region2(beta'' 300 counts/px).proposal.candidates[13].group = "Mo_La"
-region2(beta'' 300 counts/px).proposal.candidates[13].energyKeV = 400258793dd97f63 2.2932000000000001
-region2(beta'' 300 counts/px).proposal.candidates[13].net = 4012c67f61df27d7 4.6938452999547371
-region2(beta'' 300 counts/px).proposal.candidates[13].sigma = 4032d4b6190460bf 18.830903590744807
-region2(beta'' 300 counts/px).proposal.candidates[13].sigmaZero = 4032b4b3000f5828 18.705856326814825
-region2(beta'' 300 counts/px).proposal.candidates[13].criticalLevel = 403ec4b5935d29f8 30.768395624394515
-region2(beta'' 300 counts/px).proposal.candidates[13].detectionLimit = 40500f826969e4c6 64.242334702884449
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts: array 1
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].id = "sum-O+Si sum-Mo"
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].kind = .sumPeak
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].element = "Mo"
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].line = "Mo_La"
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].energiesKeV: n 2 sum 40123b2fec56d5d0 4.5578000000000003 fnv 83e16c96c1ecba8e
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].energiesKeV[0] = 40021de69ad42c3d 2.2646000000000002
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].energiesKeV[1] = 400258793dd97f63 2.2932000000000001
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].requires: array 2
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].requires[0] = "O"
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].requires[1] = "Si"
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].question = "O+Si sum peak (2.265 keV) or Mo Lα (2.293 keV)?"
-region2(beta'' 300 counts/px).proposal.candidates[13].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+region2(beta'' 300 counts/px).proposal.candidates[13].element = "Tm"
+region2(beta'' 300 counts/px).proposal.candidates[13].group = "Tm_La"
+region2(beta'' 300 counts/px).proposal.candidates[13].energyKeV = 401cb8a0902de00d 7.1802999999999999
+region2(beta'' 300 counts/px).proposal.candidates[13].net = 40378df16c2fdc6e 23.554465066609218
+region2(beta'' 300 counts/px).proposal.candidates[13].sigma = 4029d870fa98b74a 12.922736960546576
+region2(beta'' 300 counts/px).proposal.candidates[13].sigmaZero = 40284787b56c153e 12.139707250064586
+region2(beta'' 300 counts/px).proposal.candidates[13].criticalLevel = 4033f7d191596121 19.96804150039782
+region2(beta'' 300 counts/px).proposal.candidates[13].detectionLimit = 40455220d0d000b4 42.641626454891053
+region2(beta'' 300 counts/px).proposal.candidates[13].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[13].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[13].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[13].misfit = 3ff0000000000000 1
-region2(beta'' 300 counts/px).proposal.candidates[13].familyNote = "Mo Kα (17.48 keV) has a residual peak of 1.4 σ, below the 3 σ its Lβ1 (2.39 keV) needs: not Mo."
-region2(beta'' 300 counts/px).proposal.candidates[13].possibleReason = nil
+region2(beta'' 300 counts/px).proposal.candidates[13].familyNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[13].possibleReason = "Adding it improves the fit by 13, below the 100 a new line needs."
 region2(beta'' 300 counts/px).proposal.candidates[13].unconfirmable = false
-region2(beta'' 300 counts/px).proposal.candidates[14].element = "Tl"
-region2(beta'' 300 counts/px).proposal.candidates[14].group = "Tl_Ma"
-region2(beta'' 300 counts/px).proposal.candidates[14].energyKeV = 40022a9930be0ded 2.2707999999999999
-region2(beta'' 300 counts/px).proposal.candidates[14].net = 0000000000000000 0
-region2(beta'' 300 counts/px).proposal.candidates[14].sigma = 402fe562ccb2c5d2 15.948019406149715
-region2(beta'' 300 counts/px).proposal.candidates[14].sigmaZero = 402fe562ccb2c5d2 15.948019406149715
-region2(beta'' 300 counts/px).proposal.candidates[14].criticalLevel = 403a3b6ead942a4d 26.232157562897829
-region2(beta'' 300 counts/px).proposal.candidates[14].detectionLimit = 404b95bded0ac9e0 55.16985857989107
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts: array 1
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].id = "sum-O+Si sum-Tl"
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].kind = .sumPeak
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].element = "Tl"
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].line = "Tl_Ma"
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].energiesKeV: n 2 sum 4012243fe5c91d15 4.5354000000000001 fnv 53069bf7b2532f4
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].energiesKeV[0] = 40021de69ad42c3d 2.2646000000000002
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].energiesKeV[1] = 40022a9930be0ded 2.2707999999999999
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].requires: array 2
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].requires[0] = "O"
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].requires[1] = "Si"
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].question = "O+Si sum peak (2.265 keV) or Tl Mα (2.271 keV)? They are 6 eV apart, far inside the detector resolution."
-region2(beta'' 300 counts/px).proposal.candidates[14].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+region2(beta'' 300 counts/px).proposal.candidates[14].element = "Hf"
+region2(beta'' 300 counts/px).proposal.candidates[14].group = "Hf_La"
+region2(beta'' 300 counts/px).proposal.candidates[14].energyKeV = 401f989374bc6a7f 7.899
+region2(beta'' 300 counts/px).proposal.candidates[14].net = 402a22cafec91c2c 13.06795498089749
+region2(beta'' 300 counts/px).proposal.candidates[14].sigma = 4028a9645694622a 12.330843644726958
+region2(beta'' 300 counts/px).proposal.candidates[14].sigmaZero = 4027d0b98f517f1c 11.907665709207826
+region2(beta'' 300 counts/px).proposal.candidates[14].criticalLevel = 4033961c28002847 19.586367130316173
+region2(beta'' 300 counts/px).proposal.candidates[14].detectionLimit = 4044f06b6776c7da 41.878277714727759
+region2(beta'' 300 counts/px).proposal.candidates[14].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2(beta'' 300 counts/px).proposal.candidates[14].suggestedRole = .fitOnly
 region2(beta'' 300 counts/px).proposal.candidates[14].holeRegionNote = nil
 region2(beta'' 300 counts/px).proposal.candidates[14].misfit = 3ff0000000000000 1
-region2(beta'' 300 counts/px).proposal.candidates[14].familyNote = "Tl Lα (10.27 keV) has a residual peak of 0.0 σ, below the 3 σ its Mγ (2.57 keV) needs: not Tl."
-region2(beta'' 300 counts/px).proposal.candidates[14].possibleReason = nil
+region2(beta'' 300 counts/px).proposal.candidates[14].familyNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[14].possibleReason = "Adding it improves the fit by 4, below the 100 a new line needs."
 region2(beta'' 300 counts/px).proposal.candidates[14].unconfirmable = false
+region2(beta'' 300 counts/px).proposal.candidates[15].element = "Pb"
+region2(beta'' 300 counts/px).proposal.candidates[15].group = "Pb_Ma"
+region2(beta'' 300 counts/px).proposal.candidates[15].energyKeV = 4002c467381d7dbf 2.3458999999999999
+region2(beta'' 300 counts/px).proposal.candidates[15].net = 4028d98cd2f80e44 12.424902527599563
+region2(beta'' 300 counts/px).proposal.candidates[15].sigma = 40303bb2cd56734b 16.233197053533598
+region2(beta'' 300 counts/px).proposal.candidates[15].sigmaZero = 402fd9cd95470765 15.925396599693793
+region2(beta'' 300 counts/px).proposal.candidates[15].criticalLevel = 403a31e801269170 26.194946357646984
+region2(beta'' 300 counts/px).proposal.candidates[15].detectionLimit = 404b8c37409d3103 55.09543616938938
+region2(beta'' 300 counts/px).proposal.candidates[15].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+region2(beta'' 300 counts/px).proposal.candidates[15].suggestedRole = .fitOnly
+region2(beta'' 300 counts/px).proposal.candidates[15].holeRegionNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[15].misfit = 3ff0000000000000 1
+region2(beta'' 300 counts/px).proposal.candidates[15].familyNote = "Pb Lα (10.55 keV) has a residual peak of 2.2 σ, below the 3 σ its Mβ (2.44 keV) needs: not Pb."
+region2(beta'' 300 counts/px).proposal.candidates[15].possibleReason = nil
+region2(beta'' 300 counts/px).proposal.candidates[15].unconfirmable = false
+region2(beta'' 300 counts/px).proposal.candidates[16].element = "Sb"
+region2(beta'' 300 counts/px).proposal.candidates[16].group = "Sb_La"
+region2(beta'' 300 counts/px).proposal.candidates[16].energyKeV = 400cd66cf41f212d 3.6046999999999998
+region2(beta'' 300 counts/px).proposal.candidates[16].net = 40298c28b8997e9c 12.773748177277689
+region2(beta'' 300 counts/px).proposal.candidates[16].sigma = 4031999bd39ba913 17.600033975127257
+region2(beta'' 300 counts/px).proposal.candidates[16].sigmaZero = 40314aee6cbdd014 17.292700573292748
+region2(beta'' 300 counts/px).proposal.candidates[16].criticalLevel = 403c71a771eacc33 28.443961257766386
+region2(beta'' 300 counts/px).proposal.candidates[16].detectionLimit = 404dcbf6b1616bc6 59.593465969628184
+region2(beta'' 300 counts/px).proposal.candidates[16].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+region2(beta'' 300 counts/px).proposal.candidates[16].suggestedRole = .fitOnly
+region2(beta'' 300 counts/px).proposal.candidates[16].holeRegionNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[16].misfit = 3ff0000000000000 1
+region2(beta'' 300 counts/px).proposal.candidates[16].familyNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[16].possibleReason = "Adding it improves the fit by 7, below the 100 a new line needs."
+region2(beta'' 300 counts/px).proposal.candidates[16].unconfirmable = false
+region2(beta'' 300 counts/px).proposal.candidates[17].element = "Er"
+region2(beta'' 300 counts/px).proposal.candidates[17].group = "Er_La"
+region2(beta'' 300 counts/px).proposal.candidates[17].energyKeV = 401bcb5dcc63f141 6.9485999999999999
+region2(beta'' 300 counts/px).proposal.candidates[17].net = 0000000000000000 0
+region2(beta'' 300 counts/px).proposal.candidates[17].sigma = 4028564cb4c82351 12.168553971701529
+region2(beta'' 300 counts/px).proposal.candidates[17].sigmaZero = 4028540a709f2967 12.164142150334284
+region2(beta'' 300 counts/px).proposal.candidates[17].criticalLevel = 4034021b946f67b4 20.008233334730633
+region2(beta'' 300 counts/px).proposal.candidates[17].detectionLimit = 40455c6ad3e60747 42.722010123556679
+region2(beta'' 300 counts/px).proposal.candidates[17].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+region2(beta'' 300 counts/px).proposal.candidates[17].suggestedRole = .fitOnly
+region2(beta'' 300 counts/px).proposal.candidates[17].holeRegionNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[17].misfit = 3ff0000000000000 1
+region2(beta'' 300 counts/px).proposal.candidates[17].familyNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[17].possibleReason = "Adding it improves the fit by 2, below the 100 a new line needs."
+region2(beta'' 300 counts/px).proposal.candidates[17].unconfirmable = false
+region2(beta'' 300 counts/px).proposal.candidates[18].element = "Ho"
+region2(beta'' 300 counts/px).proposal.candidates[18].group = "Ho_La"
+region2(beta'' 300 counts/px).proposal.candidates[18].energyKeV = 401ae0f9096bb98c 6.7196999999999996
+region2(beta'' 300 counts/px).proposal.candidates[18].net = 0000000000000000 0
+region2(beta'' 300 counts/px).proposal.candidates[18].sigma = 4028af4c95012c81 12.342381149667064
+region2(beta'' 300 counts/px).proposal.candidates[18].sigmaZero = 4028af4c95012c81 12.342381149667064
+region2(beta'' 300 counts/px).proposal.candidates[18].criticalLevel = 40344d293b5f7113 20.301410399247356
+region2(beta'' 300 counts/px).proposal.candidates[18].detectionLimit = 4045a7787ad610a6 43.308364252590124
+region2(beta'' 300 counts/px).proposal.candidates[18].conflicts: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
+region2(beta'' 300 counts/px).proposal.candidates[18].suggestedRole = .fitOnly
+region2(beta'' 300 counts/px).proposal.candidates[18].holeRegionNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[18].misfit = 3ff0000000000000 1
+region2(beta'' 300 counts/px).proposal.candidates[18].familyNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[18].possibleReason = "Adding it improves the fit by 1, below the 100 a new line needs."
+region2(beta'' 300 counts/px).proposal.candidates[18].unconfirmable = false
+region2(beta'' 300 counts/px).proposal.candidates[19].element = "Mo"
+region2(beta'' 300 counts/px).proposal.candidates[19].group = "Mo_La"
+region2(beta'' 300 counts/px).proposal.candidates[19].energyKeV = 400258793dd97f63 2.2932000000000001
+region2(beta'' 300 counts/px).proposal.candidates[19].net = 0000000000000000 0
+region2(beta'' 300 counts/px).proposal.candidates[19].sigma = 4032addd998e5f4b 18.679162595042083
+region2(beta'' 300 counts/px).proposal.candidates[19].sigmaZero = 4032addd998e5f4b 18.679162595042083
+region2(beta'' 300 counts/px).proposal.candidates[19].criticalLevel = 403eb978116af71b 30.724488342871251
+region2(beta'' 300 counts/px).proposal.candidates[19].detectionLimit = 405009e3a870cb57 64.154520139837913
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts: array 1
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].id = "sum-O+Si sum-Mo"
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].kind = .sumPeak
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].element = "Mo"
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].line = "Mo_La"
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].energiesKeV: n 2 sum 40123b2fec56d5d0 4.5578000000000003 fnv 83e16c96c1ecba8e
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].energiesKeV[0] = 40021de69ad42c3d 2.2646000000000002
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].energiesKeV[1] = 400258793dd97f63 2.2932000000000001
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].requires: array 2
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].requires[0] = "O"
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].requires[1] = "Si"
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].question = "O+Si sum peak (2.265 keV) or Mo Lα (2.293 keV)?"
+region2(beta'' 300 counts/px).proposal.candidates[19].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+region2(beta'' 300 counts/px).proposal.candidates[19].suggestedRole = .fitOnly
+region2(beta'' 300 counts/px).proposal.candidates[19].holeRegionNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[19].misfit = 3ff0000000000000 1
+region2(beta'' 300 counts/px).proposal.candidates[19].familyNote = "Mo Kα (17.48 keV) has a residual peak of 1.4 σ, below the 3 σ its Lβ1 (2.39 keV) needs: not Mo."
+region2(beta'' 300 counts/px).proposal.candidates[19].possibleReason = nil
+region2(beta'' 300 counts/px).proposal.candidates[19].unconfirmable = false
+region2(beta'' 300 counts/px).proposal.candidates[20].element = "Tl"
+region2(beta'' 300 counts/px).proposal.candidates[20].group = "Tl_Ma"
+region2(beta'' 300 counts/px).proposal.candidates[20].energyKeV = 40022a9930be0ded 2.2707999999999999
+region2(beta'' 300 counts/px).proposal.candidates[20].net = 0000000000000000 0
+region2(beta'' 300 counts/px).proposal.candidates[20].sigma = 402fd0882bc6e36a 15.907288902309762
+region2(beta'' 300 counts/px).proposal.candidates[20].sigmaZero = 402fd0882bc6e36a 15.907288902309762
+region2(beta'' 300 counts/px).proposal.candidates[20].criticalLevel = 403a2a480bf6d005 26.165161845929124
+region2(beta'' 300 counts/px).proposal.candidates[20].detectionLimit = 404b84974b6d6f98 55.035867145953659
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts: array 1
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].id = "sum-O+Si sum-Tl"
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].kind = .sumPeak
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].element = "Tl"
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].line = "Tl_Ma"
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].energiesKeV: n 2 sum 4012243fe5c91d15 4.5354000000000001 fnv 53069bf7b2532f4
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].energiesKeV[0] = 40021de69ad42c3d 2.2646000000000002
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].energiesKeV[1] = 40022a9930be0ded 2.2707999999999999
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].requires: array 2
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].requires[0] = "O"
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].requires[1] = "Si"
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].question = "O+Si sum peak (2.265 keV) or Tl Mα (2.271 keV)? They are 6 eV apart, far inside the detector resolution."
+region2(beta'' 300 counts/px).proposal.candidates[20].conflicts[0].remedy = "Acquire two spectrum images at different beam currents: a sum peak scales with the square of the count rate, an element does not."
+region2(beta'' 300 counts/px).proposal.candidates[20].suggestedRole = .fitOnly
+region2(beta'' 300 counts/px).proposal.candidates[20].holeRegionNote = nil
+region2(beta'' 300 counts/px).proposal.candidates[20].misfit = 3ff0000000000000 1
+region2(beta'' 300 counts/px).proposal.candidates[20].familyNote = "Tl Lα (10.27 keV) has a residual peak of 1.7 σ, below the 3 σ its Mγ (2.57 keV) needs: not Tl."
+region2(beta'' 300 counts/px).proposal.candidates[20].possibleReason = nil
+region2(beta'' 300 counts/px).proposal.candidates[20].unconfirmable = false
 region2(beta'' 300 counts/px).proposal.sumPeaks: array 5
 region2(beta'' 300 counts/px).proposal.sumPeaks[0].label = "Al+Al sum"
 region2(beta'' 300 counts/px).proposal.sumPeaks[0].elements: array 2
 region2(beta'' 300 counts/px).proposal.sumPeaks[0].elements[0] = "Al"
 region2(beta'' 300 counts/px).proposal.sumPeaks[0].elements[1] = "Al"
 region2(beta'' 300 counts/px).proposal.sumPeaks[0].energyKeV = 4007c8b439581062 2.9729999999999999
-region2(beta'' 300 counts/px).proposal.sumPeaks[0].net = 40c15041fa199e86 8864.5154449485817
-region2(beta'' 300 counts/px).proposal.sumPeaks[0].sigmaZero = 40329968c06177bd 18.599254630847771
-region2(beta'' 300 counts/px).proposal.sumPeaks[0].detectionLimit = 404ff221778a4c1a 63.891646330383267
+region2(beta'' 300 counts/px).proposal.sumPeaks[0].net = 40c18b2263045631 8982.2686467572075
+region2(beta'' 300 counts/px).proposal.sumPeaks[0].sigmaZero = 4032a81ad7b505ba 18.656659585661806
+region2(beta'' 300 counts/px).proposal.sumPeaks[0].detectionLimit = 40500526c730c245 64.080491826644973
 region2(beta'' 300 counts/px).proposal.sumPeaks[1].label = "Al+Si sum"
 region2(beta'' 300 counts/px).proposal.sumPeaks[1].elements: array 2
 region2(beta'' 300 counts/px).proposal.sumPeaks[1].elements[0] = "Al"
 region2(beta'' 300 counts/px).proposal.sumPeaks[1].elements[1] = "Si"
 region2(beta'' 300 counts/px).proposal.sumPeaks[1].energyKeV = 4009cf41f212d773 3.2262
-region2(beta'' 300 counts/px).proposal.sumPeaks[1].net = 40c08b779e47cd25 8470.9345178367312
-region2(beta'' 300 counts/px).proposal.sumPeaks[1].sigmaZero = 40324a41325a065d 18.290057322481847
-region2(beta'' 300 counts/px).proposal.sumPeaks[1].detectionLimit = 404f6feee2a5f06c 62.874477702164626
+region2(beta'' 300 counts/px).proposal.sumPeaks[1].net = 40c0d1429330e313 8610.5201169117699
+region2(beta'' 300 counts/px).proposal.sumPeaks[1].sigmaZero = 403266e2ff1c7491 18.401901192137817
+region2(beta'' 300 counts/px).proposal.sumPeaks[1].detectionLimit = 404f9f07554c8946 63.242411291476444
 region2(beta'' 300 counts/px).proposal.sumPeaks[2].label = "Al+Mg sum"
 region2(beta'' 300 counts/px).proposal.sumPeaks[2].elements: array 2
 region2(beta'' 300 counts/px).proposal.sumPeaks[2].elements[0] = "Al"
 region2(beta'' 300 counts/px).proposal.sumPeaks[2].elements[1] = "Mg"
 region2(beta'' 300 counts/px).proposal.sumPeaks[2].energyKeV = 4005ebb98c7e2824 2.7401
-region2(beta'' 300 counts/px).proposal.sumPeaks[2].net = 40aac31b2e22ff52 3425.5530863701506
-region2(beta'' 300 counts/px).proposal.sumPeaks[2].sigmaZero = 40333581dee24bdc 19.209012918708922
-region2(beta'' 300 counts/px).proposal.sumPeaks[2].detectionLimit = 40507971d4514634 65.897572593087546
+region2(beta'' 300 counts/px).proposal.sumPeaks[2].net = 40ab3a47653eef09 3485.139444319419
+region2(beta'' 300 counts/px).proposal.sumPeaks[2].sigmaZero = 403336dc8b69f8ec 19.214302743312984
+region2(beta'' 300 counts/px).proposal.sumPeaks[2].detectionLimit = 40507a8ef17cfa3b 65.914974567459396
 region2(beta'' 300 counts/px).proposal.sumPeaks[3].label = "Si+Si sum"
 region2(beta'' 300 counts/px).proposal.sumPeaks[3].elements: array 2
 region2(beta'' 300 counts/px).proposal.sumPeaks[3].elements[0] = "Si"
 region2(beta'' 300 counts/px).proposal.sumPeaks[3].elements[1] = "Si"
 region2(beta'' 300 counts/px).proposal.sumPeaks[3].energyKeV = 400bd5cfaacd9e84 3.4794
-region2(beta'' 300 counts/px).proposal.sumPeaks[3].net = 40a4b0dfa8b2a159 2648.436833936878
-region2(beta'' 300 counts/px).proposal.sumPeaks[3].sigmaZero = 40322508b589d14a 18.14466414084135
-region2(beta'' 300 counts/px).proposal.sumPeaks[3].detectionLimit = 404f32b5eb045c1b 62.396176697853853
+region2(beta'' 300 counts/px).proposal.sumPeaks[3].net = 40a4fd5632f2796a 2686.668357446023
+region2(beta'' 300 counts/px).proposal.sumPeaks[3].sigmaZero = 40324d114491a1fb 18.301044736437671
+region2(beta'' 300 counts/px).proposal.sumPeaks[3].detectionLimit = 404f748f4c088b66 62.910623077556735
 region2(beta'' 300 counts/px).proposal.sumPeaks[4].label = "Mg+Mg sum"
 region2(beta'' 300 counts/px).proposal.sumPeaks[4].elements: array 2
 region2(beta'' 300 counts/px).proposal.sumPeaks[4].elements[0] = "Mg"
 region2(beta'' 300 counts/px).proposal.sumPeaks[4].elements[1] = "Mg"
 region2(beta'' 300 counts/px).proposal.sumPeaks[4].energyKeV = 40040ebedfa43fe6 2.5072000000000001
-region2(beta'' 300 counts/px).proposal.sumPeaks[4].net = 4079c7c61dafb6a4 412.48586815488875
-region2(beta'' 300 counts/px).proposal.sumPeaks[4].sigmaZero = 4033d9812e1e256a 19.849627382621669
-region2(beta'' 300 counts/px).proposal.sumPeaks[4].detectionLimit = 405100520760e34f 68.005006641976465
+region2(beta'' 300 counts/px).proposal.sumPeaks[4].net = 407a63d720e01368 422.24002158670055
+region2(beta'' 300 counts/px).proposal.sumPeaks[4].sigmaZero = 4033d19fb382822c 19.818843097078727
+region2(beta'' 300 counts/px).proposal.sumPeaks[4].detectionLimit = 4050f9d6cccff9a6 67.903735354519625
 region2(beta'' 300 counts/px).proposal.refused: array 7
 region2(beta'' 300 counts/px).proposal.refused[0].element = "H"
 region2(beta'' 300 counts/px).proposal.refused[0].reason = "H has no characteristic X-ray line: it cannot be detected by EDX."
@@ -363,32 +474,33 @@ region2(beta'' 300 counts/px).proposal.refused[6].element = "N"
 region2(beta'' 300 counts/px).proposal.refused[6].reason = "Its line at 0.39 keV lies below the proposer's lowest tested line (0.45 keV): under the detector window the continuum is too model-dependent for a net area to be trusted. List it by hand if you know it is there."
 region2(beta'' 300 counts/px).proposal.currie.alpha = 3fa999999999999a 0.050000000000000003
 region2(beta'' 300 counts/px).proposal.currie.beta = 3fa999999999999a 0.050000000000000003
-region2(beta'' 300 counts/px).proposal.notes: array 11
+region2(beta'' 300 counts/px).proposal.notes: array 12
 region2(beta'' 300 counts/px).proposal.notes[0] = "Lines below 0.45 keV are not tested (a measured limit of the continuum model, not a property of the method)."
-region2(beta'' 300 counts/px).proposal.notes[1] = "Identification: the residual's peaks at or above 5 σ of its top-hat filter (1.5 × below 1 keV); a candidate joins when Σ(y − μ)²/(μ + (0.01 μ)²) falls by at least 100, 20 % of that at its own lines, with its area at or above Currie L_D (α = β = 0.05, σ₀ from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (100). Kβ weights from NIST EPQ in this fit."
-region2(beta'' 300 counts/px).proposal.notes[2] = "Fit: least squares, weighted by 1/(y + (0.01 y)²) to decide, least squares, unweighted for the numbers shown; continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data; escape peaks: none (no line above the Si K edge, 1.839 keV); reference shapes: none; 5 residual peaks examined, 31 candidate fits, 33 fits in all."
-region2(beta'' 300 counts/px).proposal.notes[3] = "Confirmation lines: an element nominated by an L or M line needs its K or L alpha line at 3 σ in the residual where the fitted range holds it and the beam is at least 2.0 times its energy; otherwise it is withheld."
-region2(beta'' 300 counts/px).proposal.notes[4] = "Confirmation withheld Ru: Ru Kα (19.28 keV) has a residual peak of 0.0 σ, below the 3 σ its Lα (2.56 keV) needs: not Ru."
+region2(beta'' 300 counts/px).proposal.notes[1] = "Identification (validation: none): the residual's peaks at or above 5 σ of its top-hat filter (1.5 × below 1 keV); a candidate joins when Σ(y − μ)²/(μ + (0.01 μ)²) falls by at least 100, 20 % of that at its own lines, with its area at or above Currie L_D (α = β = 0.05, σ₀ from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (100). Kβ weights from NIST EPQ in this fit."
+region2(beta'' 300 counts/px).proposal.notes[2] = "Fit: least squares, weighted by 1/(y + (0.01 y)²) to decide, least squares, unweighted for the numbers shown; continuum: Kramers×Bernstein(9,5), split at 1.5596 keV (step broadened by the detector resolution); orders chosen on synthetic data; escape peaks: fitted for 1 line group above the Si K edge (1.839 keV); reference shapes: none; 6 residual peaks examined, 38 candidate fits, 41 fits in all."
+region2(beta'' 300 counts/px).proposal.notes[3] = "Confirmation lines (validation: none): an element nominated by an L or M line needs its K or L alpha line at 3 σ in the residual where the fitted range holds it and the beam is at least 2.0 times its energy; otherwise it is withheld."
+region2(beta'' 300 counts/px).proposal.notes[4] = "Confirmation withheld Ru: Ru Kα (19.28 keV) has a residual peak of 1.7 σ, below the 3 σ its Lα (2.56 keV) needs: not Ru."
 region2(beta'' 300 counts/px).proposal.notes[5] = "Confirmation withheld Bi: Bi Lα (10.84 keV) has a residual peak of 2.4 σ, below the 3 σ its Mβ (2.53 keV) needs: not Bi."
-region2(beta'' 300 counts/px).proposal.notes[6] = "Confirmation withheld Pb: Pb Lα (10.55 keV) has a residual peak of 2.4 σ, below the 3 σ its Mβ (2.44 keV) needs: not Pb."
+region2(beta'' 300 counts/px).proposal.notes[6] = "Confirmation withheld Pb: Pb Lα (10.55 keV) has a residual peak of 2.2 σ, below the 3 σ its Mβ (2.44 keV) needs: not Pb."
 region2(beta'' 300 counts/px).proposal.notes[7] = "Confirmation withheld Mo: Mo Kα (17.48 keV) has a residual peak of 1.4 σ, below the 3 σ its Lβ1 (2.39 keV) needs: not Mo."
-region2(beta'' 300 counts/px).proposal.notes[8] = "Confirmation withheld Tl: Tl Lα (10.27 keV) has a residual peak of 0.0 σ, below the 3 σ its Mγ (2.57 keV) needs: not Tl."
-region2(beta'' 300 counts/px).proposal.notes[9] = "Look-elsewhere: 31 candidates were tested, so about 0.02 chance passes of the area bar alone are expected; the gain and confirmation bars stand beside it."
-region2(beta'' 300 counts/px).proposal.notes[10] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
-region2(beta'' 300 counts/px).proposal.passes = 33
+region2(beta'' 300 counts/px).proposal.notes[8] = "Confirmation withheld Tl: Tl Lα (10.27 keV) has a residual peak of 1.7 σ, below the 3 σ its Mγ (2.57 keV) needs: not Tl."
+region2(beta'' 300 counts/px).proposal.notes[9] = "Look-elsewhere: 38 candidates were tested, so about 0.02 chance passes of the area bar alone are expected; the gain and confirmation bars stand beside it."
+region2(beta'' 300 counts/px).proposal.notes[10] = "Cu_Ka: Si-escape/parent ratio 22.5 % exceeds 5 %: an unmodelled line near the escape energy is likely (the 5 % flag is a sanity bound; the SDD Si escape is about 1 % at Cu Kα)"
+region2(beta'' 300 counts/px).proposal.notes[11] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −270 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −272 ± 23 at 882 (generator S); −325 ± 38 at 3000 (A) and −226 ± 22 at 2899 (S)"
+region2(beta'' 300 counts/px).proposal.passes = 41
 region2(beta'' 300 counts/px).proposal.settled = true
-region2(beta'' 300 counts/px).proposal.reducedChiSquared = 3ff0dc3303be3c81 1.0537595888343108
+region2(beta'' 300 counts/px).proposal.reducedChiSquared = 3ff099f33b7c33b4 1.0375854800833908
 region2.fit.groupIDs: array 4
 region2.fit.groupIDs[0] = "Al_Ka"
 region2.fit.groupIDs[1] = "Mg_Ka"
 region2.fit.groupIDs[2] = "O_Ka"
 region2.fit.groupIDs[3] = "Si_Ka"
-region2.fit.values: n 4 sum 40dc47c154356f4f 28959.020764692974 fnv 1d3e09995c112218
-region2.fit.values[0] = 40ce04c3e9c9a4c9 15369.530572133504
-region2.fit.values[1] = 40b0364f1c0d6689 4150.3090217948275
-region2.fit.values[2] = 4068969b3f41db92 196.70645106184799
-region2.fit.values[3] = 40c20d3cc39d7f22 9242.4747197027937
-region2.fit.covariance: n 16 sum 40eb9c8cc9edca52 56548.39964952007 fnv 3841fe76ba7a0bfc
+region2.fit.values: n 4 sum 40dcf247931991e2 29641.118353264297 fnv 2072c6682f09b939
+region2.fit.values[0] = 40cf028ded228e66 15877.108799285441
+region2.fit.values[1] = 40b038cb31c9f062 4152.7937284671661
+region2.fit.values[2] = 4070d3a1574a4e00 269.22688988709706
+region2.fit.values[3] = 40c23efe95714abd 9341.9889356245931
+region2.fit.covariance: n 16 sum 40edd0884af9da8e 61060.259152342667 fnv 3486991234ff3148
 region2.fit.covarianceKind = "sandwich covariance of unweighted least squares, Var(data) = model (Poisson) on the passive set (columns not held at a bound); a bound-active area carries the full-design marginal variance (as if freed) and no covariance"
 region2.fit.supported: n 4 sum-bits 4 fnv fdcdb80e5fd8d165
 region2.fit.atBound: n 4 sum-bits 0 fnv c8210784d8af5a5
@@ -414,32 +526,32 @@ region2.fit.backgroundNames[12] = "continuum s1 t^2"
 region2.fit.backgroundNames[13] = "continuum s1 t^3"
 region2.fit.backgroundNames[14] = "continuum s1 t^4"
 region2.fit.backgroundNames[15] = "continuum s1 t^5"
-region2.fit.backgroundCoefficients: n 16 sum 40eeb260109795fb 62867.002025406771 fnv d8711c27ad9547dd
+region2.fit.backgroundCoefficients: n 16 sum 40ed5541e31298ed 60074.058968828853 fnv 94d66bd241fa1908
 region2.fit.channels = 136..<4096
-region2.fit.model: n 3960 sum 40f426df30a4969d 82541.949375713666 fnv e959d12bb6094660
-region2.fit.residual: n 3960 sum c0b910f30a4969da -6416.9493757136752 fnv 94e4e90f1a399644
-region2.fit.standardizedResidual: n 3960 sum c09a3867f7f8c2c5 -1678.1015318745497 fnv f84c950f63bf735d
+region2.fit.model: n 3960 sum 40f4494925d2d007 83092.571734249694 fnv d65a7db3294fc6b6
+region2.fit.residual: n 3960 sum c0b8fe925d2cff90 -6398.57173424949 fnv 2fbd976660c36124
+region2.fit.standardizedResidual: n 3960 sum c09a2c087d5c07a6 -1675.0082907085102 fnv 64b0d11fe884543b
 region2.fit.negativeModelChannels = 0
 region2.fit.degreesOfFreedom = 3940
-region2.fit.reducedChiSquared = 40938ebc9ee4b678 1251.6841998802538
-region2.fit.pearsonReducedChiSquared = 403f340687b3faa5 31.203224641266065
-region2.fit.deviance = 40f19180bb9f77e5 71960.045806377733
-region2.fit.reducedDeviance = 403243939ac47349 18.26397101684714
+region2.fit.reducedChiSquared = 40941de97bf6025c 1287.4780119360867
+region2.fit.pearsonReducedChiSquared = 403fa806247a00c1 31.656343726907611
+region2.fit.deviance = 40f1d01fd85414e3 72961.990314561452
+region2.fit.reducedDeviance = 403284ad7379fa2a 18.518271653441992
 region2.fit.methodLabel = "least squares, unweighted"
 region2.fit.referenceShapesLabel = "reference shapes: none"
 region2.fit.escapeLabel = "escape peaks: none (no line above the Si K edge, 1.839 keV)"
 region2.fit.lineShapeLabel = "line shape: Gaussian"
-region2.fit.backgroundLabel = "continuum: Kramers×Bernstein(9,5), split at 1.5596 keV; orders chosen on synthetic data"
+region2.fit.backgroundLabel = "continuum: Kramers×Bernstein(9,5), split at 1.5596 keV (step broadened by the detector resolution); orders chosen on synthetic data"
 region2.fit.exit = "converged"
 region2.fit.warnings: array 1
-region2.fit.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −295 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −310 ± 23 at 882 (generator S); −402 ± 33 at 3000 (A) and −310 ± 23 at 2899 (S)"
+region2.fit.warnings[0] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −270 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −272 ± 23 at 882 (generator S); −325 ± 38 at 3000 (A) and −226 ± 22 at 2899 (S)"
 region2.fit.droppedLines: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region2.fit.escapeRatios: array 4
 region2.fit.escapeRatios[0] = nil
 region2.fit.escapeRatios[1] = nil
 region2.fit.escapeRatios[2] = nil
 region2.fit.escapeRatios[3] = nil
-region2.fit.iterations = 16
+region2.fit.iterations = 18
 region2.fit.converged = true
 region2.fit.irls = nil
 region2.fit.devianceHistory: n 0 sum 0000000000000000 0 fnv cbf29ce484222325

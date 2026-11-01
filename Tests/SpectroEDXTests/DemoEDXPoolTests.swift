@@ -19,7 +19,9 @@ import SpectroEDX
 ///
 /// What the bounds are: MEASURED regression bounds on fixed inputs, not derived limits. The fit with the default sum peaks reads
 /// noise-free Si K-alpha -0.0 to -4.0 % on the pools at up to 300 counts/px and -7.9 % on L5 (the highest rate, where the
-/// generator's pile-up takes 11 % of the Al K-alpha photons); the bound is 5 % (10 % on L5). The fit without sum peaks read -8 to
+/// generator's pile-up takes 11 % of the Al K-alpha photons); the bound is 5 % (10 % on L5). With the continuum seen through the
+/// detector (the expected spectra's continuum blurred, `tools/edx-sim/detector_blur.py`) and the broadened continuum step (the
+/// default since then): -0.04 to -1.6 % on the pools, -2.4 % on L5; the bounds are kept. The fit without sum peaks read -8 to
 /// -57 % on the same pools: the Al+Al sum peak (2.97 keV) pulls the continuum segment above the Al K edge and Si K-alpha with it.
 struct DemoEDXPoolTests {
     static let tables = try! QuantificationTables(directory: EDXFixtures.repoRoot.appendingPathComponent("Sources/SpectroEDX/Resources/Spectroscopy"))
@@ -165,7 +167,10 @@ struct DemoEDXPoolTests {
     /// detector (the absorption-truth pool, 1e4 px) with `TailEstimate`, then typed into `FitPolicy.lineTail`, it takes the noise-free
     /// Mg K-alpha bias next to Al K-alpha (-22 % on L5, -32 % on recipe A, -45 % on the matrix map) to within 5 % on L5 and recipe A,
     /// and to -15 % on the matrix map (which
-    /// pools seven recipes and thicknesses; not explained). Without it the default fit leaves Mg where it was (the tail is not a sum peak).
+    /// pools seven recipes and thicknesses; not explained). Without it the default fit leaves Mg near where it was (the tail is not a
+    /// sum peak): within 1.6 points on every pool but L5, the highest rate, where with the broadened continuum step the sum peaks take
+    /// Mg from -24.5 % to -15.6 % (bound 0.10 there, 0.03 elsewhere). Measured with the broadened step: with the calibrated tail Mg
+    /// reads +4.2 % (L5), +1.4 % (L6), +0.8 % (L7), +3.1 % (recipe A), -14.5 % (matrix map).
     @Test func aCalibratedTailTakesTheMgBiasOut() throws {
         let fx = Self.named("absorption-truth")
         var s = FitSettings.standard(elements: ["Al", "Mg", "Si", "Cu", "O"], axis: fx.axis, resolutionMnKaEV: 130, beamEnergy: 200)
@@ -184,7 +189,7 @@ struct DemoEDXPoolTests {
             let mgOff = Self.net(off, "Mg_Ka") / 100 / c.mg - 1
             Self.say(String(format: "%@ Mg with the calibrated tail %+.4f, default %+.4f, without sum peaks %+.4f", name, mg, mgPlain, mgOff))
             #expect(abs(mg) <= bound, "\(name): Mg \(mg)")
-            #expect(abs(mgPlain - mgOff) <= 0.03, "\(name): sum peaks moved Mg from \(mgOff) to \(mgPlain)")
+            #expect(abs(mgPlain - mgOff) <= (name == "L5" ? 0.10 : 0.03), "\(name): sum peaks moved Mg from \(mgOff) to \(mgPlain)")
         }
     }
 
