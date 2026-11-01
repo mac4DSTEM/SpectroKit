@@ -33,7 +33,9 @@ struct DemoEDXAutoIDTests {
             #expect(c.explainedBySumPeak == "Al+Al sum", "\(name): \(el) \(c.explainedBySumPeak ?? "nil")")
             #expect(c.hasSumPeakQuestion, "\(name): \(el) has no Al+Al conflict")
         }
-        #expect(p.notes.contains { $0.hasPrefix("Explained as pile-up") && $0.contains("Ar") && $0.contains("Al+Al sum") }, "\(name): \(p.notes)")
+        #expect(p.notes.contains { $0.hasPrefix("Explained as pile-up: ") && $0.contains("Ar") && $0.contains("Al+Al sum") }, "\(name): \(p.notes)")
+        // The pile-up note carries no validation tag.
+        #expect(!p.notes.contains { $0.hasPrefix("Explained as pile-up") && $0.contains("(validation") }, "\(name): \(p.notes)")
         // Explained is its own tier: never possible, proposed or withheld.
         for c in p.explainedBySumPeaks {
             #expect(!c.isProposed && c.familyNote == nil && !p.possible.contains(c))

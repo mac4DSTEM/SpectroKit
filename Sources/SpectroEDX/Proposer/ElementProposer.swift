@@ -787,7 +787,7 @@ public nonisolated struct ElementProposer: Sendable {
         }
         for label in Set(candidates.compactMap(\.explainedBySumPeak)).sorted() {
             let els = candidates.filter { $0.explainedBySumPeak == label }.map(\.element)
-            notes.append("Explained as pile-up (validation: none): \(els.joined(separator: ", ")) lost the peak they were tested on to the \(label) column, which the final fit keeps at or above its detection limit; they are not possible elements.")
+            notes.append("Explained as pile-up: \(els.joined(separator: ", ")) lost the peak they were tested on to the \(label) column, which the final fit keeps at or above its detection limit; they are not possible elements.")
         }
         if overlapCheck {
             notes.append(String(format: "Overlap check (validation: none): every element whose lines all sit under modelled lines was fitted once with the settled model; %d reached L_D with a gain of at least %.0f and are possible only.", overlapFinds.count, t.minimumGain))
