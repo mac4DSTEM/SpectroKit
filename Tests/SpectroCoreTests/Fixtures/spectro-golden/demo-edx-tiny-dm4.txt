@@ -618,7 +618,7 @@ whole.quantification.kSet.values[0] = 3ff0000000000000 1
 whole.quantification.kSet.values[1] = 3fed9f7bb092a466 0.92571815955046755
 whole.quantification.kSet.values[2] = 3ff074366f371035 1.0283722252215857
 whole.quantification.kSet.values[3] = 4000f1dcdd6ed6dd 2.1180970477533791
-whole.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Al; beam 200.0 keV; UNVALIDATED"
+whole.quantification.kSet.source = "computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Al; beam 200.0 keV"
 whole.quantification.kSet.date = "EPQ 249dd3f8 + Krause 1979 + FFAST"
 whole.quantification.kSet.relativeSigma: n 4 sum 3fe3333333333334 0.60000000000000009 fnv 64c581f70074c890
 whole.quantification.kSet.relativeSigma[0] = 0000000000000000 0
@@ -639,7 +639,7 @@ whole.quantification.footerLines[2] = "beam 200 kV · typed"
 whole.quantification.footerLines[3] = "fit range 0.2–9.80777 keV (default; the axis end) · 24 px pooled (Whole map)"
 whole.quantification.footerLines[4] = "σ: counting only; model choice can move a weak line by more"
 whole.quantification.footerLines[5] = "σ is counting statistics at χ²ᵣ = 1; this fit is at 0.38 (Pearson)"
-whole.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Al; beam 200.0 keV; UNVALIDATED (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Al)"
+whole.quantification.footerLines[6] = "k: computed: Bote-Salvat 2008 (NIST EPQ tables, PRA 77 042701), edges DHS xionUis.csv; not Velox's Brown-Powell default; omega: Krause 1979 (NIST EPQ Krause1979.csv); epsilon: EPQ getDefaultSDDProperties (Au 0.0 nm, Al 10.0 nm, Si dead layer 0.0 µm, Si 450.0 µm); generic SDD model, not a measured calibration of this detector; FFAST MACs; relative to Al; beam 200.0 keV (EPQ 249dd3f8 + Krause 1979 + FFAST); σ_k 20 % flat, 0 on the reference (Al)"
 whole.quantification.footerLines[7] = "k-free ratio: net / net(Al)"
 whole.quantification.footerLines[8] = "absorption: not applied — GMS files: the stage tilt and the four detector segments are not read yet (open item), so the absorption geometry is unknown"
 whole.quantification.fitSettings.elements: array 6
@@ -679,7 +679,7 @@ whole.quantification.unlistedCheckPending = false
 whole.quantification.abundanceCaveat = nil
 whole.quantification.appliedSumEscape = nil
 whole.quantification.continuumDeadLayerMicrons = nil
-whole.csv-fnv = f7c620561e1f0e17
+whole.csv-fnv = f8ff56552c7b9f69
 whole.rangeSensitivity = nil
 whole.unlistedProposal.candidates: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 whole.unlistedProposal.sumPeaks: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
@@ -702,9 +702,9 @@ whole.unlistedProposal.currie.alpha = 3fa999999999999a 0.050000000000000003
 whole.unlistedProposal.currie.beta = 3fa999999999999a 0.050000000000000003
 whole.unlistedProposal.notes: array 7
 whole.unlistedProposal.notes[0] = "Lines below 0.45 keV are not tested (a measured limit of the continuum model, not a property of the method)."
-whole.unlistedProposal.notes[1] = "Identification (validation: none): the residual's peaks at or above 5 σ of its top-hat filter (1.5 × below 1 keV); a candidate joins when Σ(y − μ)²/(μ + (0.01 μ)²) falls by at least 100, 20 % of that at its own lines, with its area at or above Currie L_D (α = β = 0.05, σ₀ from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (100). Kβ weights from NIST EPQ in this fit."
+whole.unlistedProposal.notes[1] = "Identification: the residual's peaks at or above 5 σ of its top-hat filter (1.5 × below 1 keV); a candidate joins when Σ(y − μ)²/(μ + (0.01 μ)²) falls by at least 100, 20 % of that at its own lines, with its area at or above Currie L_D (α = β = 0.05, σ₀ from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (100). Kβ weights from NIST EPQ in this fit."
 whole.unlistedProposal.notes[2] = "Fit: least squares, weighted by 1/(y + (0.01 y)²) to decide, least squares, unweighted for the numbers shown; continuum: Kramers×Bernstein(9,5), split at 1.5596 keV (step broadened by the detector resolution); orders chosen on synthetic data; escape peaks: fitted for 2 line groups above the Si K edge (1.839 keV); reference shapes: none; 0 residual peaks examined, 0 candidate fits, 2 fits in all."
-whole.unlistedProposal.notes[3] = "Confirmation lines (validation: none): an element nominated by an L or M line needs its K or L alpha line at 3 σ in the residual where the fitted range holds it and the beam is at least 2.0 times its energy; otherwise it is withheld."
+whole.unlistedProposal.notes[3] = "Confirmation lines: an element nominated by an L or M line needs its K or L alpha line at 3 σ in the residual where the fitted range holds it and the beam is at least 2.0 times its energy; otherwise it is withheld."
 whole.unlistedProposal.notes[4] = "Background check: data over model 0.59 off the lines in 1.0 to 2.5 keV (0.80 to 1.25 is healthy); a find there is only possible."
 whole.unlistedProposal.notes[5] = "Look-elsewhere: 0 candidates were tested, so about 0.00 chance passes of the area bar alone are expected; the gain and confirmation bars stand beside it."
 whole.unlistedProposal.notes[6] = "a weak line next to Al Kα reads low by ≈ 300 counts per pooled spectrum on synthetic data (cause: the Al Kα incomplete-charge tail, unmodelled until a tail is measured on an Al matrix, `TailEstimate`); unmeasured on real data. Weak-line bias measured on synthetic data: Δ = −270 ± 31 counts at 900 planted Mg Kα (generator A, no tail: continuum–line projection) and −272 ± 23 at 882 (generator S); −325 ± 38 at 3000 (A) and −226 ± 22 at 2899 (S)"
@@ -727,7 +727,7 @@ whole.withholding[1][1] = 403b7e117b1a077f 27.492454236845784
 whole.withholding[1][2] = 40483983ddea3400 48.449336757046694
 whole.withholding[1][3] = 4012d79212e5305e 4.7105181648622345
 whole.withholding.caveat = nil
-whole.csv-withholding-fnv = 36b8c585c8640dfa
+whole.csv-withholding-fnv = fa4dea8dee2f92e4
 region-locked-axis.quantification.method.version = 1
 region-locked-axis.quantification.method.estimator = .leastSquares
 region-locked-axis.quantification.method.background = .empiricalWithAlEdge
@@ -922,5 +922,5 @@ region-locked-axis.quantification.unlistedCheckPending = false
 region-locked-axis.quantification.abundanceCaveat = nil
 region-locked-axis.quantification.appliedSumEscape = nil
 region-locked-axis.quantification.continuumDeadLayerMicrons = nil
-region-locked-axis.csv-fnv = de6c63e7fca3cf8f
+region-locked-axis.csv-fnv = 531547be5f392fb
 region-locked-axis.rangeSensitivity = nil

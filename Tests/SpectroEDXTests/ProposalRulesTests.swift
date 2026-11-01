@@ -128,7 +128,7 @@ struct ProposalRulesTests {
         #expect(r.hygiene && r.corroboration && r.release)
         #expect(r.actinideZ == 89); #expect(r.besideKFWHM == 1.5); #expect(r.lineMinimumSignificance == 3); #expect(r.releaseSignificance == 10)
         #expect(ProposalRules.Rule.allCases.map(\.rawValue) == ["R1", "R2", "R3"])
-        #expect(ProposalRules.source.contains("unvalidated"))
+        #expect(ProposalRules.source.contains("78 Velox-session files") && !ProposalRules.source.contains("validated"), "\(ProposalRules.source)")
         // What the room applies: R3 was refuted on the dose ladder (Ar released from the Al+Al sum), R2 missed its hold-out bar.
         // Mutation: `shipped` = `registered`.
         let s = ProposalRules.shipped

@@ -56,14 +56,16 @@ struct SpectroscopyProvenanceExportTests {
 
     // MARK: 5 - export
 
-    /// The CSV: header lines (validation, method hash, provenance), the column row, one row per fitted element, at% empty
-    /// without a k source, the reference's k-free sigma empty, the flags and the estimator on each row.
-    /// Mutation: the `validation` header line removed from `SpectroscopyExport.csv` - red.
+    /// The CSV: header lines (method with its k table and reference, method hash, provenance), the column row, one row per
+    /// fitted element, at% empty without a k source, the reference's k-free sigma empty, the flags and the estimator on each row.
+    /// Mutation: the `# method:` header line removed from `SpectroscopyExport.csv` - red.
     @Test func testTheCSVCarriesTheTableTheValidationBadgeAndTheMethodHash() throws {
         let r = try PooledQuantifier.run(Q.input(Q.method(), image: try Q.image()), tables: Q.tables)
         let csv = SpectroscopyExport.csv(r, regionName: "Whole map")
         let lines = csv.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-        #expect(lines.contains { $0.hasPrefix("# validation: UNVALIDATED") })
+        let methodLine = try #require(lines.first { $0.hasPrefix("# method: at% from k ") })
+        #expect(methodLine.contains("Bote-Salvat") && methodLine.contains("relative to Al"), "\(methodLine)")
+        #expect(!lines.contains { $0.contains("UNVALIDATED") || $0.hasPrefix("# validation:") })
         #expect(lines.contains("# method hash (sha256 of the method JSON): \(r.method.hash)"))
         #expect(lines.contains { $0.hasPrefix("# beam 200 kV") })
         let head = try #require(lines.firstIndex { !$0.hasPrefix("#") })
@@ -78,7 +80,7 @@ struct SpectroscopyProvenanceExportTests {
 
         var m = Q.method(); m.kFactorSource = .typed          // no k: no at%
         let none = SpectroscopyExport.csv(try PooledQuantifier.run(Q.input(m, image: try Q.image()), tables: Q.tables), regionName: "Whole map")
-        #expect(none.contains("# validation: net counts and k-free ratios only"))
+        #expect(none.contains("# method: net counts and k-free ratios only"))
         let row = try #require(none.split(separator: "\n").first { $0.hasPrefix("Al,Al_Ka,") }).split(separator: ",", omittingEmptySubsequences: false)
         #expect(row[6] == ""); #expect(row[7] == ""); #expect(row[8] == "")
     }

@@ -122,9 +122,10 @@ struct SpectroscopyComputedKTests {
         #expect(isEqual(set.k("Mg")!, 0.9002, accuracy: 5e-5)); #expect(isEqual(set.k("Al")!, 0.9724, accuracy: 5e-5))
         #expect(set.kind == .computed); #expect(set.reference == "Si")
         #expect(set.relSigma("Si") == 0); #expect(set.relSigma("Mg") == 0.2)
-        for needle in ["Bote-Salvat", "Krause 1979", "EPQ getDefaultSDDProperties", "generic SDD", "relative to Si", "UNVALIDATED", "200.0 keV"] {
+        for needle in ["Bote-Salvat", "Krause 1979", "EPQ getDefaultSDDProperties", "generic SDD", "relative to Si", "200.0 keV"] {
             #expect(set.source.contains(needle), "\(needle) in \(set.source)")
         }
+        #expect(!set.source.uppercased().contains("VALIDATED"), "the source names its table, not a validation tag: \(set.source)")
         // Reference carries no sigma: Mg/Si against Si is 20 %; two independent factors would be 28 %.
         assertRel(RatioSigma.kTerm(set, numerator: "Mg", denominator: "Si")!, 0.2, 1e-12)
         let free = KFactorSet(kind: .computed, elements: ["Mg", "Si"], values: [0.93, 1], source: "x", date: "2026-10-05")!

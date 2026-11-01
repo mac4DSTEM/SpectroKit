@@ -772,16 +772,16 @@ public nonisolated struct ElementProposer: Sendable {
 
         var notes = [
             String(format: "Lines below %.2f keV are not tested (a measured limit of the continuum model, not a property of the method).", minimumLineEnergyKeV),
-            String(format: "Identification (validation: none): the residual's peaks at or above %.0f \u{03C3} of its top-hat filter (%.1f \u{00D7} below %.0f keV); a candidate joins when \u{03A3}(y \u{2212} \u{03BC})\u{00B2}/(\u{03BC} + (%.2f \u{03BC})\u{00B2}) falls by at least %.0f, %.0f %% of that at its own lines, with its area at or above Currie L_D (\(Self.rateText(currie)), \u{03C3}\u{2080} from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (%.0f). K\u{03B2} weights from NIST EPQ in this fit.",
+            String(format: "Identification: the residual's peaks at or above %.0f \u{03C3} of its top-hat filter (%.1f \u{00D7} below %.0f keV); a candidate joins when \u{03A3}(y \u{2212} \u{03BC})\u{00B2}/(\u{03BC} + (%.2f \u{03BC})\u{00B2}) falls by at least %.0f, %.0f %% of that at its own lines, with its area at or above Currie L_D (\(Self.rateText(currie)), \u{03C3}\u{2080} from the fit's own variance with it absent) and no line against it; the final fit drops what it does not need (%.0f). K\u{03B2} weights from NIST EPQ in this fit.",
                    t.peakSigma, t.lowEnergyFactor, t.lowEnergyBelowKeV, t.relativeModelTerm, t.minimumGain, 100 * t.minimumLocalShare, t.pruneGain),
             "Fit: \(fit.result.methodLabel) to decide, \(report.result.methodLabel) for the numbers shown; \(fit.result.backgroundLabel); \(fit.result.escapeLabel); \(fit.result.referenceShapesLabel); \(examined) residual peak\(examined == 1 ? "" : "s") examined, \(tested) candidate fits, \(fitsDone) fits in all.",
         ]
         if let p = policy.noteLine { notes.insert(p, at: 3) }
         if EPQLineWeights.bundled == nil { notes.append("The NIST EPQ line weights are missing from this build: the identification fit used eXSpy's Kβ weights.") }
         if familyConsistency {
-            notes.append("Confirmation lines (validation: none): an element nominated by an L or M line needs its K or L alpha line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise it is withheld.")
+            notes.append("Confirmation lines: an element nominated by an L or M line needs its K or L alpha line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it and the beam is at least \(familyOvervoltage) times its energy; otherwise it is withheld.")
             if let z = downwardFamilyMinimumZ {
-                notes.append("Downward confirmation (validation: none): an element of Z \u{2265} \(z) nominated by a K line needs its L\u{03B1} line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it; otherwise it is withheld.")
+                notes.append("Downward confirmation: an element of Z \u{2265} \(z) nominated by a K line needs its L\u{03B1} line at \(String(format: "%.0f", t.confirmationSigma)) \u{03C3} in the residual where the fitted range holds it; otherwise it is withheld.")
             }
             notes += candidates.compactMap { c in c.familyNote.map { "Confirmation withheld \(c.element): \($0)" } }
         }
@@ -790,7 +790,7 @@ public nonisolated struct ElementProposer: Sendable {
             notes.append("Explained as pile-up: \(els.joined(separator: ", ")) lost the peak they were tested on to the \(label) column, which the final fit keeps at or above its detection limit; they are not possible elements.")
         }
         if overlapCheck {
-            notes.append(String(format: "Overlap check (validation: none): every element whose lines all sit under modelled lines was fitted once with the settled model; %d reached L_D with a gain of at least %.0f and are possible only.", overlapFinds.count, t.minimumGain))
+            notes.append(String(format: "Overlap check: every element whose lines all sit under modelled lines was fitted once with the settled model; %d reached L_D with a gain of at least %.0f and are possible only.", overlapFinds.count, t.minimumGain))
         }
         for b in unhealthy { notes.append(String(format: "Background check: data over model %.2f off the lines in %.1f to %.1f keV (0.80 to 1.25 is healthy); a find there is only possible.", b.ratio, b.lo, b.hi)) }
         let pChance = 0.5 * erfc((currie.zAlpha + currie.zBeta) / 2.0.squareRoot())

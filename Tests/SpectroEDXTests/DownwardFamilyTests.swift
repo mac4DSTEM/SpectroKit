@@ -56,7 +56,10 @@ struct DownwardFamilyTests {
         let note = try #require(zn.familyNote)
         #expect(note.contains("Zn L\u{03B1}") && note.contains("below the 3 \u{03C3}"), "\(note)")
         #expect(r.withheld.contains { $0.element == "Zn" } && !r.proposed.contains { $0.element == "Zn" })
-        #expect(r.notes.contains { $0.hasPrefix("Downward confirmation") && $0.contains("Z \u{2265} 30") })
+        #expect(r.notes.contains { $0.hasPrefix("Downward confirmation: ") && $0.contains("Z \u{2265} 30") })
+        // The notes name the rule, not a validation tag.
+        #expect(r.notes.contains { $0.hasPrefix("Confirmation lines: ") }, "\(r.notes)")
+        #expect(!r.notes.contains { $0.contains("(validation") }, "\(r.notes)")
     }
 
     @Test func testAZnKLineWithItsLLineIsKept() throws {

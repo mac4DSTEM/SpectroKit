@@ -4,8 +4,8 @@
 //        else: the results table as CSV and the method as JSON (the method's own sorted-keys encoding plus its hash).
 //        Pure text; the room's view only hands it to a save panel.
 //
-//  The CSV states what the numbers are in its own header, so a file read alone keeps its caveats: the at% columns carry
-//  validation "none" (the cross-section source is unvalidated), a row's flags say a line was held at 0 or refused, and
+//  The CSV states what the numbers are in its own header, so a file read alone keeps its caveats: a `# method:` line names
+//  the k table and its reference element behind the at% columns, a row's flags say a line was held at 0 or refused, and
 //  the footer lines of the fit (estimator, continuum, beam and its source, axis, k, absorption) travel as `#` lines.
 //  Numbers are written with a period and six significant digits whatever the locale.
 //
@@ -22,8 +22,8 @@ public nonisolated enum SpectroscopyExport {
                             title: String = "Spectroscopy quantification") -> String {
         var out: [String] = []
         out.append("# \(title), region: \(regionName)")
-        out.append("# validation: " + (q.hasAbundance
-            ? "UNVALIDATED (at% rests on a computed or typed k with validation \"none\"; net counts and k-free ratios are fit areas)"
+        out.append("# method: " + (q.hasAbundance
+            ? "at% from k " + (q.kFactorSourceDescription ?? q.method.kSource) + "; net counts and k-free ratios are fit areas"
             : "net counts and k-free ratios only; no at% was computed"))
         if let c = q.abundanceCaveat { out.append("# at% caveat: " + c) }
         // WP3b F1: the unlisted-line check travels with the numbers, finished or not.

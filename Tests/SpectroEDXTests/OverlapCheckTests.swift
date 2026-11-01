@@ -52,7 +52,8 @@ struct OverlapCheckTests {
         #expect(!rb.isProposed && rb.aboveDetectionLimit)
         #expect(rb.possibleReason?.contains("overlap check") == true && rb.possibleReason?.contains("Si") == true, "\(rb.possibleReason ?? "no reason")")
         #expect(r.possible.contains { $0.element == "Rb" } && !r.proposed.contains { $0.element == "Rb" })
-        #expect(r.notes.contains { $0.hasPrefix("Overlap check") })
+        #expect(r.notes.contains { $0.hasPrefix("Overlap check: ") })
+        #expect(!r.notes.contains { $0.contains("(validation") }, "the notes name the check, not a validation tag: \(r.notes)")
     }
 
     /// Without the hidden element the check reports nothing: every element it fits under Si and Al gains nothing.
