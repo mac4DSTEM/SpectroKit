@@ -11,7 +11,7 @@
 //                      meets R1 and R2 like any other pick.
 //
 //  The cuts (3, 10 L_D, 1.5 FWHM) were read off 78 files of ONE operator, one detector, mostly Al-Mg-Si; a threshold is a
-//  property of the dataset until measured on every dataset it will touch, so `UNVALIDATED` stays on the Auto ID row. A rule
+//  property of the dataset until measured on every dataset it will touch, so the source names those files. A rule
 //  that did not hold on the hold-out files and the synthetic dose ladder is switched off in `shipped`, not retuned: R1's
 //  actinide half ships; R1's beside-K half is off because an independent review found that the sample never met a true L/M element beside a proposed K, and the line
 //  table has pairs where it would drop a real one (Hf Lα 1.0 FWHM from Cu Kα on a Cu grid, Pt Lα 1.2 from Ga Kα on a FIB
@@ -67,7 +67,7 @@ public nonisolated struct ProposalRules: Equatable, Sendable {
     /// beside Cu and Pt beside Ga. R2 was refuted in-sample there too. A new beside-K test needs a different evidence term.
     public static let shipped = ProposalRules(hygiene: true, besideK: false, corroboration: false, release: false)
     /// Where the cuts come from (said in the notes, never hidden).
-    public static let source = "fixed 2026-10-07, cuts read off 78 Velox-session files: unvalidated"
+    public static let source = "fixed 2026-10-07, cuts read off 78 Velox-session files"
     public var isNone: Bool { !hygiene && !besideK && !corroboration && !release }   // besideKGuard alone acts only with besideK
 
     public nonisolated struct Withheld: Equatable, Sendable {

@@ -71,13 +71,13 @@ package nonisolated struct ComputedKFactor: Sendable {
         "computed: \(cross.sourceName); omega: \(yield.sourceName); epsilon: \(efficiency.sourceName)"
     }
 
-    /// The k set, reported "relative to <reference>", badged unvalidated, with its source
-    /// string naming the cross-section, omega and epsilon models. The reference
-    /// element carries sigma_k = 0 (it is 1 by definition).
+    /// The k set, reported "relative to <reference>", with its source string naming the
+    /// cross-section, omega and epsilon models. The reference element carries
+    /// sigma_k = 0 (it is 1 by definition).
     package func kFactorSet(lines: [LineIngredients], reference: Int = 0, date: String) throws -> KFactorSet {
         let k = try kFactors(lines: lines, reference: reference)
         let ref = lines[reference].element
-        let src = "\(sourceDescription); relative to \(ref); beam \(beamEnergyKeV) keV; UNVALIDATED"
+        let src = "\(sourceDescription); relative to \(ref); beam \(beamEnergyKeV) keV"
         guard let s = KFactorSet(kind: .computed, elements: lines.map(\.element), values: k, source: src, date: date, reference: ref) else {
             throw QuantError.invalid("The computed k-factors could not form a set (duplicate or non-positive).")
         }

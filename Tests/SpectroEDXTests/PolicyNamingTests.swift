@@ -58,7 +58,7 @@ struct PolicyNamingTests {
 
     /// 0.11.0: the note moved into the identification note (the "Detection:" line is gone); the rates are written as before.
     @Test func testDetectionNoteGivesBothCurieRatesAndTheDefaultTextIsUnchanged() throws {
-        func detection(_ c: Currie) throws -> String { try #require(Self.notes(ProposerPolicy(currie: c)).first { $0.hasPrefix("Identification (validation: none)") }) }
+        func detection(_ c: Currie) throws -> String { try #require(Self.notes(ProposerPolicy(currie: c)).first { $0.hasPrefix("Identification: ") }) }
         let tail = ", \u{03C3}\u{2080} from the fit's own variance with it absent)"
         let head = "with its area at or above Currie L_D ("
         #expect(try detection(.standard).contains(head + "\u{03B1} = \u{03B2} = 0.05" + tail))
