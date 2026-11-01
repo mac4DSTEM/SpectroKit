@@ -109,6 +109,9 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     /// reduced chi2 (or deviance) when that is above 1. Default 3: a stated choice, not a measured false-keep rate (c is clipped at 0,
     /// and the rate holds only for a model that fits; a real line under the self pair is read as pile-up whatever the level).
     public var sumPeakSignificance: Double
+    /// The table tying each family's sub-lines to its alpha line (`EDSLineWeights`). Default `.exspy`, the parity path; `.epq` ties the K
+    /// families at NIST EPQ's Kβ weights (Al Kβ 0.0315 of Kα against eXSpy's 0.0132). A stored policy without the field reads `.exspy`.
+    public var lineWeights: EDSLineWeights
 
     public init(fitFromKeV: Double = 0.2, defaultUpperLimitKeV: Double = 20, continuumOrders: [Int] = [9, 5],
                 continuumEdges: [Double] = [FitPolicy.alKEdgeKeV], continuumNonNegative: Bool = true,
@@ -116,8 +119,10 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                 irls: IRLSSettings = IRLSSettings(), escapeRatioWarning: Double = 0.05,
                 axisRefinement: AxisRefinementSettings = AxisRefinementSettings(),
                 lineTail: LineTail? = nil, sumPeaks: SumPeakRule = .whenSignificant, sumPeakSignificance: Double = 3,
-                continuumEdgeStep: ContinuumEdgeStep = .broadened, continuumDeadLayer: ContinuumDeadLayer? = nil) {
+                continuumEdgeStep: ContinuumEdgeStep = .broadened, continuumDeadLayer: ContinuumDeadLayer? = nil,
+                lineWeights: EDSLineWeights = .exspy) {
         self.continuumDeadLayer = continuumDeadLayer
+        self.lineWeights = lineWeights
         self.fitFromKeV = fitFromKeV; self.defaultUpperLimitKeV = defaultUpperLimitKeV
         self.continuumOrders = continuumOrders; self.continuumEdges = continuumEdges
         self.continuumNonNegative = continuumNonNegative; self.continuumEfficiency = continuumEfficiency
@@ -134,7 +139,7 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
     private enum CodingKeys: String, CodingKey {
         case fitFromKeV, defaultUpperLimitKeV, continuumOrders, continuumEdges, continuumNonNegative, continuumEfficiency, escapePeaks,
              lineTail, maximumPolynomialOrder, irls, escapeRatioWarning, axisRefinement, sumPeaks, sumPeakSignificance, continuumEdgeStep,
-             continuumDeadLayer
+             continuumDeadLayer, lineWeights
     }
 
     /// The synthesized encoding in a fixed key order. Every field with a value is written, `continuumEdgeStep` and `sumPeaks`
@@ -157,10 +162,11 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         try c.encode(sumPeakSignificance, forKey: .sumPeakSignificance)
         try c.encode(continuumEdgeStep, forKey: .continuumEdgeStep)
         try c.encodeIfPresent(continuumDeadLayer, forKey: .continuumDeadLayer)
+        try c.encode(lineWeights, forKey: .lineWeights)
     }
 
     /// A policy stored before sum peaks were the default has no `sumPeaks`: it reads `.off`, the fit it was stored with (and gets the
-    /// non-default footer line). One stored before `continuumEdgeStep` existed reads `.sharp`, the form it was run with. Every other
+    /// non-default footer line). One stored before `continuumEdgeStep` existed reads `.sharp`, the form it was run with; one without `lineWeights` reads `.exspy`. Every other
     /// field is required, as before.
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -179,7 +185,8 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
                   sumPeaks: try c.decodeIfPresent(SumPeakRule.self, forKey: .sumPeaks) ?? .off,
                   sumPeakSignificance: try c.decodeIfPresent(Double.self, forKey: .sumPeakSignificance) ?? 3,
                   continuumEdgeStep: try c.decodeIfPresent(ContinuumEdgeStep.self, forKey: .continuumEdgeStep) ?? .sharp,
-                  continuumDeadLayer: try c.decodeIfPresent(ContinuumDeadLayer.self, forKey: .continuumDeadLayer))
+                  continuumDeadLayer: try c.decodeIfPresent(ContinuumDeadLayer.self, forKey: .continuumDeadLayer),
+                  lineWeights: try c.decodeIfPresent(EDSLineWeights.self, forKey: .lineWeights) ?? .exspy)
     }
 
     /// The Al K absorption edge, keV (X-ray Data Booklet, Table 1-1): the default continuum split.

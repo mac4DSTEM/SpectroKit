@@ -664,6 +664,7 @@ whole.quantification.fitSettings.escapePeaks = true
 whole.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 whole.quantification.fitSettings.method = .leastSquares
 whole.quantification.fitSettings.lineTail = nil
+whole.quantification.fitSettings.lineWeights = .exspy
 whole.quantification.sumEscapeCounts = nil
 whole.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
 whole.quantification.fitRange.toKeV = 40239d945918854d 9.8077724306519034
@@ -906,6 +907,7 @@ region-locked-axis.quantification.fitSettings.escapePeaks = true
 region-locked-axis.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 region-locked-axis.quantification.fitSettings.method = .leastSquares
 region-locked-axis.quantification.fitSettings.lineTail = nil
+region-locked-axis.quantification.fitSettings.lineWeights = .exspy
 region-locked-axis.quantification.sumEscapeCounts = nil
 region-locked-axis.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
 region-locked-axis.quantification.fitRange.toKeV = 402380c28065dbf0 9.7514839290942916

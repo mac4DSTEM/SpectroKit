@@ -262,6 +262,7 @@ public nonisolated enum PooledQuantifier {
             s.method = method.estimator == .leastSquares ? .leastSquares : .poissonML(policy.fit.irls)
             s.fitTo = range(axis).toKeV
             s.lineTail = policy.fit.lineTail
+            s.lineWeights = policy.fit.lineWeights
             return s
         }
 
@@ -411,7 +412,8 @@ public nonisolated enum PooledQuantifier {
         progress?(0.95)
         // Plot curves: the model, and the background as the fitted continuum columns.
         let lineModel = EDSLineModel.build(elements: active, axis: axis, beamEnergy: beam, resolutionMnKaEV: resolution,
-                                           escapePeaks: fitSettings.escapePeaks, lineTail: fitSettings.lineTail)
+                                           escapePeaks: fitSettings.escapePeaks, lineTail: fitSettings.lineTail,
+                                           lineWeights: fitSettings.lineWeights)
         let design = LinearDesign.build(model: lineModel, axis: axis, channels: fit.channels, background: fitSettings.background,
                                         shapes: fitSettings.referenceShapes, counts: counts)
         var plotModel = [Double](repeating: 0, count: axis.size), plotBackground = plotModel

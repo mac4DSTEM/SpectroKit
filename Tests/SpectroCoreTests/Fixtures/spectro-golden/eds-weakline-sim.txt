@@ -213,6 +213,7 @@ level0.quantification.fitSettings.escapePeaks = true
 level0.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 level0.quantification.fitSettings.method = .leastSquares
 level0.quantification.fitSettings.lineTail = nil
+level0.quantification.fitSettings.lineWeights = .exspy
 level0.quantification.sumEscapeCounts = nil
 level0.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
 level0.quantification.fitRange.toKeV = 4034050539b865ad 20.019610984343377
@@ -443,6 +444,7 @@ level4.quantification.fitSettings.escapePeaks = true
 level4.quantification.fitSettings.referenceShapes.shapes: n 0 sum 0000000000000000 0 fnv cbf29ce484222325
 level4.quantification.fitSettings.method = .leastSquares
 level4.quantification.fitSettings.lineTail = nil
+level4.quantification.fitSettings.lineWeights = .exspy
 level4.quantification.sumEscapeCounts = nil
 level4.quantification.fitRange.fromKeV = 3fc999999999999a 0.20000000000000001
 level4.quantification.fitRange.toKeV = 4034037c2c18d3a3 20.013613468228538

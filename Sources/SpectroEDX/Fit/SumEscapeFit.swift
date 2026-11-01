@@ -151,7 +151,8 @@ public nonisolated enum EDSSumEscapeFit {
         var s = settings
         if model.commonEscapeFraction { s.escapePeaks = true }   // the line model needs the escape lists; the free columns are removed below
         let lineModel = EDSLineModel.build(elements: s.elements, axis: axis, beamEnergy: s.beamEnergy,
-                                           resolutionMnKaEV: s.resolutionMnKaEV, escapePeaks: s.escapePeaks, lineTail: s.lineTail)
+                                           resolutionMnKaEV: s.resolutionMnKaEV, escapePeaks: s.escapePeaks, lineTail: s.lineTail,
+                                           lineWeights: s.lineWeights)
         var design = LinearDesign.build(model: lineModel, axis: axis, channels: channels, background: s.background,
                                         shapes: s.referenceShapes, counts: counts)
         if model.commonEscapeFraction {

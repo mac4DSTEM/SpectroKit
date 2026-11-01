@@ -13,12 +13,13 @@ the continuum shape and amplitude, the detector efficiency, the Al K-edge step, 
 internal-fluorescence fraction are choices written into each fixture so a test knows the answer.
 """
 import math
+import os
 
 import numpy as np
 
 # --- line table: eXSpy `exspy/material/xray_lines.json` (commit 7185a4d, Chantler et al. 2005), copied verbatim:
 #     Al :119  Cu :716  Mg :1725  O :1968  Si :2953 (line numbers of the element key). (energy keV, weight rel. to the family's first line)
-LINES = {
+LINES_EXSPY = {
     "Al": {"Ka": (1.4865, 1.0), "Kb": (1.5596, 0.0132)},
     "Mg": {"Ka": (1.2536, 1.0), "Kb": (1.305, 0.01)},
     "Si": {"Ka": (1.7397, 1.0), "Kb": (1.8389, 0.02779)},
@@ -30,9 +31,52 @@ LINES = {
     "Ga": {"La": (1.098, 1.0), "Lb1": (1.1249, 0.16704), "Lb3": (1.1948, 0.0461),
            "Ll": (0.9573, 0.0544), "Ln": (0.9842, 0.02509)},
 }
+
+
+def kbeta_epq(element: str) -> float:
+    """K-beta over K-alpha from NIST EPQ `LineWeights.csv` (public domain; N. W. M. Ritchie, NIST DTSA-II / EPQ library), the copy
+    SpectroEDX ships (Resources/Spectroscopy/LineWeights.csv): every K transition other than K-L2 and K-L3, over those two, as
+    `EPQLineWeights.kBetaOverKAlpha` computes it. Al 0.0315, Mg 0.0174, Si 0.0571, Cu 0.146."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Sources", "SpectroEDX", "Resources", "Spectroscopy",
+                        "LineWeights.csv")
+    with open(path) as fh:
+        rows = fh.read().splitlines()
+    names = [n.strip() for n in rows[0][2:].split(",")]
+    values = [r.split(",") for r in rows[1:] if r]
+    row = values[ATOMIC_NUMBER[element]]
+    alpha = rest = 0.0
+    for n, v in zip(names, row):
+        if not n.startswith("K-"):
+            continue
+        if n in ("K-L3", "K-L2"):
+            alpha += float(v or 0)
+        else:
+            rest += float(v or 0)
+    return rest / alpha
+
+
+# Which table plants the K-beta lines: "epq" (default, the physical NIST EPQ weights) or "exspy" (eXSpy's table, which the
+# committed fixtures were generated with; see README.md). Chosen with the environment variable EDX_SIM_KBETA.
+KBETA_TABLES = ("epq", "exspy")
+
+
+def lines(table: str) -> dict:
+    """LINES_EXSPY with every K-beta weight taken from `table` (L lines and K-alpha unchanged)."""
+    if table not in KBETA_TABLES:
+        raise SystemExit("EDX_SIM_KBETA must be one of %s, got %r" % (", ".join(KBETA_TABLES), table))
+    out = {el: dict(ls) for el, ls in LINES_EXSPY.items()}
+    if table == "epq":
+        for el, ls in out.items():
+            if "Kb" in ls:
+                ls["Kb"] = (ls["Kb"][0], kbeta_epq(el))
+    return out
+
+
 MN_KA = 5.8987          # xray_lines.json:1735 block, Mn Ka (keV)
 ATOMIC_NUMBER = {"Al": 13, "Mg": 12, "Si": 14, "Cu": 29, "O": 8, "Ga": 31}
 AL_K_EDGE = 1.5596      # keV, the Al Kb energy of the table; the absorption step sits here
+KBETA = os.environ.get("EDX_SIM_KBETA", "epq")
+LINES = lines(KBETA)
 
 
 def fwhm_kev(energy_kev: float, fwhm_mnka_ev: float = 130.0) -> float:

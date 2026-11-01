@@ -83,7 +83,7 @@ package nonisolated enum EnergyAxisRefinement {
         try EDSFit.validate(settings.referenceShapes, axis: fileAxis,
                             model: EDSLineModel.build(elements: settings.elements, axis: fileAxis, beamEnergy: settings.beamEnergy,
                                                       resolutionMnKaEV: fileResolutionMnKaEV, escapePeaks: settings.escapePeaks,
-                                                      lineTail: settings.lineTail))
+                                                      lineTail: settings.lineTail, lineWeights: settings.lineWeights))
 
         // Units: u0 = offset shift / 1 eV, u1 = gain shift / 1e-4, u2 = (R - R_file) / 1 eV.
         func rss(_ u: [Double]) -> Double {
@@ -93,7 +93,8 @@ package nonisolated enum EnergyAxisRefinement {
             guard r > options.minimumResolutionEV, r < options.maximumResolutionEV else { return .infinity }
             let axis = EnergyAxis(offset: fileAxis.offset + d, scale: fileAxis.scale * (1 + g), size: fileAxis.size)
             let model = EDSLineModel.build(elements: settings.elements, axis: axis, beamEnergy: settings.beamEnergy,
-                                           resolutionMnKaEV: r, escapePeaks: settings.escapePeaks, lineTail: settings.lineTail)
+                                           resolutionMnKaEV: r, escapePeaks: settings.escapePeaks, lineTail: settings.lineTail,
+                                           lineWeights: settings.lineWeights)
             let design = LinearDesign.build(model: model, axis: axis, channels: channels,
                                             background: settings.background, shapes: settings.referenceShapes,
                                             counts: counts)

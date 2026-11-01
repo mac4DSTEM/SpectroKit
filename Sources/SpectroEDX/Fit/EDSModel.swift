@@ -73,14 +73,20 @@ public nonisolated struct FitLineGroup: Sendable, Equatable {
     package let escapes: [FitLine]
 }
 
-/// Which table ties a family's sub-lines to its alpha line.
-public nonisolated enum EDSLineWeights: Sendable, Equatable {
-    /// eXSpy's `xray_lines.json` weights: the quantification fit (parity, D17).
+/// Which table ties a family's sub-lines to its alpha line (`FitSettings.lineWeights`, `FitPolicy.lineWeights`).
+/// Encoded as "exspy" or "epq".
+public nonisolated enum EDSLineWeights: String, Sendable, Equatable, Codable {
+    /// eXSpy's `xray_lines.json` weights: the parity path (D17).
     case exspy
-    /// The identification fit (docs/design/auto-id-tem.md): the K family's Kβ from NIST EPQ `LineWeights.csv` (public domain), every K
-    /// transition other than K-L2 and K-L3 over those two (Al 0.0315 against eXSpy's 0.0132; two measured Al-alloy map sums read 0.031 and
-    /// 0.034 with Kβ free). L and M families keep eXSpy's weights (EPQ's are per subshell, with no clean map onto eXSpy's lines).
-    case epqK
+    /// NIST EPQ relative line weights for the K family (`LineWeights.csv`, public domain; N. W. M. Ritchie, NIST DTSA-II / EPQ library):
+    /// Kβ over Kα is every K transition other than K-L2 and K-L3, over those two (Al 0.0315, Mg 0.0174, Si 0.0571, Cu 0.146 against eXSpy's
+    /// 0.0132, 0.01, 0.0278, 0.132). On the public Leeds pure-Al wedge (DOI 10.5518/1826) a free Al Kβ fits to 0.028-0.030 of Kα. L and M families keep
+    /// eXSpy's weights (EPQ's are per subshell, with no clean map onto eXSpy's lines). The identification fit always uses it
+    /// (docs/design/auto-id-tem.md); `epq` is the same table.
+    case epqK = "epq"
+
+    /// The NIST EPQ table (`epqK`).
+    public static let epq: EDSLineWeights = .epqK
 }
 
 public nonisolated struct EDSLineModel: Sendable, Equatable {
