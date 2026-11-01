@@ -38,7 +38,9 @@
 //  WHAT IS NOT ESTABLISHED (read before trusting a number):
 //    * The axis refinement was REFUTED at low counts: on demo-edx-tiny (706 counts, 24 px) it found -3.0 eV / +0.58 %
 //      gain against the planted +10 eV / -0.2 %. The sigma terms carry NO axis term, so a wrong refined axis is not in
-//      the shown sigma. Its recovery against counts is unmeasured (open-items).
+//      the shown sigma. Its recovery against counts is unmeasured (open-items). A spectrum with one strong line does not
+//      determine offset, gain and width together (issue 83); the refinement then ends against a bound
+//      (`AxisRefinementSettings`), is reported not converged, and the file's axis is used, named in the warnings and footer.
 //    * The absorption test (`SpectroscopyQuantifyTests`) checks plumbing only (applied/refused, terms present, the
 //      composition moves); it does not check the correction against a truth geometry (open-items).
 //
@@ -283,7 +285,13 @@ public nonisolated enum PooledQuantifier {
                 catch { warnings.append("axis refinement failed (\(error)); the file's axis is used") }
             }
             if let r = refinement {
-                if r.rssRefined < r.rssFile { axis = r.refinedAxis; resolution = r.resolutionMnKaEV }
+                // A refinement that ended against a bound is not a minimum (issue 83: a one-line spectrum walked to gain +444 %).
+                if !r.parametersAtBound.isEmpty {
+                    warnings.append("axis refinement stopped at its bound (\(r.boundText)): the spectrum does not determine the energy axis; the file's axis is used")
+                } else if r.rssRefined < r.rssFile {
+                    axis = r.refinedAxis; resolution = r.resolutionMnKaEV
+                    if !r.converged { warnings.append("axis refinement reached its iteration cap (\(r.iterations)) without converging; the refined axis is used") }
+                }
                 else { warnings.append("axis refinement did not lower the residual; the file's axis is used") }
             }
         }
@@ -509,7 +517,8 @@ public nonisolated enum PooledQuantifier {
         else if let r = refinement {
             footer.append(String(format: "energy axis: file %.3f keV + %.4f keV/ch \u{2192} refined %+.1f eV, gain %+.3f %%, FWHM(Mn K\u{03B1}) %.0f eV%@",
                                  r.fileOffset, r.fileScale, r.offsetShiftEV, r.gainShift * 100, r.resolutionMnKaEV,
-                                 axis == r.refinedAxis ? "" : "; NOT used (residual not lower)"))
+                                 !r.parametersAtBound.isEmpty ? "; NOT used (stopped at its bound: \(r.boundText))"
+                                    : axis == r.refinedAxis ? "" : "; NOT used (residual not lower)"))
         }
         if let b = BeamEnergy.provenance(typedKeV: input.method.beamEnergyKeV, metadata: input.metadata) { footer.append(b) }
         footer.append("\(fitRange.footerText) \u{00B7} \(input.pixelCount) px pooled (\(input.regionName))")

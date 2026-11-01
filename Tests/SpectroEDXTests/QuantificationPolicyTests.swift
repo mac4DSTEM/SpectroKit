@@ -324,6 +324,21 @@ struct QuantificationPolicyTests {
         #expect(loose.iterations <= d.iterations)
         let bounded = try refined(AxisRefinementSettings(minimumResolutionEV: 20, maximumResolutionEV: 140))
         #expect(bounded.resolutionMnKaEV < 140 && bounded.resolutionMnKaEV < d.resolutionMnKaEV, "\(bounded.resolutionMnKaEV) \(d.resolutionMnKaEV)")
+        // A refinement that ends against a bound is not converged, and names the parameter (issue 83).
+        #expect(d.converged && d.parametersAtBound.isEmpty)
+        #expect(!bounded.converged && bounded.parametersAtBound == ["FWHM"], "\(bounded.parametersAtBound)")
+        // The pooled fit does not use it: the file axis and width, and the footer says why.
+        let q = try Self.run(c, policy: Self.fit(FitPolicy(axisRefinement: AxisRefinementSettings(maximumResolutionEV: 140))), locked: false)
+        #expect(q.usedAxis == Self.axis)
+        #expect(q.footerLines.contains { $0.contains("NOT used (stopped at its bound: FWHM") }, "\(q.footerLines)")
+        // A capped refinement that is still moving is used, and says it did not converge.
+        let cappedRun = try Self.run(c, policy: Self.fit(FitPolicy(axisRefinement: AxisRefinementSettings(maxIterations: 3))), locked: false)
+        #expect(cappedRun.warnings.contains { $0.contains("iteration cap (3) without converging") }, "\(cappedRun.warnings)")
+        // The offset and gain bounds must be finite and positive.
+        for bad in [AxisRefinementSettings(maximumOffsetShiftEV: 0), AxisRefinementSettings(maximumGainShift: -0.01),
+                    AxisRefinementSettings(maximumGainShift: .infinity)] {
+            #expect(FitPolicy(axisRefinement: bad).problem != nil)
+        }
     }
 
     // MARK: F13 the range-sensitivity alternative
