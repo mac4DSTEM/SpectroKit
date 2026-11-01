@@ -219,6 +219,55 @@ struct ContinuumDeadLayerTests {
         #expect(both.fit.backgroundLabel.contains("EPQ") && both.fit.backgroundLabel.contains("Si dead layer 0.3000"))
     }
 
+    /// The fitted thickness is fitted without the sum/escape model; the warning says so whenever the final fit includes it, also
+    /// when that model comes from `FitPolicy.sumPeaks` (no `sumEscape` passed), and not when the final fit has none. Red before:
+    /// the clause was read from `input.sumEscape` alone.
+    @Test func testTheFittedDeadLayerWarningNamesTheSumEscapeModelWhenThePolicyKeepsIt() throws {
+        let clause = "fitted without the sum/escape model"
+        func note(_ q: PooledQuantification) throws -> String { try #require(q.warnings.first { $0.hasPrefix("Si dead layer fitted:") }) }
+        let kept = try PooledQuantifier.run(Self.input(policy: QuantificationPolicy(fit: FitPolicy(sumPeaks: .always, continuumDeadLayer: .fitted()))), tables: nil)
+        #expect(kept.appliedSumEscape != nil)
+        let keptNote = try note(kept)
+        #expect(keptNote.contains(clause), Comment(rawValue: keptNote))
+        let off = try PooledQuantifier.run(Self.input(policy: QuantificationPolicy(fit: FitPolicy(sumPeaks: .off, continuumDeadLayer: .fitted()))), tables: nil)
+        #expect(off.appliedSumEscape == nil)
+        let offNote = try note(off)
+        #expect(!offNote.contains(clause), Comment(rawValue: offNote))
+        var passed = Self.input(policy: QuantificationPolicy(fit: FitPolicy(sumPeaks: .off, continuumDeadLayer: .fitted())))
+        passed.sumEscape = SumEscapeModel(sumPeaks: true)
+        let passedNote = try note(PooledQuantifier.run(passed, tables: nil))
+        #expect(passedNote.contains(clause), Comment(rawValue: passedNote))
+    }
+
+    /// The range-sensitivity refit repeats the reported fit's dead layer: its nets are those of the alternative range with the
+    /// reported thickness typed, not with a thickness fitted again on the longer range (which differs, so the check can tell).
+    /// The default range is cut to 10 keV so that the pool's 20 keV axis runs past it. Red before: the refit fitted its own.
+    @Test func testTheRangeSensitivityRefitKeepsTheReportedDeadLayer() throws {
+        let fit = FitPolicy(defaultUpperLimitKeV: 10, sumPeaks: .off, continuumDeadLayer: .fitted())
+        let input = Self.input(policy: QuantificationPolicy(fit: fit))
+        let q = try PooledQuantifier.run(input, tables: nil)
+        let t = try #require(q.continuumDeadLayerMicrons)
+        let to = try #require(FitRangeSensitivityCheck.alternative(for: q))
+        let s = try #require(FitRangeSensitivityCheck.run(input: input, quantification: q))
+        #expect(s.failure == nil && s.alternativeToKeV == to && !s.moves.isEmpty)
+
+        var pinned = input
+        pinned.method.fitToKeV = to
+        pinned.refinement = q.refinement
+        pinned.sumEscape = SumEscapeModel()
+        pinned.policy.fit.continuumDeadLayer = .given(microns: t)
+        let expected = try PooledQuantifier.run(pinned, tables: nil)
+        var free = pinned
+        free.policy.fit.continuumDeadLayer = .fitted()
+        let refitted = try #require(try PooledQuantifier.run(free, tables: nil).continuumDeadLayerMicrons)
+        Self.note(String(format: "range check: reported %.4f um (to %g keV), fitted again on to %g keV %.4f um", t, q.fitRange.toKeV, to, refitted))
+        #expect(abs(refitted - t) > 1e-3, "the longer range must fit another thickness for this test to discriminate")
+        for m in s.moves {
+            let row = try #require(expected.rows.first { $0.element == m.element })
+            #expect(m.after == row.net, "\(m.element): refit \(m.after), with the reported \(t) um \(row.net)")
+        }
+    }
+
     @Test func testPolicyRefusesANegativeOrEmptyDeadLayer() {
         #expect(FitPolicy(continuumDeadLayer: .given(microns: -0.1)).problem != nil)
         #expect(FitPolicy(continuumDeadLayer: .fitted(maximumMicrons: 0)).problem != nil)

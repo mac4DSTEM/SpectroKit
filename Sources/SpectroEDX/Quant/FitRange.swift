@@ -169,7 +169,7 @@ public nonisolated enum FitRangeSensitivityCheck {
         var refit = input
         refit.method.fitToKeV = to
         refit.refinement = q.refinement
-        refit.sumEscape = PooledQuantifier.sameSumEscape(as: q)   // the reported fit's sum-peak decision, not a new one
+        refit = PooledQuantifier.pinningReportedChoices(refit, as: q)   // the reported fit's sum-peak decision and dead layer, not new ones
         let after: PooledQuantification
         do { after = try PooledQuantifier.run(refit, tables: nil, cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(f * 0.95) } }) }
         catch let c as SpectroCancelled { throw c }
