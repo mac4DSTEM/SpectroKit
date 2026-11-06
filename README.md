@@ -2,9 +2,9 @@
 
 # SpectroKit
 
-[![CI](https://github.com/mac4DSTEM/SpectroKit/actions/workflows/ci.yml/badge.svg)](https://github.com/mac4DSTEM/SpectroKit/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/tag/mac4DSTEM/SpectroKit?label=release)](https://github.com/mac4DSTEM/SpectroKit/tags)
-[![Docs](https://img.shields.io/badge/docs-DocC-blue)](https://mac4dstem.github.io/SpectroKit/documentation/)
+[![CI](https://github.com/macEMSuite/SpectroKit/actions/workflows/ci.yml/badge.svg)](https://github.com/macEMSuite/SpectroKit/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/tag/macEMSuite/SpectroKit?label=release)](https://github.com/macEMSuite/SpectroKit/tags)
+[![Docs](https://img.shields.io/badge/docs-DocC-blue)](https://macemsuite.github.io/SpectroKit/documentation/)
 [![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)](LICENSE)
 
 A Swift library for X-ray (EDS) and electron energy-loss (EELS) spectroscopy in the transmission electron microscope: a
@@ -41,7 +41,7 @@ let package = Package(
     name: "MyTool",
     platforms: [.macOS(.v15)],
     dependencies: [
-        .package(url: "https://github.com/mac4DSTEM/SpectroKit", from: "0.13.2"),
+        .package(url: "https://github.com/macEMSuite/SpectroKit", from: "0.13.2"),
     ],
     targets: [
         .executableTarget(name: "MyTool", dependencies: [
@@ -56,7 +56,7 @@ let package = Package(
 
 Add only the products you use; `SpectroEDX` and `SpectroEELS` each need `SpectroCore` and bring it.
 
-**File formats.** The readers are not here: they are [FormatoKit](https://github.com/mac4DSTEM/FormatoKit)'s, a dependency
+**File formats.** The readers are not here: they are [FormatoKit](https://github.com/macEMSuite/FormatoKit)'s, a dependency
 SpectroKit resolves by itself, with its own libhdf5 inside (nothing to install). `SpectrumImageOpener` in `SpectroCore` calls
 them: it opens a Velox `.emd` (Thermo Fisher; FormatoKit's `FormatoEMD`) or a Gatan GMS `.dm4` EDS spectrum image
 (`FormatoDM`) and needs no import of yours. Add the Formato products to your own target only to read the file yourself:
@@ -224,7 +224,7 @@ of this README and nothing else, and `check-readme.py` fails if the README and `
 
 - [`docs/parity.md`](docs/parity.md): SpectroKit against exSpy's documented API, row by row. Numbers are held to the Python
   reference within its own tolerance; `docs/parity.md` lists each function, its state and its tolerance.
-- [API reference (DocC)](https://mac4dstem.github.io/SpectroKit/documentation/): one catalogue per module.
+- [API reference (DocC)](https://macemsuite.github.io/SpectroKit/documentation/): one catalogue per module.
 - [`CHANGELOG.md`](CHANGELOG.md): each release, with a Migration paragraph where a consumer must change something.
 - [`NOTICE`](NOTICE): the licences and credits in full.
 
