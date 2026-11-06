@@ -1,6 +1,5 @@
 import Foundation
 import Testing
-import SpectroCore
 import FormatoDM
 
 /// A DM4 whose disk has been

@@ -25,8 +25,7 @@ struct SumEscapeIdenticalTests {
         mutating func normal() -> Double { (-2 * log(uniform())).squareRoot() * cos(2 * Double.pi * uniform()) }
     }
 
-    /// The 1500-channel test axis (0 to 14.99 keV) and the short axis that ends between V K-alpha and V K-beta (top 5.115 keV).
-    private static let axis = EnergyAxis(offset: 0, scale: 0.01, size: 1500)
+    /// The short axis that ends between V K-alpha and V K-beta (top 5.115 keV).
     private static let shortAxis = EnergyAxis(offset: 0, scale: 0.005, size: 1024)
 
     /// Kramers x window continuum (as SpectroscopyProposerTests), E0 = 200 keV, plus the planted line areas (counts) of the fit's own groups.

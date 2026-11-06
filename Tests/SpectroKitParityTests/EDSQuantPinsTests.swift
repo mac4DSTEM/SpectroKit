@@ -1,7 +1,6 @@
 import Foundation
 import Testing
 import SpectroTestSupport
-import SpectroCore
 import SpectroEDX
 
 /// eXSpy quantification pins (tools/edx-exspy-pins/quant_pins.py).

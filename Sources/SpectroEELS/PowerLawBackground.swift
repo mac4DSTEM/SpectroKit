@@ -11,7 +11,6 @@
 //
 
 import Foundation
-import SpectroCore
 
 package nonisolated struct PowerLawWindow: Sendable, Equatable {
     package let i1: Int, i2: Int, i3: Int

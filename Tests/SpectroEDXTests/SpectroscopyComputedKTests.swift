@@ -1,7 +1,6 @@
 import Foundation
 import Testing
 import SpectroTestSupport
-import SpectroCore
 import SpectroEDX
 
 /// WP3 lane K round 2: computed k from NIST EPQ data (Bote-Salvat 2008 sigma, Krause 1979 omega,

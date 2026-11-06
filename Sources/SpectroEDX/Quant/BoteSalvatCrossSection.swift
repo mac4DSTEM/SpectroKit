@@ -34,7 +34,6 @@
 import Foundation
 
 package nonisolated struct BoteSalvatCrossSection: IonisationCrossSection {
-    package static let shellNames = ["K", "L1", "L2", "L3", "M1", "M2", "M3", "M4", "M5"]
     private static let bohrRadiusCm = 5.291772083e-11 * 100
     private static let restMassEV = 8.1871047e-14 / 1.60217653e-19
     private static let fourPiA0Sq = 4 * Double.pi * bohrRadiusCm * bohrRadiusCm
@@ -64,13 +63,6 @@ package nonisolated struct BoteSalvatCrossSection: IonisationCrossSection {
     package init(directory: URL) throws {
         func read(_ n: String) throws -> String { try String(contentsOf: directory.appendingPathComponent(n), encoding: .utf8) }
         self.init(tableA: try read("SalvatXionA.csv"), tableB: try read("SalvatXionB.csv"), edges: try read("xionUis.csv"))
-    }
-
-    package static func bundled(in bundle: Bundle? = nil) -> BoteSalvatCrossSection? {
-        let bundle = bundle ?? .module   // SpectroKit's own copy (Resources/Spectroscopy); an app may pass its own bundle
-        guard let url = bundle.url(forResource: "xionUis", withExtension: "csv", subdirectory: "Spectroscopy")
-            ?? bundle.url(forResource: "xionUis", withExtension: "csv") else { return nil }
-        return try? BoteSalvatCrossSection(directory: url.deletingLastPathComponent())
     }
 
     /// Ionisation energy (eV) of `shell` (0 = K, 1 = L1, ...), nil if untabulated.

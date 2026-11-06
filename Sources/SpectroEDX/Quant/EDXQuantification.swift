@@ -27,7 +27,6 @@
 //
 
 import Foundation
-import SpectroCore
 
 /// Which quantification method, with its factors in the order of `EDXQuantificationSetup.elements`.
 public nonisolated enum EDXQuantificationMethod: Sendable, Equatable {

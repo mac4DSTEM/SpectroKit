@@ -38,8 +38,6 @@ public nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
     /// efficiency; unvalidated) or typed with its source. No zeta in the menu.
     public enum KFactorSource: String, CaseIterable, Codable, Sendable {
         case computed
-        /// The name the room used before the addendum replaced Brown-Powell; same value as `computed`.
-        package static var brownPowell: KFactorSource { .computed }
         case typed
     }
 

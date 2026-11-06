@@ -6,7 +6,6 @@
 //
 import Foundation
 import Testing
-import SpectroCore
 import SpectroEDX
 
 @MainActor

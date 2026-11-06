@@ -1,7 +1,6 @@
 import Foundation
 import Testing
 import SpectroTestSupport
-import SpectroCore
 import SpectroEDX
 
 /// The public per-pixel EDX quantification against eXSpy 0.3.2 / HyperSpy 2.4.0 (`tools/edx-quant-maps/pins.py`, fixture

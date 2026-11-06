@@ -59,10 +59,6 @@ package extension Array where Element == MgRun {
     var pReported: Double { isEmpty ? .nan : Double(filter(\.reported).count) / Double(count) }
     var meanNet: Double { map(\.net).reduce(0, +) / Double(count) }
     var meanSigma: Double { map(\.sigma).reduce(0, +) / Double(count) }
-    var sdNet: Double {
-        let m = meanNet
-        return (map { ($0.net - m) * ($0.net - m) }.reduce(0, +) / Double(Swift.max(count - 1, 1))).squareRoot()
-    }
 }
 
 /// Runs cached for the process (the checks and the diagnosis experiments read the same spectra; every run happens once).
