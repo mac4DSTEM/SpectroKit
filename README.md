@@ -41,7 +41,7 @@ let package = Package(
     name: "MyTool",
     platforms: [.macOS(.v15)],
     dependencies: [
-        .package(url: "https://github.com/mac4DSTEM/SpectroKit", from: "0.12.0"),
+        .package(url: "https://github.com/mac4DSTEM/SpectroKit", from: "0.13.2"),
     ],
     targets: [
         .executableTarget(name: "MyTool", dependencies: [

@@ -1,6 +1,7 @@
 # tools/eels-edge: truth and pins for EELS edge quantification (power-law background, C K areal density)
 
-Written before the Swift code, as the EELS edge quantification design note sections 3.3, 4 and 5 fix them. Four scripts:
+Four scripts. The "design note" below is the EELS edge quantification design note (eels-slice-2), archived in the suite's
+private folder; its section and gate numbers are kept so the findings can be read against it.
 
 | script | needs | writes |
 |---|---|---|
@@ -59,7 +60,7 @@ two-area estimate's I1, I2, r, A computed from the components.
 
 ## Findings
 
-**1. Registered prediction false: the single-scattering bias is not below 1 %.** (Gate 3 predicted "the bias is below 1 %".)
+**1. The design note's prediction is false: the single-scattering bias is not below 1 %.** (Gate 3 predicted "the bias is below 1 %".)
 The bias is absolute (atoms/nm^2) and, for single scattering, independent of n_true: `(I_b,true - I_b,est) * 1e10 / (I_0 sigma_k)`.
 Default window, Delta 50, sigma_k = 3850.67 barn, I_0 = 1e7: bias -0.428 (A=1e9, r=3.0), -3.548 (A=5e8, r=2.5), -0.494 (A=2e10, r=3.5)
 atoms/nm^2. In units of n_true the 15 pixels read (row by row, n = 2, 5, 10, 20, 50):
@@ -99,7 +100,7 @@ and `energy_axis` as float32 (NumPy 2 keeps float32 + Python float float32), and
 factor `4 pi a0^2 R^2 / E / T * subshell_factor * 1e28` is a float32 array; only `qint` itself (and everything after the
 `searchsorted`/interpolation, which mix float32 data with float64 `qmin`/`qmax`) is float64. Replacing the arrays by their float64
 widenings gives `qint` and `function(E)` that differ from exSpy's by up to 1.9e-7 and 1.0e-7 relative. A Double port will
-miss the registered 1e-12 / 1e-10 bounds by five orders of magnitude unless it reproduces exSpy's float32 steps in the same places
+miss the design note's 1e-12 / 1e-10 bounds by five orders of magnitude unless it reproduces exSpy's float32 steps in the same places
 (or the bounds are amended). The pins hold `tabulatedEnergies` (the float32 axis, widened), `qint`, and for C K 200/10/20 the
 `qmin`/`qmax` passed to `get_qaxis_and_gos` per energy (`splineC.integrateq`), to help find the first divergent step.
 
@@ -108,7 +109,7 @@ reused across E0 at alpha = 0 (effective angle = beta) keeps a stale `qint`. The
 The effective angle is computed with `GOS.onset_energy` (the table's onset), not the editable onset.
 
 **8. Counting statistics, first set.** The noisy images (seed 20261015) have the edge (7.7 to 192 counts over 50 eV) on 1717 to 15038 background counts: the
-ss default-window Delta-50 n of the 15 noisy pixels runs from -141.7 to +138.3 atoms/nm^2 for n_true 2-50 (sigma_n ~ 36-130 atoms/nm^2). The first set stays as registered; the
+ss default-window Delta-50 n of the 15 noisy pixels runs from -141.7 to +138.3 atoms/nm^2 for n_true 2-50 (sigma_n ~ 36-130 atoms/nm^2). The first set stays as the design note defines it; the
 realistic set below is the one the bias and noise gates can meaningfully use.
 
 ## The second, realistic set (R): n_true 200, 500, 1000, 2000, 5000 atoms/nm^2 (a ~2-50 nm carbon film)
@@ -125,7 +126,7 @@ relative to n_true, default window, Delta 50, by row (n = 200, 500, 1000, 2000, 
 -0.214, -0.086, -0.043, -0.021, -0.009 %;  -1.774, -0.71, -0.355, -0.177, -0.071 %;  -0.247, -0.099, -0.049, -0.025, -0.010 %.
 Min/max -1.774 % / -0.0086 %: **"<= 2 % for Delta 50 with the default window" holds at every pixel** (worst: A = 5e8, r = 2.5, n = 200). It holds for all
 three windows and every Delta 30-150 too (worst -1.951 %, narrow window, Delta 30; default window: -1.827 % at Delta 30 ... -1.547 % at Delta 150).
-The registered "below 1 %" fails at that one pixel only, at Delta 50 default (by 0.8 percentage points).
+The design note's "below 1 %" fails at that one pixel only, at Delta 50 default (by 0.8 percentage points).
 
 **R2. Plural scattering (gate 4), I_low(Delta) route, default window, Delta 50**, relative bias (min .. max over the 15 pixels):
 tau 0.3: -9.40 % .. -7.64 %;  tau 0.7: -19.35 % .. -17.57 %;  tau 1.3: -32.57 % .. -30.70 %.
