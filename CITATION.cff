@@ -9,7 +9,7 @@ authors:
 license: GPL-3.0-only
 version: "0.13.2" # x-release-please-version
 date-released: "2026-11-01" # x-release-please-date
-repository-code: "https://github.com/mac4DSTEM/SpectroKit"
+repository-code: "https://github.com/macEMSuite/SpectroKit"
 abstract: "A Swift library for EDS and EELS spectroscopy on macOS: X-ray identification and quantification, EELS thickness, deconvolution and core-loss edges, a port of exSpy checked against exSpy and HyperSpy."
 keywords:
   - EDS
