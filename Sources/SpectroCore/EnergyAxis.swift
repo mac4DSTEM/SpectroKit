@@ -26,7 +26,6 @@ public nonisolated struct EnergyAxis: Equatable, Sendable {
     /// Channel width, keV (> 0).
     public let scale: Double
     public let size: Int
-    package var units: String { "keV" }
 
     public init(offset: Double, scale: Double, size: Int) {
         // DEVIATION: hyperspy also handles a negative scale (its rounding branch

@@ -158,8 +158,6 @@ struct AxisGateTests {
 
     // MARK: E3
 
-    private struct CalRow { let cell: [String: Any]; let counts: [Double] }
-
     private func calibrationRows() -> [(id: String, delta: Double, gain: Double, r: Double, nAl: Double, real: Int, trueOffset: Double, trueScale: Double, counts: [Double])] {
         let cal = EDXFixtures.calibration
         let nwin = cal.i("nwin"), k0 = cal.i("k0")

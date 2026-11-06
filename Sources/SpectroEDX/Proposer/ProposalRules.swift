@@ -23,14 +23,6 @@ import Foundation
 public nonisolated struct ProposalRules: Equatable, Sendable {
     public enum Rule: String, Sendable, CaseIterable {
         case hygiene = "R1", corroboration = "R2", release = "R3"
-        /// Plain words, as the row's hover and the notes say them.
-        package var title: String {
-            switch self {
-            case .hygiene: return "hygiene"
-            case .corroboration: return "L/M corroboration"
-            case .release: return "sum-peak release"
-            }
-        }
     }
 
     public var hygiene: Bool

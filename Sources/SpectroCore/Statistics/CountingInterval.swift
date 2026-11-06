@@ -38,7 +38,6 @@ package nonisolated struct CountingInterval: Equatable, Sendable {
         return CountingInterval(count: n, lower: lower, upper: upper, confidence: confidence)
     }
 
-    package var width: Double { upper - lower }
     package func contains(_ mean: Double) -> Bool { mean >= lower && mean <= upper }
 
     /// The same interval shrunk about the observed count by `factor` (0.5 =

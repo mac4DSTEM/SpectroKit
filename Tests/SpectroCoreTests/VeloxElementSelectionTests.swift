@@ -1,6 +1,5 @@
 import Foundation
 import Testing
-import SpectroCore
 import FormatoEMD
 
 /// Velox's own element selection, read from the file (`VeloxEMDReader.storedElementSelection`).

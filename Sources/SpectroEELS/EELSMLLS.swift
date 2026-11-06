@@ -175,14 +175,14 @@ public enum EELSMLLS {
         try coreLoss.counts.withUnsafeBufferPointer { counts in
             nonisolated(unsafe) let input = counts
             try EELSParallel.forEachPixel(count: np, cancelled: cancelled, progress: progress) { p in
-                if let mask, !mask[p] { slots.set(p, failed(.masked, references: options.references.count, edges: m)); return }
-                guard let r = exponents[p] else { slots.set(p, failed(.fitFailed, references: options.references.count, edges: m)); return }
+                if let mask, !mask[p] { slots.set(p, failed(.masked)); return }
+                guard let r = exponents[p] else { slots.set(p, failed(.fitFailed)); return }
                 let y = Array(UnsafeBufferPointer(start: input.baseAddress! + p * n + window.lowerBound, count: window.count))
                 var columns: [[Double]] = [logE.map { exp(-r * $0) * basis.scale }]
                 for g in 0 ..< m { columns.append(basis.column(group: g, pixel: p, rows: window)) }
                 columns.append(contentsOf: refColumns)
                 guard let s = solve(columns: columns, y: y) else {
-                    slots.set(p, failed(.fitFailed, references: options.references.count, edges: m)); return
+                    slots.set(p, failed(.fitFailed)); return
                 }
                 let dof = window.count - k
                 func amplitude(_ j: Int) -> EELSAmplitude { EELSAmplitude(value: s.x[j], standardError: s.standardError[j]) }
@@ -198,7 +198,7 @@ public enum EELSMLLS {
             convolved: basis.convolved, methodName: methodName, validation: "none", basis: basis, references: options.references)
     }
 
-    private static func failed(_ why: EELSUnavailable, references: Int, edges: Int) -> EELSMLLSPixel {
+    private static func failed(_ why: EELSUnavailable) -> EELSMLLSPixel {
         EELSMLLSPixel(background: nil, exponent: nil, intensities: [], references: [], residualSumOfSquares: nil, degreesOfFreedom: 0, unavailable: why)
     }
 

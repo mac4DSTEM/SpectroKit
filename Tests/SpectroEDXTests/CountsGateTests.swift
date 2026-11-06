@@ -14,7 +14,6 @@ import Foundation
 import Testing
 import SpectroTestSupport
 import SpectroCore
-import SpectroEDX
 import FormatoEMD
 
 struct CountsGateTests {

@@ -1,7 +1,6 @@
 import Foundation
 import Testing
 import SpectroTestSupport
-import SpectroCore
 import SpectroEDX
 
 /// k-factors, Cliff-Lorimer / zeta / cross-section quantification and

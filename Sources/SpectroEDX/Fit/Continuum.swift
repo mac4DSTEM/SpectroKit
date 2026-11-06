@@ -108,8 +108,6 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
         self.efficiency = efficiency; self.edgeStep = edgeStep
     }
 
-    package var coefficientCount: Int { orders.reduce(0) { $0 + $1 + 1 } }
-
     /// The basis columns over `energies` (ascending, the fitted channels). A coefficient with no
     /// support (an empty segment) is not produced. `names` label them for the result.
     /// `resolutionMnKaEV`: the detector resolution that broadens each edge step (the line model's). nil, or `edgeStep == .sharp`,

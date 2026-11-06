@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SpectroCore
 
 /// A spectrum image on a uniform energy axis: `counts[(y * nx + x) * channels + c]`, channel `c` at `energyOffsetEV + energyScaleEV * c`.
 /// `LowLossSpectrumImage` and `CoreLossSpectrumImage` conform; the initialiser validates as theirs do (finite counts, scale > 0).
