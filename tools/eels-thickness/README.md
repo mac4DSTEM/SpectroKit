@@ -1,11 +1,11 @@
 # tools/eels-thickness: truth and pins for EELS thickness (the t/λ thickness map)
 
-Written before any Swift code, as the EELS thickness design note sections 4 and 5 fix them. Two generators, one
-fixture directory, `Tests/SpectroEELSTests/Fixtures/` (written before the `SpectroEELS` target existed; `SpectroEELSTests` reads it).
+Two generators, one fixture directory, `Tests/SpectroEELSTests/Fixtures/`. The "design note" below is the EELS thickness
+design note (eels-slice-1), archived in the suite's private folder; its section numbers are kept so the findings can be read against it.
 
 **Agreement with exSpy is not truth.** `pins.json` is what exSpy 7185a4d1 answers; a port that equals it is a port, not a
 measurement. The truth is `planted-truth.json`, made by `make_planted.py` from NumPy alone, with no exSpy, HyperSpy or SciPy
-in it. The two answer different gates (design note section 7: gate 1 against the pins, gates 2 and 3 against the truth).
+in it. The two answer different tests (design note section 7: gate 1 against the pins, gates 2 and 3 against the truth).
 Nothing here makes a thickness validated: `validation: "none"` stays until a sample of known thickness is measured.
 
 ## Run
@@ -126,7 +126,7 @@ is at or above the last channel's energy the crop ends at `size − 1`, so the l
 stop = `value2index(θ)` (above), end exclusive, so I_0 is the sum of channels `[0, value2index(θ))`; the channel nearest θ is
 not in it. If `value2index` raises because θ is above the last energy the slice runs to the end (I_0 = I_t, `axes.py:462-466`);
 θ below the first energy raises `IndexError` (`:457-461`); θ exactly at the last energy gives stop = `size − 1`. For the
-registered 2.5, 4.5, 6.0 eV the channels are 250, 290, 320 (planted) and 205, 209, 212 (line scan).
+design note's 2.5, 4.5, 6.0 eV the channels are 250, 290, 320 (planted) and 205, 209, 212 (line scan).
 
 **estimated threshold, per pixel** (`_eels.py:608-621`): NaN gives NaN; else `ind = axis.value2index(threshold)` and
 `I_0 = data[:ind].sum()` (numpy pairwise sum of the float64 channels `[0, ind)`; `pins.py` asserts exSpy's I_0 equals exactly
@@ -180,9 +180,9 @@ noiseless image (≤ 5.6e-16: the generator and exSpy agree to rounding); and `g
 per pixel and route, with the pixels above 4. For the estimated threshold it is **7.4 at the worst pixel (pixels 7 and 9 exceed 4)**,
 for every fixed threshold at most 2.01: see the findings below.
 
-## Findings while writing these (the design note is not amended here; these are for its amendment)
+## Findings while writing these (read against the design note)
 
-1. **Gate 3 as registered cannot hold for the estimated threshold.** With the estimated threshold the noisy image's thresholds
+1. **Gate 3 as the design note states it cannot hold for the estimated threshold.** With the estimated threshold the noisy image's thresholds
    differ from the noiseless ones (noiseless 1.2 to 1.35 eV; noisy 1.3 to 8.65 eV, because the global `tol` is set by the noisiest
    pixel), so |t/λ_noisy − t/λ_noiseless| is a threshold effect, not counting noise: 6.2 σ_counting at the τ = 1.3 pixel and 7.4 σ_counting
    at τ = 2.0 (gate: ≤ 4). Over 200 noise realisations (NumPy seeds 1 to 200, run once with exSpy, not stored) the standard

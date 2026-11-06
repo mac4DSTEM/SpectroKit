@@ -1,6 +1,6 @@
 # tools/eels-chain: exSpy / HyperSpy pins for the EELS chain, sections 2, 3 and 4
 
-Written before the Swift code, so the port of `docs/design/eels-chain.md` started with numbers.
+Fixtures for the EELS chain (the 0.9.0 design note is archived in the suite's private folder, `process/archive/SpectroKit/`).
 Covers zero-loss alignment and mask (design section 2), power-law extrapolation and Hanning taper (section 3), Fourier-log,
 Fourier-ratio and `optimal_fft_size` (section 4). Not covered: GOS tables, the edge model fit (section 6), Richardson-Lucy.
 
