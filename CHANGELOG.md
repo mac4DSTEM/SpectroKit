@@ -8,6 +8,13 @@ each entry from the merged pull requests' titles; a breaking change's Migration 
 Every quantification and thickness result reports `validation: "none"`: agreement with exSpy and HyperSpy is not validation on a
 sample of known composition.
 
+## [0.14.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.13.2...0.14.0) (2026-11-12)
+
+
+### Features
+
+* an EELS spectrum image keeps float32 counts at four bytes a count, and Align shifts and crops them in place ([#96](https://github.com/mac4DSTEM/SpectroKit/issues/96)) ([1c7234d](https://github.com/mac4DSTEM/SpectroKit/commit/1c7234d74bc425582944d618699da643bb4d903f))
+
 ## [0.13.2](https://github.com/mac4DSTEM/SpectroKit/compare/0.13.1...0.13.2) (2026-11-01)
 
 
