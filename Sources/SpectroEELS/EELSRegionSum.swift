@@ -15,9 +15,10 @@ extension EELSSpectrumImage {
         guard mask.contains(true) else { throw EELSModelError.emptyMask }
         var total = [Double](repeating: 0, count: channels)
         let n = channels
-        counts.withUnsafeBufferPointer { c in
-            for p in 0 ..< pixelCount where mask[p] {
-                let row = c.baseAddress! + p * n
+        // A row at a time (a float32 cube is never widened whole: SpectroKit#94); the same additions in the same order.
+        let stored = storedCounts
+        for p in 0 ..< pixelCount where mask[p] {
+            stored.withRow(start: p * n, count: n) { row in
                 for k in 0 ..< n { total[k] += row[k] }
             }
         }

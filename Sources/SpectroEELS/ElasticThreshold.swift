@@ -65,10 +65,37 @@ package nonisolated enum ElasticThreshold {
         return .gradient(NumpyGradient(axis: croppedAxis))
     }
 
+    /// `estimate` on the counts at their own precision: only the search window's channels are widened, a pixel at a time, into one buffer of
+    /// `pixelCount` x window (a few percent of the cube), never the whole cube (SpectroKit#94). The same numbers: the rows hold the same values.
+    package static func estimate(
+        stored: EELSCounts, pixelCount: Int, navigationWidth nx: Int, channels nch: Int, axis: EELSAxis,
+        window: Double, start: Double, windowLength: Int, polynomialOrder: Int, tolerance userTolerance: Double?,
+        coefficientsOverride: [Double]? = nil,
+        cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?
+    ) throws -> EstimatedThresholds {
+        // The refusals first, in the same order as below, so a bad request is refused before anything is copied.
+        guard start.isFinite, window.isFinite, window >= 0 else {
+            throw EELSThicknessError.invalidSearchWindow(startEV: start, windowEV: window)
+        }
+        if let t = userTolerance, t.isNaN || t < 0 { throw EELSThicknessError.invalidTolerance(t) }
+        let (i1, i2) = try axis.valueRangeToIndices(start, start + window)
+        guard i2 >= i1 + minimumChannels else { throw EELSThicknessError.searchWindowTooShort(channels: i2 - i1) }
+        let length = i2 - i1
+        var windowed = [Double](repeating: 0, count: pixelCount * length)
+        windowed.withUnsafeMutableBufferPointer { w in
+            for p in 0..<pixelCount { stored.copy(start: p * nch + i1, count: length, into: w.baseAddress! + p * length) }
+        }
+        return try windowed.withUnsafeBufferPointer { w in
+            try estimate(counts: w, pixelCount: pixelCount, navigationWidth: nx, channels: length, axis: axis, window: window, start: start,
+                         windowLength: windowLength, polynomialOrder: polynomialOrder, tolerance: userTolerance,
+                         coefficientsOverride: coefficientsOverride, windowStart: i1, cancelled: cancelled, progress: progress)
+        }
+    }
+
     package static func estimate(
         counts: UnsafeBufferPointer<Double>, pixelCount: Int, navigationWidth nx: Int, channels nch: Int, axis: EELSAxis,
         window: Double, start: Double, windowLength: Int, polynomialOrder: Int, tolerance userTolerance: Double?,
-        coefficientsOverride: [Double]? = nil,
+        coefficientsOverride: [Double]? = nil, windowStart: Int? = nil,
         cancelled: @Sendable () -> Bool, progress: (@Sendable (Double) -> Void)?
     ) throws -> EstimatedThresholds {
         guard start.isFinite, window.isFinite, window >= 0 else {
@@ -79,6 +106,8 @@ package nonisolated enum ElasticThreshold {
         let (i1, i2) = try axis.valueRangeToIndices(start, start + window)
         guard i2 >= i1 + minimumChannels else { throw EELSThicknessError.searchWindowTooShort(channels: i2 - i1) }
         let length = i2 - i1
+        // `counts` holds every channel (`windowStart` nil), or only the search window's, from channel `windowStart` (the `EELSCounts` overload).
+        let rowOffset = i1 - (windowStart ?? 0)
         let croppedOffset = axis.energy(ofChannel: i1)
         var croppedAxis = [Double](repeating: 0, count: length)
         for i in 0..<length {
@@ -89,7 +118,7 @@ package nonisolated enum ElasticThreshold {
         precondition(nx > 0 && pixelCount % nx == 0)
         let kernel = try kernel(windowLength: windowLength, polynomialOrder: polynomialOrder, scale: axis.scale,
                                 croppedAxis: croppedAxis, nx: nx, ny: pixelCount / nx,
-                                row: { p in UnsafeBufferPointer(start: counts.baseAddress! + p * nch + i1, count: length) },
+                                row: { p in UnsafeBufferPointer(start: counts.baseAddress! + p * nch + rowOffset, count: length) },
                                 coefficientsOverride: coefficientsOverride)
 
         var derivative = [Double](repeating: 0, count: length)
@@ -99,7 +128,7 @@ package nonisolated enum ElasticThreshold {
         try derivative.withUnsafeMutableBufferPointer { d in
             for p in 0..<pixelCount {
                 if p % block == 0 { try SpectroCancellation.check(cancelled); progress?(0.5 * Double(p) / Double(pixelCount)) }
-                let row = UnsafeBufferPointer(start: counts.baseAddress! + p * nch + i1, count: length)
+                let row = UnsafeBufferPointer(start: counts.baseAddress! + p * nch + rowOffset, count: length)
                 kernel.apply(row, into: d, pixel: p)
                 var m = abs(d[0])
                 for i in 1..<length { m = min(m, abs(d[i])) }
@@ -124,7 +153,7 @@ package nonisolated enum ElasticThreshold {
         try derivative.withUnsafeMutableBufferPointer { d in
             for p in 0..<pixelCount {
                 if p % block == 0 { try SpectroCancellation.check(cancelled); progress?(0.5 + 0.5 * Double(p) / Double(pixelCount)) }
-                let row = UnsafeBufferPointer(start: counts.baseAddress! + p * nch + i1, count: length)
+                let row = UnsafeBufferPointer(start: counts.baseAddress! + p * nch + rowOffset, count: length)
                 kernel.apply(row, into: d, pixel: p)
                 var maxAbsInput = 0.0
                 if coefficientL1 > 0 { for value in row { maxAbsInput = max(maxAbsInput, abs(value)) } }

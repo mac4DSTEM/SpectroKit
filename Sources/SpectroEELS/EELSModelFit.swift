@@ -200,8 +200,9 @@ struct EELSEdgeBasis: Sendable {
             direct = []
             lowLossChannels = g
             lowLossPixels = ll.pixelCount
-            var reversed = [Double](repeating: 0, count: ll.counts.count)
-            for p in 0 ..< ll.pixelCount { for j in 0 ..< g { reversed[p * g + j] = ll.counts[p * g + g - 1 - j] } }
+            let llCounts = ll.storedCounts
+            var reversed = [Double](repeating: 0, count: llCounts.count)
+            for p in 0 ..< ll.pixelCount { for j in 0 ..< g { reversed[p * g + j] = llCounts[p * g + g - 1 - j] } }
             reversedLowLoss = reversed
         } else {
             direct = sections.map { row in
@@ -270,7 +271,7 @@ public enum EELSModelFit {
         let rows = setup.start ..< (n - 1)                               // the last stage of smart_fit: [start, axis end), the end channel excluded
         let slots = EELSSlots<PixelFit?>(count: np, initial: nil)
         let logE = rows.map { log(basis.energies[$0]) }
-        try coreLoss.counts.withUnsafeBufferPointer { counts in
+        try coreLoss.storedCounts.withDoubles { counts in
             nonisolated(unsafe) let input = counts
             try EELSParallel.forEachPixel(count: np, cancelled: cancelled, progress: progress) { p in
                 if let mask, !mask[p] { slots.set(p, PixelFit(failure: .masked)); return }
@@ -313,7 +314,7 @@ public enum EELSModelFit {
         let rows = setup.start ..< setup.preEdgeEnd
         let logE = rows.map { log(setup.axis.energy(ofChannel: $0)) }
         let slots = EELSSlots<PowerLawParameters?>(count: np, initial: nil)
-        try coreLoss.counts.withUnsafeBufferPointer { counts in
+        try coreLoss.storedCounts.withDoubles { counts in
             nonisolated(unsafe) let input = counts
             try EELSParallel.forEachPixel(count: np, cancelled: cancelled, progress: progress) { p in
                 if let mask, !mask[p] { return }
@@ -333,7 +334,7 @@ public enum EELSModelFit {
         let e1 = setup.axis.energy(ofChannel: setup.start)
         let window = try PowerLawWindow(axis: setup.axis, from: e1, to: setup.firstOnset - options.preEdgeSafeWindowEV)
         let n = coreLoss.channels
-        return coreLoss.counts.withUnsafeBufferPointer { counts in
+        return coreLoss.storedCounts.withDoubles { counts in
             (0 ..< coreLoss.pixelCount).map { p -> PowerLawParameters? in
                 if let mask, !mask[p] { return nil }
                 switch PowerLawFit.estimate(UnsafeBufferPointer(start: counts.baseAddress! + p * n, count: n), window: window) {
@@ -455,7 +456,7 @@ public enum EELSModelFit {
         let slots = EELSSlots<WindowedPixel?>(count: np, initial: nil)
         let bgLogE = bgRows.map { rs in rs.flatMap { r in r.map { log(basis.energies[$0]) } } }
         let range = options.exponentRange
-        try coreLoss.counts.withUnsafeBufferPointer { counts in
+        try coreLoss.storedCounts.withDoubles { counts in
             nonisolated(unsafe) let input = counts
             try EELSParallel.forEachPixel(count: np, cancelled: cancelled, progress: progress) { p in
                 if let mask, !mask[p] { slots.set(p, WindowedPixel(failure: .masked)); return }
