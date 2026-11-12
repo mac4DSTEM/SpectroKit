@@ -113,40 +113,60 @@ public nonisolated enum EELSAlignment {
         let spectra = RawSpectra(image)
         guard shifts.count == spectra.pixels else { throw EELSAlignmentError.shiftCountMismatch(expected: spectra.pixels, got: shifts.count) }
         if let bad = shifts.firstIndex(where: { $0 != nil && !$0!.isFinite }) { throw EELSAlignmentError.nonFiniteShift(pixel: bad) }
-        let moved = try shifted(spectra, by: shifts.map { $0 ?? .nan }, crop: crop)
-        let out = try I(nx: image.nx, ny: image.ny, channels: moved.spectra.channels, counts: moved.spectra.counts,
-                        energyOffsetEV: moved.spectra.offset, energyScaleEV: moved.spectra.scale)
-        return (out, moved.kept)
+        var moved = spectra
+        let kept = try shifted(&moved, by: shifts.map { $0 ?? .nan }, crop: crop)
+        let out = try I(nx: image.nx, ny: image.ny, channels: moved.channels, storedCounts: moved.counts,
+                        energyOffsetEV: moved.offset, energyScaleEV: moved.scale)
+        return (out, kept)
     }
 
     // MARK: Alignment
 
     /// exSpy `align_zero_loss_peak(calibrate, also_align, subpixel, mask, signal_range, crop, number_of_interpolation_points)`.
+    ///
+    /// Memory (SpectroKit#94): the counts are shifted and cropped in place, at their own precision (a float32 cube is written back as
+    /// float32, as NumPy writes into a float32 array), so the alignment holds one cube, not three. The images are taken: a caller that
+    /// passes its last copy (`consume`, or a value it lets go) is not charged a second cube; one that keeps its own pays for a copy.
     public static func alignZeroLossPeak(
-        _ image: LowLossSpectrumImage, alsoAlign: [CoreLossSpectrumImage] = [], mask: PixelMask? = nil,
+        _ image: consuming LowLossSpectrumImage, alsoAlign: consuming [CoreLossSpectrumImage] = [], mask: PixelMask? = nil,
         options: ZeroLossAlignmentOptions = .init(),
         cancelled: @Sendable () -> Bool = SpectroCancellation.task, progress: (@Sendable (Double) -> Void)? = nil
     ) throws -> ZeroLossAlignment {
-        let pixels = image.nx * image.ny
+        let nx = image.nx, ny = image.ny, channels = image.channels
+        let pixels = nx * ny
         try validate(mask: mask, pixels: pixels)
-        for (i, a) in alsoAlign.enumerated() where a.nx != image.nx || a.ny != image.ny { throw EELSAlignmentError.alsoAlignShapeMismatch(index: i) }
-        try validate(interpolationPoints: options.interpolationPoints, channels: image.channels)
+        for i in alsoAlign.indices where alsoAlign[i].nx != nx || alsoAlign[i].ny != ny { throw EELSAlignmentError.alsoAlignShapeMismatch(index: i) }
+        try validate(interpolationPoints: options.interpolationPoints, channels: channels)
         if let r = options.signalRangeEV, !(r.lowerBound < r.upperBound) { throw EELSAlignmentError.invalidOption("the search window is empty") }
 
-        var main = RawSpectra(image)
-        var also = alsoAlign.map { RawSpectra($0) }
+        // The counts move into the working spectra and the images are let go, so each cube is held once and written in place.
+        var main = RawSpectra(consume image)
+        var also: [RawSpectra] = []
+        var alsoImages = consume alsoAlign
+        while !alsoImages.isEmpty { also.append(RawSpectra(alsoImages.removeFirst())) }
         var total = [Double](repeating: 0, count: pixels)       // NaN where masked
-        var keptLow = 0, keptHigh = image.channels             // in INPUT channels
-        var alsoLow = [Int](repeating: 0, count: alsoAlign.count)
+        var keptLow = 0, keptHigh = channels                   // in INPUT channels
+        var alsoLow = [Int](repeating: 0, count: also.count)
+
+        func images() throws -> (LowLossSpectrumImage, [CoreLossSpectrumImage]) {
+            let aligned = try LowLossSpectrumImage(nx: nx, ny: ny, channels: main.channels, storedCounts: main.counts,
+                                                   energyOffsetEV: main.offset, energyScaleEV: main.scale)
+            let alsoOut = try also.map { raw in
+                try CoreLossSpectrumImage(nx: nx, ny: ny, channels: raw.channels, storedCounts: raw.counts,
+                                          energyOffsetEV: raw.offset, energyScaleEV: raw.scale)
+            }
+            return (aligned, alsoOut)
+        }
 
         // exSpy: zlpc = estimate_zero_loss_peak_centre(self, mask, signal_range); mean_ = nanmean(zlpc).
         let zlpc0 = try centres(main, mask: mask, range: options.signalRangeEV, cancelled: cancelled)
         let mean0 = nanMean(zlpc0)
         if mean0.isNaN {
             // Every pixel masked (or none finite): nothing to align; shift1D of an all-NaN array changes nothing.
-            return ZeroLossAlignment(aligned: image, alsoAligned: alsoAlign, initialCentreEV: zlpc0.map { $0.isNaN ? nil : $0 },
-                                     shiftEV: [Double?](repeating: nil, count: pixels), keptChannels: 0..<image.channels,
-                                     alsoKeptChannels: alsoAlign.map { 0..<$0.channels }, methodName: methodName)
+            let (aligned, alsoAligned) = try images()
+            return ZeroLossAlignment(aligned: aligned, alsoAligned: alsoAligned, initialCentreEV: zlpc0.map { $0.isNaN ? nil : $0 },
+                                     shiftEV: [Double?](repeating: nil, count: pixels), keptChannels: 0..<channels,
+                                     alsoKeptChannels: also.map { 0..<$0.channels }, methodName: methodName)
         }
         progress?(0.05)
         try SpectroCancellation.check(cancelled)
@@ -154,12 +174,11 @@ public nonisolated enum EELSAlignment {
         // Coarse pass: every signal shifted by mean - zlpc (also_align first, then self; each cropped on its own axis).
         let coarse = zlpc0.map { $0.isNaN ? Double.nan : -$0 + mean0 }
         for i in also.indices {
-            let moved = try shifted(also[i], by: coarse, crop: options.crop, cancelled: cancelled)
-            also[i] = moved.spectra; alsoLow[i] += moved.kept.lowerBound
+            let kept = try shifted(&also[i], by: coarse, crop: options.crop, cancelled: cancelled)
+            alsoLow[i] += kept.lowerBound
         }
-        let firstMain = try shifted(main, by: coarse, crop: options.crop, cancelled: cancelled)
-        main = firstMain.spectra
-        keptLow += firstMain.kept.lowerBound; keptHigh = keptLow + main.channels
+        let firstKept = try shifted(&main, by: coarse, crop: options.crop, cancelled: cancelled)
+        keptLow += firstKept.lowerBound; keptHigh = keptLow + main.channels
         for p in 0..<pixels where !coarse[p].isNaN { total[p] += coarse[p] }
         progress?(0.25)
 
@@ -182,12 +201,11 @@ public nonisolated enum EELSAlignment {
             if pixels > 1 {
                 let fine = try estimate(main, fromEV: start, toEV: end, referencePixel: 0, interpolationPoints: options.interpolationPoints,
                                         mask: mask, cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(0.4 + 0.4 * f) } })
-                let moved = try shifted(main, by: fine, crop: options.crop, cancelled: cancelled)
-                main = moved.spectra
-                keptLow += moved.kept.lowerBound; keptHigh = keptLow + main.channels
+                let kept = try shifted(&main, by: fine, crop: options.crop, cancelled: cancelled)
+                keptLow += kept.lowerBound; keptHigh = keptLow + main.channels
                 for i in also.indices {
-                    let moved = try shifted(also[i], by: fine, crop: options.crop, cancelled: cancelled)
-                    also[i] = moved.spectra; alsoLow[i] += moved.kept.lowerBound
+                    let kept = try shifted(&also[i], by: fine, crop: options.crop, cancelled: cancelled)
+                    alsoLow[i] += kept.lowerBound
                 }
                 for p in 0..<pixels where !fine[p].isNaN { total[p] += fine[p] }
             }
@@ -195,12 +213,7 @@ public nonisolated enum EELSAlignment {
         }
         progress?(1)
 
-        let aligned = try LowLossSpectrumImage(nx: image.nx, ny: image.ny, channels: main.channels, counts: main.counts,
-                                               energyOffsetEV: main.offset, energyScaleEV: main.scale)
-        let alsoOut = try zip(also, alsoAlign).map { raw, original in
-            try CoreLossSpectrumImage(nx: original.nx, ny: original.ny, channels: raw.channels, counts: raw.counts,
-                                      energyOffsetEV: raw.offset, energyScaleEV: raw.scale)
-        }
+        let (aligned, alsoOut) = try images()
         return ZeroLossAlignment(aligned: aligned, alsoAligned: alsoOut, initialCentreEV: zlpc0.map { $0.isNaN ? nil : $0 },
                                  shiftEV: (0..<pixels).map { coarse[$0].isNaN ? nil : total[$0] },
                                  keptChannels: keptLow..<keptHigh,
@@ -211,14 +224,14 @@ public nonisolated enum EELSAlignment {
 
     /// The raw arrays of one spectrum image and its axis (the generic operations work on this, not on the public types).
     package struct RawSpectra: Sendable {
-        package var counts: [Double]
+        package var counts: EELSCounts
         package let pixels: Int
         package var channels: Int
         package var offset: Double
         package let scale: Double
 
         package init<I: EELSSpectrumImage>(_ image: I) {
-            counts = image.counts; pixels = image.nx * image.ny; channels = image.channels
+            counts = image.storedCounts; pixels = image.nx * image.ny; channels = image.channels
             offset = image.energyOffsetEV; scale = image.energyScaleEV
         }
     }
@@ -271,16 +284,17 @@ public nonisolated enum EELSAlignment {
         let w = try window(s, range)
         let subOffset = s.offset + s.scale * Double(w.lowerBound)
         let out = EELSSlots<Double>(count: s.pixels, initial: .nan)
-        try s.counts.withUnsafeBufferPointer { buf in
-            nonisolated(unsafe) let data = buf
-            try EELSParallel.forEachPixel(count: s.pixels, cancelled: cancelled, progress: nil) { p in
-                if mask?[p] == true { return }
-                let row = data.baseAddress! + p * s.channels
-                var best = row[w.lowerBound], at = 0
+        let counts = s.counts, n = s.channels
+        try EELSParallel.forEachPixel(count: s.pixels, cancelled: cancelled, progress: nil) { p in
+            if mask?[p] == true { return }
+            // The window of one pixel, as Doubles (a float32 cube widens a row at a time).
+            let at = counts.withRow(start: p * n + w.lowerBound, count: w.count) { row -> Int in
+                var best = row[0], first = 0
                 var k = 1
-                while k < w.count { let v = row[w.lowerBound + k]; if v > best { best = v; at = k }; k += 1 }
-                out.set(p, subOffset + s.scale * Double(at))
+                while k < row.count { let v = row[k]; if v > best { best = v; first = k }; k += 1 }
+                return first
             }
+            out.set(p, subOffset + s.scale * Double(at))
         }
         return out.values
     }
@@ -335,32 +349,30 @@ public nonisolated enum EELSAlignment {
         let i1 = try index(fromEV) ?? 0
         let i2 = try index(toEV) ?? s.channels
         guard i2 - i1 >= 2 else { throw EELSAlignmentError.signalRangeOutsideAxis(fromEV: fromEV ?? axis.lowValue, toEV: toEV ?? axis.highValue) }
-        let refRaw = s.counts[(referencePixel * s.channels + i1)..<(referencePixel * s.channels + i2)]
-        var ref = refRaw.withUnsafeBufferPointer { upsample($0, ip: ip) }
+        var ref = s.counts.withRow(start: referencePixel * s.channels + i1, count: i2 - i1) { upsample($0, ip: ip) }
         let refMean = ref.withUnsafeBufferPointer { NumpySum.pairwise($0.baseAddress!, count: $0.count) } / Double(ref.count)
         for j in ref.indices { ref[j] -= refMean }
         let out = EELSSlots<Double>(count: s.pixels, initial: .nan)
         let refCopy = ref
-        try s.counts.withUnsafeBufferPointer { buf in
-            nonisolated(unsafe) let data = buf
-            try EELSParallel.forEachPixel(count: s.pixels, chunk: 8, cancelled: cancelled, progress: progress) { p in
-                if mask?[p] == true { return }
-                let slice = UnsafeBufferPointer(start: data.baseAddress! + (p * s.channels + i1), count: i2 - i1)
-                var d = upsample(slice, ip: ip)
-                let mean = d.withUnsafeBufferPointer { NumpySum.pairwise($0.baseAddress!, count: $0.count) } / Double(d.count)
-                for j in d.indices { d[j] -= mean }
-                out.set(p, correlationLag(ref: refCopy, data: d) / Double(ip) * s.scale)
-            }
+        let counts = s.counts, n = s.channels
+        try EELSParallel.forEachPixel(count: s.pixels, chunk: 8, cancelled: cancelled, progress: progress) { p in
+            if mask?[p] == true { return }
+            var d = counts.withRow(start: p * n + i1, count: i2 - i1) { upsample($0, ip: ip) }
+            let mean = d.withUnsafeBufferPointer { NumpySum.pairwise($0.baseAddress!, count: $0.count) } / Double(d.count)
+            for j in d.indices { d[j] -= mean }
+            out.set(p, correlationLag(ref: refCopy, data: d) / Double(ip) * s.scale)
         }
         return out.values
     }
 
     /// HyperSpy `shift1D(shift_array, crop=…)`: linear interpolation at `axis - shift` (linear extrapolation at the ends), a NaN or zero shift
-    /// leaves a pixel alone; with `crop` the channels `[ilow, ihigh)` that every shift leaves defined are kept and the offset follows.
-    private static func shifted(_ s: RawSpectra, by shifts: [Double], crop: Bool,
-                                cancelled: @Sendable () -> Bool = { false }) throws -> (spectra: RawSpectra, kept: Range<Int>) {
+    /// leaves a pixel alone; with `crop` the channels `[ilow, ihigh)` that every shift leaves defined are kept and the offset follows. In place
+    /// (SpectroKit#94): each pixel's spectrum is read as Doubles, interpolated, and written back at the counts' own precision; the crop moves
+    /// each pixel's kept channels down in the same storage. Returns the kept channels of the input axis.
+    private static func shifted(_ s: inout RawSpectra, by shifts: [Double], crop: Bool,
+                                cancelled: @Sendable () -> Bool = { false }) throws -> Range<Int> {
         // `if not np.any(shift_array): return` (an all-zero array; NaN counts as non-zero).
-        if !shifts.contains(where: { $0 != 0 }) { return (s, 0..<s.channels) }
+        if !shifts.contains(where: { $0 != 0 }) { return 0..<s.channels }
         let axis = try axisOf(s)
         var minimum = Double.infinity, maximum = -Double.infinity
         for v in shifts where !v.isNaN { minimum = min(minimum, v); maximum = max(maximum, v) }
@@ -373,46 +385,48 @@ public nonisolated enum EELSAlignment {
             guard let i = axis.channel(ofEnergy: axis.offset + maximum, rounding: .up) else { throw EELSAlignmentError.emptyAfterCrop }
             ilow = i
         }
-        let n = s.channels
-        var out = [Double](repeating: 0, count: s.counts.count)
-        try out.withUnsafeMutableBufferPointer { dst in
-            nonisolated(unsafe) let target = dst
-            try s.counts.withUnsafeBufferPointer { src in
-                nonisolated(unsafe) let source = src
-                try EELSParallel.forEachPixel(count: s.pixels, cancelled: cancelled, progress: nil) { p in
-                    let row = source.baseAddress! + p * n
-                    let to = target.baseAddress! + p * n
-                    let shift = shifts[p]
-                    if shift.isNaN || shift == 0 || n < 2 {
-                        for c in 0..<n { to[c] = row[c] }
-                        return
-                    }
+        // Refused before any count moves, so a refused crop leaves the spectra as they were.
+        if crop { guard ilow < ihigh else { throw EELSAlignmentError.emptyAfterCrop } }
+        let n = s.channels, pixels = s.pixels, offset = s.offset, scale = s.scale
+        try s.counts.withUnsafeMutableStorage { singles, doubles in
+            nonisolated(unsafe) let floats = singles?.baseAddress, wide = doubles?.baseAddress
+            try EELSParallel.forEachPixel(count: pixels, cancelled: cancelled, progress: nil) { p in
+                let shift = shifts[p]
+                if shift.isNaN || shift == 0 || n < 2 { return }          // left as it is
+                // The pixel's spectrum as Doubles (`row`) and its shifted values (`to`), in one scratch allocation.
+                withUnsafeTemporaryAllocation(of: Double.self, capacity: 2 * n) { scratch in
+                    let row = scratch.baseAddress!, to = scratch.baseAddress! + n
+                    if let floats { vDSP_vspdp(floats + p * n, 1, row, 1, vDSP_Length(n)) }
+                    else if let wide { row.update(from: wide + p * n, count: n) }
                     for c in 0..<n {
-                        let x = (s.offset + s.scale * Double(c)) - shift          // original_axis - shift, as the array arithmetic does
-                        let u = (x - s.offset) / s.scale
+                        let x = (offset + scale * Double(c)) - shift          // original_axis - shift, as the array arithmetic does
+                        let u = (x - offset) / scale
                         var j = Int(u.rounded(.down))
                         if j < 0 { j = 0 } else if j > n - 2 { j = n - 2 }
-                        let t0 = s.offset + s.scale * Double(j), t1 = s.offset + s.scale * Double(j + 1)
+                        let t0 = offset + scale * Double(j), t1 = offset + scale * Double(j + 1)
                         let w = (x - t0) / (t1 - t0)
                         to[c] = row[j] * (1 - w) + row[j + 1] * w
                     }
+                    if let floats { vDSP_vdpsp(to, 1, floats + p * n, 1, vDSP_Length(n)) }
+                    else if let wide { (wide + p * n).update(from: to, count: n) }
                 }
             }
         }
-        var result = s
-        result.counts = out
-        guard crop else { return (result, 0..<n) }
-        guard ilow < ihigh else { throw EELSAlignmentError.emptyAfterCrop }
+        guard crop else { return 0..<n }
         let kept = ilow..<ihigh
         if kept.count != n {
-            var cropped = [Double](repeating: 0, count: s.pixels * kept.count)
-            for p in 0..<s.pixels {
-                for c in 0..<kept.count { cropped[p * kept.count + c] = out[p * n + ilow + c] }
+            // Pixel p's kept channels move from p * n + ilow to p * kept.count: never past where they were, so in order, in place.
+            let k = kept.count
+            s.counts.withUnsafeMutableStorage { singles, doubles in
+                for p in 0..<pixels {
+                    if let f = singles?.baseAddress { (f + p * k).update(from: f + p * n + ilow, count: k) }
+                    if let d = doubles?.baseAddress { (d + p * k).update(from: d + p * n + ilow, count: k) }
+                }
             }
-            result.counts = cropped
-            result.channels = kept.count
-            result.offset = s.offset + s.scale * Double(ilow)
+            s.counts.truncate(to: pixels * k)
+            s.channels = k
+            s.offset = offset + scale * Double(ilow)
         }
-        return (result, kept)
+        return kept
     }
 }

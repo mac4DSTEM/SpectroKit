@@ -14,9 +14,12 @@ public protocol EELSSpectrumImage: Sendable {
     var ny: Int { get }
     var channels: Int { get }
     var counts: [Double] { get }
+    /// The counts at their own precision (`EELSCounts`).
+    var storedCounts: EELSCounts { get }
     var energyOffsetEV: Double { get }
     var energyScaleEV: Double { get }
     init(nx: Int, ny: Int, channels: Int, counts: [Double], energyOffsetEV: Double, energyScaleEV: Double) throws
+    init(nx: Int, ny: Int, channels: Int, storedCounts: EELSCounts, energyOffsetEV: Double, energyScaleEV: Double) throws
 }
 
 extension LowLossSpectrumImage: EELSSpectrumImage {}
@@ -24,6 +27,14 @@ extension CoreLossSpectrumImage: EELSSpectrumImage {}
 
 extension EELSSpectrumImage {
     public var pixelCount: Int { nx * ny }
+
+    /// A conformer that keeps Doubles only: its counts as `EELSCounts` (SpectroKit#94 added the requirement; the kit's own types store it).
+    public var storedCounts: EELSCounts { EELSCounts(counts) }
+
+    /// A conformer that keeps Doubles only: built from the counts widened to Double.
+    public init(nx: Int, ny: Int, channels: Int, storedCounts: EELSCounts, energyOffsetEV: Double, energyScaleEV: Double) throws {
+        try self.init(nx: nx, ny: ny, channels: channels, counts: storedCounts.doubles, energyOffsetEV: energyOffsetEV, energyScaleEV: energyScaleEV)
+    }
 }
 
 /// A per-pixel answer a method could not give, with the reason (the kit's rule: nil with a reason, never NaN).

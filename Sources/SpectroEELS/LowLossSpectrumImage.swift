@@ -20,13 +20,26 @@ public nonisolated struct LowLossSpectrumImage: Sendable {
     public let nx: Int
     public let ny: Int
     public let channels: Int
-    public let counts: [Double]
+    /// The counts at the precision they were given (`EELSCounts`): a float32 cube stays four bytes a count.
+    public let storedCounts: EELSCounts
+    /// Every count as a Double: the stored array when the counts are Doubles, else a widened full-size copy. For a one-off; per-pixel and
+    /// whole-cube work in the kit reads `storedCounts` (`withRow`, `withDoubles`).
+    public var counts: [Double] { storedCounts.doubles }
     /// Energy of channel 0, eV.
     public let energyOffsetEV: Double
     /// Channel width, eV (> 0).
     public let energyScaleEV: Double
 
     public init(nx: Int, ny: Int, channels: Int, counts: [Double], energyOffsetEV: Double, energyScaleEV: Double) throws {
+        try self.init(nx: nx, ny: ny, channels: channels, storedCounts: EELSCounts(counts), energyOffsetEV: energyOffsetEV, energyScaleEV: energyScaleEV)
+    }
+
+    /// The same from single-precision counts, kept as they are (four bytes a count; every read widens exactly to Double).
+    public init(nx: Int, ny: Int, channels: Int, counts: [Float], energyOffsetEV: Double, energyScaleEV: Double) throws {
+        try self.init(nx: nx, ny: ny, channels: channels, storedCounts: EELSCounts(counts), energyOffsetEV: energyOffsetEV, energyScaleEV: energyScaleEV)
+    }
+
+    public init(nx: Int, ny: Int, channels: Int, storedCounts counts: EELSCounts, energyOffsetEV: Double, energyScaleEV: Double) throws {
         guard nx > 0, ny > 0, channels > 0, nx <= Int.max / ny, nx * ny <= Int.max / channels,
               counts.count == nx * ny * channels else {
             throw EELSThicknessError.invalidShape(nx: nx, ny: ny, channels: channels, counts: counts.count)
@@ -34,17 +47,11 @@ public nonisolated struct LowLossSpectrumImage: Sendable {
         guard energyOffsetEV.isFinite, energyScaleEV.isFinite, energyScaleEV > 0 else {
             throw EELSThicknessError.invalidEnergyAxis(offsetEV: energyOffsetEV, scaleEV: energyScaleEV)
         }
-        if let bad = counts.firstIndex(where: { !$0.isFinite }) {
+        if let bad = counts.firstNonFinite() {
             throw EELSThicknessError.nonFiniteCounts(pixel: bad / channels)
         }
-        self.nx = nx; self.ny = ny; self.channels = channels; self.counts = counts
+        self.nx = nx; self.ny = ny; self.channels = channels; self.storedCounts = counts
         self.energyOffsetEV = energyOffsetEV; self.energyScaleEV = energyScaleEV
-    }
-
-    /// The same from single-precision counts (widened exactly to Double).
-    public init(nx: Int, ny: Int, channels: Int, counts: [Float], energyOffsetEV: Double, energyScaleEV: Double) throws {
-        try self.init(nx: nx, ny: ny, channels: channels, counts: counts.map { Double($0) },
-                      energyOffsetEV: energyOffsetEV, energyScaleEV: energyScaleEV)
     }
 
     public var pixelCount: Int { nx * ny }

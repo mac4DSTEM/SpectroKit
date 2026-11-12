@@ -190,7 +190,7 @@ public enum EELSDeconvolution {
         if let f = options.fwhmEV { fwhm = f } else {
             // exSpy measures the first pixel; with its continuation non-finite the width is NaN and so is every pixel's result.
             if firstLowLossOverflowed { throw EELSDeconvolutionError.noPeakWidth }
-            let first = Array(llT.counts[0 ..< llChannels])
+            let first = llT.storedCounts.withRow(start: 0, count: llChannels) { Array($0) }
             guard let w = try peakWidth(first, offsetEV: llT.energyOffsetEV, scaleEV: llT.energyScaleEV) else {
                 throw EELSDeconvolutionError.noPeakWidth
             }
@@ -268,7 +268,7 @@ public enum EELSDeconvolution {
             guard thetas.count == np else { throw EELSThicknessError.perPixelThresholdCount(expected: np, got: thetas.count) }
             return thetas.map { $0.isNaN ? nil : axis.channel(ofEnergy: $0) }
         case .estimated(let window, let start, let windowLength, let polynomialOrder, let tolerance):
-            let found = try lowLoss.counts.withUnsafeBufferPointer { buf in
+            let found = try lowLoss.storedCounts.withDoubles { buf in
                 try ElasticThreshold.estimate(
                     counts: buf, pixelCount: np, navigationWidth: lowLoss.nx, channels: lowLoss.channels, axis: axis, window: window, start: start,
                     windowLength: windowLength, polynomialOrder: polynomialOrder, tolerance: tolerance, cancelled: cancelled, progress: progress)

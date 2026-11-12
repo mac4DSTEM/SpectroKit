@@ -17,11 +17,24 @@ public nonisolated struct CoreLossSpectrumImage: Sendable {
     public let nx: Int
     public let ny: Int
     public let channels: Int
-    public let counts: [Double]
+    /// The counts at the precision they were given (`EELSCounts`): a float32 cube stays four bytes a count.
+    public let storedCounts: EELSCounts
+    /// Every count as a Double: the stored array when the counts are Doubles, else a widened full-size copy. For a one-off; per-pixel and
+    /// whole-cube work in the kit reads `storedCounts` (`withRow`, `withDoubles`).
+    public var counts: [Double] { storedCounts.doubles }
     public let energyOffsetEV: Double
     public let energyScaleEV: Double
 
     public init(nx: Int, ny: Int, channels: Int, counts: [Double], energyOffsetEV: Double, energyScaleEV: Double) throws {
+        try self.init(nx: nx, ny: ny, channels: channels, storedCounts: EELSCounts(counts), energyOffsetEV: energyOffsetEV, energyScaleEV: energyScaleEV)
+    }
+
+    /// The same from single-precision counts, kept as they are (four bytes a count; every read widens exactly to Double).
+    public init(nx: Int, ny: Int, channels: Int, counts: [Float], energyOffsetEV: Double, energyScaleEV: Double) throws {
+        try self.init(nx: nx, ny: ny, channels: channels, storedCounts: EELSCounts(counts), energyOffsetEV: energyOffsetEV, energyScaleEV: energyScaleEV)
+    }
+
+    public init(nx: Int, ny: Int, channels: Int, storedCounts counts: EELSCounts, energyOffsetEV: Double, energyScaleEV: Double) throws {
         guard nx > 0, ny > 0, channels > 0, nx <= Int.max / ny, nx * ny <= Int.max / channels,
               counts.count == nx * ny * channels else {
             throw EELSEdgeError.invalidShape(nx: nx, ny: ny, channels: channels, counts: counts.count)
@@ -29,15 +42,11 @@ public nonisolated struct CoreLossSpectrumImage: Sendable {
         guard energyOffsetEV.isFinite, energyScaleEV.isFinite, energyScaleEV > 0 else {
             throw EELSEdgeError.invalidEnergyAxis(offsetEV: energyOffsetEV, scaleEV: energyScaleEV)
         }
-        if let bad = counts.firstIndex(where: { !$0.isFinite }) { throw EELSEdgeError.nonFiniteCounts(pixel: bad / channels) }
-        self.nx = nx; self.ny = ny; self.channels = channels; self.counts = counts
+        if let bad = counts.firstNonFinite() {
+            throw EELSEdgeError.nonFiniteCounts(pixel: bad / channels)
+        }
+        self.nx = nx; self.ny = ny; self.channels = channels; self.storedCounts = counts
         self.energyOffsetEV = energyOffsetEV; self.energyScaleEV = energyScaleEV
-    }
-
-    /// The same from single-precision counts (widened exactly).
-    public init(nx: Int, ny: Int, channels: Int, counts: [Float], energyOffsetEV: Double, energyScaleEV: Double) throws {
-        try self.init(nx: nx, ny: ny, channels: channels, counts: counts.map { Double($0) },
-                      energyOffsetEV: energyOffsetEV, energyScaleEV: energyScaleEV)
     }
 
     public var pixelCount: Int { nx * ny }
@@ -219,7 +228,7 @@ public nonisolated enum EELSEdgeQuantification {
             do { stop = try llAxis.zeroLossStop(forFixedThreshold: integrationWidthEV) } catch {
                 throw EELSEdgeError.invalidIntegrationWidth(integrationWidthEV)       // Δ below the low-loss axis start
             }
-            lowLossRaw = ll.counts.withUnsafeBufferPointer { b in
+            lowLossRaw = ll.storedCounts.withDoubles { b in
                 (0 ..< np).map { p in NumpySum.pairwise(b.baseAddress! + p * ll.channels, count: stop) }
             }
             route = "I_low(Δ): low-loss sum to \(integrationWidthEV) eV (Egerton eq. 4.66)"
@@ -231,7 +240,7 @@ public nonisolated enum EELSEdgeQuantification {
 
         var pixels = [ArealDensityPixel]()
         pixels.reserveCapacity(np)
-        try coreLoss.counts.withUnsafeBufferPointer { buf in
+        try coreLoss.storedCounts.withDoubles { buf in
             for p in 0 ..< np {
                 if p % 4096 == 0 { try SpectroCancellation.check(cancelled) }
                 let spectrum = UnsafeBufferPointer(rebasing: buf[(p * nch) ..< ((p + 1) * nch)])

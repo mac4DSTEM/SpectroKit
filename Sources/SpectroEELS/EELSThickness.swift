@@ -61,7 +61,7 @@ public nonisolated enum EELSThickness {
                 guard thetas.count == np else { throw EELSThicknessError.perPixelThresholdCount(expected: np, got: thetas.count) }
                 route = .perPixel(energies: thetas, unavailableForNaN: .thresholdNotANumber)
             case .estimated(let window, let start, let windowLength, let polynomialOrder, let tolerance):
-                let found = try image.counts.withUnsafeBufferPointer { buf in
+                let found = try image.storedCounts.withDoubles { buf in
                     try ElasticThreshold.estimate(
                         counts: buf, pixelCount: np, navigationWidth: image.nx, channels: nch, axis: axis, window: window, start: start,
                         windowLength: windowLength, polynomialOrder: polynomialOrder, tolerance: tolerance,
@@ -78,14 +78,18 @@ public nonisolated enum EELSThickness {
         let correction = lambda?.correction
         let lambdaNM = lambda?.lambdaNM
         let block = 2048
-        try image.counts.withUnsafeBufferPointer { buf in
-            try (zeroLoss?.counts ?? []).withUnsafeBufferPointer { zbuf in
+        // One pixel's spectrum at a time, as Doubles (a float32 cube is widened a row at a time, never as a whole: SpectroKit#94).
+        var scratch = [Double](repeating: 0, count: nch)
+        let counts = image.storedCounts
+        try scratch.withUnsafeMutableBufferPointer { rowBuffer in
+            try (zeroLoss?.storedCounts ?? EELSCounts([Double]())).withDoubles { zbuf in
                 for p in 0..<np {
                     if p % block == 0 {
                         try SpectroCancellation.check(cancelled)
                         progress?(progressBase + (1 - progressBase) * Double(p) / Double(np))
                     }
-                    let row = buf.baseAddress! + p * nch
+                    counts.copy(start: p * nch, count: nch, into: rowBuffer.baseAddress!)
+                    let row = UnsafePointer(rowBuffer.baseAddress!)
                     let iTotal = NumpySum.pairwise(row, count: nch)
                     var centre = 0
                     var best = row[0]

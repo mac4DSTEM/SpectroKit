@@ -172,7 +172,7 @@ public enum EELSMLLS {
         let logE = window.map { log(basis.energies[$0]) }
         let refColumns = options.references.map { Array($0[window]) }
         let slots = EELSSlots<EELSMLLSPixel?>(count: np, initial: nil)
-        try coreLoss.counts.withUnsafeBufferPointer { counts in
+        try coreLoss.storedCounts.withDoubles { counts in
             nonisolated(unsafe) let input = counts
             try EELSParallel.forEachPixel(count: np, cancelled: cancelled, progress: progress) { p in
                 if let mask, !mask[p] { slots.set(p, failed(.masked)); return }
