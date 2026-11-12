@@ -61,12 +61,10 @@ public nonisolated enum EELSThickness {
                 guard thetas.count == np else { throw EELSThicknessError.perPixelThresholdCount(expected: np, got: thetas.count) }
                 route = .perPixel(energies: thetas, unavailableForNaN: .thresholdNotANumber)
             case .estimated(let window, let start, let windowLength, let polynomialOrder, let tolerance):
-                let found = try image.storedCounts.withDoubles { buf in
-                    try ElasticThreshold.estimate(
-                        counts: buf, pixelCount: np, navigationWidth: image.nx, channels: nch, axis: axis, window: window, start: start,
-                        windowLength: windowLength, polynomialOrder: polynomialOrder, tolerance: tolerance,
-                        cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(0.5 * f) } })
-                }
+                let found = try ElasticThreshold.estimate(
+                    stored: image.storedCounts, pixelCount: np, navigationWidth: image.nx, channels: nch, axis: axis, window: window,
+                    start: start, windowLength: windowLength, polynomialOrder: polynomialOrder, tolerance: tolerance,
+                    cancelled: cancelled, progress: progress.map { p in { @Sendable f in p(0.5 * f) } })
                 estimatedTolerance = found.tolerance
                 progressBase = 0.5
                 route = .perPixel(energies: found.thresholdEV, unavailableForNaN: .noInflexionFound)

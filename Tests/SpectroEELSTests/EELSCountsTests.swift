@@ -76,6 +76,12 @@ struct EELSCountsTests {
         let b = try EELSThickness.logRatio(double, threshold: .fixed(theta))
         #expect(a.pixels.map(\.tOverLambda) == b.pixels.map(\.tOverLambda))
         #expect(a.pixels.map(\.zlpCentreEV) == b.pixels.map(\.zlpCentreEV))
+        // The estimated threshold (the default, run when the room opens) reads only its search window, a pixel at a time: the same thresholds.
+        let c = try EELSThickness.logRatio(single)
+        let d = try EELSThickness.logRatio(double)
+        #expect(c.pixels.map(\.thresholdEV) == d.pixels.map(\.thresholdEV))
+        #expect(c.pixels.map(\.tOverLambda) == d.pixels.map(\.tOverLambda))
+        #expect(c.estimatedTolerance == d.estimatedTolerance)
     }
 
     /// Align of a float32 cube: the same shifts and crop as of its Doubles (the reads are exact) and the result stays four bytes a count. The
