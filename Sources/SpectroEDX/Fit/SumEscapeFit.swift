@@ -277,7 +277,7 @@ public nonisolated enum EDSSumEscapeFit {
             if cDone && fDone && da < model.tolerance { converged = true; break }
         }
         // A NaN in the counts or the design leaves the alternation's numbers NaN; that is not a converged fit.
-        if !(c.isFinite && f.isFinite && area.allSatisfy(\.isFinite)) { converged = false }
+        if !(c.isFinite && f.isFinite && area.allSatisfy(\.isFinite) && y.allSatisfy(\.isFinite)) { converged = false }
         cAtBound = estimateC && c == 0
 
         // Final fit with covariance on the linearised design at the converged point.
