@@ -75,6 +75,27 @@ struct DeconvolutionPinsTests {
         }
     }
 
+    /// SpectroKit#75: dark-subtracted counts with Poisson noise, a fifth of them negative, and a zero loss cut from the noisy
+    /// spectrum. exSpy in float64 and the kit agree as on the planted image; the departure seen on a real cube came from NumPy 2
+    /// transforming a float32 cube in float32 (docs/parity.md).
+    @Test func testFourierLogEqualsExSpyOnNoisyNegativeCounts() throws {
+        let fl = Eels16.dict("fourierLog")
+        let p = fl["plural"] as! [String: Any], c = fl["noisy"] as! [String: Any]
+        let n = p["channels"] as! Int
+        func image(_ file: String) throws -> LowLossSpectrumImage {
+            try LowLossSpectrumImage(nx: p["nx"] as! Int, ny: p["ny"] as! Int, channels: n, counts: Eels16.array(file),
+                                     energyOffsetEV: Eels16.number(p["offsetEV"]), energyScaleEV: Eels16.number(p["scaleEV"]))
+        }
+        let ll = try image(c["lowLossFile"] as! String), zlp = try image(c["zlpFile"] as! String)
+        #expect(ll.counts.contains { $0 < 0 }, "the case holds negative counts")
+        let out = try EELSDeconvolution.fourierLog(ll, zeroLoss: zlp)
+        #expect(out.fftSize == c["fftSize"] as! Int)
+        #expect(out.unavailable.allSatisfy { $0 == nil })
+        let ratio = worstRatio(out.image.counts, Eels16.array(c["file"] as! String), channels: out.image.channels)
+        print("fourier-log noisy: worst error / allowance \(ratio)")
+        #expect(ratio <= 1, Comment(rawValue: "\(ratio)"))
+    }
+
     @Test func testFourierRatioEqualsExSpy() throws {
         let fr = Eels16.dict("fourierRatio")
         let p = fr["plural"] as! [String: Any], core = fr["core"] as! [String: Any]

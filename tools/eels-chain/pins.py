@@ -341,7 +341,21 @@ for name, kw in {"default": {}, "add-zlp": dict(add_zlp=True), "crop": dict(crop
     write(fl[name]["file"], out.data)
 # zlp shorter than the spectrum and longer than it (sizes differ; zlp.data is broadcast against j only when sizes match,
 # so the shapes here keep the channel counts equal and the case documents that exSpy requires it)
-PINS["fourierLog"] = {"plural": plural, "cases": fl}
+# SpectroKit#75: real counts, dark-subtracted. The planted image at 1e8 counts with Poisson noise and a dark offset 5 counts above the
+# floor, so about a fifth of the channels are negative; the zero loss is the noisy spectrum cut at +2 eV. Its own generator, so the sections
+# after this one draw the same numbers as before.
+RNG_NOISY = np.random.default_rng(75)
+jl_noisy = RNG_NOISY.poisson(jl * 100.0 + 50.0).astype(np.float64) - 55.0
+zl_noisy = np.where(E_P < 2.0, jl_noisy, 0.0)
+write("noisy-ll", jl_noisy)
+write("noisy-zlp", zl_noisy)
+out = eels(jl_noisy, OFF_P, SC_P, title="J").fourier_log_deconvolution(eels(zl_noisy, OFF_P, SC_P, title="Z"))
+write("fl-noisy", out.data)
+noisy = {"lowLossFile": "noisy-ll", "zlpFile": "noisy-zlp", "file": "fl-noisy", "fftSize": int(optimal_fft_size(2 * N_P - 1, True)),
+         "negativeFraction": float((jl_noisy < 0).mean()),
+         "note": "plural image x 100 + Poisson + 50, minus 55 (dark subtracted); zero loss = the noisy image below +2 eV; float64. "
+                 "A float32 cube is not pinned: NumPy 2 transforms float32 in float32, the kit in float64 (docs/parity.md)"}
+PINS["fourierLog"] = {"plural": plural, "cases": fl, "noisy": noisy}
 
 # Fourier ratio: core loss = edge (single scattering, background removed) convolved with J/I0 (ZLP weight 1), 300 channels at 0.1 eV from 280 eV.
 N_C, OFF_C = 300, 280.0
