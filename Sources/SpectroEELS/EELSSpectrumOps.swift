@@ -58,13 +58,18 @@ public nonisolated enum EELSSpectrumOps {
         let n = image.channels
         guard extrapolationChannels >= 1 else { throw EELSDeconvolutionError.extrapolationWindowTooWide(window: windowChannels, channels: n) }
         guard windowChannels >= 3, windowChannels <= n else { throw EELSDeconvolutionError.extrapolationWindowTooWide(window: windowChannels, channels: n) }
-        let extended = n + extrapolationChannels
+        // An extension or a cube past Int is refused in words, never an overflow trap.
+        let (extended, o1) = n.addingReportingOverflow(extrapolationChannels)
+        let (pixels, o2) = image.nx.multipliedReportingOverflow(by: image.ny)
+        let (values, o3) = pixels.multipliedReportingOverflow(by: extended)
+        guard !o1, !o2, !o3, values <= 1 << 40 else {
+            throw EELSDeconvolutionError.extrapolationWindowTooWide(window: extrapolationChannels, channels: n)
+        }
         let axis = try EELSAxis(offset: image.energyOffsetEV, scale: image.energyScaleEV, size: extended)
         // x1 = index2value(size - window), x2 = index2value(size - 1) on the ORIGINAL axis; the window indices come from the extended one.
         let x1 = axis.energy(ofChannel: n - windowChannels), x2 = axis.energy(ofChannel: n - 1)
         let window = try PowerLawWindow(axis: axis, from: x1, to: x2)
-        let pixels = image.nx * image.ny
-        var counts = [Double](repeating: 0, count: pixels * extended)
+        var counts = [Double](repeating: 0, count: values)
         let fits = EELSSlots<PowerLawParameters?>(count: pixels, initial: nil)
         let nonFinite = EELSSlots<Bool>(count: pixels, initial: false)
         let scale = image.energyScaleEV
@@ -122,8 +127,8 @@ public nonisolated enum EELSSpectrumOps {
         let n = image.channels
         let c = channels ?? defaultTaperChannels(forChannels: n)
         guard c >= 1, offset >= 0 else { throw EELSDeconvolutionError.tooFewChannels(n) }
-        // each side's slice must lie inside the spectrum (HyperSpy's broadcast fails otherwise)
-        guard c + offset <= n else { throw EELSDeconvolutionError.tooFewChannels(n) }
+        // each side's slice must lie inside the spectrum (HyperSpy's broadcast fails otherwise); `c + offset` never overflows here
+        guard c <= n, offset <= n - c else { throw EELSDeconvolutionError.tooFewChannels(n) }
         let window = hanning(2 * c)
         var counts = image.counts
         for p in 0..<(image.nx * image.ny) {

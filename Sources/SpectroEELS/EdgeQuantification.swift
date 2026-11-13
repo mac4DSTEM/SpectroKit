@@ -162,8 +162,12 @@ public nonisolated enum EELSEdgeQuantification {
     /// The default pre-edge background window: `[E_k − belowOnsetEV, E_k − gapEV]`, by default [E_k − 50, E_k − 5] eV. The library's
     /// choice (exSpy has no default: its user picks the window); 50 eV is wide enough to estimate a power
     /// law and 5 eV keeps the window clear of the edge's onset. `ratioMethod(backgroundWindowEV:)` takes any window.
+    /// A gap wider than the window gives the window with its ends in order; a NaN or infinite end gives `0...0`, which no spectrum's
+    /// pre-edge holds, so `ratioMethod` refuses it in words (a reversed `ClosedRange` traps).
     public static func defaultBackgroundWindow(onsetEV: Double, belowOnsetEV: Double = 50, gapEV: Double = 5) -> ClosedRange<Double> {
-        (onsetEV - belowOnsetEV)...(onsetEV - gapEV)
+        let a = onsetEV - belowOnsetEV, b = onsetEV - gapEV
+        guard a.isFinite, b.isFinite else { return 0...0 }
+        return Swift.min(a, b)...Swift.max(a, b)
     }
 
     /// The energy-differential cross section of `edge` at `energiesEV`, barn/eV (exSpy's `EELSCLEdge.function` with

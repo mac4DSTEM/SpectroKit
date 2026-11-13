@@ -205,7 +205,9 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         }
         if continuumOrders.count != continuumEdges.count + 1 { return "The continuum needs one polynomial order per segment: \(continuumEdges.count + 1) for \(continuumEdges.count) edge(s), got \(continuumOrders.count)." }
         if continuumOrders.contains(where: { $0 < 0 }) { return "A continuum order must be 0 or more." }
-        if !zip(continuumEdges, continuumEdges.dropFirst()).allSatisfy({ $0 < $1 }) { return "The continuum edges must ascend." }
+        if !continuumEdges.allSatisfy(\.isFinite) || !zip(continuumEdges, continuumEdges.dropFirst()).allSatisfy({ $0 < $1 }) {
+            return "The continuum edges must be numbers that ascend."
+        }
         if let d = continuumDeadLayer {
             if let t = d.microns, !(t.isFinite && t >= 0) { return "The typed Si dead layer (\(t) \u{00B5}m) must be 0 or more." }
             if d.microns == nil, !(d.maximumMicrons.isFinite && d.maximumMicrons > 0) {
@@ -215,14 +217,15 @@ public nonisolated struct FitPolicy: Sendable, Equatable, Codable {
         if maximumPolynomialOrder < 0 { return "The largest polynomial order must be 0 or more." }
         if !(escapeRatioWarning.isFinite && escapeRatioWarning > 0) { return "The escape-ratio warning level must be positive." }
         if !(sumPeakSignificance.isFinite && sumPeakSignificance >= 0) { return "The sum-peak significance level must be a number of 0 or more." }
-        if irls.maxIterations < 1 || !(irls.tolerance > 0) || !(irls.muFloor > 0) { return "The Poisson iteration needs a cap of 1 or more, a positive tolerance and a positive floor." }
-        if axisRefinement.maxIterations < 1 || !(axisRefinement.tolerance > 0)
+        if irls.maxIterations < 1 || !(irls.tolerance > 0 && irls.tolerance.isFinite) || !(irls.muFloor > 0 && irls.muFloor.isFinite) { return "The Poisson iteration needs a cap of 1 or more, a positive tolerance and a positive floor." }
+        if axisRefinement.maxIterations < 1 || !(axisRefinement.tolerance > 0 && axisRefinement.tolerance.isFinite)
+            || !(axisRefinement.minimumResolutionEV.isFinite && axisRefinement.maximumResolutionEV.isFinite)
             || !(axisRefinement.minimumResolutionEV < axisRefinement.maximumResolutionEV) {
             return "The axis refinement needs a cap of 1 or more, a positive tolerance and a width range with its lower bound below its upper."
         }
         if !(axisRefinement.maximumOffsetShiftEV.isFinite && axisRefinement.maximumOffsetShiftEV > 0)
-            || !(axisRefinement.maximumGainShift.isFinite && axisRefinement.maximumGainShift > 0) {
-            return "The axis refinement needs a finite, positive bound on the offset shift and on the gain shift."
+            || !(axisRefinement.maximumGainShift.isFinite && axisRefinement.maximumGainShift > 0 && axisRefinement.maximumGainShift < 1) {
+            return "The axis refinement needs a finite, positive bound on the offset shift, and a gain shift bound between 0 and 1."
         }
         return nil
     }
@@ -262,7 +265,8 @@ public nonisolated struct AbundancePolicy: Sendable, Equatable, Codable {
         if !(absorptionConvergencePercent.isFinite && absorptionConvergencePercent > 0) { return "The absorption convergence level must be positive." }
         if absorptionMaxIterations < 1 { return "The absorption iteration needs a cap of 1 or more." }
         if !(derivativeRelativeStep.isFinite && derivativeRelativeStep > 0) { return "The derivative step must be positive." }
-        if detector.goldNm < 0 || detector.aluminiumNm < 0 || detector.deadLayerMicrons < 0 || !(detector.siliconMicrons > 0) {
+        let layers = [detector.goldNm, detector.aluminiumNm, detector.deadLayerMicrons]
+        if !layers.allSatisfy({ $0.isFinite && $0 >= 0 }) || !(detector.siliconMicrons > 0 && detector.siliconMicrons.isFinite) {
             return "The detector layers must be 0 or more, with a positive active silicon thickness."
         }
         return nil
@@ -345,9 +349,8 @@ public nonisolated struct QuantificationPolicy: Sendable, Equatable, Codable {
 
     /// Sorted-key JSON; encoding a decoded policy gives the same string.
     public var canonicalJSON: String {
-        let e = JSONEncoder()
-        e.outputFormatting = [.sortedKeys]
-        return String(decoding: try! e.encode(self), as: UTF8.self)
+        // Cannot throw (a non-finite number is written as a string); the empty object is never returned.
+        (try? CheckedConversion.canonicalEncoder().encode(self)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
     }
 
     /// The footer line for a non-default policy: every field that differs from the default, `path = value`, sorted by path. A field
@@ -355,8 +358,10 @@ public nonisolated struct QuantificationPolicy: Sendable, Equatable, Codable {
     /// written `[5, 4]`, a Bool `true` or `false`. nil for the default.
     public var footerLine: String? {
         guard !isDefault else { return nil }
-        let diffs = PolicyDifference.paths(try! JSONSerialization.jsonObject(with: JSONEncoder().encode(self)),
-                                           try! JSONSerialization.jsonObject(with: JSONEncoder().encode(QuantificationPolicy.default)))
+        func object(_ policy: QuantificationPolicy) -> Any? {
+            (try? CheckedConversion.canonicalEncoder().encode(policy)).flatMap { try? JSONSerialization.jsonObject(with: $0) }
+        }
+        let diffs = PolicyDifference.paths(object(self), object(QuantificationPolicy.default))
         return "policy (non-default): " + diffs.map { "\($0.path) = \($0.value)" }.joined(separator: ", ")
     }
 }

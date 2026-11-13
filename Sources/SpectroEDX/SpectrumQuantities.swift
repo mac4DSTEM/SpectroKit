@@ -52,13 +52,18 @@ public nonisolated enum SpectrumRegionShape: Equatable, Sendable {
             guard let first = v.first else { return PixelRect(x0: 0, y0: 0, x1: 0, y1: 0) }
             var lx = first.x, hx = first.x, ly = first.y, hy = first.y
             for p in v { lx = min(lx, p.x); hx = max(hx, p.x); ly = min(ly, p.y); hy = max(hy, p.y) }
-            return PixelRect(x0: Int(lx.rounded(.down)), y0: Int(ly.rounded(.down)), x1: Int(hx.rounded(.up)), y1: Int(hy.rounded(.up)))
+            // A NaN or far-off vertex is clamped before it becomes an Int (`Int(NaN)` traps); the mask clips to the grid anyway.
+            func whole(_ v: Double) -> Int { Int(CheckedConversion.clamped(v)) }
+            return PixelRect(x0: whole(lx.rounded(.down)), y0: whole(ly.rounded(.down)), x1: whole(hx.rounded(.up)), y1: whole(hy.rounded(.up)))
         }
     }
 
     /// Row-major `y * nx + x`, true = in. Pixels outside the grid are ignored.
     public func mask(nx: Int, ny: Int) -> PixelMask {
-        var m = PixelMask(repeating: false, count: nx * ny)
+        // A negative or overflowing grid holds no pixel.
+        let (area, overflow) = nx.multipliedReportingOverflow(by: ny)
+        guard nx >= 0, ny >= 0, !overflow else { return [] }
+        var m = PixelMask(repeating: false, count: area)
         let r = bounds
         // Clamped to the grid; a shape wholly off it (or empty) has an empty range, never a reversed one.
         let ys = max(r.y0, 0)..<max(min(r.y1, ny), max(r.y0, 0)), xs = max(r.x0, 0)..<max(min(r.x1, nx), max(r.x0, 0))
@@ -145,7 +150,7 @@ public nonisolated struct LineNetCount: Equatable, Sendable {
     /// "not a measurement: the background windows (s·B = …) hold more than the signal window (G = …); they sit on neighbouring peaks"
     public var notAMeasurementText: String? {
         guard backgroundExceedsSignal, let b = background, let s = scale else { return nil }
-        return "not a measurement: the background windows (s·B = \(Int((s * Double(b)).rounded()))) hold more than the signal window (G = \(signal)); they sit on neighbouring peaks"
+        return "not a measurement: the background windows (s·B = \(CheckedConversion.int((s * Double(b)).rounded()).map(String.init) ?? "\(s * Double(b))")) hold more than the signal window (G = \(signal)); they sit on neighbouring peaks"
     }
 }
 

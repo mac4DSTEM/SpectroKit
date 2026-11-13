@@ -216,7 +216,8 @@ struct SavitzkyGolayPortTests {
 
     private func applyKernel(_ sg: SavitzkyGolayFirstDerivative, _ row: [Double]) -> [Double] {
         var out = [Double](repeating: .nan, count: row.count)
-        row.withUnsafeBufferPointer { f in out.withUnsafeMutableBufferPointer { o in sg.apply(f, into: o) } }
+        // A window LAPACK cannot solve leaves the NaNs in place (the callers here pass finite rows).
+        row.withUnsafeBufferPointer { f in out.withUnsafeMutableBufferPointer { o in try? sg.apply(f, into: o) } }
         return out
     }
 }

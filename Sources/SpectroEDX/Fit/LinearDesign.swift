@@ -101,7 +101,8 @@ package nonisolated struct LinearDesign: Sendable {
         case .polynomial(let order):
             let lo = energies.first ?? 0, hi = energies.last ?? 1
             let mid = (lo + hi) / 2, half = max((hi - lo) / 2, 1e-12)
-            for k in 0...order {
+            // A negative order is no polynomial: no column, where `0...order` trapped.
+            for k in stride(from: 0, through: order, by: 1) {
                 let v = energies.map { pow(($0 - mid) / half, Double(k)) * axis.scale }
                 bg.append(Column(kind: .background, name: "polynomial \(k)", values: v, signed: true, supported: true))
             }

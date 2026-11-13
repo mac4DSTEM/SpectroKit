@@ -10,6 +10,7 @@
 //
 
 import Foundation
+import SpectroCore
 
 package nonisolated enum IdentificationLoop {
 
@@ -55,7 +56,8 @@ package nonisolated enum IdentificationLoop {
     package static func widths(energies: [Double], scale: Double, resolutionMnKaEV: Double) -> [Int] {
         energies.map { e in
             let fw = XRayLines.fwhm(resolutionMnKaEV: resolutionMnKaEV, atEnergy: max(e, 0)) ?? resolutionMnKaEV / 1000
-            var w = max(Int((fw / scale).rounded()), 3)
+            // A width that is not a number (a NaN resolution or scale) is the narrowest, 3; one past the spectrum is capped.
+            var w = max(min(CheckedConversion.int((fw / scale).rounded()) ?? 3, 1 << 20), 3)
             if w % 2 == 0 { w += 1 }
             return w
         }

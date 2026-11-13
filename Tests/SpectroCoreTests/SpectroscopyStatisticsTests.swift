@@ -80,7 +80,7 @@ struct SpectroscopyStatisticsTests {
     }
 
     @Test func testNetCounts() {
-        let n = NetCounts(gross: 140, background: 100, scale: 0.4)
+        guard let n = NetCounts(gross: 140, background: 100, scale: 0.4) else { Issue.record("a valid window"); return }
         #expect(isEqual(n.net, 100, accuracy: 1e-12))
         #expect(isEqual(n.variance, 140 + 0.16 * 100, accuracy: 1e-12))   // G + s^2 B, not G + s B
         #expect(isEqual(n.sigma, n.variance.squareRoot(), accuracy: 1e-15))
