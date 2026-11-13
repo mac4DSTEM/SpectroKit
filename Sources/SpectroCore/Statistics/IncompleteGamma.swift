@@ -31,9 +31,9 @@ package nonisolated enum IncompleteGamma {
         maximumIterations + Int(min(12 * a.squareRoot(), 1e8))
     }
 
-    /// Regularized lower incomplete gamma P(a, x), a > 0, x >= 0.
+    /// Regularized lower incomplete gamma P(a, x), a > 0, x >= 0; NaN outside that (and for NaN), as `scipy.special.gammainc`.
     package static func lowerRegularized(a: Double, x: Double) -> Double {
-        precondition(a > 0 && x >= 0, "IncompleteGamma needs a > 0, x >= 0")
+        guard a > 0, x >= 0 else { return .nan }
         if x == 0 { return 0 }
         if x < a + 1 { return series(a: a, x: x) }
         return 1 - continuedFraction(a: a, x: x)
@@ -92,8 +92,9 @@ package nonisolated enum IncompleteGamma {
     /// Newton on P with the exact derivative x^(a-1) e^-x / Gamma(a), kept inside
     /// a bracket that is grown from a Wilson-Hilferty start and shrunk on every
     /// evaluation; a step that leaves the bracket is replaced by its midpoint.
+    /// NaN for a shape <= 0, a p outside [0, 1] or a NaN, as `scipy.special.gammaincinv`.
     package static func gammaQuantile(p: Double, shape a: Double) -> Double {
-        precondition(a > 0 && p >= 0 && p <= 1, "gammaQuantile needs a > 0, 0 <= p <= 1")
+        guard a > 0, a.isFinite, p >= 0, p <= 1 else { return .nan }
         if p == 0 { return 0 }
         if p == 1 { return .infinity }
         // Wilson-Hilferty start: x ~ a (1 - 1/(9a) + z sqrt(1/(9a)))^3.

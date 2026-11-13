@@ -155,8 +155,8 @@ public nonisolated enum EDXQuantification {
                                     takeOffDegreesPerPixel: [Double]? = nil) throws -> EDXQuantificationMaps {
         let n = intensityMaps.count
         try validate(setup, count: n)
-        let pixels = rows * columns
-        guard rows > 0, columns > 0, intensityMaps.allSatisfy({ $0.count == pixels }) else {
+        let (pixels, overflow) = rows.multipliedReportingOverflow(by: columns)
+        guard rows > 0, columns > 0, !overflow, intensityMaps.allSatisfy({ $0.count == pixels }) else {
             throw QuantError.countMismatch("Each intensity map must hold rows x columns values.")
         }
         if let m = navigationMask, m.count != pixels { throw QuantError.countMismatch("The navigation mask must hold rows x columns values.") }

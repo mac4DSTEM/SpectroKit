@@ -159,6 +159,11 @@ extension MaskTransport {
         guard registration.isInvertible else {
             throw MaskTransportError(description: "The registration is singular (det = \(registration.determinant)).")
         }
+        // A pixel and a region are stored as Int32 (`Entry.pixels`): a spectrum grid past 2^31 pixels has no such index.
+        let (gridPixels, gridOverflow) = w.multipliedReportingOverflow(by: h)
+        guard w > 0, h > 0, !gridOverflow, gridPixels <= Int(Int32.max), regions.count <= Int(Int32.max) else {
+            throw MaskTransportError(description: "The \(w) x \(h) spectrum grid is empty or holds more than 2^31 pixels.")
+        }
         let indices = try regions.map { try $0.scanIndices(width: sw, height: sh) }
         let m = registration.matrix
         let pixelArea = abs(registration.determinant)

@@ -28,10 +28,12 @@ package nonisolated struct CountingInterval: Equatable, Sendable {
     package let confidence: Double
 
     /// Garwood interval for a (non-negative, normally integer) observed count.
-    /// Non-integer counts use the gamma generalisation (shapes n, n + 1).
+    /// Non-integer counts use the gamma generalisation (shapes n, n + 1). A count that is negative or not finite, or a confidence
+    /// outside (0, 1), has no interval: both ends are NaN, as `scipy.stats.gamma.ppf` gives for them.
     package static func garwood(count n: Double, confidence: Double = 0.95) -> CountingInterval {
-        precondition(n >= 0 && n.isFinite, "a count must be finite and >= 0")
-        precondition(confidence > 0 && confidence < 1, "confidence must be in (0, 1)")
+        guard n >= 0, n.isFinite, confidence > 0, confidence < 1 else {
+            return CountingInterval(count: n, lower: .nan, upper: .nan, confidence: confidence)
+        }
         let alpha = 1 - confidence
         let lower = n == 0 ? 0 : IncompleteGamma.gammaQuantile(p: alpha / 2, shape: n)
         let upper = IncompleteGamma.gammaQuantile(p: 1 - alpha / 2, shape: n + 1)
@@ -60,8 +62,9 @@ package nonisolated struct NetCounts: Equatable, Sendable {
     package let background: Double
     package let scale: Double
 
-    package init(gross: Double, background: Double, scale: Double) {
-        precondition(gross >= 0 && background >= 0 && scale > 0, "G, B >= 0 and s > 0")
+    /// Nil unless G, B >= 0 and s > 0 (a fitted NaN or a negative count is no window, never a trap).
+    package init?(gross: Double, background: Double, scale: Double) {
+        guard gross >= 0, background >= 0, scale > 0, scale.isFinite else { return nil }
         self.gross = gross
         self.background = background
         self.scale = scale

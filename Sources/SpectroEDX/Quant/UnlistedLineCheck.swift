@@ -189,7 +189,9 @@ public nonisolated enum UnlistedLineChecker {
 
     /// 44913 -> "44 913" (a plain space, whatever the locale).
     public static func grouped(_ x: Double) -> String {
-        let digits = String(Int(x.rounded()))
+        // A count that is not a number, or past Int, is written as Swift writes the Double ("nan", "inf", "1e+20").
+        guard let whole = CheckedConversion.int(x.rounded()) else { return "\(x)" }
+        let digits = String(whole)
         var out = "", n = 0
         for ch in digits.reversed() {
             if ch != "-" && n > 0 && n % 3 == 0 { out.append(" ") }

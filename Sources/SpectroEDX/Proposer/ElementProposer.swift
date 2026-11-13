@@ -391,7 +391,9 @@ public nonisolated struct ElementProposer: Sendable {
         func fwhm(_ e: Double) -> Double { XRayLines.fwhm(resolutionMnKaEV: s.resolutionMnKaEV, atEnergy: max(e, 0)) ?? s.resolutionMnKaEV / 1000 }
         /// Fitted-channel indices within `half` keV of `e`.
         func window(_ e: Double, _ half: Double) -> Range<Int> {
-            let a = Int(((e - half - energies[0]) / axis.scale).rounded(.up)), b = Int(((e + half - energies[0]) / axis.scale).rounded(.down))
+            // A NaN energy or half-width, or one past Int, gives no channel instead of a trap.
+            guard let a = CheckedConversion.int(((e - half - energies[0]) / axis.scale).rounded(.up)),
+                  let b = CheckedConversion.int(((e + half - energies[0]) / axis.scale).rounded(.down)), b < Int.max else { return 0..<0 }
             let lower = max(a, 0), upper = min(b + 1, energies.count)
             return lower < upper ? lower..<upper : 0..<0
         }
