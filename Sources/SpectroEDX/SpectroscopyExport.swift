@@ -16,7 +16,7 @@ public nonisolated enum SpectroscopyExport {
     /// `text` on one line: every line break (LF, CR, CRLF, U+2028...) becomes a space, so a region name, a k source or a caveat
     /// typed with a return cannot end its `#` line and start a line a CSV reader takes as data.
     package static func oneLine(_ text: String) -> String {
-        text.components(separatedBy: .newlines).joined(separator: " ")
+        text.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: .newlines).joined(separator: " ")
     }
 
     package static let columns = ["element", "line", "net_counts", "sigma_net", "kfree_ratio", "sigma_kfree",
