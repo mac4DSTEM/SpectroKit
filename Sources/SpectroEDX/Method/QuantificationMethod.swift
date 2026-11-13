@@ -14,6 +14,7 @@
 //
 
 import Foundation
+import SpectroCore
 import CryptoKit
 
 public nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
@@ -131,16 +132,13 @@ public nonisolated struct QuantificationMethod: Codable, Equatable, Sendable {
 
     // MARK: - Byte-stable form
 
-    private static func encoder() -> JSONEncoder {
-        let e = JSONEncoder()
-        e.outputFormatting = [.sortedKeys]
-        return e
-    }
+    private static func encoder() -> JSONEncoder { CheckedConversion.canonicalEncoder() }
 
     /// Sorted-key JSON. Encoding a decoded method returns the same string.
     public var canonicalJSON: String {
-        // try! is safe: every field is a Codable string, number, bool or optional of them.
-        String(decoding: try! Self.encoder().encode(self), as: UTF8.self)
+        // Cannot throw: every field is a Codable string, number, bool or optional of them, and a non-finite number is written as
+        // a string ("nan", "inf"), where JSONEncoder's default threw and `try!` trapped. The empty object is never returned.
+        (try? Self.encoder().encode(self)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
     }
 
     /// SHA-256 of `canonicalJSON`, lowercase hex.

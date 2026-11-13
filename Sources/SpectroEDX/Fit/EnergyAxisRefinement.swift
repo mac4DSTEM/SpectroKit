@@ -131,7 +131,9 @@ package nonisolated enum EnergyAxisRefinement {
             let g = (options.refineGain ? u[1] : 0) * 1e-4
             let r = fileResolutionMnKaEV + (options.refineResolution ? u[2] : 0)
             guard r > options.minimumResolutionEV, r < options.maximumResolutionEV,
-                  abs(d * 1000) < options.maximumOffsetShiftEV, abs(g) < options.maximumGainShift else { return .infinity }
+                  abs(d * 1000) < options.maximumOffsetShiftEV, abs(g) < options.maximumGainShift,
+                  // A gain bound of 1 or more would let the trial scale reach 0 or below, which is no energy axis.
+                  fileAxis.scale * (1 + g) > 0, (fileAxis.offset + d).isFinite else { return .infinity }
             let axis = EnergyAxis(offset: fileAxis.offset + d, scale: fileAxis.scale * (1 + g), size: fileAxis.size)
             let model = EDSLineModel.build(elements: settings.elements, axis: axis, beamEnergy: settings.beamEnergy,
                                            resolutionMnKaEV: r, escapePeaks: settings.escapePeaks, lineTail: settings.lineTail,

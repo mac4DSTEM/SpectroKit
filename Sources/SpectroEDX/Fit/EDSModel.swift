@@ -45,6 +45,15 @@ public nonisolated struct LineTail: Sendable, Equatable, Codable {
         self.source = source
     }
 
+    private enum CodingKeys: String, CodingKey { case fraction, slopeKeV, source }
+
+    /// A decoded tail goes through the same clamps as a typed one: a saved slope of 0 or a NaN fraction never reaches a column.
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(fraction: try c.decode(Double.self, forKey: .fraction), slopeKeV: try c.decode(Double.self, forKey: .slopeKeV),
+                  source: try c.decode(String.self, forKey: .source))
+    }
+
     /// The footer's words for the line shape.
     package static func label(_ tail: LineTail?) -> String {
         guard let t = tail else { return "line shape: Gaussian" }

@@ -63,7 +63,8 @@ public nonisolated struct FitSettings: Sendable, Equatable {
     /// model to every footer for zero measured gain. eps stays an option.
     /// `policy` (default `FitPolicy.default`): the start and upper limit of the range, the continuum's orders, edges and basis, and the
     /// escape columns. Its `continuumEfficiency` is realised by the caller through `efficiency` (it needs the mass-absorption table).
-    /// A policy whose `problem` is not nil traps here (the continuum form's preconditions); `PooledQuantifier` refuses it instead.
+    /// A policy whose `problem` is not nil is refused by `PooledQuantifier`; built here anyway, its continuum is cleaned (finite ascending
+    /// edges, one order of 0 or more per segment) rather than trapped (SpectroKit#103).
     public static func standard(elements: [String], axis: EnergyAxis, resolutionMnKaEV: Double,
                                  beamEnergy: Double, efficiency: (any DetectorEfficiency)? = nil,
                                  policy: FitPolicy = .default) -> FitSettings {
@@ -155,7 +156,8 @@ package nonisolated enum EDSFit {
                             escapeRatioWarning: Double = FitPolicy.default.escapeRatioWarning) throws -> EDSFitResult {
         guard counts.count == axis.size else { throw EDSFitError.lengthMismatch }
         let channels = explicit ?? axis.fitChannels(from: settings.fitFrom, to: settings.fitTo)
-        guard !channels.isEmpty else { throw EDSFitError.noChannels }
+        // A caller's range past the spectrum has no channel to fit there (`EDSSumEscapeFit.run` comes through here first).
+        guard !channels.isEmpty, channels.lowerBound >= 0, channels.upperBound <= counts.count else { throw EDSFitError.noChannels }
         let model = EDSLineModel.build(elements: settings.elements, axis: axis, beamEnergy: settings.beamEnergy,
                                        resolutionMnKaEV: settings.resolutionMnKaEV, escapePeaks: settings.escapePeaks,
                                        lineTail: settings.lineTail, lineWeights: settings.lineWeights)

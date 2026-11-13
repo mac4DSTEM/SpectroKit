@@ -13,6 +13,12 @@
 import Foundation
 
 public nonisolated enum SpectroscopyExport {
+    /// `text` on one line: every line break (LF, CR, CRLF, U+2028...) becomes a space, so a region name, a k source or a caveat
+    /// typed with a return cannot end its `#` line and start a line a CSV reader takes as data.
+    package static func oneLine(_ text: String) -> String {
+        text.components(separatedBy: .newlines).joined(separator: " ")
+    }
+
     package static let columns = ["element", "line", "net_counts", "sigma_net", "kfree_ratio", "sigma_kfree",
                                   "at_percent", "sigma_at_percent", "validation", "flags", "estimator"]
 
@@ -21,21 +27,21 @@ public nonisolated enum SpectroscopyExport {
     public static func csv(_ q: PooledQuantification, regionName: String,
                             title: String = "Spectroscopy quantification") -> String {
         var out: [String] = []
-        out.append("# \(title), region: \(regionName)")
+        out.append("# \(oneLine(title)), region: \(oneLine(regionName))")
         out.append("# method: " + (q.hasAbundance
-            ? "at% from k " + (q.kFactorSourceDescription ?? q.method.kSource) + "; net counts and k-free ratios are fit areas"
+            ? "at% from k " + oneLine(q.kFactorSourceDescription ?? q.method.kSource) + "; net counts and k-free ratios are fit areas"
             : "net counts and k-free ratios only; no at% was computed"))
-        if let c = q.abundanceCaveat { out.append("# at% caveat: " + c) }
+        if let c = q.abundanceCaveat { out.append("# at% caveat: " + oneLine(c)) }
         // WP3b F1: the unlisted-line check travels with the numbers, finished or not.
-        out.append("# unlisted-line check: " + (q.unlistedCheck?.summary
+        out.append("# unlisted-line check: " + oneLine(q.unlistedCheck?.summary
             ?? (q.unlistedCheckPending ? "check not finished when this was exported" : "not run")))
         out.append("# method hash (sha256 of the method JSON): \(q.method.hash)")
-        for line in q.footerLines { out.append("# " + line.replacingOccurrences(of: "\n", with: " ")) }
+        for line in q.footerLines { out.append("# " + oneLine(line)) }
         if let r = q.refinement {
             out.append(String(format: "# axis refinement residual (RSS): file %.0f, refined %.0f", r.rssFile, r.rssRefined))
         }
         out.append("# \(q.qualityLabel) \(num(q.quality))")
-        for w in q.warnings { out.append("# warning: " + w.replacingOccurrences(of: "\n", with: " ")) }
+        for w in q.warnings { out.append("# warning: " + oneLine(w)) }
         out.append(columns.joined(separator: ","))
         for r in q.rows {
             var flags: [String] = []

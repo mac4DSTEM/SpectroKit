@@ -242,7 +242,9 @@ extension EDXQuantification {
                                              takeOffSigmaDegrees: Double? = nil, navigationMask: [Bool]? = nil,
                                              liveTimesSeconds: [Double]? = nil, takeOffDegreesPerPixel: [Double]? = nil) throws -> EDXQuantificationSigmaMaps {
         let n = intensityMaps.count
-        let pixels = rows * columns
+        let (product, overflow) = rows.multipliedReportingOverflow(by: columns)
+        guard rows > 0, columns > 0, !overflow else { throw QuantError.countMismatch("Each intensity map must hold rows x columns values.") }
+        let pixels = product
         // The composition maps (and every refusal of their inputs) are `quantifyMaps`' own.
         _ = try validateSigmaArguments(count: n, setup: setup, factorRelativeSigmas: factorRelativeSigmas, thicknessSigmaNm: thicknessSigmaNm,
                                        doseRelativeSigma: doseRelativeSigma, takeOffSigmaDegrees: takeOffSigmaDegrees)

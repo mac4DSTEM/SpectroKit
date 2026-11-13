@@ -79,6 +79,14 @@ public nonisolated enum SpectrumImageOpener {
 
     // MARK: Velox
 
+    /// True when `count` values fill an `ny x nx x channels` box exactly, every side positive and the product within Int.
+    package static func holds(ny: Int, nx: Int, channels: Int, count: Int) -> Bool {
+        guard ny > 0, nx > 0, channels > 0 else { return false }
+        let (pixels, o1) = ny.multipliedReportingOverflow(by: nx)
+        let (values, o2) = pixels.multipliedReportingOverflow(by: channels)
+        return !o1 && !o2 && values == count
+    }
+
     package static func openVelox(path: String, cancelled: @Sendable () -> Bool = SpectroCancellation.task,
                                   progress: (@Sendable (Double) -> Void)? = nil) throws -> LoadedSpectrumImage {
         let name = spectroDisplayFileName(path)
@@ -103,7 +111,7 @@ public nonisolated enum SpectrumImageOpener {
         } else {
             throw SpectrumImageOpenError.noEnergyAxis(name)
         }
-        guard scaleKeV > 0, scaleKeV.isFinite, offsetKeV.isFinite else { throw SpectrumImageOpenError.noEnergyAxis(name) }
+        guard scaleKeV > 0, scaleKeV.isFinite, offsetKeV.isFinite, store.channels > 0 else { throw SpectrumImageOpenError.noEnergyAxis(name) }
         let axis = EnergyAxis(offset: offsetKeV, scale: scaleKeV, size: store.channels)
 
         var meta = SpectrumImageMetadata(
@@ -126,7 +134,7 @@ public nonisolated enum SpectrumImageOpener {
         meta.beamEnergyKeV = m.accelerationVoltageVolts.map { $0 / 1000 }
         meta.instrument = m.instrumentModel
         var scan: [Float]?
-        if let s = v.scanImage, s.ny == store.ny, s.nx == store.nx { scan = s.sum.map { Float($0) } }
+        if let s = v.scanImage, s.ny == store.ny, s.nx == store.nx, s.sum.count == store.ny * store.nx { scan = s.sum.map { Float($0) } }
         progress?(1)
         return LoadedSpectrumImage(image: image, metadata: meta, energyAxis: axis, scanImage: scan)
     }
@@ -159,7 +167,11 @@ public nonisolated enum SpectrumImageOpener {
         // GMS: the value at pixel i is (i - origin) * scale.
         let scaleKeV = d.energyAxis.scale * toKeV
         let offsetKeV = -d.energyAxis.origin * d.energyAxis.scale * toKeV
-        guard scaleKeV > 0, scaleKeV.isFinite, offsetKeV.isFinite else { throw SpectrumImageOpenError.noEnergyAxis(name) }
+        guard scaleKeV > 0, scaleKeV.isFinite, offsetKeV.isFinite, d.channels > 0 else { throw SpectrumImageOpenError.noEnergyAxis(name) }
+        // A damaged object whose counts do not fill its ny x nx x channels box is refused, not trapped in `DenseSpectrumImage`.
+        guard Self.holds(ny: d.ny, nx: d.nx, channels: d.channels, count: d.counts.count) else {
+            throw SpectrumImageOpenError.notASpectrumImage(name)
+        }
         let axis = EnergyAxis(offset: offsetKeV, scale: scaleKeV, size: d.channels)
 
         var meta = SpectrumImageMetadata(
@@ -182,7 +194,8 @@ public nonisolated enum SpectrumImageOpener {
         var scan: [Float]?
         if let s = objects.first(where: { $0.role == .scanSignal && $0.experimentID == eds.experimentID
             && $0.dimensions.filter { $0 > 1 } == [d.nx, d.ny] }),
-           let img = try? DM4Experiment.readImage(path: path, index: s.index), img.width == d.nx, img.height == d.ny {
+           let img = try? DM4Experiment.readImage(path: path, index: s.index), img.width == d.nx, img.height == d.ny,
+           img.pixels.count == d.ny * d.nx {
             scan = img.pixels
         }
         try SpectroCancellation.check(cancelled)

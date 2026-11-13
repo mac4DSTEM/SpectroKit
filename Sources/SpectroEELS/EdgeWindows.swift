@@ -63,10 +63,10 @@ public struct EdgeWindows: Sendable, Equatable, Codable {
             let who = precedingName ?? "the preceding edge"
             if let po = precedingOnsetEV, bgEnd - po >= backgroundWidthLimitsEV.lowerBound {
                 bgWindow = clip(po, bgEnd)
-                note = "background between \(who)'s onset and this one: edges \(Int((onsetEV - po).rounded())) eV apart"
+                note = "background between \(who)'s onset and this one: edges \(CheckedConversion.int((onsetEV - po).rounded()).map(String.init) ?? "close") eV apart"
             } else if let pb = precedingBackgroundEV {
                 bgWindow = clip(pb.lowerBound, pb.upperBound)
-                note = "background shares \(who)'s window: edges \(precedingOnsetEV.map { String(Int((onsetEV - $0).rounded())) } ?? "close") eV apart"
+                note = "background shares \(who)'s window: edges \(precedingOnsetEV.flatMap { CheckedConversion.int((onsetEV - $0).rounded()).map(String.init) } ?? "close") eV apart"
             }
         }
         let sigStart = onsetEV + (family == "K" ? 0 : delayedSignalOffsetEV)
@@ -78,8 +78,11 @@ public struct EdgeWindows: Sendable, Equatable, Codable {
 
     /// Channels `[first, last]` of `axis` with energy inside `window` (inclusive, 1e-9-channel tolerance); an empty range where none.
     package static func rows(_ window: ClosedRange<Double>, offset: Double, scale: Double, size: Int) -> Range<Int> {
-        let first = max(0, Int(((window.lowerBound - offset) / scale - 1e-9).rounded(.up)))
-        let last = min(size - 1, Int(((window.upperBound - offset) / scale + 1e-9).rounded(.down)))
+        // A NaN bound, offset or scale has no channel; a bound far past the axis is clamped before it becomes an Int.
+        let lo = ((window.lowerBound - offset) / scale - 1e-9).rounded(.up), hi = ((window.upperBound - offset) / scale + 1e-9).rounded(.down)
+        guard !lo.isNaN, !hi.isNaN, size > 0 else { return 0 ..< 0 }
+        let first = max(0, Int(CheckedConversion.clamped(lo)))
+        let last = min(size - 1, Int(CheckedConversion.clamped(hi)))
         return last >= first ? first ..< (last + 1) : first ..< first
     }
 }

@@ -37,11 +37,16 @@ public nonisolated enum SmoothingKernel: Sendable, Equatable, Codable {
         }
     }
 
+    /// The widest Gaussian radius in pixels, `truncation · sigma`.
+    package static let maximumRadius = 1_000_000.0
+
     /// A box needs an odd positive width; a Gaussian a positive finite sigma and a positive finite truncation.
     public var isValid: Bool {
         switch self {
         case .box(let width): return width >= 1 && width % 2 == 1
-        case .gaussian(let sigma, let truncation): return sigma.isFinite && sigma > 0 && truncation.isFinite && truncation > 0
+        // A radius past a million pixels is wider than any map and would not fit the taps' Int range for a large enough product.
+        case .gaussian(let sigma, let truncation):
+            return sigma.isFinite && sigma > 0 && truncation.isFinite && truncation > 0 && truncation * sigma <= Self.maximumRadius
         }
     }
 }

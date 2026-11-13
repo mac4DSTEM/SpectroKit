@@ -102,9 +102,14 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
     package init(beamEnergy: Double, edges: [Double] = [ContinuumForm.alKEdge], orders: [Int] = [9, 5],
                  nonNegative: Bool = true, efficiency: (any DetectorEfficiency)? = nil,
                  edgeStep: ContinuumEdgeStep = .broadened) {
-        precondition(orders.count == edges.count + 1, "ContinuumForm needs one order per segment")
-        precondition(zip(edges, edges.dropFirst()).allSatisfy { $0 < $1 }, "edges ascend")
-        self.beamEnergy = beamEnergy; self.edges = edges; self.orders = orders; self.nonNegative = nonNegative
+        // A policy whose `problem` is not nil is refused by `PooledQuantifier`; a caller that builds one anyway gets a form that
+        // runs, not a trap: the edges that are numbers, ascending and unique, one order per segment (the last given order repeated,
+        // or the extra ones dropped), no order below 0.
+        let clean = Array(Set(edges.filter(\.isFinite))).sorted()
+        var perSegment = orders.map { max($0, 0) }
+        if perSegment.isEmpty { perSegment = [0] }
+        while perSegment.count < clean.count + 1 { perSegment.append(perSegment[perSegment.count - 1]) }
+        self.beamEnergy = beamEnergy; self.edges = clean; self.orders = Array(perSegment.prefix(clean.count + 1)); self.nonNegative = nonNegative
         self.efficiency = efficiency; self.edgeStep = edgeStep
     }
 
@@ -121,7 +126,9 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
         bounds.append(hi)
         let eRef = 2.0
         let epsRef = efficiency?.efficiency(energyKeV: eRef) ?? 1
-        let kRef = (beamEnergy - eRef) / eRef * (epsRef > 0 ? epsRef : 1)
+        // A beam of 2 keV (or a NaN) makes the reference 0 or not a number: 1 instead, so no column is infinite.
+        let kRefRaw = (beamEnergy - eRef) / eRef * (epsRef > 0 ? epsRef : 1)
+        let kRef = kRefRaw.isFinite && kRefRaw != 0 ? kRefRaw : 1
         if edgeStep == .broadened, let r = resolutionMnKaEV, bounds.count > 2 {
             return broadenedColumns(energies: energies, bounds: bounds, segmentIndex: segmentIndex, resolutionMnKaEV: r, kRef: kRef)
         }
@@ -143,7 +150,7 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
                         ? binomial(order, k) * pow(t, Double(k)) * pow(1 - t, Double(order - k))
                         : pow(t, Double(k))
                     let eps = efficiency?.efficiency(energyKeV: e) ?? 1
-                    col[i] = ((beamEnergy - e) / e) * eps / kRef * basis
+                    col[i] = e > 0 ? ((beamEnergy - e) / e) * eps / kRef * basis : 0   // no 1/E continuum at 0 keV or below
                 }
                 values.append(col)
                 names.append("continuum s\(segmentIndex[s]) t^\(k)")
@@ -184,7 +191,7 @@ public nonisolated struct ContinuumForm: Sendable, Equatable {
                         ? binomial(order, k) * pow(t, Double(k)) * pow(1 - t, Double(order - k))
                         : pow(t, Double(k))
                     let eps = efficiency?.efficiency(energyKeV: e) ?? 1
-                    col[i] = ((beamEnergy - e) / e) * eps / kRef * basis * weight[i]
+                    col[i] = e > 0 ? ((beamEnergy - e) / e) * eps / kRef * basis * weight[i] : 0
                 }
                 values.append(col)
                 names.append("continuum s\(segmentIndex[s]) t^\(k)")

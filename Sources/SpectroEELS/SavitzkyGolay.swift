@@ -275,7 +275,7 @@ package nonisolated struct SavitzkyGolayFirstDerivative: Sendable {
     package func edgeTable(nx: Int, ny: Int, row: (Int) -> UnsafeBufferPointer<Double>) throws -> SavitzkyGolayEdgeTable {
         let wl = windowLength, h = wl / 2
         let n = row(0).count
-        precondition(n >= wl, "savgol_filter: window_length must be <= the number of samples")
+        guard n >= wl else { throw EELSThicknessError.invalidSavitzkyGolay("window_length \(wl) exceeds the \(n) samples (mode=\"interp\")") }
         guard let left = edges.derivatives(window: { p in UnsafeBufferPointer(rebasing: row(p)[0..<wl]) },
                                            nx: nx, ny: ny, positions: 0..<h),
               let right = edges.derivatives(window: { p in UnsafeBufferPointer(rebasing: row(p)[(n - wl)..<n]) },
@@ -297,9 +297,10 @@ package nonisolated struct SavitzkyGolayFirstDerivative: Sendable {
         }
     }
 
-    /// A single spectrum on its own (an image of one pixel: a 1-D `savgol_filter` call).
-    package func apply(_ f: UnsafeBufferPointer<Double>, into out: UnsafeMutableBufferPointer<Double>) {
-        guard let table = try? edgeTable(nx: 1, ny: 1, row: { _ in f }) else { preconditionFailure("dgelsd failed on a finite window") }
+    /// A single spectrum on its own (an image of one pixel: a 1-D `savgol_filter` call). A window LAPACK cannot solve (a NaN or
+    /// infinite sample: dgelsd's SVD does not converge) is refused, as `numpy.linalg.lstsq` raises `LinAlgError`.
+    package func apply(_ f: UnsafeBufferPointer<Double>, into out: UnsafeMutableBufferPointer<Double>) throws {
+        let table = try edgeTable(nx: 1, ny: 1, row: { _ in f })
         apply(f, into: out, pixel: 0, table: table)
     }
 }
