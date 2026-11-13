@@ -14,7 +14,7 @@ import SpectroCore
 import SpectroEDX
 
 struct RealFileAutoIDTests {
-    private static let base = (ProcessInfo.processInfo.environment["MACEM_DATA"] ?? NSHomeDirectory() + "/GitHub/mac4DSTEM_Organization/data") + "/stem-edx/"
+    private static let base = (ProcessInfo.processInfo.environment["MACEM_DATA"] ?? NSHomeDirectory() + "/GitHub/macEMSuite/data") + "/stem-edx/"
     private static let files: [(name: String, truth: Set<String>, allowed: Set<String>)] = [
         ("SI HAADF 1339 65000 x 20260508.emd", ["O", "Mg", "Al", "Si", "Cu"], ["Fe", "Mn", "Zr"]),
         ("SI HAADF 1840 23000 x 20260506.emd", ["O", "Mg", "Al", "Si", "Cu"], ["Fe", "Mn", "Zr"]),
