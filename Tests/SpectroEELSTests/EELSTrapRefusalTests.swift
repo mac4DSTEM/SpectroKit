@@ -52,7 +52,7 @@ struct EELSTrapRefusalTests {
         row.withUnsafeBufferPointer { f in
             #expect(throws: EELSThicknessError.self) { try sg.edgeTable(nx: 1, ny: 1, row: { _ in f }) }
             var out = [Double](repeating: 0, count: 3)
-            out.withUnsafeMutableBufferPointer { o in
+            _ = out.withUnsafeMutableBufferPointer { o in
                 #expect(throws: EELSThicknessError.self) { try sg.apply(f, into: o) }
             }
         }
