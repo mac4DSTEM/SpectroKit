@@ -31,6 +31,8 @@ package nonisolated enum LeastSquaresFit {
         package var free: [Double]
         package var iterations: Int
         package var converged: Bool
+        /// False when the data or the answer is not finite or a free-block solve failed (then `converged` is false too).
+        package var answered: Bool = true
     }
 
     /// `min || sqrt(w) (y - N x - F b) ||` over `x >= 0`, `b` free. `rowWeights` nil is the unweighted fit.
@@ -64,13 +66,19 @@ package nonisolated enum LeastSquaresFit {
         // Eliminate the free block.
         var work = scaled.selecting(active)
         var target = yW
+        // A free block the solver cannot answer, or a NaN in the data, is not a converged fit (it used to report converged zeros).
+        var answered = yW.allSatisfy(\.isFinite)
+        guard answered else {
+            return Solution(nonNegative: [Double](repeating: 0, count: n.cols), free: [Double](repeating: 0, count: f.cols),
+                            iterations: 0, converged: false, answered: false)
+        }
         if fW.cols > 0 {
             var rhs = ColumnMatrix(rows: m, cols: work.cols + 1)
             rhs.data = work.data + yW
             if let (x, _) = FitLinearAlgebra.leastSquares(fW, rhs) {
                 let proj = fW.times1(x)
                 for k in 0..<rhs.data.count { rhs.data[k] -= proj[k] }
-            }
+            } else { answered = false }
             work = ColumnMatrix(rows: m, cols: work.cols, data: Array(rhs.data[0..<(work.cols * m)]))
             target = Array(rhs.data[(work.cols * m)...])
         }
@@ -85,9 +93,10 @@ package nonisolated enum LeastSquaresFit {
             let nx = nW.times(x)
             var r = yW
             for i in 0..<m { r[i] -= nx[i] }
-            if let (sol, _) = FitLinearAlgebra.leastSquares(fW, ColumnMatrix(rows: m, cols: 1, data: r)) { b = sol.data }
+            if let (sol, _) = FitLinearAlgebra.leastSquares(fW, ColumnMatrix(rows: m, cols: 1, data: r)) { b = sol.data } else { answered = false }
         }
-        return Solution(nonNegative: x, free: b, iterations: iterations, converged: converged)
+        if !(x.allSatisfy(\.isFinite) && b.allSatisfy(\.isFinite)) { answered = false }
+        return Solution(nonNegative: x, free: b, iterations: iterations, converged: converged && answered, answered: answered)
     }
 
     /// Algorithm 23.10 on unit-norm columns. Returns the solution on those columns.

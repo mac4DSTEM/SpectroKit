@@ -276,6 +276,8 @@ public nonisolated enum EDSSumEscapeFit {
             let fDone = !estimateF || df < model.tolerance
             if cDone && fDone && da < model.tolerance { converged = true; break }
         }
+        // A NaN in the counts or the design leaves the alternation's numbers NaN; that is not a converged fit.
+        if !(c.isFinite && f.isFinite && area.allSatisfy(\.isFinite)) { converged = false }
         cAtBound = estimateC && c == 0
 
         // Final fit with covariance on the linearised design at the converged point.
@@ -304,10 +306,13 @@ public nonisolated enum EDSSumEscapeFit {
             var cols: [[Double]] = keep.map { Array(nn.column($0)) }
             for j in 0..<ff.cols { cols.append(Array(ff.column(j))) }
             var qp = q
-            if !cols.isEmpty, let sol = FitLinearAlgebra.leastSquares(ColumnMatrix(columns: cols), ColumnMatrix(columns: [q])) {
+            if !cols.isEmpty {
+                // Without the projection the shape keeps what the other columns explain and its sigma comes out too small: none.
+                guard let sol = FitLinearAlgebra.leastSquares(ColumnMatrix(columns: cols), ColumnMatrix(columns: [q])) else { return nil }
                 let proj = ColumnMatrix(columns: cols).times(Array(sol.x.data))
                 for k in 0..<n { qp[k] -= proj[k] }
             }
+            guard qp.allSatisfy(\.isFinite) else { return nil }
             let nrm = qp.reduce(0) { $0 + $1 * $1 }
             guard nrm > 1e-12 else { return nil }
             if isML {

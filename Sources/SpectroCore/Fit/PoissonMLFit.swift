@@ -43,6 +43,8 @@ package nonisolated enum IRLSExit: String, Sendable {
     case capReached = "cap reached"
     /// No decrease but the KKT conditions are violated: the iteration is stuck, the result is not a maximum.
     case stalled = "stalled (no deviance decrease, KKT violated)"
+    /// The data, the deviance or the answer is not finite (a NaN count), so there is no fit to report.
+    case notFinite = "no answer (the data or the fit is not finite)"
 }
 
 package nonisolated enum PoissonMLFit {
@@ -138,7 +140,8 @@ package nonisolated enum PoissonMLFit {
             for i in 0..<m { let d = f.data[j * m + i]; g += d * wk[i]; norm += abs(d) }
             if norm > 0 { kkt = max(kkt, abs(g) / norm) }
         }
-        if exit == .stationary, kkt > 1e-5 { exit = .stalled }
+        if exit == .stationary, !(kkt <= 1e-5) { exit = .stalled }
+        if !(dev.isFinite && x.allSatisfy(\.isFinite) && b.allSatisfy(\.isFinite)) { exit = .notFinite }
         converged = (exit == .converged || exit == .stationary)
         return Solution(nonNegative: x, free: b, deviance: dev, devianceHistory: history,
                         iterations: iterations, converged: converged, exit: exit, kktResidual: kkt, clampedChannels: clamped)
