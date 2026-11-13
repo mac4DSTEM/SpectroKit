@@ -9,7 +9,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-SpectroKit was extracted from mac4DSTEM (https://github.com/mac4DSTEM/mac4DSTEM,
+SpectroKit was extracted from mac4DSTEM (https://github.com/macEMSuite/mac4DSTEM,
 commit 5ba712a0) with its history; the notices below are mac4DSTEM's, narrowed to
 what this library carries.
 
@@ -39,7 +39,7 @@ The element table in Sources/SpectroEDX/Quant/QuantElementData.swift
 (atomic weights and densities) comes from eXSpy's elements data (GPL-3.0-or-later).
 
 The file readers (the Velox EMD reader, the DM4 reader with its EDS and EELS spectrum images, the HDF5 lock) moved
-to FormatoKit (https://github.com/mac4DSTEM/FormatoKit, GPL-3.0-only) at SpectroKit 0.4.0, with their notices,
+to FormatoKit (https://github.com/macEMSuite/FormatoKit, GPL-3.0-only) at SpectroKit 0.4.0, with their notices,
 their rosettasciio comparison and their fixtures. SpectroKit depends on FormatoKit 0.2.1.
 
 Tests/SpectroEDXTests/Fixtures/public/ holds three of rosettasciio's public Velox test files, copied byte for byte under

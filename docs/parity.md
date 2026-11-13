@@ -319,7 +319,7 @@ it 20.3 % low in counts (Si share 0.546 at% against 0.675 at%, 19 % low; the sha
 
 ## Known limits and decisions
 
-Open work is in the [issues](https://github.com/mac4DSTEM/SpectroKit/issues), including the ones closed as *not planned* and
+Open work is in the [issues](https://github.com/macEMSuite/SpectroKit/issues), including the ones closed as *not planned* and
 parked for later (t/λ speed #7, EELS fine structure #10, Richardson-Lucy and weighted MLLS #11, EDS calibration operations
 #12, standards #14). Speed against HyperSpy and exSpy is in `docs/benchmarks.md`; benchmark rows for the EDX fit and auto ID
 on a Velox spectrum image, the EELS power-law fit, edge quantification and the large sizes are not written yet.
