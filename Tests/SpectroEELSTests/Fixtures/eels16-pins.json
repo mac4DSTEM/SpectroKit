@@ -7,7 +7,7 @@
   "numpy": "2.5.4",
   "python": "3.13.16",
   "scipy": "1.18.1",
-  "scriptSha256": "1e9cc77b2609e732df6f5c26dae4bae39107d86bb8bfc41f0f0fc189ea65d262"
+  "scriptSha256": "9e5631313e991dff7a7c304e2aa5d3042a5ce809879b8207b00efdb3c11d8587"
  },
  "files": {
   "fl-add-zlp": {
@@ -36,6 +36,14 @@
   },
   "fl-default": {
    "sha256": "d94bb835d368e802d7a20dba0fce67ef2710f75df5396fda88f79fb6ddf6accc",
+   "shape": [
+    3,
+    4,
+    1600
+   ]
+  },
+  "fl-noisy": {
+   "sha256": "80a95d2112dfaccd6bea766837711c2496270a97d40381f24130b88a57d3d347",
    "shape": [
     3,
     4,
@@ -88,6 +96,22 @@
     3,
     4,
     300
+   ]
+  },
+  "noisy-ll": {
+   "sha256": "349123a5da3426a71df98244a55010ff68f26d7683ecf29559dc8d567d1ca63a",
+   "shape": [
+    3,
+    4,
+    1600
+   ]
+  },
+  "noisy-zlp": {
+   "sha256": "4ffb25c6815ef9b3d8bf85ad39ee18a297e0e8d6ae0b6c27d52b93177bc15f31",
+   "shape": [
+    3,
+    4,
+    1600
    ]
   },
   "pl-binned-w20-e100": {
@@ -514,6 +538,14 @@
     "offsetEV": -20.0,
     "taperedChannels": 32
    }
+  },
+  "noisy": {
+   "fftSize": 3200,
+   "file": "fl-noisy",
+   "lowLossFile": "noisy-ll",
+   "negativeFraction": 0.18588541666666666,
+   "note": "plural image x 100 + Poisson + 50, minus 55 (dark subtracted); zero loss = the noisy image below +2 eV; float64. A float32 cube is not pinned: NumPy 2 transforms float32 in float32, the kit in float64 (docs/parity.md); generated on Linux x86_64 (the other arrays on the Mac; a rerun on Linux moves them by round-off only)",
+   "zlpFile": "noisy-zlp"
   },
   "plural": {
    "channels": 1600,
