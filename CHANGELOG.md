@@ -8,6 +8,14 @@ each entry from the merged pull requests' titles; a breaking change's Migration 
 Every quantification and thickness result reports `validation: "none"`: agreement with exSpy and HyperSpy is not validation on a
 sample of known composition.
 
+## [0.14.1](https://github.com/macEMSuite/SpectroKit/compare/0.14.0...0.14.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* keep the incomplete gamma exact at large counts and report silent solver failures ([#109](https://github.com/macEMSuite/SpectroKit/issues/109)) ([8ae8a15](https://github.com/macEMSuite/SpectroKit/commit/8ae8a15fb035dd516e4267784c47f9e286f11219))
+* refuse damaged inputs in words instead of trapping ([#108](https://github.com/macEMSuite/SpectroKit/issues/108)) ([fe691b9](https://github.com/macEMSuite/SpectroKit/commit/fe691b92cf3d7725e92a4b837f26ba2ff8c95228))
+
 ## [0.14.0](https://github.com/mac4DSTEM/SpectroKit/compare/0.13.2...0.14.0) (2026-11-12)
 
 
