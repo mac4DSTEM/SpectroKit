@@ -43,6 +43,8 @@ package nonisolated enum IRLSExit: String, Sendable {
     case capReached = "cap reached"
     /// No decrease but the KKT conditions are violated: the iteration is stuck, the result is not a maximum.
     case stalled = "stalled (no deviance decrease, KKT violated)"
+    /// The data, the deviance or the answer is not finite (a NaN count), so there is no fit to report.
+    case notFinite = "no answer (the data or the fit is not finite)"
 }
 
 package nonisolated enum PoissonMLFit {
@@ -82,6 +84,13 @@ package nonisolated enum PoissonMLFit {
     ) -> Solution {
         let m = y.count
         let off = offset ?? [Double](repeating: 0, count: m)
+        // A count or offset that is not a number: the deviance skips it (`y > 0` is false for NaN) and the fit would "converge" on
+        // the rest, so it is no answer (SpectroKit#104).
+        guard y.allSatisfy(\.isFinite), off.allSatisfy(\.isFinite) else {
+            return Solution(nonNegative: [Double](repeating: .nan, count: n.cols), free: [Double](repeating: .nan, count: f.cols),
+                            deviance: .nan, devianceHistory: [], iterations: 0, converged: false, exit: .notFinite,
+                            kktResidual: .nan, clampedChannels: 0)
+        }
         let target = (0..<m).map { y[$0] - off[$0] }
 
         func mu(_ x: [Double], _ b: [Double]) -> [Double] {
@@ -138,7 +147,8 @@ package nonisolated enum PoissonMLFit {
             for i in 0..<m { let d = f.data[j * m + i]; g += d * wk[i]; norm += abs(d) }
             if norm > 0 { kkt = max(kkt, abs(g) / norm) }
         }
-        if exit == .stationary, kkt > 1e-5 { exit = .stalled }
+        if exit == .stationary, !(kkt <= 1e-5) { exit = .stalled }
+        if !(dev.isFinite && x.allSatisfy(\.isFinite) && b.allSatisfy(\.isFinite)) { exit = .notFinite }
         converged = (exit == .converged || exit == .stationary)
         return Solution(nonNegative: x, free: b, deviance: dev, devianceHistory: history,
                         iterations: iterations, converged: converged, exit: exit, kktResidual: kkt, clampedChannels: clamped)

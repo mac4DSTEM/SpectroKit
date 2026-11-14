@@ -764,11 +764,14 @@ public nonisolated enum PooledQuantifier {
         // counting: J C J^T by central differences on each area.
         var jAt = [[Double]](repeating: [Double](repeating: 0, count: n), count: n)   // [output i][input j]
         var jWt = jAt
+        var countingFailed = false, kFailed = false, thicknessFailed = false
         for j in 0..<n {
             let h = max(policy.derivativeRelativeStep * max(I0[j], 1), 1e-9)
             var lo = I0, hi = I0
             lo[j] = max(I0[j] - h, 0); hi[j] = I0[j] + h
-            guard let a = f(hi, kVals), let b = f(lo, kVals), hi[j] > lo[j] else { continue }
+            guard hi[j] > lo[j] else { continue }
+            // A perturbed quantification that fails leaves this area's share unknown: the counting sigma is not given (it was 0).
+            guard let a = f(hi, kVals), let b = f(lo, kVals) else { countingFailed = true; continue }
             for i in 0..<n {
                 jAt[i][j] = (a.at[i] - b.at[i]) / (hi[j] - lo[j])
                 jWt[i][j] = (a.wt[i] - b.wt[i]) / (hi[j] - lo[j])
@@ -784,7 +787,7 @@ public nonisolated enum PooledQuantifier {
         for j in 0..<n where kSig[j] > 0 {
             var up = kVals, dn = kVals
             up[j] *= 1 + kSig[j]; dn[j] *= max(1 - kSig[j], 1e-6)
-            guard let a = f(I0, up), let b = f(I0, dn) else { continue }
+            guard let a = f(I0, up), let b = f(I0, dn) else { kFailed = true; continue }
             for i in 0..<n {
                 kAt[i] += pow((a.at[i] - b.at[i]) / 2, 2)
                 kWt[i] += pow((a.wt[i] - b.wt[i]) / 2, 2)
@@ -798,9 +801,14 @@ public nonisolated enum PooledQuantifier {
                 for i in 0..<n { absAt[i] = abs(gm.at[i] - base.at[i]); absWt[i] = abs(gm.wt[i] - base.wt[i]) }
             }
             for i in 0..<n {
-                thAt[i] = (try? ThicknessPropagation.sigma(at: t.nanometres, sigmaNm: t.sigmaNanometres) { tt in try evaluate(I0, kVals, t: tt, geometry: g).at[i] }) ?? 0
-                thWt[i] = (try? ThicknessPropagation.sigma(at: t.nanometres, sigmaNm: t.sigmaNanometres) { tt in try evaluate(I0, kVals, t: tt, geometry: g).wt[i] }) ?? 0
+                // A failed evaluation leaves the thickness term unknown (NaN), never 0, which understated the sigma.
+                thAt[i] = (try? ThicknessPropagation.sigma(at: t.nanometres, sigmaNm: t.sigmaNanometres) { tt in try evaluate(I0, kVals, t: tt, geometry: g).at[i] }) ?? .nan
+                thWt[i] = (try? ThicknessPropagation.sigma(at: t.nanometres, sigmaNm: t.sigmaNanometres) { tt in try evaluate(I0, kVals, t: tt, geometry: g).wt[i] }) ?? .nan
+                if thAt[i].isNaN || thWt[i].isNaN { thicknessFailed = true }
             }
+        }
+        for (failed, term) in [(countingFailed, "counting"), (kFailed, "k-factor"), (thicknessFailed, "thickness")] where failed {
+            warnings.append("the \(term) uncertainty could not be evaluated (a perturbed quantification failed), so the \u{03C3} is not given")
         }
         let absorbed = geom != nil
         let thicknessSigmaTyped = (thickness?.sigmaNanometres ?? 0) > 0
@@ -815,7 +823,8 @@ public nonisolated enum PooledQuantifier {
         for i in 0..<n {
             let a = base.at[i], w = base.wt[i]
             func rel(_ x: Double, _ v: Double) -> Double { v > 0 ? x / v : 0 }
-            let aCount = quad(jAt[i]), wCount = quad(jWt[i])
+            let aCount = countingFailed ? .nan : quad(jAt[i]), wCount = countingFailed ? .nan : quad(jWt[i])
+            if kFailed { kAt[i] = .nan; kWt[i] = .nan }
             let aTerms = SigmaTerms(counting: rel(aCount, a), k: rel(kAt[i].squareRoot(), a), absorption: 0, thickness: rel(thAt[i], a))
             let wTerms = SigmaTerms(counting: rel(wCount, w), k: rel(kWt[i].squareRoot(), w), absorption: 0, thickness: rel(thWt[i], w))
             let aSig = aTerms.combined * a, wSig = wTerms.combined * w
@@ -827,5 +836,5 @@ public nonisolated enum PooledQuantifier {
         }
     }
 
-    private static func pct(_ v: Double) -> String { String(format: "%.1f %%", v * 100) }
+    private static func pct(_ v: Double) -> String { v.isNaN ? "not given" : String(format: "%.1f %%", v * 100) }
 }

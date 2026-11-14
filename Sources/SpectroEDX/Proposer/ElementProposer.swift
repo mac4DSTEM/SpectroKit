@@ -451,7 +451,7 @@ public nonisolated struct ElementProposer: Sendable {
         var trials: [String: Trial] = [:]
         var sumInfo: [String: (label: String, elements: [String])] = [:]
         var tried: [Double] = []
-        var examined = 0, tested = 0
+        var examined = 0, tested = 0, failedFits = 0
         var capped = false
 
         /// The confirmation rule for an element nominated by `line`: `withhold` says why it cannot be it; `unconfirmable` says why the rule
@@ -543,7 +543,8 @@ public nonisolated struct ElementProposer: Sendable {
 
             var eligible: [Trial] = []
             for (k, r) in zip(keys, results) {
-                guard let p = try? r.get(), let gi = p.model.groups.firstIndex(where: { $0.id == k.group }) else { continue }
+                guard let p = try? r.get() else { failedFits += 1; continue }
+                guard let gi = p.model.groups.firstIndex(where: { $0.id == k.group }) else { continue }
                 let new = p.model.groups.filter { !columns.contains($0.id) }
                 let gain = fit.statistic - p.statistic
                 let mask = near(new)
@@ -597,6 +598,7 @@ public nonisolated struct ElementProposer: Sendable {
             guard !inModel.isEmpty else { break }
             let jobs = inModel.map { el in model.filter { $0.element != el } }
             let results = try runAll(jobs, on: counts)
+            failedFits += results.filter { (try? $0.get()) == nil }.count
             let costs = zip(inModel, results).compactMap { el, r in (try? r.get()).map { (el, $0.statistic - fit.statistic, $0) } }
             // Dropped only when the final fit does not need it AND its own peak does not either (the statistic's fall within one FWHM of the
             // peak it was found at, the filtered peak gain of the method's step 7).
@@ -646,7 +648,7 @@ public nonisolated struct ElementProposer: Sendable {
                 let results = try runAll(jobs, on: counts)
                 tested += jobs.count
                 for (k, r) in zip(keys, results) {
-                    guard let p = try? r.get() else { continue }
+                    guard let p = try? r.get() else { failedFits += 1; continue }
                     let gain = fit.statistic - p.statistic
                     let gs = p.model.groups.enumerated().filter { $0.element.element == k.element }.compactMap { gi, g in stat(p, gi).map { (g.id, $0) } }
                     guard gain >= t.minimumGain, let (gid, st) = gs.max(by: { $0.1.significance < $1.1.significance }), st.net >= st.ld else { continue }
@@ -798,6 +800,9 @@ public nonisolated struct ElementProposer: Sendable {
         let pChance = 0.5 * erfc((currie.zAlpha + currie.zBeta) / 2.0.squareRoot())
         notes.append(String(format: "Look-elsewhere: %d candidates were tested, so about %.2f chance passes of the area bar alone are expected; the gain and confirmation bars stand beside it.", tested, Double(tested) * pChance))
         if capped && examined >= t.maximumPeaks { notes.append("The loop stopped after \(t.maximumPeaks) residual peaks: this spectrum keeps producing peaks, which points to a model misfit (continuum or line shapes) rather than to that many elements.") }
+        if failedFits > 0 {
+            notes.append("\(failedFits) candidate fit\(failedFits == 1 ? "" : "s") failed (the solver gave no answer) and \(failedFits == 1 ? "was" : "were") left out of the search: an element tested only there is not reported.")
+        }
         if capped && foundOrder.count >= t.maximumNewElements { notes.append("The loop stopped at \(t.maximumNewElements) new elements.") }
         for w in report.result.warnings where !notes.contains(w) { notes.append(w) }
         progress?(1)

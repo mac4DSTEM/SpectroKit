@@ -221,7 +221,8 @@ public enum EELSDeconvolution {
                     nonisolated(unsafe) let cinput = csrc, linput = lsrc
                     try EELSParallel.forEachPixel(count: pixels, cancelled: cancelled,
                                                   progress: progress.map { p in { @Sendable f in p(0.2 + 0.8 * f) } }) { p in
-                        guard let stopChannel = stops[p], stopChannel <= llChannels else { why.set(p, .noThreshold); return }
+                        // A stop at channel 0 sums no elastic intensity: exSpy's I_0 is 0 and its result all zeros. The zeros stay, flagged.
+                        guard let stopChannel = stops[p], stopChannel > 0, stopChannel <= llChannels else { why.set(p, .noThreshold); return }
                         if unanswered[p] { why.set(p, .nonFiniteResult); return }
                         let i0 = NumpySum.pairwise(linput.baseAddress! + p * llChannels, count: stopChannel)
                         let jk = realFFT(cinput.baseAddress! + p * clChannels, count: clChannels, size: size, plan: forward)

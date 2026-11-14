@@ -59,6 +59,14 @@ struct SumEscapeFitTests {
         return mu.map { rng.poisson($0) }
     }
 
+    /// SpectroKit#104: a NaN count leaves the alternation's numbers NaN, which is not a converged fit (it was reported converged).
+    @Test func testANaNCountIsNotAConvergedSumEscapeFit() throws {
+        var y = Self.planted()
+        y[Self.axis.size / 2] = .nan
+        guard let r = try? EDSSumEscapeFit.run(counts: y, axis: Self.axis, settings: Self.settings(), model: .both) else { return }
+        #expect(!r.converged && !r.fit.converged, Comment(rawValue: "\(r.fit.exit)"))
+    }
+
     @Test func offByDefaultIsTheBaselineBitForBit() throws {
         let y = Self.planted()
         let s = Self.settings()

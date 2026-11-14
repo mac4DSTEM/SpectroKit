@@ -201,7 +201,7 @@ package nonisolated enum EDSFit {
         case .leastSquares:
             let s = LeastSquaresFit.solve(nonNegative: nn, free: ff, y: target)
             x = s.nonNegative; b = s.free; iterations = s.iterations; converged = s.converged
-            exit = s.converged ? "converged" : "cap reached"
+            exit = s.converged ? "converged" : !s.answered ? IRLSExit.notFinite.rawValue : "cap reached"
             label = LeastSquaresFit.label
         case .poissonML(let ir):
             let s = PoissonMLFit.solve(nonNegative: nn, free: ff, y: y, offset: design.offset, settings: ir)

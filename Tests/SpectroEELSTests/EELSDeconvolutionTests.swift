@@ -76,13 +76,14 @@ struct EELSDeconvolutionTests {
         var thetas = [Double](repeating: 6, count: 12)
         thetas[4] = .nan
         thetas[7] = 1e6                                                  // outside the axis
+        thetas[2] = t.ll.energyOffsetEV                                  // the stop at channel 0: no elastic intensity (SpectroKit#104)
         var options = FourierRatioOptions()
         options.threshold = .perPixel(thetas)
         let out = try EELSDeconvolution.fourierRatio(coreLoss: t.core, lowLoss: t.ll, options: options)
         let n = t.core.channels
         for px in 0 ..< 12 {
             let row = out.image.counts[px * n ..< (px + 1) * n]
-            if px == 4 || px == 7 {
+            if px == 2 || px == 4 || px == 7 {
                 #expect(out.unavailable[px] == .noThreshold && row.allSatisfy { $0 == 0 }, Comment(rawValue: "pixel \(px)"))
             } else {
                 #expect(out.unavailable[px] == nil && row.contains { $0 != 0 }, Comment(rawValue: "pixel \(px)"))

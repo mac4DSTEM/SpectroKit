@@ -25,6 +25,12 @@ package nonisolated enum IncompleteGamma {
     package static let quantileResidual = 1e-15
     package static let maximumIterations = 500
 
+    /// Near x ≈ a the series and the continued fraction need of order √a terms (SpectroKit#104: at 500 terms the series was 11 %
+    /// off at a = 1e5), so the cap grows with √a. A sum that still has not converged is NaN, never a truncated value.
+    package static func iterationCap(a: Double) -> Int {
+        maximumIterations + Int(min(12 * a.squareRoot(), 1e8))
+    }
+
     /// Regularized lower incomplete gamma P(a, x), a > 0, x >= 0; NaN outside that (and for NaN), as `scipy.special.gammainc`.
     package static func lowerRegularized(a: Double, x: Double) -> Double {
         guard a > 0, x >= 0 else { return .nan }
@@ -33,20 +39,28 @@ package nonisolated enum IncompleteGamma {
         return 1 - continuedFraction(a: a, x: x)
     }
 
-    private static func logPrefactor(a: Double, x: Double) -> Double {
-        -x + a * log(x) - lgamma(a)
+    /// log(x^a e^-x / Γ(a)). For a >= 10 it is written about x = a with Stirling's series for log Γ(a), so the a log x and x terms
+    /// do not cancel (at a = 1e6 the direct form loses about 1e-10 relative per unit of a log x).
+    package static func logPrefactor(a: Double, x: Double) -> Double {
+        guard a >= 10 else { return -x + a * log(x) - lgamma(a) }
+        let t = (x - a) / a
+        let a2 = a * a
+        let stirling = (1 / (12 * a)) * (1 - (1 / (30 * a2)) * (1 - (2 / (7 * a2)) * (1 - 3 / (4 * a2))))
+        return a * (log1p(t) - t) + 0.5 * log(a / (2 * Double.pi)) - stirling
     }
 
     private static func series(a: Double, x: Double) -> Double {
         var term = 1 / a
         var sum = term
         var n = a
-        for _ in 0..<maximumIterations {
+        var converged = false
+        for _ in 0..<iterationCap(a: a) {
             n += 1
             term *= x / n
             sum += term
-            if abs(term) < abs(sum) * seriesTolerance { break }
+            if abs(term) < abs(sum) * seriesTolerance { converged = true; break }
         }
+        guard converged else { return .nan }
         return sum * exp(logPrefactor(a: a, x: x))
     }
 
@@ -57,7 +71,8 @@ package nonisolated enum IncompleteGamma {
         var c = 1 / tiny
         var d = 1 / b
         var h = d
-        for i in 1...maximumIterations {
+        var converged = false
+        for i in 1...iterationCap(a: a) {
             let an = -Double(i) * (Double(i) - a)
             b += 2
             d = an * d + b
@@ -67,8 +82,9 @@ package nonisolated enum IncompleteGamma {
             d = 1 / d
             let delta = d * c
             h *= delta
-            if abs(delta - 1) < seriesTolerance { break }
+            if abs(delta - 1) < seriesTolerance { converged = true; break }
         }
+        guard converged else { return .nan }
         return exp(logPrefactor(a: a, x: x)) * h
     }
 
